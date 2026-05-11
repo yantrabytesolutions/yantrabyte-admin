@@ -71,7 +71,6 @@ import {
   useTeam,
   useClientLogos,
   useGallery,
-  useProducts,
   useBlogPosts,
   submitContact,
 } from '../hooks/useSupabase';
@@ -83,7 +82,6 @@ import type {
   TeamMember,
   ClientLogo,
   GalleryImage,
-  Product,
   BlogPost,
 } from '../types';
 
@@ -142,15 +140,6 @@ const FALLBACK_TEAM: TeamMember[] = [
   { id: '4', name: 'Priya Nair', role: 'Lead Engineer', bio: 'Priya oversees our technical team, specializing in CCTV and access control systems. She holds certifications from Hikvision, Dahua, and Bosch.', image_url: '', is_published: true, sort_order: 4, created_at: '' },
 ];
 
-const FALLBACK_PRODUCTS: Product[] = [
-  { id: '1', name: 'Hikvision 4MP Camera', slug: 'hikvision-4mp-camera', description: 'High-definition 4-megapixel dome camera with night vision and remote viewing.', category: 'CCTV Cameras', price: '3,499', image_url: '', features: ['4MP HD Resolution', 'Night Vision up to 30m', 'Motion Detection & Alerts', 'Mobile Remote Viewing', 'Weatherproof IP67'], is_featured: true, is_published: true, sort_order: 1, created_at: '', updated_at: '' },
-  { id: '2', name: 'Dahua 16-Channel NVR', slug: 'dahua-16ch-nvr', description: 'Professional 16-channel NVR with 4TB storage and AI-powered analytics.', category: 'CCTV Cameras', price: '14,999', image_url: '', features: ['16-Channel Recording', '4TB HDD Included', 'AI-Powered Analytics', 'H.265+ Compression', 'Remote Access via App'], is_featured: true, is_published: true, sort_order: 2, created_at: '', updated_at: '' },
-  { id: '3', name: 'TP-Link Business Router', slug: 'tp-link-business-router', description: 'Enterprise-grade VPN router with dual-WAN and VLAN support.', category: 'Networking', price: '8,999', image_url: '', features: ['Dual-WAN Failover', 'VPN Support', 'VLAN Segmentation', 'Bandwidth Control', 'Guest Network Isolation'], is_featured: false, is_published: true, sort_order: 3, created_at: '', updated_at: '' },
-  { id: '4', name: 'eSSL Biometric System', slug: 'essl-biometric-system', description: 'Advanced fingerprint and RFID access control with attendance management.', category: 'Biometric', price: '11,999', image_url: '', features: ['Fingerprint + RFID', '5000 User Capacity', 'Attendance Management', 'TCP/IP Network', 'LCD Display & Voice Prompt'], is_featured: true, is_published: true, sort_order: 5, created_at: '', updated_at: '' },
-  { id: '5', name: 'D-Link 24-Port Switch', slug: 'd-link-24port-switch', description: 'Managed 24-port Gigabit switch with VLAN, QoS, and network management.', category: 'Networking', price: '12,499', image_url: '', features: ['24 Gigabit Ports', 'Layer 2 Management', 'VLAN & QoS Support', 'IGMP Snooping', 'Rack-Mountable Design'], is_featured: false, is_published: true, sort_order: 6, created_at: '', updated_at: '' },
-  { id: '6', name: 'Godrej Smart Lock', slug: 'godrej-smart-lock', description: 'Digital smart lock with fingerprint, PIN, and Bluetooth access.', category: 'Accessories', price: '15,999', image_url: '', features: ['Fingerprint + PIN + Bluetooth', 'Anti-Peep PIN Code', 'Tamper Alert Alarm', 'Low Battery Warning', 'Emergency Power Backup'], is_featured: false, is_published: true, sort_order: 7, created_at: '', updated_at: '' },
-];
-
 const FALLBACK_CLIENT_LOGOS: ClientLogo[] = [
   { id: '1', name: 'TechPark Solutions', logo_url: '', is_published: true, sort_order: 1, created_at: '' },
   { id: '2', name: 'Metro Retail Group', logo_url: '', is_published: true, sort_order: 2, created_at: '' },
@@ -204,13 +193,6 @@ const CATEGORY_GRADIENTS: Record<string, string> = {
   'CCTV Tips': 'from-[#0EA5E9] to-[#0284C7]', 'IT Solutions': 'from-[#38BDF8] to-[#0EA5E9]',
   'Networking': 'from-[#0EA5E9] to-[#7DD3FC]', 'Security Systems': 'from-[#0284C7] to-[#38BDF8]',
   'Office Automation': 'from-[#7DD3FC] to-[#0EA5E9]',
-};
-
-const PRODUCT_CATEGORY_BADGE_COLORS: Record<string, string> = {
-  'CCTV Cameras': 'bg-red-500/20 text-red-400 border-red-500/30',
-  'Networking': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-  'Biometric': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-  'Accessories': 'bg-amber-500/20 text-amber-400 border-amber-500/30',
 };
 
 const AVATAR_GRADIENTS = [
@@ -698,103 +680,6 @@ function IndustriesSection() {
                   </div>
                   <h3 className="text-white font-semibold text-base mb-1.5">{industry.name}</h3>
                   <p className="text-[#64748B] text-xs leading-relaxed">{industry.description}</p>
-                </motion.div>
-              );
-            })}
-          </motion.div>
-        )}
-      </div>
-    </Section>
-  );
-}
-
-// ─── 7. Products ────────────────────────────────────────────────────────────
-
-function ProductsSection() {
-  const { products, loading } = useProducts();
-  const displayProducts: Product[] = products.length > 0 ? products : FALLBACK_PRODUCTS;
-  const [activeCategory, setActiveCategory] = useState('All');
-  const categories = ['All', 'CCTV Cameras', 'Networking', 'Biometric', 'Accessories'];
-
-  const filtered = activeCategory === 'All' ? displayProducts : displayProducts.filter(p => p.category === activeCategory);
-  const PRODUCT_ICONS: React.ElementType[] = [Camera, HardDrive, Router, Camera, Fingerprint, Router, Lock, Monitor];
-
-  return (
-    <Section id="products">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div variants={fadeInUp} className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0EA5E9] to-[#38BDF8]">Products</span>
-          </h2>
-          <p className="text-[#94A3B8] text-lg max-w-2xl mx-auto">
-            Genuine products from authorized distributors with full manufacturer warranty
-          </p>
-        </motion.div>
-
-        <motion.div variants={fadeInUp} className="flex flex-wrap justify-center gap-2 mb-12">
-          {categories.map(cat => (
-            <button key={cat} onClick={() => setActiveCategory(cat)}
-              className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${
-                activeCategory === cat ? 'bg-[#0EA5E9] text-white shadow-lg shadow-[#0EA5E9]/25'
-                  : 'bg-white/5 text-[#94A3B8] hover:bg-white/10 hover:text-white border border-white/10'
-              }`}>
-              {cat}
-            </button>
-          ))}
-        </motion.div>
-
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: 6 }).map((_, i) => (<div key={i} className="h-96 rounded-2xl bg-white/5 animate-pulse border border-white/5" />))}
-          </div>
-        ) : (
-          <motion.div key={activeCategory} variants={staggerContainer} initial="hidden" animate="visible"
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtered.map((product, i) => {
-              const IconComponent = PRODUCT_ICONS[i % PRODUCT_ICONS.length];
-              const badgeColor = PRODUCT_CATEGORY_BADGE_COLORS[product.category] || 'bg-[#0EA5E9]/20 text-[#0EA5E9] border-[#0EA5E9]/30';
-              return (
-                <motion.div key={product.id} variants={staggerItem}
-                  whileHover={{ scale: 1.03, y: -4 }}
-                  className={`group backdrop-blur-xl bg-white/5 border rounded-2xl p-6 transition-all duration-300 hover:shadow-lg hover:shadow-[#0EA5E9]/10 relative overflow-hidden ${
-                    product.is_featured ? 'border-[#0EA5E9]/30' : 'border-white/10'
-                  }`}>
-                  {product.is_featured && (
-                    <>
-                      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#0EA5E9] to-[#38BDF8]" />
-                      <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-[#0EA5E9]/20 border border-[#0EA5E9]/40 text-[#0EA5E9] text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
-                        <Star className="w-3 h-3 fill-[#0EA5E9]" /> Best Seller
-                      </div>
-                    </>
-                  )}
-                  <div className="w-14 h-14 rounded-xl bg-[#0EA5E9]/10 flex items-center justify-center mb-5 group-hover:bg-[#0EA5E9]/20 transition-colors duration-300">
-                    <IconComponent className="w-7 h-7 text-[#0EA5E9]" />
-                  </div>
-                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider border ${badgeColor} mb-3`}>
-                    {product.category}
-                  </span>
-                  <h3 className="text-white font-bold text-lg mb-2">{product.name}</h3>
-                  <p className="text-[#94A3B8] text-sm leading-relaxed mb-4">{product.description}</p>
-                  <ul className="space-y-2 mb-5">
-                    {product.features.slice(0, 3).map((feature, fi) => (
-                      <li key={fi} className="flex items-start gap-2 text-sm text-[#94A3B8]">
-                        <Check className="w-4 h-4 text-[#0EA5E9] shrink-0 mt-0.5" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="flex items-end justify-between pt-4 border-t border-white/10">
-                    <div>
-                      <span className="text-[#64748B] text-xs">Starting from</span>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-white font-bold text-xl">&#8377;{product.price}</span>
-                      </div>
-                    </div>
-                    <a href="#contact"
-                      className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-[#0EA5E9] hover:bg-[#0284C7] text-white text-sm font-semibold transition-all duration-300 shadow-lg shadow-[#0EA5E9]/25">
-                      Get Quote <ArrowRight className="w-4 h-4" />
-                    </a>
-                  </div>
                 </motion.div>
               );
             })}
@@ -1350,7 +1235,6 @@ export default function Home() {
       <WhyChooseUsSection />
       <AboutSection />
       <IndustriesSection />
-      <ProductsSection />
       <TestimonialsSection />
       <GoogleReviewsSection />
       <ProcessSection />

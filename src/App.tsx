@@ -4,7 +4,6 @@ import Home from './pages/Home';
 import About from './pages/About';
 import Services from './pages/Services';
 import ServiceDetail from './pages/ServiceDetail';
-import Products from './pages/Products';
 import Industries from './pages/Industries';
 import Testimonials from './pages/Testimonials';
 import Blog from './pages/Blog';
@@ -23,7 +22,6 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/services" element={<Services />} />
           <Route path="/services/:slug" element={<ServiceDetail />} />
-          <Route path="/products" element={<Products />} />
           <Route path="/industries" element={<Industries />} />
           <Route path="/testimonials" element={<Testimonials />} />
           <Route path="/blog" element={<Blog />} />
