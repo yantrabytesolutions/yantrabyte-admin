@@ -240,7 +240,7 @@ function ProductsGridSection({ products }: { products: Product[] }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div variants={fadeInUp} className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Browse Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0EA5E9] to-[#38BDF8]">Products</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0EA5E9] to-[#38BDF8]">Products</span>
           </h2>
           <p className="text-[#94A3B8] text-lg max-w-2xl mx-auto">
             Genuine products from authorized distributors with full manufacturer warranty
