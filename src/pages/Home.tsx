@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import {
   Camera,
@@ -34,9 +33,59 @@ import {
   Wrench,
   TestTube2,
   Headphones,
+  Target,
+  Eye,
+  Heart,
+  Award,
+  Cable,
+  HardDrive,
+  Lock,
+  Wifi,
+  Server,
+  Cloud,
+  Send,
+  Mail,
+  MapPin,
+  Check,
+  AlertCircle,
+  Building2,
+  Store,
+  Calendar,
+  Tag,
+  BookOpen,
+  TrendingUp,
+  Play,
+  Video,
+  Quote,
+  User,
+  Share2,
+  Facebook,
+  Twitter,
+  Linkedin,
 } from 'lucide-react';
-import { useServices, useTestimonials, useFAQs, useIndustries } from '../hooks/useSupabase';
-import type { Service, Testimonial, FAQ, Industry } from '../types';
+import {
+  useServices,
+  useTestimonials,
+  useFAQs,
+  useIndustries,
+  useTeam,
+  useClientLogos,
+  useGallery,
+  useProducts,
+  useBlogPosts,
+  submitContact,
+} from '../hooks/useSupabase';
+import type {
+  Service,
+  Testimonial,
+  FAQ,
+  Industry,
+  TeamMember,
+  ClientLogo,
+  GalleryImage,
+  Product,
+  BlogPost,
+} from '../types';
 
 // ─── Fallback Data ──────────────────────────────────────────────────────────
 
@@ -47,17 +96,24 @@ const FALLBACK_SERVICES: Service[] = [
   { id: '4', title: 'Networking', slug: 'networking', short_description: 'Complete networking solutions including LAN, WAN, and Wi-Fi setup.', full_description: '', icon: 'Router', features: [], benefits: [], meta_title: '', meta_description: '', is_featured: true, is_published: true, sort_order: 4, created_at: '', updated_at: '' },
   { id: '5', title: 'Printer Services', slug: 'printer-services', short_description: 'Printer installation, repair, and maintenance for all brands.', full_description: '', icon: 'Printer', features: [], benefits: [], meta_title: '', meta_description: '', is_featured: false, is_published: true, sort_order: 5, created_at: '', updated_at: '' },
   { id: '8', title: 'AMC Support', slug: 'amc-support', short_description: 'Annual maintenance contracts for ongoing IT support and peace of mind.', full_description: '', icon: 'FileCheck', features: [], benefits: [], meta_title: '', meta_description: '', is_featured: false, is_published: true, sort_order: 8, created_at: '', updated_at: '' },
+  { id: '9', title: 'Wi-Fi Solutions', slug: 'wifi-solutions', short_description: 'High-performance Wi-Fi coverage for offices, apartments, and hotels.', full_description: '', icon: 'Wifi', features: [], benefits: [], meta_title: '', meta_description: '', is_featured: false, is_published: true, sort_order: 9, created_at: '', updated_at: '' },
+  { id: '10', title: 'Server Setup', slug: 'server-setup', short_description: 'On-premise and cloud server configuration and management.', full_description: '', icon: 'Server', features: [], benefits: [], meta_title: '', meta_description: '', is_featured: false, is_published: true, sort_order: 10, created_at: '', updated_at: '' },
+  { id: '11', title: 'Data Recovery', slug: 'data-recovery', short_description: 'Professional data recovery from failed hard drives and SSDs.', full_description: '', icon: 'HardDrive', features: [], benefits: [], meta_title: '', meta_description: '', is_featured: false, is_published: true, sort_order: 11, created_at: '', updated_at: '' },
+  { id: '12', title: 'Cloud Solutions', slug: 'cloud-solutions', short_description: 'Google Workspace, Microsoft 365, and AWS cloud setup and migration.', full_description: '', icon: 'Cloud', features: [], benefits: [], meta_title: '', meta_description: '', is_featured: false, is_published: true, sort_order: 12, created_at: '', updated_at: '' },
+  { id: '13', title: 'Access Control', slug: 'access-control', short_description: 'Smart access control with RFID, biometric, and mobile-based entry.', full_description: '', icon: 'Lock', features: [], benefits: [], meta_title: '', meta_description: '', is_featured: false, is_published: true, sort_order: 13, created_at: '', updated_at: '' },
+  { id: '14', title: 'IT Consulting', slug: 'it-consulting', short_description: 'Strategic IT consulting to optimize technology spending.', full_description: '', icon: 'Zap', features: [], benefits: [], meta_title: '', meta_description: '', is_featured: false, is_published: true, sort_order: 14, created_at: '', updated_at: '' },
+  { id: '15', title: 'Hardware Upgrades', slug: 'hardware-upgrades', short_description: 'RAM, SSD, and component upgrades to extend hardware life.', full_description: '', icon: 'Wrench', features: [], benefits: [], meta_title: '', meta_description: '', is_featured: false, is_published: true, sort_order: 15, created_at: '', updated_at: '' },
 ];
 
 const FALLBACK_INDUSTRIES: Industry[] = [
-  { id: '1', name: 'Offices', slug: 'offices', description: 'Secure IT infrastructure for corporate offices and coworking spaces.', icon: 'Building', is_published: true, sort_order: 1, created_at: '' },
-  { id: '2', name: 'Retail Stores', slug: 'retail', description: 'CCTV and POS solutions for retail businesses of all sizes.', icon: 'ShoppingCart', is_published: true, sort_order: 2, created_at: '' },
-  { id: '3', name: 'Warehouses', slug: 'warehouses', description: 'Comprehensive security and networking for warehouses.', icon: 'Warehouse', is_published: true, sort_order: 3, created_at: '' },
-  { id: '4', name: 'Apartments', slug: 'apartments', description: 'Smart security and intercom systems for apartment complexes.', icon: 'Home', is_published: true, sort_order: 4, created_at: '' },
-  { id: '5', name: 'Schools', slug: 'schools', description: 'Safe campus solutions with CCTV and access control.', icon: 'GraduationCap', is_published: true, sort_order: 5, created_at: '' },
+  { id: '1', name: 'Corporate Offices', slug: 'corporate-offices', description: 'Secure IT infrastructure and smart access control for modern office spaces.', icon: 'Building2', is_published: true, sort_order: 1, created_at: '' },
+  { id: '2', name: 'Retail Stores', slug: 'retail-stores', description: 'CCTV surveillance and POS network solutions for retail businesses.', icon: 'Store', is_published: true, sort_order: 2, created_at: '' },
+  { id: '3', name: 'Warehouses', slug: 'warehouses', description: 'Comprehensive security and networking for storage and logistics facilities.', icon: 'Warehouse', is_published: true, sort_order: 3, created_at: '' },
+  { id: '4', name: 'Apartments', slug: 'apartments', description: 'Smart security, intercom, and Wi-Fi solutions for apartment complexes.', icon: 'Building', is_published: true, sort_order: 4, created_at: '' },
+  { id: '5', name: 'Schools', slug: 'schools', description: 'Safe campus solutions with CCTV monitoring and access control.', icon: 'GraduationCap', is_published: true, sort_order: 5, created_at: '' },
   { id: '6', name: 'Hospitals', slug: 'hospitals', description: 'Critical IT and security systems for healthcare facilities.', icon: 'HeartPulse', is_published: true, sort_order: 6, created_at: '' },
-  { id: '7', name: 'Factories', slug: 'factories', description: 'Industrial-grade security and IT infrastructure for factories.', icon: 'Factory', is_published: true, sort_order: 7, created_at: '' },
-  { id: '8', name: 'Homes', slug: 'homes', description: 'Smart home security, Wi-Fi, and IT solutions for residences.', icon: 'House', is_published: true, sort_order: 8, created_at: '' },
+  { id: '7', name: 'Factories', slug: 'factories', description: 'Industrial-grade security, networking, and IT infrastructure.', icon: 'Factory', is_published: true, sort_order: 7, created_at: '' },
+  { id: '8', name: 'Homes', slug: 'homes', description: 'Smart home security, Wi-Fi, and IT solutions for residences.', icon: 'Home', is_published: true, sort_order: 8, created_at: '' },
 ];
 
 const FALLBACK_TESTIMONIALS: Testimonial[] = [
@@ -69,14 +125,63 @@ const FALLBACK_TESTIMONIALS: Testimonial[] = [
 ];
 
 const FALLBACK_FAQS: FAQ[] = [
-  { id: '1', question: 'What areas in Bangalore do you serve?', answer: 'We serve all major areas in Bangalore including Whitefield, Electronic City, Koramangala, Indiranagar, HSR Layout, Marathahalli, BTM Layout, Jayanagar, and many more. We also cover surrounding areas for larger projects.', category: 'General', is_published: true, sort_order: 1, created_at: '' },
+  { id: '1', question: 'What areas in Bangalore do you serve?', answer: 'We serve all major areas in Bangalore including Whitefield, Electronic City, Koramangala, Indiranagar, HSR Layout, Marathahalli, BTM Layout, Jayanagar, and many more.', category: 'General', is_published: true, sort_order: 1, created_at: '' },
   { id: '2', question: 'Do you provide free consultations and site visits?', answer: 'Yes, we offer completely free consultations and site visits for all our services. Our experts will visit your location, assess your requirements, and provide a detailed quotation with no obligation.', category: 'General', is_published: true, sort_order: 2, created_at: '' },
-  { id: '3', question: 'How many CCTV cameras do I need for my property?', answer: 'The number of cameras depends on your property size, layout, and security requirements. We recommend a site inspection where our experts will map out optimal camera positions and provide a comprehensive coverage plan.', category: 'CCTV', is_published: true, sort_order: 3, created_at: '' },
-  { id: '4', question: 'Can I view my CCTV footage remotely on my phone?', answer: 'Absolutely! All our CCTV installations support remote viewing through mobile apps. You can monitor your property from anywhere in the world using your smartphone, tablet, or computer with an internet connection.', category: 'CCTV', is_published: true, sort_order: 4, created_at: '' },
-  { id: '5', question: 'What brands of laptops do you repair?', answer: 'We repair all major laptop brands including Dell, HP, Lenovo, Asus, Acer, Apple, MSI, and Toshiba. Our certified technicians handle hardware and software issues for both Windows and Mac systems.', category: 'Repair', is_published: true, sort_order: 5, created_at: '' },
-  { id: '6', question: 'What does your Annual Maintenance Contract include?', answer: 'Our AMC includes regular preventive maintenance, priority support with guaranteed response times, discounts on parts, unlimited remote support, and scheduled visits. We offer flexible plans for businesses of all sizes.', category: 'AMC', is_published: true, sort_order: 6, created_at: '' },
-  { id: '7', question: 'How quickly can you respond to an emergency IT issue?', answer: 'We offer 24/7 emergency support with a guaranteed response time of under 2 hours within Bangalore city limits. For AMC clients, we guarantee under 1 hour response time for critical issues.', category: 'General', is_published: true, sort_order: 7, created_at: '' },
-  { id: '8', question: 'Do you provide warranty on your installations?', answer: 'Yes, all our installations come with a minimum 1-year warranty on labor. Equipment warranties vary by manufacturer, typically ranging from 1-3 years. Extended warranty options are also available.', category: 'General', is_published: true, sort_order: 8, created_at: '' },
+  { id: '3', question: 'How many CCTV cameras do I need for my property?', answer: 'The number depends on your property size, layout, and security requirements. We recommend a site inspection where our experts will map out optimal camera positions.', category: 'CCTV', is_published: true, sort_order: 3, created_at: '' },
+  { id: '4', question: 'Can I view my CCTV footage remotely on my phone?', answer: 'Absolutely! All our CCTV installations support remote viewing through mobile apps. You can monitor your property from anywhere in the world.', category: 'CCTV', is_published: true, sort_order: 4, created_at: '' },
+  { id: '5', question: 'What brands of laptops do you repair?', answer: 'We repair all major laptop brands including Dell, HP, Lenovo, Asus, Acer, Apple, MSI, and Toshiba.', category: 'Repair', is_published: true, sort_order: 5, created_at: '' },
+  { id: '6', question: 'What does your Annual Maintenance Contract include?', answer: 'Our AMC includes regular preventive maintenance, priority support with guaranteed response times, discounts on parts, unlimited remote support, and scheduled visits.', category: 'AMC', is_published: true, sort_order: 6, created_at: '' },
+  { id: '7', question: 'How quickly can you respond to an emergency IT issue?', answer: 'We offer 24/7 emergency support with a guaranteed response time of under 2 hours within Bangalore city limits. For AMC clients, we guarantee under 1 hour.', category: 'General', is_published: true, sort_order: 7, created_at: '' },
+  { id: '8', question: 'Do you provide warranty on your installations?', answer: 'Yes, all our installations come with a minimum 1-year warranty on labor. Equipment warranties vary by manufacturer, typically ranging from 1-3 years.', category: 'General', is_published: true, sort_order: 8, created_at: '' },
+];
+
+const FALLBACK_TEAM: TeamMember[] = [
+  { id: '1', name: 'Arjun Mehta', role: 'CEO & Founder', bio: 'With over 15 years in IT infrastructure and security, Arjun founded Yantrabyte to bring enterprise-grade solutions to businesses of every size across Karnataka.', image_url: '', is_published: true, sort_order: 1, created_at: '' },
+  { id: '2', name: 'Kavitha Rao', role: 'CTO', bio: 'Kavitha leads our technology strategy, bringing deep expertise in cybersecurity, networking, and cloud infrastructure.', image_url: '', is_published: true, sort_order: 2, created_at: '' },
+  { id: '3', name: 'Ramesh Iyer', role: 'Head of Operations', bio: 'Ramesh ensures seamless project delivery and after-sales support, drawing on a decade of experience managing large-scale IT deployments.', image_url: '', is_published: true, sort_order: 3, created_at: '' },
+  { id: '4', name: 'Priya Nair', role: 'Lead Engineer', bio: 'Priya oversees our technical team, specializing in CCTV and access control systems. She holds certifications from Hikvision, Dahua, and Bosch.', image_url: '', is_published: true, sort_order: 4, created_at: '' },
+];
+
+const FALLBACK_PRODUCTS: Product[] = [
+  { id: '1', name: 'Hikvision 4MP Camera', slug: 'hikvision-4mp-camera', description: 'High-definition 4-megapixel dome camera with night vision and remote viewing.', category: 'CCTV Cameras', price: '3,499', image_url: '', features: ['4MP HD Resolution', 'Night Vision up to 30m', 'Motion Detection & Alerts', 'Mobile Remote Viewing', 'Weatherproof IP67'], is_featured: true, is_published: true, sort_order: 1, created_at: '', updated_at: '' },
+  { id: '2', name: 'Dahua 16-Channel NVR', slug: 'dahua-16ch-nvr', description: 'Professional 16-channel NVR with 4TB storage and AI-powered analytics.', category: 'CCTV Cameras', price: '14,999', image_url: '', features: ['16-Channel Recording', '4TB HDD Included', 'AI-Powered Analytics', 'H.265+ Compression', 'Remote Access via App'], is_featured: true, is_published: true, sort_order: 2, created_at: '', updated_at: '' },
+  { id: '3', name: 'TP-Link Business Router', slug: 'tp-link-business-router', description: 'Enterprise-grade VPN router with dual-WAN and VLAN support.', category: 'Networking', price: '8,999', image_url: '', features: ['Dual-WAN Failover', 'VPN Support', 'VLAN Segmentation', 'Bandwidth Control', 'Guest Network Isolation'], is_featured: false, is_published: true, sort_order: 3, created_at: '', updated_at: '' },
+  { id: '4', name: 'eSSL Biometric System', slug: 'essl-biometric-system', description: 'Advanced fingerprint and RFID access control with attendance management.', category: 'Biometric', price: '11,999', image_url: '', features: ['Fingerprint + RFID', '5000 User Capacity', 'Attendance Management', 'TCP/IP Network', 'LCD Display & Voice Prompt'], is_featured: true, is_published: true, sort_order: 5, created_at: '', updated_at: '' },
+  { id: '5', name: 'D-Link 24-Port Switch', slug: 'd-link-24port-switch', description: 'Managed 24-port Gigabit switch with VLAN, QoS, and network management.', category: 'Networking', price: '12,499', image_url: '', features: ['24 Gigabit Ports', 'Layer 2 Management', 'VLAN & QoS Support', 'IGMP Snooping', 'Rack-Mountable Design'], is_featured: false, is_published: true, sort_order: 6, created_at: '', updated_at: '' },
+  { id: '6', name: 'Godrej Smart Lock', slug: 'godrej-smart-lock', description: 'Digital smart lock with fingerprint, PIN, and Bluetooth access.', category: 'Accessories', price: '15,999', image_url: '', features: ['Fingerprint + PIN + Bluetooth', 'Anti-Peep PIN Code', 'Tamper Alert Alarm', 'Low Battery Warning', 'Emergency Power Backup'], is_featured: false, is_published: true, sort_order: 7, created_at: '', updated_at: '' },
+];
+
+const FALLBACK_CLIENT_LOGOS: ClientLogo[] = [
+  { id: '1', name: 'TechPark Solutions', logo_url: '', is_published: true, sort_order: 1, created_at: '' },
+  { id: '2', name: 'Metro Retail Group', logo_url: '', is_published: true, sort_order: 2, created_at: '' },
+  { id: '3', name: 'Sunrise Apartments', logo_url: '', is_published: true, sort_order: 3, created_at: '' },
+  { id: '4', name: 'Precision Manufacturing', logo_url: '', is_published: true, sort_order: 4, created_at: '' },
+  { id: '5', name: 'Bangalore School of Excellence', logo_url: '', is_published: true, sort_order: 5, created_at: '' },
+  { id: '6', name: 'Karnataka Health Corp', logo_url: '', is_published: true, sort_order: 6, created_at: '' },
+];
+
+const FALLBACK_GALLERY: GalleryImage[] = [
+  { id: '1', title: 'Office CCTV Installation', before_url: '', after_url: '', category: 'Security', is_published: true, sort_order: 1, created_at: '' },
+  { id: '2', title: 'Server Room Networking', before_url: '', after_url: '', category: 'Networking', is_published: true, sort_order: 2, created_at: '' },
+  { id: '3', title: 'Biometric Access System', before_url: '', after_url: '', category: 'Security', is_published: true, sort_order: 3, created_at: '' },
+];
+
+const FALLBACK_POSTS: BlogPost[] = [
+  { id: '1', title: 'Top 5 Tips for Choosing the Right CCTV System', slug: 'tips-choosing-right-cctv-system', excerpt: 'Selecting the right CCTV system can be overwhelming. Here are the top 5 factors every business owner should consider.', content: '', category: 'CCTV Tips', featured_image: '', meta_title: '', meta_description: '', is_published: true, published_at: '2024-12-15', sort_order: 1, created_at: '2024-12-15', updated_at: '2024-12-15' },
+  { id: '2', title: 'How to Secure Your Office Network Against Cyber Threats', slug: 'secure-office-network-cyber-threats', excerpt: 'With cyber attacks on the rise, protecting your office network is more important than ever.', content: '', category: 'IT Solutions', featured_image: '', meta_title: '', meta_description: '', is_published: true, published_at: '2024-11-28', sort_order: 2, created_at: '2024-11-28', updated_at: '2024-11-28' },
+  { id: '3', title: 'Complete Guide to Office Wi-Fi', slug: 'complete-guide-office-wifi-setup', excerpt: 'A reliable Wi-Fi network is the backbone of modern offices. This guide covers everything from setup to optimization.', content: '', category: 'Networking', featured_image: '', meta_title: '', meta_description: '', is_published: true, published_at: '2024-11-10', sort_order: 3, created_at: '2024-11-10', updated_at: '2024-11-10' },
+];
+
+const GOOGLE_REVIEWS = [
+  { id: 'g1', name: 'Arun Kumar', company: 'Whitefield IT Park', rating: 5, text: 'Extremely professional team. They installed our entire CCTV and networking setup in 3 days flat. Highly recommended!', time: '2 months ago' },
+  { id: 'g2', name: 'Deepa Nair', company: 'Koramangala Apartments', rating: 5, text: 'Our apartment complex needed a complete security overhaul. Yantrabyte delivered beyond expectations.', time: '3 weeks ago' },
+  { id: 'g3', name: 'Suresh Menon', company: 'Electronics City Warehouse', rating: 5, text: 'Best IT service provider in Bangalore, hands down. Every cable is neatly managed, every camera perfectly positioned.', time: '1 month ago' },
+];
+
+const ALL_SERVICES_LIST = [
+  'CCTV Installation', 'Laptop Repair', 'Desktop Repair', 'Networking Solutions',
+  'Printer Services', 'AMC Support', 'Wi-Fi Solutions', 'Server Setup',
+  'Data Recovery', 'Cloud Solutions', 'Access Control', 'IT Consulting', 'Hardware Upgrades',
 ];
 
 // ─── Icon Mapping ──────────────────────────────────────────────────────────
@@ -84,11 +189,35 @@ const FALLBACK_FAQS: FAQ[] = [
 const ICON_MAP: Record<string, React.ElementType> = {
   Camera, Laptop, Monitor, Router, Printer, Fingerprint, Shield, FileCheck,
   Building, ShoppingCart, Warehouse, Home: HomeIcon, GraduationCap, HeartPulse, Factory, House: HouseIcon,
+  Building2, Store, Wifi, Server, HardDrive, Cloud, Lock, Zap, Wrench, Cable,
 };
 
 const SERVICE_ICONS: React.ElementType[] = [Camera, Laptop, Monitor, Router, Printer, Fingerprint, Shield, FileCheck];
+const INDUSTRY_ICONS: React.ElementType[] = [Building2, Store, Warehouse, Building, GraduationCap, HeartPulse, Factory, HomeIcon];
 
-const INDUSTRY_ICONS: React.ElementType[] = [Building, ShoppingCart, Warehouse, HomeIcon, GraduationCap, HeartPulse, Factory, HouseIcon];
+const CATEGORY_ICONS: Record<string, React.ElementType> = {
+  'CCTV Tips': Camera, 'IT Solutions': Monitor, 'Networking': Router,
+  'Security Systems': Shield, 'Office Automation': Printer,
+};
+
+const CATEGORY_GRADIENTS: Record<string, string> = {
+  'CCTV Tips': 'from-[#0EA5E9] to-[#0284C7]', 'IT Solutions': 'from-[#38BDF8] to-[#0EA5E9]',
+  'Networking': 'from-[#0EA5E9] to-[#7DD3FC]', 'Security Systems': 'from-[#0284C7] to-[#38BDF8]',
+  'Office Automation': 'from-[#7DD3FC] to-[#0EA5E9]',
+};
+
+const PRODUCT_CATEGORY_BADGE_COLORS: Record<string, string> = {
+  'CCTV Cameras': 'bg-red-500/20 text-red-400 border-red-500/30',
+  'Networking': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+  'Biometric': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+  'Accessories': 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+};
+
+const AVATAR_GRADIENTS = [
+  'from-[#0EA5E9] to-[#0284C7]', 'from-[#38BDF8] to-[#0EA5E9]',
+  'from-[#7DD3FC] to-[#38BDF8]', 'from-[#0EA5E9] to-[#7DD3FC]',
+  'from-[#0284C7] to-[#38BDF8]', 'from-[#38BDF8] to-[#7DD3FC]',
+];
 
 // ─── Animation Variants ────────────────────────────────────────────────────
 
@@ -99,10 +228,7 @@ const fadeInUp = {
 
 const staggerContainer = {
   hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.12, delayChildren: 0.1 },
-  },
+  visible: { opacity: 1, transition: { staggerChildren: 0.12, delayChildren: 0.1 } },
 };
 
 const staggerItem = {
@@ -128,12 +254,8 @@ function AnimatedCounter({ target, suffix = '', duration = 2000 }: { target: num
     const step = target / (duration / 16);
     const timer = setInterval(() => {
       start += step;
-      if (start >= target) {
-        setCount(target);
-        clearInterval(timer);
-      } else {
-        setCount(Math.floor(start));
-      }
+      if (start >= target) { setCount(target); clearInterval(timer); }
+      else { setCount(Math.floor(start)); }
     }, 16);
     return () => clearInterval(timer);
   }, [inView, target, duration]);
@@ -165,106 +287,62 @@ function Section({ children, className = '', id }: { children: React.ReactNode; 
 
 function HeroSection() {
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-[#0B1120] via-[#111827] to-[#0B1120]">
-      {/* Grid pattern overlay */}
+    <section id="hero" className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-[#0B1120] via-[#111827] to-[#0B1120]">
       <div className="absolute inset-0 opacity-[0.04]" style={{
         backgroundImage: `linear-gradient(rgba(14,165,233,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(14,165,233,0.5) 1px, transparent 1px)`,
         backgroundSize: '60px 60px',
       }} />
-
-      {/* Animated particles */}
       <div className="absolute inset-0 overflow-hidden">
         {Array.from({ length: 40 }).map((_, i) => (
-          <div
-            key={i}
-            className="absolute rounded-full bg-[#0EA5E9] animate-pulse"
+          <div key={i} className="absolute rounded-full bg-[#0EA5E9] animate-pulse"
             style={{
-              width: Math.random() * 4 + 1 + 'px',
-              height: Math.random() * 4 + 1 + 'px',
-              left: Math.random() * 100 + '%',
-              top: Math.random() * 100 + '%',
-              animationDelay: Math.random() * 5 + 's',
-              animationDuration: Math.random() * 3 + 2 + 's',
+              width: Math.random() * 4 + 1 + 'px', height: Math.random() * 4 + 1 + 'px',
+              left: Math.random() * 100 + '%', top: Math.random() * 100 + '%',
+              animationDelay: Math.random() * 5 + 's', animationDuration: Math.random() * 3 + 2 + 's',
               opacity: Math.random() * 0.5 + 0.1,
             }}
           />
         ))}
       </div>
-
-      {/* Radial glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#0EA5E9]/5 rounded-full blur-[120px]" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left: Text content */}
           <div className="space-y-8">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#0EA5E9]/10 border border-[#0EA5E9]/30 text-[#0EA5E9] text-sm font-medium"
-            >
+            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#0EA5E9]/10 border border-[#0EA5E9]/30 text-[#0EA5E9] text-sm font-medium">
               <span className="w-2 h-2 rounded-full bg-[#0EA5E9] animate-pulse" />
               Bangalore's Trusted IT & Security Partner
             </motion.div>
 
-            <motion.h1
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight"
-            >
+            <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.4 }}
+              className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight">
               Complete IT & Security{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0EA5E9] to-[#38BDF8]">
-                Solutions in Bangalore
-              </span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0EA5E9] to-[#38BDF8]">Solutions in Bangalore</span>
             </motion.h1>
 
-            <motion.p
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.6 }}
-              className="text-lg text-[#94A3B8] max-w-xl leading-relaxed"
-            >
+            <motion.p initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.6 }}
+              className="text-lg text-[#94A3B8] max-w-xl leading-relaxed">
               Professional CCTV Installation, Computer Repair, Networking & Smart Security Solutions for Homes & Businesses.
             </motion.p>
 
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.8 }}
-              className="flex flex-wrap gap-4"
-            >
-              <Link
-                to="/contact"
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg bg-[#0EA5E9] hover:bg-[#0284C7] text-white font-semibold transition-all duration-300 shadow-lg shadow-[#0EA5E9]/25 hover:shadow-[#0EA5E9]/40"
-              >
+            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.8 }}
+              className="flex flex-wrap gap-4">
+              <a href="#contact" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg bg-[#0EA5E9] hover:bg-[#0284C7] text-white font-semibold transition-all duration-300 shadow-lg shadow-[#0EA5E9]/25 hover:shadow-[#0EA5E9]/40">
                 Get Free Consultation <ArrowRight className="w-4 h-4" />
-              </Link>
-              <a
-                href="https://wa.me/919986742525"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg bg-[#25D366] hover:bg-[#1EB755] text-white font-semibold transition-all duration-300 shadow-lg shadow-[#25D366]/25"
-              >
+              </a>
+              <a href="https://wa.me/919986742525" target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg bg-[#25D366] hover:bg-[#1EB755] text-white font-semibold transition-all duration-300 shadow-lg shadow-[#25D366]/25">
                 <MessageCircle className="w-4 h-4" /> WhatsApp Now
               </a>
-              <a
-                href="tel:+919986742525"
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg border-2 border-white/30 text-white font-semibold hover:bg-white/10 transition-all duration-300"
-              >
+              <a href="tel:+919986742525"
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg border-2 border-white/30 text-white font-semibold hover:bg-white/10 transition-all duration-300">
                 <Phone className="w-4 h-4" /> Call Now
               </a>
             </motion.div>
           </div>
 
-          {/* Right: CCTV Dashboard Mock */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, x: 40 }}
-            animate={{ opacity: 1, scale: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="hidden lg:block"
-          >
+          <motion.div initial={{ opacity: 0, scale: 0.9, x: 40 }} animate={{ opacity: 1, scale: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.6 }} className="hidden lg:block">
             <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 shadow-2xl shadow-[#0EA5E9]/10">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
@@ -306,14 +384,12 @@ function HeroSection() {
           </motion.div>
         </div>
       </div>
-
-      {/* Bottom fade */}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#0B1120] to-transparent" />
     </section>
   );
 }
 
-// ─── 2. Trust Stats Section ─────────────────────────────────────────────────
+// ─── 2. Trust Stats ─────────────────────────────────────────────────────────
 
 function TrustStatsSection() {
   const stats = [
@@ -326,16 +402,10 @@ function TrustStatsSection() {
   return (
     <Section className="relative -mt-16 z-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          variants={staggerContainer}
-          className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6"
-        >
+        <motion.div variants={staggerContainer} className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {stats.map((stat, i) => (
-            <motion.div
-              key={i}
-              variants={staggerItem}
-              className="backdrop-blur-xl bg-white/5 border border-[#0EA5E9]/20 rounded-2xl p-6 md:p-8 text-center hover:border-[#0EA5E9]/50 transition-all duration-300 shadow-lg shadow-[#0EA5E9]/5"
-            >
+            <motion.div key={i} variants={staggerItem}
+              className="backdrop-blur-xl bg-white/5 border border-[#0EA5E9]/20 rounded-2xl p-6 md:p-8 text-center hover:border-[#0EA5E9]/50 transition-all duration-300 shadow-lg shadow-[#0EA5E9]/5">
               <div className="text-3xl md:text-4xl font-bold text-[#0EA5E9] mb-2">
                 <AnimatedCounter target={stat.value} suffix={stat.suffix} />
               </div>
@@ -348,11 +418,13 @@ function TrustStatsSection() {
   );
 }
 
-// ─── 3. Services Overview ───────────────────────────────────────────────────
+// ─── 3. Services ────────────────────────────────────────────────────────────
 
 function ServicesSection() {
   const { services, loading } = useServices();
   const displayServices: Service[] = services.length > 0 ? services : FALLBACK_SERVICES;
+  const [showAll, setShowAll] = useState(false);
+  const displayed = showAll ? displayServices : displayServices.slice(0, 8);
 
   return (
     <Section id="services">
@@ -373,47 +445,45 @@ function ServicesSection() {
             ))}
           </div>
         ) : (
-          <motion.div
-            variants={staggerContainer}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-          >
-            {displayServices.map((service, i) => {
-              const IconComponent = service.icon ? (ICON_MAP[service.icon] || SERVICE_ICONS[i % SERVICE_ICONS.length]) : SERVICE_ICONS[i % SERVICE_ICONS.length];
-              return (
-                <motion.div
-                  key={service.id}
-                  variants={staggerItem}
-                  whileHover={{ scale: 1.04, borderColor: 'rgba(14,165,233,0.5)' }}
-                  className="group backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 transition-all duration-300 hover:shadow-lg hover:shadow-[#0EA5E9]/10 cursor-pointer"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-[#0EA5E9]/10 flex items-center justify-center mb-4 group-hover:bg-[#0EA5E9]/20 transition-colors duration-300">
-                    <IconComponent className="w-6 h-6 text-[#0EA5E9]" />
-                  </div>
-                  <h3 className="text-white font-semibold text-lg mb-2">{service.title}</h3>
-                  <p className="text-[#94A3B8] text-sm leading-relaxed mb-4">{service.short_description}</p>
-                  <Link
-                    to={`/services/${service.slug}`}
-                    className="inline-flex items-center gap-1.5 text-[#0EA5E9] text-sm font-medium hover:gap-2.5 transition-all duration-300"
-                  >
-                    Learn More <ArrowRight className="w-4 h-4" />
-                  </Link>
-                </motion.div>
-              );
-            })}
-          </motion.div>
+          <>
+            <motion.div variants={staggerContainer} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {displayed.map((service, i) => {
+                const IconComponent = service.icon ? (ICON_MAP[service.icon] || SERVICE_ICONS[i % SERVICE_ICONS.length]) : SERVICE_ICONS[i % SERVICE_ICONS.length];
+                return (
+                  <motion.div key={service.id} variants={staggerItem}
+                    whileHover={{ scale: 1.04, borderColor: 'rgba(14,165,233,0.5)' }}
+                    className="group backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 transition-all duration-300 hover:shadow-lg hover:shadow-[#0EA5E9]/10 cursor-pointer">
+                    <div className="w-12 h-12 rounded-xl bg-[#0EA5E9]/10 flex items-center justify-center mb-4 group-hover:bg-[#0EA5E9]/20 transition-colors duration-300">
+                      <IconComponent className="w-6 h-6 text-[#0EA5E9]" />
+                    </div>
+                    <h3 className="text-white font-semibold text-lg mb-2">{service.title}</h3>
+                    <p className="text-[#94A3B8] text-sm leading-relaxed">{service.short_description}</p>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+            {displayServices.length > 8 && (
+              <div className="text-center mt-10">
+                <button onClick={() => setShowAll(!showAll)}
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-white/5 border border-white/10 text-white font-medium hover:bg-white/10 hover:border-[#0EA5E9]/30 transition-all duration-300">
+                  {showAll ? 'Show Less' : `View All ${displayServices.length} Services`} <ArrowRight className={`w-4 h-4 transition-transform duration-300 ${showAll ? 'rotate-[-90deg]' : ''}`} />
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </Section>
   );
 }
 
-// ─── 4. Why Choose Us ───────────────────────────────────────────────────────
+// ─── 4. Why Choose Us ────────────────────────────────────────────────────────
 
 function WhyChooseUsSection() {
   const features = [
-    { icon: Zap, title: 'Same Day Service', description: 'Get your issues resolved the same day you call. Our rapid response team ensures minimal downtime for your business.' },
-    { icon: BadgePercent, title: 'Affordable Pricing', description: 'Competitive pricing without compromising quality. Transparent quotes with no hidden charges for any service.' },
-    { icon: Users, title: 'Expert Engineers', description: 'Certified professionals with years of experience in IT infrastructure, security systems, and networking.' },
+    { icon: Zap, title: 'Same Day Service', description: 'Get your issues resolved the same day you call. Our rapid response team ensures minimal downtime.' },
+    { icon: BadgePercent, title: 'Affordable Pricing', description: 'Competitive pricing without compromising quality. Transparent quotes with no hidden charges.' },
+    { icon: Users, title: 'Expert Engineers', description: 'Certified professionals with years of experience in IT infrastructure and security systems.' },
     { icon: CheckCircle, title: 'Genuine Products', description: 'We use only genuine, branded products from authorized distributors with full manufacturer warranty.' },
     { icon: Clock, title: 'Fast Response', description: 'Average response time under 2 hours for emergency calls. Priority support for AMC clients.' },
     { icon: Settings, title: 'Custom Business Solutions', description: 'Tailored IT and security solutions designed specifically for your business requirements and budget.' },
@@ -427,23 +497,16 @@ function WhyChooseUsSection() {
             Why Choose <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0EA5E9] to-[#38BDF8]">Yantrabyte</span>
           </h2>
           <p className="text-[#94A3B8] text-lg max-w-2xl mx-auto">
-            We deliver reliability, speed, and expertise that sets us apart from the competition
+            We deliver reliability, speed, and expertise that sets us apart
           </p>
         </motion.div>
 
-        <motion.div
-          variants={staggerContainer}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-        >
+        <motion.div variants={staggerContainer} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((feature, i) => {
             const Icon = feature.icon;
             return (
-              <motion.div
-                key={i}
-                variants={staggerItem}
-                whileHover={{ y: -4 }}
-                className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 hover:border-[#0EA5E9]/30 transition-all duration-300 group"
-              >
+              <motion.div key={i} variants={staggerItem} whileHover={{ y: -4 }}
+                className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 hover:border-[#0EA5E9]/30 transition-all duration-300 group">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 shrink-0 rounded-xl bg-[#0EA5E9]/10 flex items-center justify-center group-hover:bg-[#0EA5E9]/20 transition-colors duration-300">
                     <Icon className="w-6 h-6 text-[#0EA5E9]" />
@@ -462,7 +525,145 @@ function WhyChooseUsSection() {
   );
 }
 
-// ─── 5. Industries Served ───────────────────────────────────────────────────
+// ─── 5. About / Company Story ────────────────────────────────────────────────
+
+function AboutSection() {
+  const { team, loading: teamLoading } = useTeam();
+  const displayTeam: TeamMember[] = team.length > 0 ? team : FALLBACK_TEAM;
+  const { logos, loading: logosLoading } = useClientLogos();
+  const displayLogos: ClientLogo[] = logos.length > 0 ? logos : FALLBACK_CLIENT_LOGOS;
+
+  return (
+    <>
+      <Section id="about">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <motion.div variants={staggerContainer} className="space-y-6">
+              <motion.div variants={fadeInUp}>
+                <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#0EA5E9]/10 border border-[#0EA5E9]/30 text-[#0EA5E9] text-sm font-medium mb-4">
+                  Our Story
+                </span>
+                <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+                  Building a <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0EA5E9] to-[#38BDF8]">Secure Future</span> for Bangalore
+                </h2>
+              </motion.div>
+              <motion.p variants={staggerItem} className="text-[#94A3B8] text-base leading-relaxed">
+                Founded in Bangalore, Yantrabyte Solutions has been providing trusted IT and security solutions to businesses and homes across Karnataka. Our mission is to make technology accessible, reliable, and secure for everyone.
+              </motion.p>
+              <motion.p variants={staggerItem} className="text-[#94A3B8] text-base leading-relaxed">
+                From our early days installing CCTV systems in local shops to deploying enterprise-grade firewalls and networking infrastructure for multinational corporations, our journey has been defined by a relentless commitment to quality and customer satisfaction.
+              </motion.p>
+
+              <motion.div variants={staggerItem} className="grid grid-cols-3 gap-4 pt-4">
+                {[
+                  { icon: Camera, label: '500+ CCTV Installations' },
+                  { icon: Laptop, label: '1000+ Devices Serviced' },
+                  { icon: Router, label: '200+ Networks Built' },
+                ].map((item, i) => {
+                  const Icon = item.icon;
+                  return (
+                    <div key={i} className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl p-4 text-center hover:border-[#0EA5E9]/30 transition-all duration-300">
+                      <Icon className="w-6 h-6 text-[#0EA5E9] mx-auto mb-2" />
+                      <p className="text-white text-xs font-semibold">{item.label}</p>
+                    </div>
+                  );
+                })}
+              </motion.div>
+            </motion.div>
+
+            <motion.div variants={scaleIn} className="relative">
+              <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 shadow-2xl shadow-[#0EA5E9]/10">
+                <div className="grid grid-cols-2 gap-4">
+                  {[
+                    { icon: Target, title: 'Our Mission', desc: 'Democratize access to professional IT and security solutions.' },
+                    { icon: Eye, title: 'Our Vision', desc: 'Become the most trusted IT services brand in South India.' },
+                    { icon: Heart, title: 'Our Values', desc: 'Integrity, Excellence, and Customer-First in everything we do.' },
+                    { icon: Award, title: 'Certifications', desc: 'ISO 9001, Google Partner, Microsoft Certified, TSSC.' },
+                  ].map((item, i) => {
+                    const Icon = item.icon;
+                    return (
+                      <motion.div key={i} whileHover={{ scale: 1.05 }}
+                        className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl p-5 text-center hover:border-[#0EA5E9]/30 transition-all duration-300">
+                        <Icon className="w-7 h-7 text-[#0EA5E9] mx-auto mb-3" />
+                        <h3 className="text-white text-sm font-bold mb-1">{item.title}</h3>
+                        <p className="text-[#64748B] text-xs leading-relaxed">{item.desc}</p>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+                <div className="mt-6 pt-6 border-t border-white/10 flex items-center justify-between">
+                  <div><p className="text-white font-bold text-2xl">8+</p><p className="text-[#94A3B8] text-sm">Years of Excellence</p></div>
+                  <div><p className="text-white font-bold text-2xl">50+</p><p className="text-[#94A3B8] text-sm">Expert Engineers</p></div>
+                  <div><p className="text-white font-bold text-2xl">4.9</p><p className="text-[#94A3B8] text-sm">Google Rating</p></div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </Section>
+
+      {/* Team */}
+      <Section id="team" className="bg-[#0F172A]/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div variants={fadeInUp} className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Meet Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0EA5E9] to-[#38BDF8]">Team</span>
+            </h2>
+            <p className="text-[#94A3B8] text-lg max-w-2xl mx-auto">The skilled professionals behind every successful project</p>
+          </motion.div>
+
+          {teamLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {Array.from({ length: 4 }).map((_, i) => (<div key={i} className="h-80 rounded-2xl bg-white/5 animate-pulse border border-white/5" />))}
+            </div>
+          ) : (
+            <motion.div variants={staggerContainer} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {displayTeam.map((member, i) => (
+                <motion.div key={member.id} variants={staggerItem} whileHover={{ y: -8 }}
+                  className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 text-center hover:border-[#0EA5E9]/40 transition-all duration-300 group">
+                  <div className={`w-24 h-24 mx-auto rounded-full bg-gradient-to-br ${AVATAR_GRADIENTS[i % AVATAR_GRADIENTS.length]} flex items-center justify-center mb-5 shadow-lg shadow-[#0EA5E9]/20 group-hover:shadow-[#0EA5E9]/40 transition-shadow duration-300`}>
+                    <span className="text-white font-bold text-2xl">{member.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</span>
+                  </div>
+                  <h3 className="text-white font-bold text-lg mb-1">{member.name}</h3>
+                  <p className="text-[#0EA5E9] text-sm font-medium mb-4">{member.role}</p>
+                  <p className="text-[#94A3B8] text-sm leading-relaxed">{member.bio}</p>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </div>
+      </Section>
+
+      {/* Client Logos */}
+      <Section id="clients">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div variants={fadeInUp} className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Trusted by <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0EA5E9] to-[#38BDF8]">Leading Businesses</span>
+            </h2>
+          </motion.div>
+
+          {!logosLoading && (
+            <div className="relative overflow-hidden">
+              <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-[#0B1120] to-transparent z-10 pointer-events-none" />
+              <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-[#0B1120] to-transparent z-10 pointer-events-none" />
+              <div className="flex animate-marquee">
+                {[...displayLogos, ...displayLogos].map((logo, i) => (
+                  <div key={`${logo.id}-${i}`}
+                    className="flex-shrink-0 mx-4 backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl px-8 py-5 flex items-center justify-center hover:border-[#0EA5E9]/30 transition-all duration-300 min-w-[200px]">
+                    <span className="text-white/60 font-semibold text-sm tracking-wide">{logo.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </Section>
+    </>
+  );
+}
+
+// ─── 6. Industries ────────────────────────────────────────────────────────────
 
 function IndustriesSection() {
   const { industries, loading } = useIndustries();
@@ -482,24 +683,16 @@ function IndustriesSection() {
 
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="h-40 rounded-2xl bg-white/5 animate-pulse border border-white/5" />
-            ))}
+            {Array.from({ length: 8 }).map((_, i) => (<div key={i} className="h-40 rounded-2xl bg-white/5 animate-pulse border border-white/5" />))}
           </div>
         ) : (
-          <motion.div
-            variants={staggerContainer}
-            className="grid grid-cols-2 sm:grid-cols-4 gap-4 md:gap-6"
-          >
+          <motion.div variants={staggerContainer} className="grid grid-cols-2 sm:grid-cols-4 gap-4 md:gap-6">
             {displayIndustries.map((industry, i) => {
               const IconComponent = industry.icon ? (ICON_MAP[industry.icon] || INDUSTRY_ICONS[i % INDUSTRY_ICONS.length]) : INDUSTRY_ICONS[i % INDUSTRY_ICONS.length];
               return (
-                <motion.div
-                  key={industry.id}
-                  variants={staggerItem}
+                <motion.div key={industry.id} variants={staggerItem}
                   whileHover={{ scale: 1.05, y: -4 }}
-                  className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 text-center hover:border-[#0EA5E9]/30 transition-all duration-300 group"
-                >
+                  className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 text-center hover:border-[#0EA5E9]/30 transition-all duration-300 group">
                   <div className="w-14 h-14 mx-auto rounded-xl bg-[#0EA5E9]/10 flex items-center justify-center mb-4 group-hover:bg-[#0EA5E9]/20 transition-colors duration-300">
                     <IconComponent className="w-7 h-7 text-[#0EA5E9]" />
                   </div>
@@ -515,7 +708,104 @@ function IndustriesSection() {
   );
 }
 
-// ─── 6. Testimonials Carousel ──────────────────────────────────────────────
+// ─── 7. Products ────────────────────────────────────────────────────────────
+
+function ProductsSection() {
+  const { products, loading } = useProducts();
+  const displayProducts: Product[] = products.length > 0 ? products : FALLBACK_PRODUCTS;
+  const [activeCategory, setActiveCategory] = useState('All');
+  const categories = ['All', 'CCTV Cameras', 'Networking', 'Biometric', 'Accessories'];
+
+  const filtered = activeCategory === 'All' ? displayProducts : displayProducts.filter(p => p.category === activeCategory);
+  const PRODUCT_ICONS: React.ElementType[] = [Camera, HardDrive, Router, Camera, Fingerprint, Router, Lock, Monitor];
+
+  return (
+    <Section id="products">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div variants={fadeInUp} className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0EA5E9] to-[#38BDF8]">Products</span>
+          </h2>
+          <p className="text-[#94A3B8] text-lg max-w-2xl mx-auto">
+            Genuine products from authorized distributors with full manufacturer warranty
+          </p>
+        </motion.div>
+
+        <motion.div variants={fadeInUp} className="flex flex-wrap justify-center gap-2 mb-12">
+          {categories.map(cat => (
+            <button key={cat} onClick={() => setActiveCategory(cat)}
+              className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${
+                activeCategory === cat ? 'bg-[#0EA5E9] text-white shadow-lg shadow-[#0EA5E9]/25'
+                  : 'bg-white/5 text-[#94A3B8] hover:bg-white/10 hover:text-white border border-white/10'
+              }`}>
+              {cat}
+            </button>
+          ))}
+        </motion.div>
+
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (<div key={i} className="h-96 rounded-2xl bg-white/5 animate-pulse border border-white/5" />))}
+          </div>
+        ) : (
+          <motion.div key={activeCategory} variants={staggerContainer} initial="hidden" animate="visible"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filtered.map((product, i) => {
+              const IconComponent = PRODUCT_ICONS[i % PRODUCT_ICONS.length];
+              const badgeColor = PRODUCT_CATEGORY_BADGE_COLORS[product.category] || 'bg-[#0EA5E9]/20 text-[#0EA5E9] border-[#0EA5E9]/30';
+              return (
+                <motion.div key={product.id} variants={staggerItem}
+                  whileHover={{ scale: 1.03, y: -4 }}
+                  className={`group backdrop-blur-xl bg-white/5 border rounded-2xl p-6 transition-all duration-300 hover:shadow-lg hover:shadow-[#0EA5E9]/10 relative overflow-hidden ${
+                    product.is_featured ? 'border-[#0EA5E9]/30' : 'border-white/10'
+                  }`}>
+                  {product.is_featured && (
+                    <>
+                      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#0EA5E9] to-[#38BDF8]" />
+                      <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-[#0EA5E9]/20 border border-[#0EA5E9]/40 text-[#0EA5E9] text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                        <Star className="w-3 h-3 fill-[#0EA5E9]" /> Best Seller
+                      </div>
+                    </>
+                  )}
+                  <div className="w-14 h-14 rounded-xl bg-[#0EA5E9]/10 flex items-center justify-center mb-5 group-hover:bg-[#0EA5E9]/20 transition-colors duration-300">
+                    <IconComponent className="w-7 h-7 text-[#0EA5E9]" />
+                  </div>
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider border ${badgeColor} mb-3`}>
+                    {product.category}
+                  </span>
+                  <h3 className="text-white font-bold text-lg mb-2">{product.name}</h3>
+                  <p className="text-[#94A3B8] text-sm leading-relaxed mb-4">{product.description}</p>
+                  <ul className="space-y-2 mb-5">
+                    {product.features.slice(0, 3).map((feature, fi) => (
+                      <li key={fi} className="flex items-start gap-2 text-sm text-[#94A3B8]">
+                        <Check className="w-4 h-4 text-[#0EA5E9] shrink-0 mt-0.5" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="flex items-end justify-between pt-4 border-t border-white/10">
+                    <div>
+                      <span className="text-[#64748B] text-xs">Starting from</span>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-white font-bold text-xl">&#8377;{product.price}</span>
+                      </div>
+                    </div>
+                    <a href="#contact"
+                      className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-[#0EA5E9] hover:bg-[#0284C7] text-white text-sm font-semibold transition-all duration-300 shadow-lg shadow-[#0EA5E9]/25">
+                      Get Quote <ArrowRight className="w-4 h-4" />
+                    </a>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        )}
+      </div>
+    </Section>
+  );
+}
+
+// ─── 8. Testimonials ────────────────────────────────────────────────────────
 
 function TestimonialsSection() {
   const { testimonials, loading } = useTestimonials();
@@ -534,17 +824,10 @@ function TestimonialsSection() {
   }, []);
 
   useEffect(() => {
-    if (displayTestimonials.length > 0) {
-      startAuto();
-      return stopAuto;
-    }
+    if (displayTestimonials.length > 0) { startAuto(); return stopAuto; }
   }, [displayTestimonials.length, startAuto, stopAuto]);
 
-  const goTo = (idx: number) => {
-    setCurrent(idx);
-    stopAuto();
-    startAuto();
-  };
+  const goTo = (idx: number) => { setCurrent(idx); stopAuto(); startAuto(); };
 
   if (loading) {
     return (
@@ -571,29 +854,13 @@ function TestimonialsSection() {
         <motion.div variants={scaleIn} className="relative">
           <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 md:p-10 min-h-[280px] flex flex-col justify-between shadow-lg shadow-[#0EA5E9]/5">
             <AnimatePresence mode="wait">
-              <motion.div
-                key={current}
-                initial={{ opacity: 0, x: 30 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -30 }}
-                transition={{ duration: 0.4 }}
-              >
-                {/* Stars */}
+              <motion.div key={current} initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.4 }}>
                 <div className="flex gap-1 mb-4">
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-5 h-5 ${i < t.rating ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'}`}
-                    />
+                    <Star key={i} className={`w-5 h-5 ${i < t.rating ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'}`} />
                   ))}
                 </div>
-
-                {/* Quote */}
-                <p className="text-white/90 text-lg leading-relaxed mb-6 italic">
-                  &ldquo;{t.content}&rdquo;
-                </p>
-
-                {/* Author */}
+                <p className="text-white/90 text-lg leading-relaxed mb-6 italic">&ldquo;{t.content}&rdquo;</p>
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-[#0EA5E9]/20 flex items-center justify-center text-[#0EA5E9] font-bold text-lg">
                     {t.name.charAt(0)}
@@ -606,16 +873,10 @@ function TestimonialsSection() {
               </motion.div>
             </AnimatePresence>
           </div>
-
-          {/* Navigation dots */}
           <div className="flex justify-center gap-2 mt-6">
             {displayTestimonials.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => goTo(i)}
-                className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                  i === current ? 'bg-[#0EA5E9] w-8' : 'bg-white/20 hover:bg-white/40'
-                }`}
+              <button key={i} onClick={() => goTo(i)}
+                className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${i === current ? 'bg-[#0EA5E9] w-8' : 'bg-white/20 hover:bg-white/40'}`}
                 aria-label={`Go to testimonial ${i + 1}`}
               />
             ))}
@@ -626,7 +887,50 @@ function TestimonialsSection() {
   );
 }
 
-// ─── 7. Process Section ────────────────────────────────────────────────────
+// ─── 9. Google Reviews ────────────────────────────────────────────────────────
+
+function GoogleReviewsSection() {
+  return (
+    <Section id="reviews" className="bg-[#0F172A]/50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div variants={fadeInUp} className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            What People Say on <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0EA5E9] to-[#38BDF8]">Google</span>
+          </h2>
+        </motion.div>
+
+        <motion.div variants={staggerContainer} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {GOOGLE_REVIEWS.map((review, i) => (
+            <motion.div key={review.id} variants={staggerItem}
+              whileHover={{ y: -4, borderColor: 'rgba(14,165,233,0.4)' }}
+              className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 transition-all duration-300 hover:shadow-lg hover:shadow-[#0EA5E9]/5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex gap-0.5">
+                  {Array.from({ length: 5 }).map((_, si) => (
+                    <Star key={si} className={`w-4 h-4 ${si < review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'}`} />
+                  ))}
+                </div>
+                <span className="text-[#64748B] text-xs">{review.time}</span>
+              </div>
+              <p className="text-[#94A3B8] text-sm leading-relaxed mb-4">{review.text}</p>
+              <div className="flex items-center gap-3 pt-4 border-t border-white/10">
+                <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${AVATAR_GRADIENTS[i % AVATAR_GRADIENTS.length]} flex items-center justify-center`}>
+                  <span className="text-white font-bold text-xs">{review.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</span>
+                </div>
+                <div>
+                  <p className="text-white font-medium text-sm">{review.name}</p>
+                  <p className="text-[#64748B] text-xs">{review.company}</p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+    </Section>
+  );
+}
+
+// ─── 10. Process ────────────────────────────────────────────────────────────
 
 function ProcessSection() {
   const steps = [
@@ -644,27 +948,16 @@ function ProcessSection() {
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             How We <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0EA5E9] to-[#38BDF8]">Work</span>
           </h2>
-          <p className="text-[#94A3B8] text-lg max-w-2xl mx-auto">
-            A streamlined process that delivers results every time
-          </p>
+          <p className="text-[#94A3B8] text-lg max-w-2xl mx-auto">A streamlined process that delivers results every time</p>
         </motion.div>
 
-        <motion.div
-          variants={staggerContainer}
-          className="relative"
-        >
-          {/* Connecting line */}
+        <motion.div variants={staggerContainer} className="relative">
           <div className="hidden md:block absolute top-16 left-[10%] right-[10%] h-0.5 bg-gradient-to-r from-[#0EA5E9]/20 via-[#0EA5E9]/40 to-[#0EA5E9]/20" />
-
           <div className="grid grid-cols-1 md:grid-cols-5 gap-8 md:gap-4">
             {steps.map((step, i) => {
               const Icon = step.icon;
               return (
-                <motion.div
-                  key={i}
-                  variants={staggerItem}
-                  className="flex flex-col items-center text-center group"
-                >
+                <motion.div key={i} variants={staggerItem} className="flex flex-col items-center text-center group">
                   <div className="relative mb-6">
                     <div className="w-16 h-16 rounded-full bg-[#0B1120] border-2 border-[#0EA5E9]/40 flex items-center justify-center group-hover:border-[#0EA5E9] transition-all duration-300 group-hover:shadow-lg group-hover:shadow-[#0EA5E9]/20 z-10 relative">
                       <Icon className="w-7 h-7 text-[#0EA5E9]" />
@@ -685,77 +978,81 @@ function ProcessSection() {
   );
 }
 
-// ─── 8. CTA Banner ──────────────────────────────────────────────────────────
+// ─── 11. Blog ────────────────────────────────────────────────────────────────
 
-function CTABannerSection() {
+function BlogSection() {
+  const { posts, loading } = useBlogPosts();
+  const displayPosts: BlogPost[] = posts.length > 0 ? posts : FALLBACK_POSTS;
+
   return (
-    <Section className="!py-16 md:!py-20">
+    <Section id="blog">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          variants={scaleIn}
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0B1120] via-[#111827] to-[#0284C7] p-8 md:p-14 text-center"
-        >
-          {/* Decorative elements */}
-          <div className="absolute top-0 left-0 w-64 h-64 bg-[#0EA5E9]/10 rounded-full blur-[80px] -translate-x-1/2 -translate-y-1/2" />
-          <div className="absolute bottom-0 right-0 w-64 h-64 bg-[#0284C7]/10 rounded-full blur-[80px] translate-x-1/2 translate-y-1/2" />
-
-          <div className="relative z-10">
-            <h2 className="text-2xl md:text-4xl font-bold text-white mb-4 leading-tight">
-              Protect Your Business with<br className="hidden sm:block" /> Smart IT & Security Solutions
-            </h2>
-            <p className="text-[#94A3B8] text-lg mb-8 max-w-xl mx-auto">
-              Get a free consultation and site visit from our experts today
-            </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <Link
-                to="/contact"
-                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-lg bg-white text-[#0B1120] font-semibold hover:bg-white/90 transition-all duration-300 shadow-lg"
-              >
-                Request Free Quote <ArrowRight className="w-4 h-4" />
-              </Link>
-              <Link
-                to="/contact"
-                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-lg border-2 border-white/30 text-white font-semibold hover:bg-white/10 transition-all duration-300"
-              >
-                Schedule Site Visit
-              </Link>
-            </div>
-          </div>
+        <motion.div variants={fadeInUp} className="text-center mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            Blog & <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0EA5E9] to-[#38BDF8]">Insights</span>
+          </h2>
+          <p className="text-[#94A3B8] text-lg max-w-2xl mx-auto">
+            Expert tips, guides, and industry insights to help you make informed technology decisions
+          </p>
         </motion.div>
+
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {Array.from({ length: 3 }).map((_, i) => (<div key={i} className="h-80 rounded-2xl bg-white/5 animate-pulse border border-white/5" />))}
+          </div>
+        ) : (
+          <motion.div variants={staggerContainer} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {displayPosts.slice(0, 3).map((post, i) => {
+              const CategoryIcon = CATEGORY_ICONS[post.category] || Camera;
+              const gradient = CATEGORY_GRADIENTS[post.category] || 'from-[#0EA5E9] to-[#38BDF8]';
+              return (
+                <motion.div key={post.id} variants={staggerItem}
+                  whileHover={{ y: -6, borderColor: 'rgba(14,165,233,0.5)' }}
+                  className="group backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-[#0EA5E9]/10">
+                  <div className={`relative h-48 bg-gradient-to-br ${gradient} flex items-center justify-center overflow-hidden`}>
+                    <div className="absolute inset-0 bg-black/20" />
+                    <CategoryIcon className="w-16 h-16 text-white/30 relative z-10" />
+                    <div className="absolute top-3 left-3 z-10">
+                      <span className="px-3 py-1 rounded-full bg-black/40 backdrop-blur-sm text-white text-xs font-medium border border-white/20">
+                        {post.category}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <div className="flex items-center gap-3 text-xs text-[#64748B] mb-3">
+                      <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{post.published_at}</span>
+                      <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />5 min read</span>
+                    </div>
+                    <h3 className="text-white font-bold text-lg mb-3 leading-snug group-hover:text-[#0EA5E9] transition-colors duration-300 line-clamp-2">
+                      {post.title}
+                    </h3>
+                    <p className="text-[#94A3B8] text-sm leading-relaxed line-clamp-3">{post.excerpt}</p>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        )}
       </div>
     </Section>
   );
 }
 
-// ─── 9. FAQ Section ─────────────────────────────────────────────────────────
+// ─── 12. FAQ ────────────────────────────────────────────────────────────────
 
 function FAQItem({ faq, isOpen, onToggle }: { faq: FAQ; isOpen: boolean; onToggle: () => void }) {
   return (
     <div className="border border-white/10 rounded-xl overflow-hidden hover:border-[#0EA5E9]/30 transition-colors duration-300">
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center justify-between p-5 text-left group"
-      >
+      <button onClick={onToggle} className="w-full flex items-center justify-between p-5 text-left group">
         <span className="text-white font-medium pr-4">{faq.question}</span>
-        <motion.div
-          animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={{ duration: 0.3 }}
-          className="shrink-0"
-        >
+        <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.3 }} className="shrink-0">
           <ChevronDown className="w-5 h-5 text-[#94A3B8] group-hover:text-[#0EA5E9] transition-colors" />
         </motion.div>
       </button>
       <AnimatePresence initial={false}>
         {isOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
-          >
-            <div className="px-5 pb-5 text-[#94A3B8] text-sm leading-relaxed border-t border-white/5 pt-4">
-              {faq.answer}
-            </div>
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3, ease: 'easeInOut' }}>
+            <div className="px-5 pb-5 text-[#94A3B8] text-sm leading-relaxed border-t border-white/5 pt-4">{faq.answer}</div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -770,9 +1067,7 @@ function FAQSection() {
   const [activeCategory, setActiveCategory] = useState('All');
   const categories = ['All', 'General', 'CCTV', 'Repair', 'AMC'];
 
-  const filteredFaqs = activeCategory === 'All'
-    ? displayFaqs
-    : displayFaqs.filter(f => f.category === activeCategory);
+  const filteredFaqs = activeCategory === 'All' ? displayFaqs : displayFaqs.filter(f => f.category === activeCategory);
 
   return (
     <Section id="faq">
@@ -784,18 +1079,12 @@ function FAQSection() {
           <p className="text-[#94A3B8] text-lg">Find answers to common questions about our services</p>
         </motion.div>
 
-        {/* Category filter */}
         <motion.div variants={fadeInUp} className="flex flex-wrap justify-center gap-2 mb-8">
           {categories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => { setActiveCategory(cat); setOpenIndex(null); }}
+            <button key={cat} onClick={() => { setActiveCategory(cat); setOpenIndex(null); }}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                activeCategory === cat
-                  ? 'bg-[#0EA5E9] text-white'
-                  : 'bg-white/5 text-[#94A3B8] hover:bg-white/10 hover:text-white border border-white/10'
-              }`}
-            >
+                activeCategory === cat ? 'bg-[#0EA5E9] text-white' : 'bg-white/5 text-[#94A3B8] hover:bg-white/10 hover:text-white border border-white/10'
+              }`}>
               {cat}
             </button>
           ))}
@@ -803,19 +1092,13 @@ function FAQSection() {
 
         {loading ? (
           <div className="space-y-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-16 rounded-xl bg-white/5 animate-pulse border border-white/5" />
-            ))}
+            {Array.from({ length: 4 }).map((_, i) => (<div key={i} className="h-16 rounded-xl bg-white/5 animate-pulse border border-white/5" />))}
           </div>
         ) : (
           <motion.div variants={staggerContainer} className="space-y-3">
             {filteredFaqs.map((faq, i) => (
               <motion.div key={faq.id} variants={staggerItem}>
-                <FAQItem
-                  faq={faq}
-                  isOpen={openIndex === i}
-                  onToggle={() => setOpenIndex(openIndex === i ? null : i)}
-                />
+                <FAQItem faq={faq} isOpen={openIndex === i} onToggle={() => setOpenIndex(openIndex === i ? null : i)} />
               </motion.div>
             ))}
           </motion.div>
@@ -825,15 +1108,214 @@ function FAQSection() {
   );
 }
 
-// ─── 10. Emergency Support Banner ──────────────────────────────────────────
+// ─── 13. Contact ────────────────────────────────────────────────────────────
+
+function ContactSection() {
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '', service: '', message: '' });
+  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSubmitting(true);
+    try {
+      const { error: submitError } = await submitContact(formData);
+      if (submitError) { setError('Something went wrong. Please try again.'); setSubmitting(false); return; }
+      setSubmitted(true);
+    } catch {
+      setError('Network error. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const inputClasses = 'w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-[#64748B] text-sm focus:outline-none focus:border-[#0EA5E9]/50 focus:ring-1 focus:ring-[#0EA5E9]/25 transition-all duration-300';
+
+  return (
+    <Section id="contact">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div variants={fadeInUp} className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            Get In <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0EA5E9] to-[#38BDF8]">Touch</span>
+          </h2>
+          <p className="text-[#94A3B8] text-lg max-w-2xl mx-auto">
+            Fill out the form below and we will get back to you within 2 hours
+          </p>
+        </motion.div>
+
+        {/* Contact Info Cards */}
+        <motion.div variants={staggerContainer} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+          {[
+            { icon: Phone, label: 'Phone', value: '+91-9986742525', link: 'tel:+919986742525' },
+            { icon: Mail, label: 'Email', value: 'yantrabyte.solutions@gmail.com', link: 'mailto:yantrabyte.solutions@gmail.com' },
+            { icon: MapPin, label: 'Address', value: '47A 1st Cross, Sainagar 2nd Stage, Bengaluru 560097', link: null },
+            { icon: Clock, label: 'Business Hours', value: 'Mon-Sat 9AM-7PM, Emergency 24/7', link: null },
+          ].map((item, i) => {
+            const Icon = item.icon;
+            const content = (
+              <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5 hover:border-[#0EA5E9]/30 transition-all duration-300 group h-full">
+                <Icon className="w-6 h-6 text-[#0EA5E9] mb-3" />
+                <h3 className="text-white font-bold text-sm mb-1">{item.label}</h3>
+                <p className="text-[#94A3B8] text-sm">{item.value}</p>
+              </div>
+            );
+            if (item.link) {
+              return <motion.a key={i} href={item.link} variants={staggerItem} whileHover={{ y: -4 }} className="block">{content}</motion.a>;
+            }
+            return <motion.div key={i} variants={staggerItem} whileHover={{ y: -4 }}>{content}</motion.div>;
+          })}
+        </motion.div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Form */}
+          <motion.div variants={fadeInUp}>
+            {submitted ? (
+              <div className="backdrop-blur-xl bg-white/5 border border-[#0EA5E9]/30 rounded-2xl p-8 text-center h-full flex flex-col items-center justify-center">
+                <div className="w-16 h-16 rounded-full bg-[#0EA5E9]/20 flex items-center justify-center mb-4">
+                  <CheckCircle className="w-8 h-8 text-[#0EA5E9]" />
+                </div>
+                <h3 className="text-white font-bold text-xl mb-2">Message Sent!</h3>
+                <p className="text-[#94A3B8] text-sm leading-relaxed max-w-sm">
+                  Thank you for reaching out. Our team will get back to you within 2 hours.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 md:p-10 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-white text-sm font-medium mb-2">Full Name *</label>
+                    <input type="text" name="name" value={formData.name} onChange={handleChange} required placeholder="Your full name" className={inputClasses} />
+                  </div>
+                  <div>
+                    <label className="block text-white text-sm font-medium mb-2">Email Address *</label>
+                    <input type="email" name="email" value={formData.email} onChange={handleChange} required placeholder="you@example.com" className={inputClasses} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-white text-sm font-medium mb-2">Phone Number</label>
+                    <input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="+91 99867 42525" className={inputClasses} />
+                  </div>
+                  <div>
+                    <label className="block text-white text-sm font-medium mb-2">Service Needed *</label>
+                    <select name="service" value={formData.service} onChange={handleChange} required className={`${inputClasses} appearance-none`}>
+                      <option value="" className="bg-[#0B1120]">Select a service</option>
+                      {ALL_SERVICES_LIST.map(service => (
+                        <option key={service} value={service} className="bg-[#0B1120]">{service}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-white text-sm font-medium mb-2">Message *</label>
+                  <textarea name="message" value={formData.message} onChange={handleChange} required rows={5} placeholder="Describe your requirements or issue..." className={`${inputClasses} resize-none`} />
+                </div>
+                {error && (
+                  <div className="flex items-center gap-2 text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-xl p-3">
+                    <AlertCircle className="w-4 h-4 shrink-0" />{error}
+                  </div>
+                )}
+                <button type="submit" disabled={submitting}
+                  className="w-full inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-[#0EA5E9] hover:bg-[#0284C7] text-white font-semibold transition-all duration-300 shadow-lg shadow-[#0EA5E9]/25 disabled:opacity-50 disabled:cursor-not-allowed">
+                  {submitting ? (
+                    <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Sending...</>
+                  ) : (
+                    <><Send className="w-4 h-4" />Send Message</>
+                  )}
+                </button>
+              </form>
+            )}
+          </motion.div>
+
+          {/* Map + Quick Actions */}
+          <motion.div variants={scaleIn} className="flex flex-col gap-6">
+            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl overflow-hidden flex-1 min-h-[300px] relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#0F172A] to-[#1E293B] flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-20 h-20 mx-auto rounded-full bg-[#0EA5E9]/10 flex items-center justify-center mb-4">
+                    <MapPin className="w-10 h-10 text-[#0EA5E9]" />
+                  </div>
+                  <h3 className="text-white font-bold text-lg mb-2">Our Location</h3>
+                  <p className="text-[#94A3B8] text-sm max-w-xs mx-auto">
+                    47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post, Bengaluru 560097
+                  </p>
+                  <a href="https://maps.google.com/?q=Bangalore+Karnataka+India" target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-[#0EA5E9] text-sm font-medium mt-3 hover:gap-2.5 transition-all duration-300">
+                    Open in Google Maps <ArrowRight className="w-4 h-4" />
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <a href="https://wa.me/919986742525" target="_blank" rel="noopener noreferrer"
+                className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-4 text-center hover:border-[#25D366]/50 hover:bg-[#25D366]/5 transition-all duration-300 group">
+                <MessageCircle className="w-6 h-6 text-[#25D366] mx-auto mb-2 group-hover:scale-110 transition-transform duration-300" />
+                <span className="text-white text-sm font-medium block">WhatsApp</span>
+              </a>
+              <a href="tel:+919986742525"
+                className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-4 text-center hover:border-[#0EA5E9]/50 hover:bg-[#0EA5E9]/5 transition-all duration-300 group">
+                <Phone className="w-6 h-6 text-[#0EA5E9] mx-auto mb-2 group-hover:scale-110 transition-transform duration-300" />
+                <span className="text-white text-sm font-medium block">Call</span>
+              </a>
+              <a href="mailto:yantrabyte.solutions@gmail.com"
+                className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-4 text-center hover:border-[#38BDF8]/50 hover:bg-[#38BDF8]/5 transition-all duration-300 group">
+                <Mail className="w-6 h-6 text-[#38BDF8] mx-auto mb-2 group-hover:scale-110 transition-transform duration-300" />
+                <span className="text-white text-sm font-medium block">Email</span>
+              </a>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </Section>
+  );
+}
+
+// ─── 14. CTA Banner ────────────────────────────────────────────────────────
+
+function CTABannerSection() {
+  return (
+    <Section className="!py-16 md:!py-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div variants={scaleIn}
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0B1120] via-[#111827] to-[#0284C7] p-8 md:p-14 text-center">
+          <div className="absolute top-0 left-0 w-64 h-64 bg-[#0EA5E9]/10 rounded-full blur-[80px] -translate-x-1/2 -translate-y-1/2" />
+          <div className="absolute bottom-0 right-0 w-64 h-64 bg-[#0284C7]/10 rounded-full blur-[80px] translate-x-1/2 translate-y-1/2" />
+          <div className="relative z-10">
+            <h2 className="text-2xl md:text-4xl font-bold text-white mb-4 leading-tight">
+              Protect Your Business with<br className="hidden sm:block" /> Smart IT & Security Solutions
+            </h2>
+            <p className="text-[#94A3B8] text-lg mb-8 max-w-xl mx-auto">
+              Get a free consultation and site visit from our experts today
+            </p>
+            <div className="flex flex-wrap justify-center gap-4">
+              <a href="#contact"
+                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-lg bg-white text-[#0B1120] font-semibold hover:bg-white/90 transition-all duration-300 shadow-lg">
+                Request Free Quote <ArrowRight className="w-4 h-4" />
+              </a>
+              <a href="tel:+919986742525"
+                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-lg border-2 border-white/30 text-white font-semibold hover:bg-white/10 transition-all duration-300">
+                <Phone className="w-4 h-4" /> Call Now
+              </a>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </Section>
+  );
+}
+
+// ─── 15. Emergency Banner ──────────────────────────────────────────────────
 
 function EmergencyBanner() {
   return (
     <Section className="!py-0">
-      <motion.div
-        variants={fadeInUp}
-        className="bg-gradient-to-r from-red-600 via-orange-600 to-red-600 py-10 md:py-14"
-      >
+      <motion.div variants={fadeInUp} className="bg-gradient-to-r from-red-600 via-orange-600 to-red-600 py-10 md:py-14">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center animate-pulse">
@@ -845,13 +1327,9 @@ function EmergencyBanner() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <a href="tel:+919986742525" className="text-white font-mono text-lg md:text-xl font-bold hover:underline">
-              +91 98765 43210
-            </a>
-            <a
-              href="tel:+919986742525"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-white text-red-600 font-bold hover:bg-white/90 transition-all duration-300 shadow-lg"
-            >
+            <a href="tel:+919986742525" className="text-white font-mono text-lg md:text-xl font-bold hover:underline">+91 99867 42525</a>
+            <a href="tel:+919986742525"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-white text-red-600 font-bold hover:bg-white/90 transition-all duration-300 shadow-lg">
               <Phone className="w-4 h-4" /> Call Now
             </a>
           </div>
@@ -870,11 +1348,16 @@ export default function Home() {
       <TrustStatsSection />
       <ServicesSection />
       <WhyChooseUsSection />
+      <AboutSection />
       <IndustriesSection />
+      <ProductsSection />
       <TestimonialsSection />
+      <GoogleReviewsSection />
       <ProcessSection />
+      <BlogSection />
       <CTABannerSection />
       <FAQSection />
+      <ContactSection />
       <EmergencyBanner />
     </div>
   );

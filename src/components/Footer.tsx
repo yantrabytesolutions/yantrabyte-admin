@@ -14,19 +14,19 @@ import {
 } from "lucide-react";
 
 const quickLinks = [
-  { name: "Home", path: "/" },
-  { name: "About Us", path: "/about" },
-  { name: "Services", path: "/services" },
-  { name: "Products", path: "/products" },
-  { name: "Blog", path: "/blog" },
-  { name: "Contact", path: "/contact" },
+  { name: "Home", path: "/#hero" },
+  { name: "About Us", path: "/#about" },
+  { name: "Services", path: "/#services" },
+  { name: "Products", path: "/#products" },
+  { name: "Blog", path: "/#blog" },
+  { name: "Contact", path: "/#contact" },
 ];
 
 const serviceLinks = [
-  { name: "CCTV Installation", path: "/services/cctv-installation" },
-  { name: "Laptop Repair", path: "/services/laptop-repair" },
-  { name: "Networking", path: "/services/networking" },
-  { name: "AMC Support", path: "/services/amc-support" },
+  { name: "CCTV Installation", path: "/#services" },
+  { name: "Laptop Repair", path: "/#services" },
+  { name: "Networking", path: "/#services" },
+  { name: "AMC Support", path: "/#services" },
 ];
 
 const socialLinks = [
