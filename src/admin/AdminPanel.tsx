@@ -3,20 +3,23 @@ import { supabase } from '../lib/supabase';
 import type {
   Service, Product, Testimonial, BlogPost, TeamMember, Career,
   Industry, FAQ, GalleryImage, ClientLogo, SiteSetting, ContactSubmission, Page,
+  ServiceTicket,
 } from '../types';
 import {
   LayoutDashboard, FileText, Wrench, Package, MessageSquareQuote, PenTool,
   Users, Briefcase, Building2, HelpCircle, Image, Award, Mail, Settings,
   LogOut, Plus, Pencil, Trash2, X, Eye, EyeOff, ChevronDown, Save,
-  Loader2, AlertCircle, CheckCircle, Search, RefreshCw, Menu,
+  Loader2, AlertCircle, CheckCircle, Search, RefreshCw, Menu, Ticket, Receipt
 } from 'lucide-react';
+
+import BillingSoftware from './BillingSoftware';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 type Section =
   | 'dashboard' | 'pages' | 'services' | 'products' | 'testimonials'
   | 'blog' | 'team' | 'careers' | 'industries' | 'faqs' | 'gallery'
-  | 'client-logos' | 'contacts' | 'settings';
+  | 'client-logos' | 'contacts' | 'settings' | 'tickets' | 'billing';
 
 interface FormField {
   key: string;
@@ -44,6 +47,8 @@ const SECTION_CONFIG: Record<Section, { label: string; icon: React.ElementType; 
   gallery: { label: 'Gallery', icon: Image, table: 'gallery_images', orderField: 'sort_order', publishedField: 'is_published' },
   'client-logos': { label: 'Client Logos', icon: Award, table: 'client_logos', orderField: 'sort_order', publishedField: 'is_published' },
   contacts: { label: 'Contact Submissions', icon: Mail, table: 'contact_submissions', orderField: 'created_at' },
+  tickets: { label: 'Service Ticket', icon: Ticket, table: 'service_tickets', orderField: 'created_at' },
+  billing: { label: 'Billing Software', icon: Receipt, table: 'invoices', orderField: 'created_at' },
   settings: { label: 'Site Settings', icon: Settings, table: 'site_settings', orderField: 'key' },
 };
 
@@ -169,6 +174,28 @@ const CLIENT_LOGOS_FIELDS: FormField[] = [
   { key: 'sort_order', label: 'Sort Order', type: 'number' },
 ];
 
+const TICKETS_FIELDS: FormField[] = [
+  { key: 'ticket_number', label: 'Ticket Number', type: 'text', required: true },
+  { key: 'customer_name', label: 'Customer Name', type: 'text', required: true },
+  { key: 'customer_email', label: 'Customer Email', type: 'text' },
+  { key: 'customer_phone', label: 'Customer Phone', type: 'text', required: true },
+  { key: 'device_type', label: 'Device/Service Type', type: 'text' },
+  { key: 'issue_description', label: 'Issue Description', type: 'textarea', rows: 4, required: true },
+  { key: 'status', label: 'Status', type: 'select', options: [
+    { label: 'Open', value: 'open' },
+    { label: 'In Progress', value: 'in-progress' },
+    { label: 'Completed', value: 'completed' },
+    { label: 'Closed', value: 'closed' }
+  ]},
+  { key: 'priority', label: 'Priority', type: 'select', options: [
+    { label: 'Low', value: 'low' },
+    { label: 'Medium', value: 'medium' },
+    { label: 'High', value: 'high' },
+    { label: 'Urgent', value: 'urgent' }
+  ]},
+  { key: 'notes', label: 'Internal Notes', type: 'textarea', rows: 3 }
+];
+
 const SECTION_FIELDS: Record<string, FormField[]> = {
   pages: PAGES_FIELDS,
   services: SERVICES_FIELDS,
@@ -181,6 +208,7 @@ const SECTION_FIELDS: Record<string, FormField[]> = {
   faqs: FAQS_FIELDS,
   gallery: GALLERY_FIELDS,
   'client-logos': CLIENT_LOGOS_FIELDS,
+  tickets: TICKETS_FIELDS,
 };
 
 // ─── Table Column Configs ──────────────────────────────────────────────────
@@ -264,6 +292,14 @@ const SECTION_COLUMNS: Record<string, { key: string; label: string }[]> = {
     { key: 'service', label: 'Service' },
     { key: 'status', label: 'Status' },
     { key: 'created_at', label: 'Date' },
+  ],
+  tickets: [
+    { key: 'ticket_number', label: 'Ticket #' },
+    { key: 'customer_name', label: 'Customer' },
+    { key: 'device_type', label: 'Device' },
+    { key: 'priority', label: 'Priority' },
+    { key: 'status', label: 'Status' },
+    { key: 'created_at', label: 'Created' },
   ],
 };
 
@@ -391,6 +427,73 @@ export default function AdminPanel() {
     setDataLoading(false);
   }, [showToast]);
 
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const syncFromGoogleSheet = async () => {
+    setIsSyncing(true);
+    try {
+      // Using a reliable CORS proxy for the Google Sheet CSV export
+      const targetUrl = encodeURIComponent('https://docs.google.com/spreadsheets/d/1y6dyRVn0seq5qZfVmThTXJHiEoyG9kgoLeOj9WZbBOc/export?format=csv&gid=1073064749');
+      const url = `https://api.allorigins.win/raw?url=${targetUrl}`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch from Google Sheets');
+      const csvText = await response.text();
+      
+      const lines = csvText.split('\n');
+      const newTickets = [];
+      let inCsv = false;
+      
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line.match(/^\d{1,2}\/\d{1,2}\/\d{4}/)) {
+          inCsv = true;
+        }
+        if (inCsv && line && !line.includes(',,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,')) {
+          const regex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
+          const columns = line.split(regex);
+          if (columns.length > 9) {
+            const name = columns[1]?.replace(/'/g, "''").replace(/^"|"$/g, '') || '';
+            const phone = columns[2]?.replace(/'/g, "''").replace(/^"|"$/g, '') || '';
+            const email = columns[3]?.replace(/'/g, "''").replace(/^"|"$/g, '') || '';
+            const device = columns[5]?.replace(/'/g, "''").replace(/^"|"$/g, '') || '';
+            const issue = columns[6]?.replace(/'/g, "''").replace(/^"|"$/g, '') || '';
+            let ticketId = columns[20]?.replace(/'/g, "''").replace(/^"|"$/g, '');
+            const statusRaw = columns[12]?.replace(/'/g, "''").replace(/^"|"$/g, '').toLowerCase() || 'open';
+            
+            let status = 'open';
+            if (statusRaw.includes('progress')) status = 'in-progress';
+            if (statusRaw.includes('closed') || statusRaw.includes('resolved')) status = 'closed';
+            if (!ticketId) ticketId = `YBS-FORM-${Date.now()}-${i}`;
+            
+            if (name) {
+              newTickets.push({
+                ticket_number: ticketId,
+                customer_name: name,
+                customer_phone: phone,
+                customer_email: email,
+                device_type: device,
+                issue_description: issue,
+                status: status
+              });
+            }
+          }
+        }
+      }
+      
+      if (newTickets.length > 0) {
+        const { error } = await supabase.from('service_tickets').upsert(newTickets, { onConflict: 'ticket_number', ignoreDuplicates: true });
+        if (error) throw error;
+        showToast('Successfully synced from Google Form!');
+        fetchData('tickets');
+      } else {
+        showToast('No valid tickets found in sheet');
+      }
+    } catch (err: any) {
+      showToast('Error syncing: ' + err.message, 'error');
+    }
+    setIsSyncing(false);
+  };
+
   useEffect(() => {
     if (session && activeSection !== 'dashboard') {
       fetchData(activeSection);
@@ -401,7 +504,7 @@ export default function AdminPanel() {
   const [stats, setStats] = useState<Record<string, number>>({});
   useEffect(() => {
     if (session && activeSection === 'dashboard') {
-      const tables = ['services', 'blog_posts', 'testimonials', 'contact_submissions', 'pages', 'products', 'team_members', 'careers', 'industries', 'faqs', 'gallery_images', 'client_logos'];
+      const tables = ['services', 'blog_posts', 'testimonials', 'contact_submissions', 'pages', 'products', 'team_members', 'careers', 'industries', 'faqs', 'gallery_images', 'client_logos', 'service_tickets'];
       Promise.all(
         tables.map(t => supabase.from(t).select('id', { count: 'exact', head: true }))
       ).then(results => {
@@ -417,7 +520,24 @@ export default function AdminPanel() {
     const fields = SECTION_FIELDS[activeSection];
     if (!fields) return;
     setEditingItem(null);
-    setFormData(getDefaultForm(fields));
+    const defaultData = getDefaultForm(fields);
+    
+    if (activeSection === 'tickets') {
+      const tickets = data.tickets || [];
+      let maxNum = 100;
+      tickets.forEach((t: any) => {
+        const match = String(t.ticket_number || '').match(/YBS-(\d+)/);
+        if (match && match[1]) {
+          const num = parseInt(match[1], 10);
+          if (num > maxNum) maxNum = num;
+        }
+      });
+      defaultData['ticket_number'] = `YBS-${maxNum + 1}`;
+      defaultData['status'] = 'open';
+      defaultData['priority'] = 'medium';
+    }
+    
+    setFormData(defaultData);
     setFormError('');
     setShowForm(true);
   };
@@ -671,6 +791,8 @@ export default function AdminPanel() {
     { section: 'gallery', label: 'Gallery', icon: Image },
     { section: 'client-logos', label: 'Client Logos', icon: Award },
     { section: 'contacts', label: 'Contact Submissions', icon: Mail },
+    { section: 'tickets', label: 'Service Ticket', icon: Ticket },
+    { section: 'billing', label: 'Billing Software', icon: Receipt },
     { section: 'settings', label: 'Site Settings', icon: Settings },
   ];
 
@@ -693,6 +815,10 @@ export default function AdminPanel() {
         new: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
         read: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
         replied: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+        open: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+        'in-progress': 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
+        completed: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+        closed: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
       };
       return (
         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${colors[status] || 'bg-white/5 text-[#64748B] border-white/10'}`}>
@@ -727,6 +853,7 @@ export default function AdminPanel() {
       { label: 'FAQs', value: stats['faqs'] || 0, icon: HelpCircle, color: 'from-[#6366F1] to-[#4F46E5]' },
       { label: 'Gallery Images', value: stats['gallery_images'] || 0, icon: Image, color: 'from-[#E11D48] to-[#BE123C]' },
       { label: 'Client Logos', value: stats['client_logos'] || 0, icon: Award, color: 'from-[#0EA5E9] to-[#0369A1]' },
+      { label: 'Service Tickets', value: stats['service_tickets'] || 0, icon: Ticket, color: 'from-[#F43F5E] to-[#BE123C]' },
     ];
 
     return (
@@ -770,6 +897,16 @@ export default function AdminPanel() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <h2 className="text-2xl font-bold text-white">{config.label}</h2>
           <div className="flex items-center gap-3">
+            {activeSection === 'tickets' && (
+              <button
+                onClick={syncFromGoogleSheet}
+                disabled={isSyncing}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium transition-all"
+              >
+                {isSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                Sync from Google Form
+              </button>
+            )}
             {fields && !isReadOnly && (
               <button
                 onClick={openAddForm}
@@ -1127,6 +1264,7 @@ export default function AdminPanel() {
   const renderContent = () => {
     if (activeSection === 'dashboard') return renderDashboard();
     if (activeSection === 'settings') return renderSettings();
+    if (activeSection === 'billing') return <BillingSoftware />;
     return renderDataTable();
   };
 

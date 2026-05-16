@@ -159,3 +159,45 @@ export interface Page {
   created_at: string;
   updated_at: string;
 }
+
+export interface ServiceTicket {
+  id: string;
+  ticket_number: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string;
+  device_type: string;
+  issue_description: string;
+  status: 'open' | 'in-progress' | 'resolved' | 'closed';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  assigned_to?: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface InvoiceItem {
+  description: string;
+  qty: number;
+  rate: number;
+}
+
+export interface Invoice {
+  id: string;
+  invoice_no: string;
+  doc_type: string;
+  date: string;
+  customer_name: string;
+  phone: string;
+  email: string;
+  address: string;
+  items: InvoiceItem[];
+  subtotal: number;
+  discount: number;
+  tax: number;
+  round_off: number;
+  grand_total: number;
+  advance_paid: number;
+  balance_due: number;
+  created_at: string;
+}
