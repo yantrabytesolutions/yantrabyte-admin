@@ -21,3 +21,12 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+*.cjs
+supabase_status*.txt
+YBS-*.pdf
+check_db*.js
+check_rest.js
+insert_test.js
+parse_csv.js
+add_stock_columns.js
