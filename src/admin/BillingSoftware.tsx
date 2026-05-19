@@ -286,7 +286,7 @@ export default function BillingSoftware() {
                 <button 
                   className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${docType === 'Invoice' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600'}`}
                   onClick={() => setDocType('Invoice')}
-                >Tax Invoice</button>
+                >Invoice</button>
                 <button 
                   className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${docType === 'Quotation' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600'}`}
                   onClick={() => setDocType('Quotation')}
@@ -468,7 +468,7 @@ export default function BillingSoftware() {
           </div>
 
           <div className="font-bold text-center py-1 border-x border-t text-base tracking-widest uppercase" style={{ backgroundColor: '#0B5394', color: '#ffffff', borderColor: '#000000' }}>
-            {docType === 'Quotation' ? 'QUOTATION' : 'TAX INVOICE'}
+            {docType === 'Quotation' ? 'QUOTATION' : 'INVOICE'}
           </div>
 
           <div className="flex justify-between border">
