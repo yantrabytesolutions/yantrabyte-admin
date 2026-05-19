@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Invoice, InvoiceItem } from '../types';
-import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw } from 'lucide-react';
+import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy } from 'lucide-react';
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
 import { PRESET_ITEMS } from './presetItems';
@@ -244,6 +244,29 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setTax(inv.tax);
     setAdvancePaid(inv.advance_paid);
     setItems(inv.items || []);
+  };
+
+  const handleConvertToInvoice = (id: string) => {
+    const inv = invoices.find(i => i.id === id);
+    if (!inv) return;
+    
+    // Clear the selected invoice ID so that we start as a brand new unsaved Invoice!
+    setSelectedInvoiceId('');
+    
+    // Force Document Type to 'Invoice'
+    setDocType('Invoice');
+    
+    // Keep all customer and items details intact!
+    setCustomerName(inv.customer_name);
+    setPhone(inv.phone || '');
+    setEmail(inv.email || '');
+    setAddress(inv.address || '');
+    setDiscount(inv.discount);
+    setTax(inv.tax);
+    setAdvancePaid(inv.advance_paid);
+    setItems(inv.items || []);
+    
+    showToast(`Converted quotation ${inv.invoice_no} to a new draft Invoice! Click Save or Print to finalize.`);
   };
 
   // Calculations
@@ -626,6 +649,18 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                   </div>
                   <div className="flex items-center space-x-3">
                     <div className="font-bold text-gray-700">₹{inv.grand_total.toLocaleString('en-IN')}</div>
+                    {inv.doc_type === 'Quotation' && (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleConvertToInvoice(inv.id);
+                        }} 
+                        className="text-[#0EA5E9] hover:text-[#0284C7] transition-colors p-1"
+                        title="Convert to Invoice"
+                      >
+                        <Copy className="w-4 h-4" />
+                      </button>
+                    )}
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
