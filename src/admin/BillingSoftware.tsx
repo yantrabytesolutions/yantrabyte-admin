@@ -56,6 +56,7 @@ export default function BillingSoftware() {
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>('');
   
   const [customersList, setCustomersList] = useState<any[]>([]);
+  const [serviceTicketsList, setServiceTicketsList] = useState<any[]>([]);
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -65,7 +66,18 @@ export default function BillingSoftware() {
   useEffect(() => {
     fetchInvoices();
     fetchCustomers();
+    fetchServiceTickets();
   }, []);
+
+  const fetchServiceTickets = async () => {
+    const { data, error } = await supabase
+      .from('service_tickets')
+      .select('*')
+      .order('ticket_number', { ascending: false });
+    if (!error && data) {
+      setServiceTicketsList(data);
+    }
+  };
 
   const fetchCustomers = async () => {
     // Attempt to fetch from 'Form Responses 1' table
@@ -137,6 +149,52 @@ export default function BillingSoftware() {
       setEmail(cust.email || '');
       setPhone(cust.phone || '');
       setAddress(cust.address || '');
+    }
+  };
+
+  const handleSelectServiceTicket = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const ticket = serviceTicketsList.find(t => t.ticket_number === e.target.value);
+    if (ticket) {
+      setCustomerName(ticket.customer_name || '');
+      setPhone(ticket.customer_phone || '');
+      setEmail(ticket.customer_email || '');
+      
+      const device = ticket.device_type ? ticket.device_type.trim() : '';
+      const issue = ticket.issue_description ? ticket.issue_description.trim() : '';
+      const desc = `Service & Repair: ${device}${issue ? ` (${issue})` : ''}`;
+      
+      const matchedCust = customersList.find(c => c.full_name?.trim().toLowerCase() === ticket.customer_name?.trim().toLowerCase());
+      if (matchedCust && matchedCust.address) {
+        setAddress(matchedCust.address);
+      } else {
+        setAddress('');
+      }
+
+      const itemExists = items.some(it => it.description.startsWith('Service & Repair:'));
+      if (!itemExists) {
+        setItems([{ description: desc, qty: 1, rate: 0 }, ...items]);
+      } else {
+        setItems([{ description: desc, qty: 1, rate: 0 }, ...items.filter(it => !it.description.startsWith('Service & Repair:'))]);
+      }
+      
+      showToast(`Selected ticket ${ticket.ticket_number} - Details loaded!`);
+    }
+  };
+
+  const handleDeleteInvoice = async (id: string, invoiceNo: string) => {
+    if (!window.confirm(`Are you sure you want to delete invoice ${invoiceNo}?`)) {
+      return;
+    }
+    try {
+      const { error } = await supabase.from('invoices').delete().eq('id', id);
+      if (error) throw error;
+      showToast(`Invoice ${invoiceNo} deleted successfully.`);
+      if (selectedInvoiceId === id) {
+        clearForm();
+      }
+      await fetchInvoices();
+    } catch (err: any) {
+      showToast(err.message || 'Failed to delete invoice', 'error');
     }
   };
 
@@ -295,10 +353,10 @@ export default function BillingSoftware() {
             </div>
 
             <div className="grid grid-cols-2 gap-4 pt-2">
-              <div className="col-span-2">
-                <div className="flex justify-between items-center mb-1">
-                  <label className="block text-sm font-medium text-gray-700">Customer Name</label>
-                  <select onChange={handleSelectCustomer} className="text-xs border rounded-md px-2 py-1 text-gray-700 bg-gray-50 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+              <div className="col-span-2 flex space-x-4">
+                <div className="flex-1">
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Load Customer Info</label>
+                  <select onChange={handleSelectCustomer} className="w-full text-xs border rounded-md px-2 py-1.5 text-gray-700 bg-gray-50 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
                     {customersList.length === 0 ? (
                       <option value="">No customers found...</option>
                     ) : (
@@ -311,6 +369,27 @@ export default function BillingSoftware() {
                     )}
                   </select>
                 </div>
+                <div className="flex-1">
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Link Active Service Ticket</label>
+                  <select onChange={handleSelectServiceTicket} className="w-full text-xs border rounded-md px-2 py-1.5 text-gray-700 bg-gray-50 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                    {serviceTicketsList.length === 0 ? (
+                      <option value="">No tickets found...</option>
+                    ) : (
+                      <>
+                        <option value="">Select Service Ticket...</option>
+                        {serviceTicketsList.map((t, i) => (
+                          <option key={i} value={t.ticket_number}>
+                            {t.ticket_number} - {t.customer_name} ({t.device_type})
+                          </option>
+                        ))}
+                      </>
+                    )}
+                  </select>
+                </div>
+              </div>
+
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>
                 <input type="text" value={customerName} onChange={e => setCustomerName(e.target.value)} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter full name" />
               </div>
               <div>
@@ -431,17 +510,29 @@ export default function BillingSoftware() {
             </h3>
             <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
               {invoices.map(inv => (
-                <button 
+                <div 
                   key={inv.id} 
                   onClick={() => loadInvoice(inv.id)}
-                  className={`w-full text-left p-3 rounded-md border transition-colors text-sm flex justify-between items-center ${selectedInvoiceId === inv.id ? 'bg-blue-50 border-blue-200 ring-1 ring-blue-500' : 'bg-white border-gray-100 hover:bg-gray-50 hover:border-gray-300'}`}
+                  className={`w-full text-left p-3 rounded-md border transition-colors text-sm flex justify-between items-center cursor-pointer ${selectedInvoiceId === inv.id ? 'bg-blue-50 border-blue-200 ring-1 ring-blue-500' : 'bg-white border-gray-100 hover:bg-gray-50 hover:border-gray-300'}`}
                 >
-                  <div>
+                  <div className="flex-1">
                     <div className="font-semibold text-gray-800">{inv.invoice_no}</div>
                     <div className="text-xs text-gray-500">{inv.customer_name} • {inv.date}</div>
                   </div>
-                  <div className="font-bold text-gray-700">₹{inv.grand_total.toLocaleString('en-IN')}</div>
-                </button>
+                  <div className="flex items-center space-x-3">
+                    <div className="font-bold text-gray-700">₹{inv.grand_total.toLocaleString('en-IN')}</div>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteInvoice(inv.id, inv.invoice_no);
+                      }} 
+                      className="text-gray-400 hover:text-red-600 transition-colors p-1"
+                      title="Delete Invoice"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
               ))}
               {invoices.length === 0 && <div className="text-sm text-gray-400 text-center py-4">No saved invoices</div>}
             </div>
