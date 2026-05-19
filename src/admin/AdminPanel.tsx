@@ -9,7 +9,7 @@ import {
   LayoutDashboard, FileText, Wrench, Package, MessageSquareQuote, PenTool,
   Users, Briefcase, Building2, HelpCircle, Image, Award, Mail, Settings,
   LogOut, Plus, Pencil, Trash2, X, Eye, EyeOff, ChevronDown, Save,
-  Loader2, AlertCircle, CheckCircle, Search, RefreshCw, Menu, Ticket, Receipt, CreditCard
+  Loader2, AlertCircle, CheckCircle, Search, RefreshCw, Menu, Ticket, Receipt, CreditCard, MessageSquare
 } from 'lucide-react';
 
 import BillingSoftware from './BillingSoftware';
@@ -564,6 +564,43 @@ export default function AdminPanel() {
     setAutofillTicket(ticket);
     setActiveSection('billing');
     showToast('Switched to billing with pre-filled ticket details!');
+  };
+
+  const sendWhatsAppAlert = (item: Record<string, unknown>) => {
+    const name = String(item.customer_name || 'Customer');
+    let phone = String(item.customer_phone || '');
+    const ticketNo = String(item.ticket_number || 'DRAFT');
+    const device = String(item.device_type || 'Device');
+    const status = String(item.status || 'open');
+
+    // Format phone number to clean digits (assume Indian +91 if length is 10)
+    phone = phone.replace(/\D/g, '');
+    if (phone.length === 10) {
+      phone = '91' + phone;
+    }
+
+    if (!phone) {
+      showToast('No phone number available for WhatsApp', 'error');
+      return;
+    }
+
+    let text = '';
+    if (status === 'open') {
+      text = `Hi ${name}, this is Yantrabyte Solutions. We have successfully registered your repair request (Ticket: ${ticketNo}) for your ${device}. Our technician will diagnose it shortly. Thank you!`;
+    } else if (status === 'in-progress') {
+      text = `Hi ${name}, this is Yantrabyte Solutions. Your ${device} (Ticket: ${ticketNo}) is currently under active diagnostics/repair. We will notify you once completed or if parts are required.`;
+    } else if (status === 'completed') {
+      text = `Hi ${name}, great news! Your ${device} (Ticket: ${ticketNo}) has been fully repaired and tested. It is ready for pickup at our workshop. Thank you for choosing Yantrabyte Solutions!`;
+    } else if (status === 'closed') {
+      text = `Hi ${name}, this is Yantrabyte Solutions. Your repair ticket ${ticketNo} for ${device} has been marked as delivered and closed. Please reach out if you have any questions!`;
+    } else {
+      text = `Hi ${name}, this is Yantrabyte Solutions. Update regarding your repair ticket ${ticketNo} (${device}). Status: ${status.toUpperCase()}.`;
+    }
+
+    const encodedText = encodeURIComponent(text);
+    const url = `https://wa.me/${phone}?text=${encodedText}`;
+    window.open(url, '_blank');
+    showToast('Opening WhatsApp chat...');
   };
 
   // --- Data Fetching ---
@@ -1210,6 +1247,13 @@ export default function AdminPanel() {
                                   title="Create Invoice for this Repair"
                                 >
                                   <CreditCard className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => sendWhatsAppAlert(item)}
+                                  className="p-1.5 rounded-lg hover:bg-white/5 text-[#64748B] hover:text-green-400 transition-all"
+                                  title="Send WhatsApp Client Alert"
+                                >
+                                  <MessageSquare className="w-4 h-4" />
                                 </button>
                                 <button
                                   onClick={() => printJobSheet(item)}
