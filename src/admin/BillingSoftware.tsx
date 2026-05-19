@@ -4,6 +4,7 @@ import { Invoice, InvoiceItem } from '../types';
 import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw } from 'lucide-react';
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
+import { PRESET_ITEMS } from './presetItems';
 
 // --- Utility Functions ---
 function numberToWords(num: number): string {
@@ -412,7 +413,28 @@ export default function BillingSoftware() {
             
             <div className="grid grid-cols-12 gap-3 items-end">
               <div className="col-span-6">
-                <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-xs font-medium text-gray-600">Description</label>
+                  <select 
+                    onChange={(e) => {
+                      const selectedVal = e.target.value;
+                      if (selectedVal) {
+                        const matched = PRESET_ITEMS.find(item => item.name === selectedVal);
+                        if (matched) {
+                          setItemDesc(matched.name);
+                          setItemRate(matched.price);
+                        }
+                      }
+                    }}
+                    value=""
+                    className="text-[10px] border rounded px-1.5 py-0.5 text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer max-w-[200px]"
+                  >
+                    <option value="">Quick Select Item...</option>
+                    {PRESET_ITEMS.map((item, idx) => (
+                      <option key={idx} value={item.name}>{item.name} (₹{item.price})</option>
+                    ))}
+                  </select>
+                </div>
                 <input type="text" value={itemDesc} onChange={e => setItemDesc(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddItem()} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" placeholder="Item description" />
               </div>
               <div className="col-span-2">
