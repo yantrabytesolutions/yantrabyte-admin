@@ -577,7 +577,7 @@ export default function BillingSoftware() {
                     <p><span className="font-bold">IFSC:</span> NESF0000333</p>
                     <p className="mt-0.5"><span className="font-bold">UPI:</span> s0424237152@slc</p>
                   </div>
-                  <div className="w-16 h-16 flex-shrink-0 border p-0.5 mr-2" style={{ borderColor: '#dddddd' }}>
+                  <div className="w-20 h-20 flex-shrink-0 border p-0.5 mr-2" style={{ borderColor: '#dddddd' }}>
                     <img src="/qr.jpg" alt="Payment QR" style={{ height: '100%', width: '100%', objectFit: 'contain' }} crossOrigin="anonymous" />
                   </div>
                 </div>
