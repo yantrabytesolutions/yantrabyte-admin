@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Invoice, InvoiceItem } from '../types';
-import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy } from 'lucide-react';
+import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt } from 'lucide-react';
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
 import { PRESET_ITEMS } from './presetItems';
@@ -66,6 +66,45 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
+  const [historyDrawerData, setHistoryDrawerData] = useState<{
+    invoices: Invoice[];
+    tickets: any[];
+    totalSpend: number;
+    outstanding: number;
+  } | null>(null);
+
+  const openCustomerHistory = () => {
+    if (!customerName.trim()) {
+      showToast('Please enter or select a customer name first', 'error');
+      return;
+    }
+    
+    const matchedInvoices = invoices.filter(inv => 
+      inv.customer_name?.trim().toLowerCase().includes(customerName.trim().toLowerCase())
+    );
+    
+    const matchedTickets = serviceTicketsList.filter(t => 
+      t.customer_name?.trim().toLowerCase().includes(customerName.trim().toLowerCase())
+    );
+
+    const totalSpend = matchedInvoices
+      .filter(inv => inv.doc_type === 'Invoice')
+      .reduce((sum, inv) => sum + (inv.grand_total || 0), 0);
+
+    const outstanding = matchedInvoices
+      .filter(inv => inv.doc_type === 'Invoice')
+      .reduce((sum, inv) => sum + (inv.balance_due || 0), 0);
+
+    setHistoryDrawerData({
+      invoices: matchedInvoices,
+      tickets: matchedTickets,
+      totalSpend,
+      outstanding
+    });
+    setShowHistoryDrawer(true);
+  };
   
   const printRef = useRef<HTMLDivElement>(null);
 
@@ -485,7 +524,18 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               </div>
 
               <div className="col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-sm font-medium text-gray-700">Customer Name</label>
+                  {customerName.trim() && (
+                    <button
+                      type="button"
+                      onClick={openCustomerHistory}
+                      className="text-xs font-semibold text-[#0EA5E9] hover:text-[#0284C7] transition-all flex items-center gap-1"
+                    >
+                      <FileText className="w-3.5 h-3.5" /> View History
+                    </button>
+                  )}
+                </div>
                 <input type="text" value={customerName} onChange={e => setCustomerName(e.target.value)} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter full name" />
               </div>
               <div>
@@ -826,6 +876,134 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
         </div>
       </div>
+
+      {/* --- CUSTOMER HISTORY DRAWER --- */}
+      {showHistoryDrawer && historyDrawerData && (
+        <div className="fixed inset-0 z-50 overflow-hidden" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
+          <div className="absolute inset-0 overflow-hidden">
+            {/* Overlay backdrop with premium glass blur */}
+            <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity" onClick={() => setShowHistoryDrawer(false)}></div>
+            
+            <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10 sm:pl-16">
+              <div className="pointer-events-auto w-screen max-w-2xl">
+                <div className="flex h-full flex-col overflow-y-scroll bg-slate-900 border-l border-white/10 p-6 shadow-2xl text-white">
+                  {/* Drawer Header */}
+                  <div className="flex items-center justify-between pb-5 border-b border-white/10 mb-6">
+                    <div>
+                      <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                        <Users className="w-5 h-5 text-[#0EA5E9]" />
+                        {customerName} • Customer Profile Ledger
+                      </h2>
+                      <p className="text-xs text-[#94A3B8] mt-1">Unified historical ledger & workshop service tickets</p>
+                    </div>
+                    <button
+                      onClick={() => setShowHistoryDrawer(false)}
+                      className="p-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all text-[#94A3B8] hover:text-white"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {/* Customer Quick Stats */}
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl p-4">
+                      <div className="text-xs text-[#94A3B8] uppercase font-semibold">Total Invoice Value</div>
+                      <div className="text-2xl font-bold text-emerald-400 mt-1">₹{historyDrawerData.totalSpend.toLocaleString('en-IN')}</div>
+                    </div>
+                    <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl p-4">
+                      <div className="text-xs text-[#94A3B8] uppercase font-semibold">Outstanding Balance</div>
+                      <div className="text-2xl font-bold text-rose-400 mt-1">₹{historyDrawerData.outstanding.toLocaleString('en-IN')}</div>
+                    </div>
+                  </div>
+
+                  {/* Tabbed view for Invoices and Tickets */}
+                  <div className="space-y-6">
+                    {/* Invoices List */}
+                    <div>
+                      <h3 className="text-sm font-semibold text-[#94A3B8] mb-3 uppercase tracking-wider flex items-center gap-2">
+                        <Receipt className="w-4 h-4 text-[#0EA5E9]" /> Lifetime Invoices & Quotes ({historyDrawerData.invoices.length})
+                      </h3>
+                      <div className="space-y-3">
+                        {historyDrawerData.invoices.map(inv => (
+                          <div key={inv.id} className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl p-4 flex justify-between items-start">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold text-white">{inv.invoice_no}</span>
+                                <span className="text-[10px] text-[#94A3B8]">• {inv.date}</span>
+                                {inv.doc_type === 'Quotation' ? (
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">Quote</span>
+                                ) : (inv.balance_due || 0) <= 0 ? (
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold font-mono">Paid</span>
+                                ) : (
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 font-semibold font-mono">₹{inv.balance_due} Due</span>
+                                )}
+                              </div>
+                              <div className="text-xs text-[#94A3B8] mt-2 space-y-1">
+                                {(inv.items || []).map((it, idx) => (
+                                  <div key={idx} className="font-mono text-[11px] text-[#CBD5E1]">• {it.description} (x{it.qty} at ₹{it.rate})</div>
+                                ))}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-lg font-bold text-white font-mono">₹{inv.grand_total.toLocaleString('en-IN')}</div>
+                              {inv.advance_paid > 0 && (
+                                <div className="text-[10px] text-[#94A3B8] mt-1 font-mono">Advance: ₹{inv.advance_paid}</div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                        {historyDrawerData.invoices.length === 0 && (
+                          <div className="text-sm text-[#64748B] italic py-3">No invoices generated yet for this client.</div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Tickets List */}
+                    <div>
+                      <h3 className="text-sm font-semibold text-[#94A3B8] mb-3 uppercase tracking-wider flex items-center gap-2">
+                        <Wrench className="w-4 h-4 text-amber-400" /> Service Tickets history ({historyDrawerData.tickets.length})
+                      </h3>
+                      <div className="space-y-3">
+                        {historyDrawerData.tickets.map(t => (
+                          <div key={t.id} className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl p-4">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-semibold text-white">{t.ticket_number}</span>
+                                  <span className="text-xs text-blue-400 font-semibold">({t.device_type})</span>
+                                </div>
+                                <div className="text-xs text-[#94A3B8] mt-1">Issue: {t.issue_description}</div>
+                              </div>
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase border ${
+                                t.status === 'completed' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                                t.status === 'in-progress' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
+                                t.status === 'closed' ? 'bg-gray-500/10 text-gray-400 border-gray-500/20' :
+                                'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                              }`}>
+                                {t.status}
+                              </span>
+                            </div>
+                            {t.notes && (
+                              <div className="mt-3 p-2 rounded-lg bg-white/5 border border-white/5 text-xs text-[#94A3B8] italic">
+                                <span className="font-semibold not-italic block mb-1 text-white">Diagnostics & Workshop Notes:</span>
+                                {t.notes}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                        {historyDrawerData.tickets.length === 0 && (
+                          <div className="text-sm text-[#64748B] italic py-3">No service tickets registered for this client.</div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
