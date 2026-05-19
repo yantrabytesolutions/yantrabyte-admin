@@ -432,12 +432,32 @@ export default function AdminPanel() {
   const syncFromGoogleSheet = async () => {
     setIsSyncing(true);
     try {
-      // Using a reliable CORS proxy for the Google Sheet CSV export
-      const targetUrl = encodeURIComponent('https://docs.google.com/spreadsheets/d/1y6dyRVn0seq5qZfVmThTXJHiEoyG9kgoLeOj9WZbBOc/export?format=csv&gid=1073064749');
-      const url = `https://api.allorigins.win/raw?url=${targetUrl}`;
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('Failed to fetch from Google Sheets');
-      const csvText = await response.text();
+      // Fetching the Google Sheet CSV with multi-stage robust fallbacks (direct first, then proxies)
+      const csvUrl = 'https://docs.google.com/spreadsheets/d/1y6dyRVn0seq5qZfVmThTXJHiEoyG9kgoLeOj9WZbBOc/export?format=csv&gid=1073064749';
+      let response;
+      let csvText = '';
+      
+      try {
+        // 1. Try Direct Fetch first (Google Sheets exports are public and support CORS directly in modern browsers)
+        response = await fetch(csvUrl);
+        if (!response.ok) throw new Error('Direct fetch returned status ' + response.status);
+        csvText = await response.text();
+      } catch (directErr) {
+        console.warn('Direct Google Sheet fetch failed, trying corsproxy.io proxy...', directErr);
+        try {
+          // 2. Try corsproxy.io as the second stage (super fast and highly reliable proxy)
+          response = await fetch(`https://corsproxy.io/?${encodeURIComponent(csvUrl)}`);
+          if (!response.ok) throw new Error('corsproxy.io returned status ' + response.status);
+          csvText = await response.text();
+        } catch (proxy1Err) {
+          console.warn('corsproxy.io proxy failed, trying api.allorigins.win proxy...', proxy1Err);
+          // 3. Try allorigins as the third stage fallback
+          const targetUrl = encodeURIComponent(csvUrl);
+          response = await fetch(`https://api.allorigins.win/raw?url=${targetUrl}`);
+          if (!response.ok) throw new Error('allorigins proxy returned status ' + response.status);
+          csvText = await response.text();
+        }
+      }
       
       const lines = csvText.split('\n');
       const newTickets = [];
