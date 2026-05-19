@@ -808,6 +808,19 @@ export default function AdminPanel() {
     }
   };
 
+  const updateTicketStatus = async (id: string, status: string) => {
+    const { error } = await supabase
+      .from('service_tickets')
+      .update({ status })
+      .eq('id', id);
+    if (error) {
+      showToast('Error updating status: ' + error.message, 'error');
+    } else {
+      showToast(`Status updated to ${status}`);
+      fetchData('tickets');
+    }
+  };
+
   // --- Site Settings ---
   const [settingsRows, setSettingsRows] = useState<SiteSetting[]>([]);
   const [settingsLoading, setSettingsLoading] = useState(false);
@@ -987,6 +1000,26 @@ export default function AdminPanel() {
     }
     if (colKey === 'status') {
       const status = String(val);
+      if (activeSection === 'tickets') {
+        const colors: Record<string, string> = {
+          open: 'bg-blue-500/10 text-blue-400 border-blue-500/20 focus:border-blue-500/50',
+          'in-progress': 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20 focus:border-yellow-500/50',
+          completed: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 focus:border-emerald-500/50',
+          closed: 'bg-gray-500/10 text-gray-400 border-gray-500/20 focus:border-gray-500/50',
+        };
+        return (
+          <select
+            value={status}
+            onChange={e => updateTicketStatus(String(item.id), e.target.value)}
+            className={`px-2 py-0.5 rounded-full text-xs font-medium border bg-[#0F172A] text-white cursor-pointer outline-none transition-all ${colors[status] || 'bg-white/5 text-[#64748B] border-white/10'}`}
+          >
+            <option value="open">Open</option>
+            <option value="in-progress">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="closed">Closed</option>
+          </select>
+        );
+      }
       const colors: Record<string, string> = {
         new: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
         read: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
