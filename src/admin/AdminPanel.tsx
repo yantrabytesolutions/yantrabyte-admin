@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 
 import BillingSoftware from './BillingSoftware';
+// @ts-ignore
+import html2pdf from 'html2pdf.js';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -409,6 +411,153 @@ export default function AdminPanel() {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   }, []);
+
+  // --- Print Service Ticket Job Sheet / Drop-off Receipt ---
+  const printJobSheet = (item: Record<string, unknown>) => {
+    const ticketNo = String(item.ticket_number || 'DRAFT');
+    const element = document.createElement('div');
+    element.style.padding = '20px';
+    element.style.width = '790px';
+    element.style.fontFamily = 'Arial, sans-serif';
+    element.style.color = '#333333';
+    element.style.backgroundColor = '#ffffff';
+
+    const dateStr = item.created_at ? new Date(String(item.created_at)).toLocaleDateString('en-GB') : new Date().toLocaleDateString('en-GB');
+
+    element.innerHTML = `
+      <div style="border: 2px solid #000000; padding: 20px; min-height: 1020px; position: relative;">
+        <!-- Header -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+          <tr>
+            <td style="width: 60%; vertical-align: top;">
+              <div style="font-size: 26px; font-weight: bold; color: #0B5394; text-transform: uppercase; letter-spacing: 0.5px;">Yantrabyte Solutions</div>
+              <div style="font-size: 11px; color: #555555; line-height: 1.4; margin-top: 5px;">
+                IT service, repair, and network management experts.<br />
+                Email: support@yantrabyte.com | Web: www.yantrabyte.com
+              </div>
+            </td>
+            <td style="width: 40%; text-align: right; vertical-align: top;">
+              <div style="background-color: #0B5394; color: #ffffff; padding: 8px 12px; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block;">
+                Job Sheet Drop-off Receipt
+              </div>
+              <div style="font-size: 12px; font-weight: bold; margin-top: 10px; color: #333333;">
+                Ticket No: <span style="color: #c2410c; font-size: 15px;">${ticketNo}</span>
+              </div>
+              <div style="font-size: 11px; color: #555555; margin-top: 4px;">
+                Date: ${dateStr}
+              </div>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Divider -->
+        <div style="height: 2px; background: #000000; margin-bottom: 20px;"></div>
+
+        <!-- Customer & Device Details Grid -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px;">
+          <tr>
+            <!-- Customer info -->
+            <td style="width: 50%; border: 1px solid #000000; vertical-align: top;">
+              <div style="background-color: #D9EAF7; padding: 6px 10px; font-weight: bold; font-size: 12px; color: #000000; border-bottom: 1px solid #000000;">
+                CUSTOMER DETAILS
+              </div>
+              <div style="padding: 10px; font-size: 12px; line-height: 1.6;">
+                <table style="width: 100%;">
+                  <tr><td style="font-weight: bold; width: 30%;">Name:</td><td>${item.customer_name || '—'}</td></tr>
+                  <tr><td style="font-weight: bold;">Phone:</td><td>${item.customer_phone || '—'}</td></tr>
+                  <tr><td style="font-weight: bold;">Email:</td><td>${item.customer_email || '—'}</td></tr>
+                </table>
+              </div>
+            </td>
+            <!-- Device Info -->
+            <td style="width: 50%; border: 1px solid #000000; border-left: none; vertical-align: top;">
+              <div style="background-color: #D9EAF7; padding: 6px 10px; font-weight: bold; font-size: 12px; color: #000000; border-bottom: 1px solid #000000;">
+                DEVICE & SERVICE DETAILS
+              </div>
+              <div style="padding: 10px; font-size: 12px; line-height: 1.6;">
+                <table style="width: 100%;">
+                  <tr><td style="font-weight: bold; width: 35%;">Device/Type:</td><td>${item.device_type || '—'}</td></tr>
+                  <tr><td style="font-weight: bold;">Priority:</td><td style="text-transform: capitalize; font-weight: bold; color: ${String(item.priority) === 'high' || String(item.priority) === 'urgent' ? '#b91c1c' : '#374151'}">${item.priority || 'Medium'}</td></tr>
+                  <tr><td style="font-weight: bold;">Status:</td><td style="text-transform: uppercase; font-weight: bold; color: #0f766e">${item.status || 'Open'}</td></tr>
+                </table>
+              </div>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Problem Description -->
+        <div style="border: 1px solid #000000; margin-bottom: 25px;">
+          <div style="background-color: #D9EAF7; padding: 6px 10px; font-weight: bold; font-size: 12px; color: #000000; border-bottom: 1px solid #000000;">
+            REPORTED CUSTOMER COMPLAINT / ISSUE
+          </div>
+          <div style="padding: 12px; font-size: 12px; min-height: 80px; line-height: 1.6; color: #111111;">
+            ${String(item.issue_description || 'No complaints specified.').replace(/\n/g, '<br />')}
+          </div>
+        </div>
+
+        <!-- Diagnostics & Internal Notes -->
+        <div style="border: 1px solid #000000; margin-bottom: 30px;">
+          <div style="background-color: #D9EAF7; padding: 6px 10px; font-weight: bold; font-size: 12px; color: #000000; border-bottom: 1px solid #000000;">
+            DIAGNOSTICS & INTERNAL WORKSHOP NOTES
+          </div>
+          <div style="padding: 12px; font-size: 12px; min-height: 100px; line-height: 1.6; color: #333333; font-style: italic;">
+            ${item.notes ? String(item.notes).replace(/\n/g, '<br />') : 'Awaiting diagnostic feedback from the support team.'}
+          </div>
+        </div>
+
+        <!-- Repair / Drop-off Terms -->
+        <div style="border: 1px solid #000000; padding: 12px; margin-bottom: 120px; background-color: #f8fafc;">
+          <div style="font-size: 11px; font-weight: bold; margin-bottom: 6px; color: #111111;">TERMS & CONDITIONS:</div>
+          <ol style="margin: 0; padding-left: 15px; font-size: 9px; color: #555555; line-height: 1.5;">
+            <li>Diagnostic charges are applicable for all devices checked in for repair, even if estimate is rejected.</li>
+            <li>Backup all data before drop-off. Yantrabyte Solutions is not liable for data loss or corruption during repair.</li>
+            <li>Devices not collected within 30 days of repair completion warning may be subject to storage fees or disposal.</li>
+            <li>Any hardware components replaced will carry their respective standard OEM manufacturer warranties.</li>
+          </ol>
+        </div>
+
+        <!-- Signatures Bottom Section -->
+        <div style="position: absolute; bottom: 30px; left: 20px; right: 20px;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <!-- Customer Sign -->
+              <td style="width: 50%; vertical-align: bottom;">
+                <div style="width: 180px; border-bottom: 1px solid #555555; margin-bottom: 8px;"></div>
+                <div style="font-size: 11px; font-weight: bold; color: #333333;">Customer Drop-off Signature</div>
+                <div style="font-size: 9px; color: #777777; margin-top: 2px;">I agree to the service repair terms above.</div>
+              </td>
+              <!-- Yantrabyte Sign -->
+              <td style="width: 50%; text-align: right; vertical-align: bottom; position: relative;">
+                <div style="display: inline-block; text-align: left; position: relative;">
+                  <!-- Stamp/Seal overlay -->
+                  <div style="position: absolute; bottom: 10px; right: 20px; pointer-events: none; opacity: 0.85;">
+                    <img src="/seal.png" style="width: 115px; height: 115px; border-radius: 9999px; object-fit: contain;" crossOrigin="anonymous" />
+                  </div>
+                  <div style="width: 220px; border-bottom: 1px solid #555555; margin-bottom: 8px;"></div>
+                  <div style="font-size: 11px; font-weight: bold; color: #0B5394;">For Yantrabyte Solutions</div>
+                  <div style="font-size: 9px; color: #777777; margin-top: 2px;">Authorized Workshop Executive</div>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(element);
+    const opt = {
+      margin: 0,
+      filename: `YBS-JOB-${ticketNo}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, windowWidth: 800 },
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(element).save().then(() => {
+      document.body.removeChild(element);
+      showToast('Job sheet drop-off receipt downloaded!');
+    });
+  };
 
   // --- Data Fetching ---
   const fetchData = useCallback(async (section: Section) => {
@@ -1013,6 +1162,15 @@ export default function AdminPanel() {
                         )}
                         {!isReadOnly && (
                           <>
+                            {activeSection === 'tickets' && (
+                              <button
+                                onClick={() => printJobSheet(item)}
+                                className="p-1.5 rounded-lg hover:bg-white/5 text-[#64748B] hover:text-emerald-400 transition-all"
+                                title="Print Job Sheet / Drop-off Receipt"
+                              >
+                                <Receipt className="w-4 h-4" />
+                              </button>
+                            )}
                             <button
                               onClick={() => openEditForm(item)}
                               className="p-1.5 rounded-lg hover:bg-white/5 text-[#64748B] hover:text-[#0EA5E9] transition-all"
