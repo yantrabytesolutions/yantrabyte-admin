@@ -215,16 +215,24 @@ export default function BillingSoftware() {
   };
 
   // Calculations
+  // Calculations
   const subtotal = items.reduce((acc, item) => acc + (item.qty * item.rate), 0);
   const beforeRound = (subtotal - discount) + tax;
   const grandTotal = Math.round(beforeRound);
   const roundOff = grandTotal - beforeRound;
   const balanceDue = grandTotal - advancePaid;
 
-  const generateInvoiceNo = () => {
+  // Stats dashboard calculations
+  const totalBilled = invoices.filter(i => i.doc_type === 'Invoice').reduce((acc, i) => acc + (i.grand_total || 0), 0);
+  const totalOutstanding = invoices.filter(i => i.doc_type === 'Invoice').reduce((acc, i) => acc + (i.balance_due || 0), 0);
+  const invoiceCount = invoices.filter(i => i.doc_type === 'Invoice').length;
+  const quoteCount = invoices.filter(i => i.doc_type === 'Quotation').length;
+
+  const generateInvoiceNo = (type: string = docType) => {
     const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const seq = (invoices.length + 1).toString().padStart(3, '0');
-    return `YBS-${datePart}-${seq}`;
+    const prefix = type === 'Quotation' ? 'YBQ' : 'YBS';
+    return `${prefix}-${datePart}-${seq}`;
   };
 
   const handleSave = async (andPrint = false) => {
@@ -323,6 +331,38 @@ export default function BillingSoftware() {
           <button onClick={clearForm} className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
             <Plus className="w-4 h-4 mr-2" /> New Document
           </button>
+        </div>
+      </div>
+
+      {/* Financial Statistics Dashboard Overview */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex flex-col justify-between">
+          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Billed</span>
+          <div className="flex items-baseline space-x-1 mt-2">
+            <span className="text-2xl font-bold text-gray-900">₹{totalBilled.toLocaleString('en-IN')}</span>
+          </div>
+          <span className="text-[10px] text-green-600 mt-1 font-medium">From finalized invoices</span>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex flex-col justify-between">
+          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Outstanding Dues</span>
+          <div className="flex items-baseline space-x-1 mt-2">
+            <span className="text-2xl font-bold text-amber-600">₹{totalOutstanding.toLocaleString('en-IN')}</span>
+          </div>
+          <span className="text-[10px] text-amber-600 mt-1 font-medium">To be collected</span>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex flex-col justify-between">
+          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Invoices</span>
+          <div className="flex items-baseline space-x-1 mt-2">
+            <span className="text-2xl font-bold text-blue-600">{invoiceCount}</span>
+          </div>
+          <span className="text-[10px] text-gray-400 mt-1">Generated bills</span>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex flex-col justify-between">
+          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Quotations</span>
+          <div className="flex items-baseline space-x-1 mt-2">
+            <span className="text-2xl font-bold text-purple-600">{quoteCount}</span>
+          </div>
+          <span className="text-[10px] text-gray-400 mt-1">Estimates & Quotes</span>
         </div>
       </div>
 
@@ -538,8 +578,19 @@ export default function BillingSoftware() {
                   className={`w-full text-left p-3 rounded-md border transition-colors text-sm flex justify-between items-center cursor-pointer ${selectedInvoiceId === inv.id ? 'bg-blue-50 border-blue-200 ring-1 ring-blue-500' : 'bg-white border-gray-100 hover:bg-gray-50 hover:border-gray-300'}`}
                 >
                   <div className="flex-1">
-                    <div className="font-semibold text-gray-800">{inv.invoice_no}</div>
-                    <div className="text-xs text-gray-500">{inv.customer_name} • {inv.date}</div>
+                    <div className="flex items-center space-x-2">
+                      <span className="font-semibold text-gray-800">{inv.invoice_no}</span>
+                      {inv.doc_type === 'Quotation' ? (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-700 font-medium">Quote</span>
+                      ) : (inv.balance_due || 0) <= 0 ? (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-green-50 text-green-700 font-medium">Paid</span>
+                      ) : (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 font-medium">
+                          ₹{(inv.balance_due || 0).toLocaleString('en-IN')} Due
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-0.5">{inv.customer_name} • {inv.date}</div>
                   </div>
                   <div className="flex items-center space-x-3">
                     <div className="font-bold text-gray-700">₹{inv.grand_total.toLocaleString('en-IN')}</div>
