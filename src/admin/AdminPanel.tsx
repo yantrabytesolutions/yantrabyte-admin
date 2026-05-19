@@ -9,7 +9,7 @@ import {
   LayoutDashboard, FileText, Wrench, Package, MessageSquareQuote, PenTool,
   Users, Briefcase, Building2, HelpCircle, Image, Award, Mail, Settings,
   LogOut, Plus, Pencil, Trash2, X, Eye, EyeOff, ChevronDown, Save,
-  Loader2, AlertCircle, CheckCircle, Search, RefreshCw, Menu, Ticket, Receipt
+  Loader2, AlertCircle, CheckCircle, Search, RefreshCw, Menu, Ticket, Receipt, CreditCard
 } from 'lucide-react';
 
 import BillingSoftware from './BillingSoftware';
@@ -379,6 +379,7 @@ export default function AdminPanel() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [autofillTicket, setAutofillTicket] = useState<any | null>(null);
 
   // --- Auth ---
   useEffect(() => {
@@ -557,6 +558,12 @@ export default function AdminPanel() {
       document.body.removeChild(element);
       showToast('Job sheet drop-off receipt downloaded!');
     });
+  };
+
+  const handleInstantBill = (ticket: Record<string, unknown>) => {
+    setAutofillTicket(ticket);
+    setActiveSection('billing');
+    showToast('Switched to billing with pre-filled ticket details!');
   };
 
   // --- Data Fetching ---
@@ -1163,13 +1170,22 @@ export default function AdminPanel() {
                         {!isReadOnly && (
                           <>
                             {activeSection === 'tickets' && (
-                              <button
-                                onClick={() => printJobSheet(item)}
-                                className="p-1.5 rounded-lg hover:bg-white/5 text-[#64748B] hover:text-emerald-400 transition-all"
-                                title="Print Job Sheet / Drop-off Receipt"
-                              >
-                                <Receipt className="w-4 h-4" />
-                              </button>
+                              <>
+                                <button
+                                  onClick={() => handleInstantBill(item)}
+                                  className="p-1.5 rounded-lg hover:bg-white/5 text-[#64748B] hover:text-[#0EA5E9] transition-all"
+                                  title="Create Invoice for this Repair"
+                                >
+                                  <CreditCard className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => printJobSheet(item)}
+                                  className="p-1.5 rounded-lg hover:bg-white/5 text-[#64748B] hover:text-emerald-400 transition-all"
+                                  title="Print Job Sheet / Drop-off Receipt"
+                                >
+                                  <Receipt className="w-4 h-4" />
+                                </button>
+                              </>
                             )}
                             <button
                               onClick={() => openEditForm(item)}
@@ -1442,7 +1458,7 @@ export default function AdminPanel() {
   const renderContent = () => {
     if (activeSection === 'dashboard') return renderDashboard();
     if (activeSection === 'settings') return renderSettings();
-    if (activeSection === 'billing') return <BillingSoftware />;
+    if (activeSection === 'billing') return <BillingSoftware initialAutofillTicket={autofillTicket} onClearAutofill={() => setAutofillTicket(null)} />;
     return renderDataTable();
   };
 

@@ -38,7 +38,12 @@ function numberToWords(num: number): string {
   return str.trim() + ' Rupees';
 }
 
-export default function BillingSoftware() {
+interface BillingSoftwareProps {
+  initialAutofillTicket?: any;
+  onClearAutofill?: () => void;
+}
+
+export default function BillingSoftware({ initialAutofillTicket, onClearAutofill }: BillingSoftwareProps) {
   const [docType, setDocType] = useState('Invoice');
   const [customerName, setCustomerName] = useState('');
   const [phone, setPhone] = useState('');
@@ -69,6 +74,33 @@ export default function BillingSoftware() {
     fetchCustomers();
     fetchServiceTickets();
   }, []);
+
+  useEffect(() => {
+    if (initialAutofillTicket) {
+      setCustomerName(initialAutofillTicket.customer_name || '');
+      setPhone(initialAutofillTicket.customer_phone || '');
+      setEmail(initialAutofillTicket.customer_email || '');
+      setAddress('');
+      
+      // Auto-set document type to 'Invoice'
+      setDocType('Invoice');
+      
+      // Add dynamic service item for this ticket!
+      const defaultDesc = `Service Charge: Repair of ${initialAutofillTicket.device_type || 'Device'} (${initialAutofillTicket.ticket_number})`;
+      setItems([{
+        description: defaultDesc,
+        qty: 1,
+        rate: 0
+      }]);
+      
+      // Clear parent state so it doesn't re-trigger on subsequent clicks/switches
+      if (onClearAutofill) {
+        onClearAutofill();
+      }
+      
+      showToast(`Loaded ticket ${initialAutofillTicket.ticket_number} details! Set the rate for the service item.`);
+    }
+  }, [initialAutofillTicket]);
 
   const fetchServiceTickets = async () => {
     const { data, error } = await supabase
