@@ -456,7 +456,7 @@ export default function BillingSoftware() {
           {/* Header */}
           <div className="flex items-center justify-between border p-3 mb-2" style={{ borderColor: '#000000' }}>
             <div className="flex items-center space-x-4">
-              <div className="w-72 h-24 flex items-center justify-start ml-2">
+              <div className="w-[340px] h-28 flex items-center justify-start ml-2">
                 <img src="/logo5.png" alt="YantraByte Solutions" style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} crossOrigin="anonymous" />
               </div>
             </div>
@@ -577,11 +577,13 @@ export default function BillingSoftware() {
                   <p className="mt-0.5"><span className="font-bold">UPI:</span> s0424237152@slc</p>
                 </div>
               </div>
-              <div className="text-center mt-6 pt-2">
-                <p className="font-bold" style={{ color: '#000000' }}>For YantraByte Solutions</p>
-                <div className="h-8"></div>
-                <p className="font-bold" style={{ color: '#000000' }}>RAMESH A S</p>
-                <p style={{ color: '#444444' }}>Authorized Signatory</p>
+              <div className="text-center mt-3 pt-1 flex flex-col items-center justify-center relative">
+                <p className="font-bold mb-1" style={{ color: '#000000', fontSize: '11px' }}>For YantraByte Solutions</p>
+                <div className="h-16 w-32 flex items-center justify-center relative my-0.5">
+                  <img src="/seal.png" alt="Seal" style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} crossOrigin="anonymous" />
+                </div>
+                <p className="font-bold mt-1" style={{ color: '#000000', fontSize: '11px' }}>RAMESH A S</p>
+                <p style={{ color: '#444444', fontSize: '10px' }}>Authorized Signatory</p>
               </div>
             </div>
           </div>
