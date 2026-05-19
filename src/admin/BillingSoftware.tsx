@@ -569,12 +569,17 @@ export default function BillingSoftware() {
             <div className="w-2/5 p-2 flex flex-col justify-between">
               <div>
                 <div className="font-bold inline-block w-full p-1 mb-1 text-center" style={{ backgroundColor: '#0B5394', color: '#ffffff' }}>Bank & Payment Details</div>
-                <div className="ml-2 leading-snug" style={{ color: '#000000' }}>
-                  <p><span className="font-bold">Bank:</span> North East Small Finance Bank</p>
-                  <p><span className="font-bold">A/C Name:</span> YantraByte Solutions</p>
-                  <p><span className="font-bold">A/C No:</span> 033311501023226</p>
-                  <p><span className="font-bold">IFSC:</span> NESF0000333</p>
-                  <p className="mt-0.5"><span className="font-bold">UPI:</span> s0424237152@slc</p>
+                <div className="flex items-center justify-between ml-2 mt-1">
+                  <div className="leading-snug" style={{ color: '#000000', fontSize: '11px' }}>
+                    <p><span className="font-bold">Bank:</span> North East Small Finance Bank</p>
+                    <p><span className="font-bold">A/C Name:</span> YantraByte Solutions</p>
+                    <p><span className="font-bold">A/C No:</span> 033311501023226</p>
+                    <p><span className="font-bold">IFSC:</span> NESF0000333</p>
+                    <p className="mt-0.5"><span className="font-bold">UPI:</span> s0424237152@slc</p>
+                  </div>
+                  <div className="w-16 h-16 flex-shrink-0 border p-0.5 mr-2" style={{ borderColor: '#dddddd' }}>
+                    <img src="/qr.jpg" alt="Payment QR" style={{ height: '100%', width: '100%', objectFit: 'contain' }} crossOrigin="anonymous" />
+                  </div>
                 </div>
               </div>
               <div className="text-center mt-3 pt-1 flex flex-col items-center justify-center relative">
