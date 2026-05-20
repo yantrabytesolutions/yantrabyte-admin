@@ -57,12 +57,14 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const [itemDesc, setItemDesc] = useState('');
   const [itemQty, setItemQty] = useState(1);
   const [itemRate, setItemRate] = useState(0);
+  const [itemProductId, setItemProductId] = useState<string>('');
 
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>('');
   
   const [customersList, setCustomersList] = useState<any[]>([]);
   const [serviceTicketsList, setServiceTicketsList] = useState<any[]>([]);
+  const [productsList, setProductsList] = useState<any[]>([]);
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -112,7 +114,18 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     fetchInvoices();
     fetchCustomers();
     fetchServiceTickets();
+    fetchProducts();
   }, []);
+
+  const fetchProducts = async () => {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .order('name', { ascending: true });
+    if (!error && data) {
+      setProductsList(data);
+    }
+  };
 
   useEffect(() => {
     if (initialAutofillTicket) {
@@ -191,10 +204,11 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       showToast('Quantity must be at least 1.', 'error');
       return;
     }
-    setItems([...items, { description: itemDesc, qty: itemQty, rate: itemRate }]);
+    setItems([...items, { product_id: itemProductId || undefined, description: itemDesc, qty: itemQty, rate: itemRate }]);
     setItemDesc('');
     setItemQty(1);
     setItemRate(0);
+    setItemProductId('');
   };
 
   const removeItem = (index: number) => {
@@ -258,6 +272,11 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       return;
     }
     try {
+      const inv = invoices.find(i => i.id === id);
+      if (inv && inv.doc_type === 'Invoice') {
+        await adjustStock(inv.items, 1);
+      }
+
       const { error } = await supabase.from('invoices').delete().eq('id', id);
       if (error) throw error;
       showToast(`Invoice ${invoiceNo} deleted successfully.`);
@@ -265,6 +284,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         clearForm();
       }
       await fetchInvoices();
+      await fetchProducts();
     } catch (err: any) {
       showToast(err.message || 'Failed to delete invoice', 'error');
     }
@@ -329,6 +349,27 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     return `${prefix}-${datePart}-${seq}`;
   };
 
+  const adjustStock = async (itemsList: InvoiceItem[], factor: number) => {
+    for (const item of itemsList) {
+      if (item.product_id) {
+        const { data: prod, error: fetchErr } = await supabase
+          .from('products')
+          .select('stock_count')
+          .eq('id', item.product_id)
+          .single();
+        
+        if (!fetchErr && prod) {
+          const currentStock = prod.stock_count || 0;
+          const newStock = currentStock + (item.qty * factor);
+          await supabase
+            .from('products')
+            .update({ stock_count: newStock })
+            .eq('id', item.product_id);
+        }
+      }
+    }
+  };
+
   const handleSave = async (andPrint = false) => {
     if (!customerName.trim()) {
       showToast('Please enter a customer name.', 'error');
@@ -366,10 +407,22 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       let currentInvoiceId = selectedInvoiceId;
 
       if (isUpdate) {
+        if (docType === 'Invoice') {
+          const oldInvoice = invoices.find(i => i.id === selectedInvoiceId);
+          if (oldInvoice && oldInvoice.doc_type === 'Invoice') {
+            await adjustStock(oldInvoice.items, 1);
+          }
+          await adjustStock(items, -1);
+        }
+
         const { error } = await supabase.from('invoices').update(payload).eq('id', selectedInvoiceId);
         if (error) throw error;
         showToast('Invoice updated successfully!');
       } else {
+        if (docType === 'Invoice') {
+          await adjustStock(items, -1);
+        }
+
         const { data, error } = await supabase.from('invoices').insert([payload]).select().single();
         if (error) throw error;
         if (data) {
@@ -380,7 +433,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       }
 
       await fetchInvoices();
-
+      await fetchProducts();
+      
       if (andPrint) {
         setTimeout(() => {
           generatePdf(payload.invoice_no);
@@ -560,27 +614,63 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               <div className="col-span-6">
                 <div className="flex justify-between items-center mb-1">
                   <label className="block text-xs font-medium text-gray-600">Description</label>
-                  <select 
-                    onChange={(e) => {
-                      const selectedVal = e.target.value;
-                      if (selectedVal) {
-                        const matched = PRESET_ITEMS.find(item => item.name === selectedVal);
-                        if (matched) {
-                          setItemDesc(matched.name);
-                          setItemRate(matched.price);
+                  <div className="flex space-x-2">
+                    <select 
+                      onChange={(e) => {
+                        const selectedVal = e.target.value;
+                        if (selectedVal) {
+                          const matched = PRESET_ITEMS.find(item => item.name === selectedVal);
+                          if (matched) {
+                            setItemDesc(matched.name);
+                            setItemRate(matched.price);
+                            setItemProductId('');
+                          }
                         }
-                      }
-                    }}
-                    value=""
-                    className="text-[10px] border rounded px-1.5 py-0.5 text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer max-w-[200px]"
-                  >
-                    <option value="">Quick Select Item...</option>
-                    {PRESET_ITEMS.map((item, idx) => (
-                      <option key={idx} value={item.name}>{item.name} (₹{item.price})</option>
-                    ))}
-                  </select>
+                      }}
+                      value=""
+                      className="text-[10px] border rounded px-1.5 py-0.5 text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer max-w-[120px]"
+                    >
+                      <option value="">Quick Service...</option>
+                      {PRESET_ITEMS.map((item, idx) => (
+                        <option key={idx} value={item.name}>{item.name} (₹{item.price})</option>
+                      ))}
+                    </select>
+
+                    <select 
+                      onChange={(e) => {
+                        const selectedId = e.target.value;
+                        if (selectedId) {
+                          const matched = productsList.find(p => p.id === selectedId);
+                          if (matched) {
+                            setItemDesc(matched.name);
+                            setItemRate(Number(matched.price) || 0);
+                            setItemProductId(matched.id);
+                          }
+                        } else {
+                          setItemProductId('');
+                        }
+                      }}
+                      value={itemProductId}
+                      className="text-[10px] border rounded px-1.5 py-0.5 text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer max-w-[120px]"
+                    >
+                      <option value="">Quick Product...</option>
+                      {productsList.map((prod) => (
+                        <option key={prod.id} value={prod.id}>
+                          {prod.name} ({prod.stock_count ?? 0})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-                <input type="text" value={itemDesc} onChange={e => setItemDesc(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddItem()} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" placeholder="Item description" />
+                <input type="text" value={itemDesc} onChange={e => {
+                  setItemDesc(e.target.value);
+                  if (itemProductId) {
+                    const matched = productsList.find(p => p.id === itemProductId);
+                    if (matched && matched.name !== e.target.value) {
+                      setItemProductId('');
+                    }
+                  }
+                }} onKeyDown={e => e.key === 'Enter' && handleAddItem()} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" placeholder="Item description" />
               </div>
               <div className="col-span-2">
                 <label className="block text-xs font-medium text-gray-600 mb-1">Qty</label>

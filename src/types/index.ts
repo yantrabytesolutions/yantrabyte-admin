@@ -177,6 +177,7 @@ export interface ServiceTicket {
 }
 
 export interface InvoiceItem {
+  product_id?: string;
   description: string;
   qty: number;
   rate: number;
@@ -198,6 +199,40 @@ export interface Invoice {
   round_off: number;
   grand_total: number;
   advance_paid: number;
+  balance_due: number;
+  created_at: string;
+}
+
+export interface Supplier {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  address: string;
+  gstin: string;
+  created_at: string;
+}
+
+export interface PurchaseItem {
+  product_id?: string;
+  description: string;
+  qty: number;
+  rate: number;
+}
+
+export interface Purchase {
+  id: string;
+  purchase_no: string;
+  supplier_id: string | null;
+  supplier_name: string;
+  date: string;
+  items: PurchaseItem[];
+  subtotal: number;
+  discount: number;
+  tax: number;
+  round_off: number;
+  grand_total: number;
+  amount_paid: number;
   balance_due: number;
   created_at: string;
 }

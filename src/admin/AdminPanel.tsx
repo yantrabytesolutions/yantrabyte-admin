@@ -10,10 +10,11 @@ import {
   Users, Briefcase, Building2, HelpCircle, Image, Award, Mail, Settings,
   LogOut, Plus, Pencil, Trash2, X, Eye, EyeOff, ChevronDown, Save,
   Loader2, AlertCircle, CheckCircle, Search, RefreshCw, Menu, Ticket, Receipt, CreditCard, MessageSquare,
-  DollarSign, Clock, Activity, TrendingUp, ArrowRight
+  DollarSign, Clock, Activity, TrendingUp, ArrowRight, Truck
 } from 'lucide-react';
 
 import BillingSoftware from './BillingSoftware';
+import PurchaseSoftware from './PurchaseSoftware';
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
 
@@ -22,7 +23,7 @@ import html2pdf from 'html2pdf.js';
 type Section =
   | 'dashboard' | 'pages' | 'services' | 'products' | 'testimonials'
   | 'blog' | 'team' | 'careers' | 'industries' | 'faqs' | 'gallery'
-  | 'client-logos' | 'contacts' | 'settings' | 'tickets' | 'billing';
+  | 'client-logos' | 'contacts' | 'settings' | 'tickets' | 'billing' | 'purchase';
 
 interface FormField {
   key: string;
@@ -52,6 +53,7 @@ const SECTION_CONFIG: Record<Section, { label: string; icon: React.ElementType; 
   contacts: { label: 'Contact Submissions', icon: Mail, table: 'contact_submissions', orderField: 'created_at' },
   tickets: { label: 'Service Ticket', icon: Ticket, table: 'service_tickets', orderField: 'created_at' },
   billing: { label: 'Billing Software', icon: Receipt, table: 'invoices', orderField: 'created_at' },
+  purchase: { label: 'Purchase Entry', icon: Truck, table: 'purchases', orderField: 'created_at' },
   settings: { label: 'Site Settings', icon: Settings, table: 'site_settings', orderField: 'key' },
 };
 
@@ -1039,6 +1041,7 @@ export default function AdminPanel() {
     { section: 'contacts', label: 'Contact Submissions', icon: Mail },
     { section: 'tickets', label: 'Service Ticket', icon: Ticket },
     { section: 'billing', label: 'Billing Software', icon: Receipt },
+    { section: 'purchase', label: 'Purchase Entry', icon: Truck },
     { section: 'settings', label: 'Site Settings', icon: Settings },
   ];
 
@@ -1815,6 +1818,7 @@ export default function AdminPanel() {
     if (activeSection === 'dashboard') return renderDashboard();
     if (activeSection === 'settings') return renderSettings();
     if (activeSection === 'billing') return <BillingSoftware initialAutofillTicket={autofillTicket} onClearAutofill={() => setAutofillTicket(null)} />;
+    if (activeSection === 'purchase') return <PurchaseSoftware />;
     return renderDataTable();
   };
 
