@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Invoice, InvoiceItem, ServiceTicket, Product } from '../types';
-import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt } from 'lucide-react';
+import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt, Mail } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 import { PRESET_ITEMS } from './presetItems';
 
@@ -75,6 +75,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [printInvoiceNumber, setPrintInvoiceNumber] = useState('');
 
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
   const [historyDrawerData, setHistoryDrawerData] = useState<{
@@ -378,7 +380,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     }
   };
 
-  const handleSave = async (andPrint = false) => {
+  const handleSave = async (action: 'save' | 'download' | 'email' = 'save') => {
     if (!customerName.trim()) {
       showToast('Please enter a customer name.', 'error');
       return;
@@ -387,8 +389,13 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       showToast('Please add at least one item.', 'error');
       return;
     }
+    if (action === 'email' && !email.trim()) {
+      showToast('Please enter the customer email before sending the invoice.', 'error');
+      return;
+    }
 
     setIsSaving(true);
+    setIsSendingEmail(action === 'email');
     try {
       const isUpdate = !!selectedInvoiceId;
       const invoiceNo = isUpdate ? invoices.find(i => i.id === selectedInvoiceId)?.invoice_no || generateInvoiceNo() : generateInvoiceNo();
@@ -440,38 +447,103 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       await fetchInvoices();
       await fetchProducts();
       
-      if (andPrint) {
-        setTimeout(() => {
-          generatePdf(payload.invoice_no);
-        }, 500);
+      if (action === 'download') {
+        await new Promise(resolve => window.setTimeout(resolve, 500));
+        await generatePdf(payload.invoice_no);
+      } else if (action === 'email') {
+        await new Promise(resolve => window.setTimeout(resolve, 500));
+        await emailInvoicePdf(payload.invoice_no);
       }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);
       showToast(errorMsg || 'Failed to save invoice', 'error');
     } finally {
       setIsSaving(false);
+      setIsSendingEmail(false);
     }
   };
 
-  const generatePdf = (invoiceNumber: string) => {
-    if (!printRef.current) return;
-    const element = printRef.current;
-    
-    // We make it temporarily visible for printing
-    element.style.display = 'block';
-
-    const opt = {
+  const getPdfOptions = (invoiceNumber: string) => ({
       margin: 0,
       filename: `YBS-${invoiceNumber}.pdf`,
       image: { type: 'jpeg' as const, quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, windowWidth: 950 },
       jsPDF: { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const }
-    };
+  });
 
-    html2pdf().set(opt).from(element).save().then(() => {
+  const preparePdfElement = async (invoiceNumber: string) => {
+    if (!printRef.current) return null;
+    setPrintInvoiceNumber(invoiceNumber);
+    await new Promise(resolve => window.setTimeout(resolve, 0));
+    printRef.current.style.display = 'block';
+    return printRef.current;
+  };
+
+  const blobToBase64 = (blob: Blob) => new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = String(reader.result || '');
+      resolve(result.includes(',') ? result.split(',')[1] : result);
+    };
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+
+  const generatePdf = async (invoiceNumber: string) => {
+    const element = await preparePdfElement(invoiceNumber);
+    if (!element) return;
+    const opt = getPdfOptions(invoiceNumber);
+
+    await html2pdf().set(opt).from(element).save().then(() => {
       element.style.display = 'none';
+      setPrintInvoiceNumber('');
       showToast('PDF Generated successfully!');
     });
+  };
+
+  const emailInvoicePdf = async (invoiceNumber: string) => {
+    const element = await preparePdfElement(invoiceNumber);
+    if (!element) return;
+    const opt = getPdfOptions(invoiceNumber);
+
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) {
+        throw new Error('Please login again before sending email.');
+      }
+
+      const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob') as Blob;
+      const pdfBase64 = await blobToBase64(pdfBlob);
+      const response = await fetch('/api/invoices/email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          to: email,
+          customerName,
+          invoiceNumber,
+          documentType: docType,
+          filename: `YBS-${invoiceNumber}.pdf`,
+          pdfBase64,
+        }),
+      });
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to email invoice.');
+      }
+
+      showToast(`Invoice emailed to ${email}`);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      showToast(errorMsg || 'Failed to email invoice', 'error');
+    } finally {
+      element.style.display = 'none';
+      setPrintInvoiceNumber('');
+    }
   };
 
   return (
@@ -757,12 +829,16 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             </div>
 
             <div className="mt-8 space-y-3">
-              <button disabled={isSaving} onClick={() => handleSave(false)} className="w-full flex items-center justify-center px-4 py-2.5 bg-gray-800 hover:bg-gray-900 text-white font-medium rounded-lg transition-colors">
+              <button disabled={isSaving} onClick={() => handleSave('save')} className="w-full flex items-center justify-center px-4 py-2.5 bg-gray-800 hover:bg-gray-900 text-white font-medium rounded-lg transition-colors">
                 {isSaving ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                 Save Only
               </button>
-              <button disabled={isSaving} onClick={() => handleSave(true)} className="w-full flex items-center justify-center px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors shadow-sm shadow-green-200">
+              <button disabled={isSaving} onClick={() => handleSave('download')} className="w-full flex items-center justify-center px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors shadow-sm shadow-green-200">
                 <Download className="w-4 h-4 mr-2" /> Save & Generate PDF
+              </button>
+              <button disabled={isSaving} onClick={() => handleSave('email')} className="w-full flex items-center justify-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors shadow-sm shadow-blue-200">
+                {isSendingEmail ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Mail className="w-4 h-4 mr-2" />}
+                Save & Email PDF
               </button>
             </div>
           </div>
@@ -850,7 +926,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
           <div className="flex justify-between border">
             <div className="w-1/2 p-2 border-r font-bold" style={{ borderColor: '#000000', color: '#0B5394' }}>
-              {docType === 'Quotation' ? 'Quotation No: ' : 'Invoice No: '} {selectedInvoiceId ? (invoices.find(i=>i.id===selectedInvoiceId)?.invoice_no || 'DRAFT') : 'DRAFT'}
+              {docType === 'Quotation' ? 'Quotation No: ' : 'Invoice No: '} {printInvoiceNumber || (selectedInvoiceId ? (invoices.find(i=>i.id===selectedInvoiceId)?.invoice_no || 'DRAFT') : 'DRAFT')}
             </div>
             <div className="w-1/2 p-2 text-right font-bold" style={{ color: '#333333' }}>
               Date: {new Date().toLocaleDateString('en-GB')}
