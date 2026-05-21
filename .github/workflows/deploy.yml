@@ -1,0 +1,122 @@
+name: DevSecOps CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  security-and-lint:
+    name: 🛡️ Security Scan & Quality Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📁 Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔑 Scan for Secret Leaks (Gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: false
+
+      - name: 🟢 Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 📦 Install Dependencies
+        run: npm ci
+
+      - name: 👕 Code Linting
+        run: npm run lint
+
+      - name: 🔬 TypeScript Typechecking
+        run: npm run typecheck
+
+      - name: 🛑 Dependency Vulnerability Audit
+        run: npm audit --audit-level=high
+
+      - name: 🔍 SAST Code Vulnerability Scan (Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          ignore-unfixed: true
+          format: 'table'
+          severity: 'HIGH,CRITICAL'
+
+  build:
+    name: 🏗️ Compile Production Bundle
+    runs-on: ubuntu-latest
+    needs: security-and-lint
+    steps:
+      - name: 📁 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 📦 Install Dependencies
+        run: npm ci
+
+      - name: 💾 Inject Environment Secrets
+        run: |
+          echo "VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}" > .env
+          echo "VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}" >> .env
+
+      - name: 🚀 Build Static Assets
+        run: npm run build
+
+      - name: 🗜️ Compress Build Folder
+        run: tar -czf dist.tar.gz dist/
+
+      - name: 📤 Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-build
+          path: dist.tar.gz
+          retention-days: 2
+
+  deploy:
+    name: 🚀 Secure EC2 Atomic Deployment
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: 📁 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 📥 Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: production-build
+          path: .
+
+      - name: 📤 Copy Files to AWS EC2 (SCP)
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          source: "dist.tar.gz,scripts/deploy-ec2.sh"
+          target: "/home/${{ secrets.EC2_USERNAME }}/"
+
+      - name: 🛠️ Execute Atomic Switch on EC2 (SSH)
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            sudo mkdir -p /var/www/yantrabyte/scripts
+            sudo cp /home/${{ secrets.EC2_USERNAME }}/scripts/deploy-ec2.sh /var/www/yantrabyte/scripts/deploy-ec2.sh
+            sudo chmod +x /var/www/yantrabyte/scripts/deploy-ec2.sh
+            sudo /var/www/yantrabyte/scripts/deploy-ec2.sh
+            # Clean up home directory
+            rm -rf /home/${{ secrets.EC2_USERNAME }}/dist.tar.gz /home/${{ secrets.EC2_USERNAME }}/scripts
