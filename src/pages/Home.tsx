@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import SEO from '../components/SEO';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import {
   Camera,
@@ -46,22 +47,10 @@ import {
   Send,
   Mail,
   MapPin,
-  Check,
   AlertCircle,
   Building2,
   Store,
   Calendar,
-  Tag,
-  BookOpen,
-  TrendingUp,
-  Play,
-  Video,
-  Quote,
-  User,
-  Share2,
-  Facebook,
-  Twitter,
-  Linkedin,
 } from 'lucide-react';
 import {
   useServices,
@@ -70,7 +59,6 @@ import {
   useIndustries,
   useTeam,
   useClientLogos,
-  useGallery,
   useBlogPosts,
   submitContact,
 } from '../hooks/useSupabase';
@@ -81,7 +69,6 @@ import type {
   Industry,
   TeamMember,
   ClientLogo,
-  GalleryImage,
   BlogPost,
 } from '../types';
 
@@ -149,11 +136,7 @@ const FALLBACK_CLIENT_LOGOS: ClientLogo[] = [
   { id: '6', name: 'Karnataka Health Corp', logo_url: '', is_published: true, sort_order: 6, created_at: '' },
 ];
 
-const FALLBACK_GALLERY: GalleryImage[] = [
-  { id: '1', title: 'Office CCTV Installation', before_url: '', after_url: '', category: 'Security', is_published: true, sort_order: 1, created_at: '' },
-  { id: '2', title: 'Server Room Networking', before_url: '', after_url: '', category: 'Networking', is_published: true, sort_order: 2, created_at: '' },
-  { id: '3', title: 'Biometric Access System', before_url: '', after_url: '', category: 'Security', is_published: true, sort_order: 3, created_at: '' },
-];
+
 
 const FALLBACK_POSTS: BlogPost[] = [
   { id: '1', title: 'Top 5 Tips for Choosing the Right CCTV System', slug: 'tips-choosing-right-cctv-system', excerpt: 'Selecting the right CCTV system can be overwhelming. Here are the top 5 factors every business owner should consider.', content: '', category: 'CCTV Tips', featured_image: '', meta_title: '', meta_description: '', is_published: true, published_at: '2024-12-15', sort_order: 1, created_at: '2024-12-15', updated_at: '2024-12-15' },
@@ -887,7 +870,7 @@ function BlogSection() {
           </div>
         ) : (
           <motion.div variants={staggerContainer} className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {displayPosts.slice(0, 3).map((post, i) => {
+            {displayPosts.slice(0, 3).map((post) => {
               const CategoryIcon = CATEGORY_ICONS[post.category] || Camera;
               const gradient = CATEGORY_GRADIENTS[post.category] || 'from-[#0EA5E9] to-[#38BDF8]';
               return (
@@ -1229,6 +1212,10 @@ function EmergencyBanner() {
 export default function Home() {
   return (
     <div className="bg-[#0B1120]">
+      <SEO 
+        title="Yantrabyte Solutions | IT & Security Solutions in Bangalore" 
+        description="Yantrabyte Solutions offers professional CCTV installation, laptop repair, desktop repair, networking, biometric systems, and smart security solutions in Bangalore."
+      />
       <HeroSection />
       <TrustStatsSection />
       <ServicesSection />

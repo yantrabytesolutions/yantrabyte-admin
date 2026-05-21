@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import SEO from '../components/SEO';
 import { Link } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
 import {
@@ -521,6 +522,10 @@ export default function Testimonials() {
 
   return (
     <div className="bg-[#0B1120]">
+      <SEO 
+        title="Client Testimonials | Yantrabyte Solutions" 
+        description="Hear directly from businesses and homeowners in Bangalore who trust Yantrabyte Solutions for their IT and security needs."
+      />
       <HeroBanner />
       <OverallRatingSection />
       <GoogleReviewsSection />

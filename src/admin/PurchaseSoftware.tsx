@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Supplier, Purchase, PurchaseItem, Product } from '../types';
-import { Plus, Trash2, Save, FileText, RefreshCw, Truck, UserPlus, X, Edit, Search } from 'lucide-react';
+import { Plus, Trash2, Save, FileText, RefreshCw, Truck, UserPlus, X } from 'lucide-react';
 
 export default function PurchaseSoftware() {
   const [purchaseNo, setPurchaseNo] = useState('');
@@ -150,8 +150,9 @@ export default function PurchaseSoftware() {
       setNewSupEmail('');
       setNewSupAddress('');
       setNewSupGstin('');
-    } catch (err: any) {
-      showToast(err.message || 'Failed to create supplier', 'error');
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      showToast(errorMsg || 'Failed to create supplier', 'error');
     } finally {
       setIsSavingSupplier(false);
     }
@@ -232,8 +233,9 @@ export default function PurchaseSoftware() {
       clearForm();
       await fetchPurchases();
       await fetchProducts();
-    } catch (err: any) {
-      showToast(err.message || 'Failed to save purchase entry', 'error');
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      showToast(errorMsg || 'Failed to save purchase entry', 'error');
     } finally {
       setIsSaving(false);
     }
@@ -258,8 +260,9 @@ export default function PurchaseSoftware() {
       }
       await fetchPurchases();
       await fetchProducts();
-    } catch (err: any) {
-      showToast(err.message || 'Failed to delete purchase', 'error');
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      showToast(errorMsg || 'Failed to delete purchase', 'error');
     }
   };
 

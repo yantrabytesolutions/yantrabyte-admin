@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import SEO from '../components/SEO';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import {
@@ -589,6 +590,10 @@ function CTASection() {
 export default function Contact() {
   return (
     <div className="bg-[#0B1120]">
+      <SEO 
+        title="Contact Us | Yantrabyte Solutions" 
+        description="Get in touch with Yantrabyte Solutions for a free consultation, site visit, or support request for your IT and security needs in Bangalore."
+      />
       <HeroBanner />
       <ContactInfoSection />
       <ContactFormSection />

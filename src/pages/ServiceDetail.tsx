@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import SEO from '../components/SEO';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import {
@@ -233,7 +234,7 @@ function FAQItem({ faq, isOpen, onToggle }: { faq: { question: string; answer: s
 
 // ─── 1. Hero Banner ─────────────────────────────────────────────────────────
 
-function HeroBanner({ title, slug }: { title: string; slug: string }) {
+function HeroBanner({ title }: { title: string }) {
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-[#0B1120] via-[#111827] to-[#0B1120] pt-32 pb-20 md:pt-40 md:pb-28">
       {/* Grid pattern overlay */}
@@ -665,7 +666,11 @@ export default function ServiceDetail() {
 
   return (
     <div className="bg-[#0B1120]">
-      <HeroBanner title={currentService.title} slug={currentService.slug} />
+      <SEO 
+        title={`${currentService.title} | Yantrabyte Solutions`} 
+        description={currentService.short_description || `Professional ${currentService.title} by Yantrabyte Solutions in Bangalore.`}
+      />
+      <HeroBanner title={currentService.title} />
       <ServiceOverview service={currentService} index={serviceIndex >= 0 ? serviceIndex : 0} />
       <BenefitsSection benefits={currentService.benefits || []} />
       <ProcessSection />

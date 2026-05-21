@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import type {
-  Service, Product, Testimonial, BlogPost, TeamMember, Career,
-  Industry, FAQ, GalleryImage, ClientLogo, SiteSetting, ContactSubmission, Page,
+  SiteSetting,
   ServiceTicket,
+  Invoice,
 } from '../types';
 import {
   LayoutDashboard, FileText, Wrench, Package, MessageSquareQuote, PenTool,
@@ -15,7 +15,7 @@ import {
 
 import BillingSoftware from './BillingSoftware';
 import PurchaseSoftware from './PurchaseSoftware';
-// @ts-ignore
+// @ts-expect-error - html2pdf.js lacks typescript declaration files
 import html2pdf from 'html2pdf.js';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -382,10 +382,10 @@ export default function AdminPanel() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [autofillTicket, setAutofillTicket] = useState<any | null>(null);
+  const [autofillTicket, setAutofillTicket] = useState<ServiceTicket | null>(null);
 
-  const [financialInvoices, setFinancialInvoices] = useState<any[]>([]);
-  const [financialTickets, setFinancialTickets] = useState<any[]>([]);
+  const [financialInvoices, setFinancialInvoices] = useState<Invoice[]>([]);
+  const [financialTickets, setFinancialTickets] = useState<ServiceTicket[]>([]);
   const [dashboardLoading, setDashboardLoading] = useState(false);
 
   // --- Auth ---
@@ -708,8 +708,9 @@ export default function AdminPanel() {
       } else {
         showToast('No valid tickets found in sheet');
       }
-    } catch (err: any) {
-      showToast('Error syncing: ' + err.message, 'error');
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      showToast('Error syncing: ' + errorMsg, 'error');
     }
     setIsSyncing(false);
   };
@@ -721,26 +722,19 @@ export default function AdminPanel() {
   }, [session, activeSection, fetchData]);
 
   // --- Dashboard Stats ---
-  const [stats, setStats] = useState<Record<string, number>>({});
   useEffect(() => {
     if (session && activeSection === 'dashboard') {
       setDashboardLoading(true);
-      const tables = ['services', 'blog_posts', 'testimonials', 'contact_submissions', 'pages', 'products', 'team_members', 'careers', 'industries', 'faqs', 'gallery_images', 'client_logos', 'service_tickets'];
       
       Promise.all([
-        Promise.all(tables.map(t => supabase.from(t).select('id', { count: 'exact', head: true }))),
         supabase.from('invoices').select('*').order('date', { ascending: false }),
         supabase.from('service_tickets').select('*').order('created_at', { ascending: false })
-      ]).then(([results, invoicesRes, ticketsRes]) => {
-        const s: Record<string, number> = {};
-        tables.forEach((t, i) => { s[t] = results[i].count || 0; });
-        setStats(s);
-        
+      ]).then(([invoicesRes, ticketsRes]) => {
         if (invoicesRes.data) {
-          setFinancialInvoices(invoicesRes.data);
+          setFinancialInvoices(invoicesRes.data as Invoice[]);
         }
         if (ticketsRes.data) {
-          setFinancialTickets(ticketsRes.data);
+          setFinancialTickets(ticketsRes.data as ServiceTicket[]);
         }
         setDashboardLoading(false);
       }).catch(err => {
@@ -758,9 +752,9 @@ export default function AdminPanel() {
     const defaultData = getDefaultForm(fields);
     
     if (activeSection === 'tickets') {
-      const tickets = data.tickets || [];
+      const tickets = (data.tickets || []) as ServiceTicket[];
       let maxNum = 100;
-      tickets.forEach((t: any) => {
+      tickets.forEach((t) => {
         const match = String(t.ticket_number || '').match(/YBS-(\d+)/);
         if (match && match[1]) {
           const num = parseInt(match[1], 10);
@@ -1135,12 +1129,19 @@ export default function AdminPanel() {
     const closedTickets = financialTickets.filter(t => t.status === 'closed').length;
     const pendingTickets = openTickets + inProgressTickets;
 
+    interface OutstandingClient {
+      customer_name: string;
+      customer_phone: string;
+      balance_due: number;
+      invoices: string[];
+    }
+
     // Get list of outstanding clients
     const outstandingClients = financialInvoices
       .filter(inv => inv.doc_type === 'Invoice' && (inv.balance_due || 0) > 0)
-      .reduce((acc: any[], inv) => {
+      .reduce((acc: OutstandingClient[], inv) => {
         const name = String(inv.customer_name || 'Customer');
-        const phone = String(inv.customer_phone || '');
+        const phone = String(inv.phone || '');
         const due = inv.balance_due || 0;
         
         const existing = acc.find(c => c.customer_name?.toLowerCase() === name.toLowerCase());
@@ -1162,7 +1163,7 @@ export default function AdminPanel() {
       .sort((a, b) => b.balance_due - a.balance_due);
 
     // Formats and opens direct WhatsApp reminder
-    const sendDuesReminder = (client: any) => {
+    const sendDuesReminder = (client: OutstandingClient) => {
       const name = client.customer_name;
       let phone = client.customer_phone.replace(/\D/g, '');
       if (phone.length === 10) {
@@ -1490,7 +1491,7 @@ export default function AdminPanel() {
                 </tr>
               </thead>
               <tbody>
-                {filteredData.map((item, i) => (
+                {filteredData.map((item) => (
                   <tr key={String(item.id)} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
                     {columns.map(col => (
                       <td key={col.key} className="px-4 py-3">

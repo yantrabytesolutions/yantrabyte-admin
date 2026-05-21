@@ -1,4 +1,5 @@
-import { useRef } from 'react';
+import { useState, useRef } from 'react';
+import SEO from '../components/SEO';
 import { useParams, Link } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
 import { ChevronRight, Camera, Monitor, Router, Shield, Printer, ArrowRight, MessageCircle, Phone, Calendar, Clock, User, Share2, Facebook, Twitter, Linkedin, ChevronLeft, ChevronRight as ChevronRightIcon, BookOpen } from 'lucide-react';
@@ -111,10 +112,6 @@ const staggerContainer = {
   },
 };
 
-const staggerItem = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' as const } },
-};
 
 const scaleIn = {
   hidden: { opacity: 0, scale: 0.8 },
@@ -195,7 +192,6 @@ function renderContent(content: string) {
 
 function ArticleHero({ post }: { post: BlogPost & { author: string } }) {
   const CategoryIcon = CATEGORY_ICONS[post.category] || BookOpen;
-  const gradient = CATEGORY_GRADIENTS[post.category] || 'from-[#0EA5E9] to-[#38BDF8]';
 
   const formatDate = (dateStr: string) => {
     try {
@@ -374,7 +370,7 @@ function ArticleContent({ post }: { post: BlogPost & { author: string } }) {
 
 function RelatedPosts({ currentSlug }: { currentSlug: string }) {
   const { posts } = useBlogPosts();
-  const allPosts = posts.length > 0 ? posts : Object.values(FALLBACK_POSTS).map(({ author, ...rest }) => rest);
+  const allPosts = posts.length > 0 ? posts : Object.values(FALLBACK_POSTS);
   const related = allPosts.filter(p => p.slug !== currentSlug).slice(0, 3);
 
   if (related.length === 0) return null;
@@ -576,6 +572,12 @@ export default function BlogPost() {
 
   return (
     <div className="bg-[#0B1120]">
+      <SEO 
+        title={`${postWithAuthor.title} | Yantrabyte Blog`} 
+        description={postWithAuthor.excerpt || "Read our latest blog post about IT and security solutions in Bangalore."}
+        type="article"
+        imageUrl={postWithAuthor.image_url}
+      />
       <ArticleHero post={postWithAuthor} />
       <FeaturedImage post={currentPost} />
       <ArticleContent post={postWithAuthor} />

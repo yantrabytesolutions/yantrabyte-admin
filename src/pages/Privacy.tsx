@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import SEO from '../components/SEO';
 import { motion } from 'framer-motion';
 import { ChevronRight, Shield } from 'lucide-react';
 
@@ -138,6 +139,10 @@ Changes to This Policy: We may update this Privacy Policy from time to time to r
 export default function Privacy() {
   return (
     <div className="bg-[#0B1120]">
+      <SEO 
+        title="Privacy Policy | Yantrabyte Solutions" 
+        description="Read our Privacy Policy to understand how Yantrabyte Solutions collects, uses, and protects your information."
+      />
       {/* Hero Banner */}
       <section className="relative overflow-hidden bg-gradient-to-br from-[#0B1120] via-[#111827] to-[#0B1120] pt-32 pb-20 md:pt-40 md:pb-28">
         <div className="absolute inset-0 opacity-[0.04]" style={{

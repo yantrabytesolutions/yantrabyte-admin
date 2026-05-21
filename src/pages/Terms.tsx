@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import SEO from '../components/SEO';
 import { motion } from 'framer-motion';
 import { ChevronRight, FileText } from 'lucide-react';
 
@@ -152,6 +153,10 @@ We recommend that you print or save a copy of these Terms for your records. Thes
 export default function Terms() {
   return (
     <div className="bg-[#0B1120]">
+      <SEO 
+        title="Terms & Conditions | Yantrabyte Solutions" 
+        description="Please read our Terms and Conditions carefully before using the services of Yantrabyte Solutions."
+      />
       {/* Hero Banner */}
       <section className="relative overflow-hidden bg-gradient-to-br from-[#0B1120] via-[#111827] to-[#0B1120] pt-32 pb-20 md:pt-40 md:pb-28">
         <div className="absolute inset-0 opacity-[0.04]" style={{

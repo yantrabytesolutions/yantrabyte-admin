@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import SEO from '../components/SEO';
 import { Link } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
 import {
@@ -366,6 +367,10 @@ export default function Services() {
 
   return (
     <div className="bg-[#0B1120]">
+      <SEO 
+        title="Our Services | Yantrabyte Solutions" 
+        description="Comprehensive IT and security solutions tailored for Bangalore's homes and businesses. From CCTV to cloud, we have you covered."
+      />
       <HeroBanner />
       <FeaturedServicesSection services={displayServices} />
       <AllServicesSection services={displayServices} />

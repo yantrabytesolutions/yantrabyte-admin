@@ -9,7 +9,6 @@ import {
   Instagram,
   Linkedin,
   Twitter,
-  MessageCircle,
   ArrowRight,
 } from "lucide-react";
 

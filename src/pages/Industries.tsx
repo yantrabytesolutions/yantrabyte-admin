@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import SEO from '../components/SEO';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import {
@@ -380,6 +381,10 @@ export default function Industries() {
 
   return (
     <div className="bg-[#0B1120]">
+      <SEO 
+        title="Industries We Serve | Yantrabyte Solutions" 
+        description="Tailored IT and security solutions for corporate offices, retail stores, warehouses, apartments, schools, and hospitals."
+      />
       <HeroBanner />
       <IndustriesGridSection industries={displayIndustries} />
       <CTASection />

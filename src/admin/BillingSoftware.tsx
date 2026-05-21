@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-import { Invoice, InvoiceItem } from '../types';
+import { Invoice, InvoiceItem, ServiceTicket, Product } from '../types';
 import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt } from 'lucide-react';
-// @ts-ignore
+// @ts-expect-error - html2pdf.js lacks typescript declaration files
 import html2pdf from 'html2pdf.js';
 import { PRESET_ITEMS } from './presetItems';
 
@@ -39,8 +39,16 @@ function numberToWords(num: number): string {
 }
 
 interface BillingSoftwareProps {
-  initialAutofillTicket?: any;
+  initialAutofillTicket?: ServiceTicket | null;
   onClearAutofill?: () => void;
+}
+
+interface CustomerListItem {
+  full_name?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  [key: string]: unknown;
 }
 
 export default function BillingSoftware({ initialAutofillTicket, onClearAutofill }: BillingSoftwareProps) {
@@ -62,9 +70,9 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>('');
   
-  const [customersList, setCustomersList] = useState<any[]>([]);
-  const [serviceTicketsList, setServiceTicketsList] = useState<any[]>([]);
-  const [productsList, setProductsList] = useState<any[]>([]);
+  const [customersList, setCustomersList] = useState<CustomerListItem[]>([]);
+  const [serviceTicketsList, setServiceTicketsList] = useState<ServiceTicket[]>([]);
+  const [productsList, setProductsList] = useState<Product[]>([]);
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -72,7 +80,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
   const [historyDrawerData, setHistoryDrawerData] = useState<{
     invoices: Invoice[];
-    tickets: any[];
+    tickets: ServiceTicket[];
     totalSpend: number;
     outstanding: number;
   } | null>(null);
@@ -152,7 +160,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       
       showToast(`Loaded ticket ${initialAutofillTicket.ticket_number} details! Set the rate for the service item.`);
     }
-  }, [initialAutofillTicket]);
+  }, [initialAutofillTicket, onClearAutofill]);
 
   const fetchServiceTickets = async () => {
     const { data, error } = await supabase
@@ -285,8 +293,9 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       }
       await fetchInvoices();
       await fetchProducts();
-    } catch (err: any) {
-      showToast(err.message || 'Failed to delete invoice', 'error');
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      showToast(errorMsg || 'Failed to delete invoice', 'error');
     }
   };
 
@@ -404,8 +413,6 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         balance_due: balanceDue,
       };
 
-      let currentInvoiceId = selectedInvoiceId;
-
       if (isUpdate) {
         if (docType === 'Invoice') {
           const oldInvoice = invoices.find(i => i.id === selectedInvoiceId);
@@ -426,7 +433,6 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         const { data, error } = await supabase.from('invoices').insert([payload]).select().single();
         if (error) throw error;
         if (data) {
-          currentInvoiceId = data.id;
           setSelectedInvoiceId(data.id);
         }
         showToast('Invoice saved successfully!');
@@ -440,8 +446,9 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           generatePdf(payload.invoice_no);
         }, 500);
       }
-    } catch (err: any) {
-      showToast(err.message || 'Failed to save invoice', 'error');
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      showToast(errorMsg || 'Failed to save invoice', 'error');
     } finally {
       setIsSaving(false);
     }

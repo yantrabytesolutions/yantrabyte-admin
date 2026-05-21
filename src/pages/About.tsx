@@ -1,4 +1,5 @@
-import { useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import SEO from '../components/SEO';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import {
@@ -7,22 +8,14 @@ import {
   Eye,
   Heart,
   Award,
-  Users,
   CheckCircle,
   ArrowRight,
   MessageCircle,
   Phone,
   Camera,
   Laptop,
-  Monitor,
   Router,
-  Printer,
-  Fingerprint,
-  FileCheck,
-  Zap,
   Target,
-  Lightbulb,
-  Handshake,
   Star,
 } from 'lucide-react';
 import { useTeam, useClientLogos, useGallery } from '../hooks/useSupabase';
@@ -623,6 +616,10 @@ function CTABanner() {
 export default function About() {
   return (
     <div className="bg-[#0B1120]">
+      <SEO 
+        title="About Us | Yantrabyte Solutions" 
+        description="Learn about Yantrabyte Solutions, Bangalore's trusted IT & Security partner providing professional services since 2018."
+      />
       <HeroBanner />
       <CompanyStorySection />
       <MissionVisionValuesSection />

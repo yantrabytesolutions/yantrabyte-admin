@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import SEO from '../components/SEO';
 import { Link } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
 import {
@@ -214,7 +215,7 @@ function HeroBanner() {
 
 // ─── Blog Post Card ─────────────────────────────────────────────────────────
 
-function BlogPostCard({ post, index }: { post: BlogPost; index: number }) {
+function BlogPostCard({ post }: { post: BlogPost }) {
   const CategoryIcon = CATEGORY_ICONS[post.category] || Camera;
   const gradient = CATEGORY_GRADIENTS[post.category] || 'from-[#0EA5E9] to-[#38BDF8]';
 
@@ -428,6 +429,10 @@ export default function Blog() {
   if (loading) {
     return (
       <div className="bg-[#0B1120] min-h-screen">
+        <SEO 
+          title="Our Blog | Yantrabyte Solutions" 
+          description="Read the latest insights, tips, and news about IT infrastructure, networking, and security solutions from the experts at Yantrabyte."
+        />
         <HeroBanner />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -478,8 +483,8 @@ export default function Blog() {
                 animate="visible"
                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6"
               >
-                {filteredPosts.map((post, i) => (
-                  <BlogPostCard key={post.id} post={post} index={i} />
+                {filteredPosts.map((post) => (
+                  <BlogPostCard key={post.id} post={post} />
                 ))}
               </motion.div>
 
