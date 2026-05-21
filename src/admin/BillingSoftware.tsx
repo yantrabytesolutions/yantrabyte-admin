@@ -576,7 +576,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
       const result = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to email invoice.');
+        throw new Error(result.error || `Invoice API failed with HTTP ${response.status}`);
       }
 
       const driveSaved = result.drive?.ok;
