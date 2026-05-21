@@ -465,7 +465,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       filename: `YBS-${invoiceNumber}.pdf`,
       image: { type: 'jpeg' as const, quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, windowWidth: 950 },
-      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+      jsPDF: { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const }
     };
 
     html2pdf().set(opt).from(element).save().then(() => {
