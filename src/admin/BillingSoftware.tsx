@@ -536,7 +536,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         throw new Error(result.error || 'Failed to email invoice.');
       }
 
-      showToast(`Invoice emailed to ${email}`);
+      const driveSaved = result.drive?.ok;
+      showToast(driveSaved ? `Invoice emailed to ${email} and saved to Google Drive` : `Invoice emailed to ${email}`);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);
       showToast(errorMsg || 'Failed to email invoice', 'error');
