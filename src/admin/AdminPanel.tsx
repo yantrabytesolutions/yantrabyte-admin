@@ -15,7 +15,6 @@ import {
 
 import BillingSoftware from './BillingSoftware';
 import PurchaseSoftware from './PurchaseSoftware';
-// @ts-expect-error - html2pdf.js lacks typescript declaration files
 import html2pdf from 'html2pdf.js';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -556,7 +555,7 @@ export default function AdminPanel() {
     const opt = {
       margin: 0,
       filename: `YBS-JOB-${ticketNo}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
+      image: { type: 'jpeg' as const, quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, windowWidth: 800 },
       jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
     };
@@ -568,7 +567,7 @@ export default function AdminPanel() {
   };
 
   const handleInstantBill = (ticket: Record<string, unknown>) => {
-    setAutofillTicket(ticket);
+    setAutofillTicket(ticket as unknown as ServiceTicket);
     setActiveSection('billing');
     showToast('Switched to billing with pre-filled ticket details!');
   };
@@ -1093,7 +1092,7 @@ export default function AdminPanel() {
       return <span className="text-[#94A3B8] text-xs">{formatDate(String(val))}</span>;
     }
     if (colKey === 'rating') {
-      return <span className="text-yellow-400">{val}</span>;
+      return <span className="text-yellow-400">{val as React.ReactNode}</span>;
     }
     if (typeof val === 'object' && val !== null) {
       return <span className="text-[#64748B] text-xs">{truncateStr(JSON.stringify(val), 30)}</span>;
@@ -1747,7 +1746,7 @@ export default function AdminPanel() {
                       }`}
                       onClick={() => setFormData(prev => ({ ...prev, [field.key]: !prev[field.key] }))}
                     >
-                      {formData[field.key] && <CheckCircle className="w-3.5 h-3.5 text-white" />}
+                      {!!formData[field.key] && <CheckCircle className="w-3.5 h-3.5 text-white" />}
                     </div>
                     <span className="text-[#94A3B8] text-sm">Enable {field.label}</span>
                   </label>

@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Invoice, InvoiceItem, ServiceTicket, Product } from '../types';
 import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt } from 'lucide-react';
-// @ts-expect-error - html2pdf.js lacks typescript declaration files
 import html2pdf from 'html2pdf.js';
 import { PRESET_ITEMS } from './presetItems';
 
@@ -464,7 +463,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     const opt = {
       margin: 0,
       filename: `YBS-${invoiceNumber}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
+      image: { type: 'jpeg' as const, quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, windowWidth: 950 },
       jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
     };

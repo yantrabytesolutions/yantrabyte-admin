@@ -28,6 +28,7 @@ export interface Product {
   is_featured: boolean;
   is_published: boolean;
   sort_order: number;
+  stock_count?: number;
   created_at: string;
   updated_at: string;
 }
@@ -168,7 +169,7 @@ export interface ServiceTicket {
   customer_phone: string;
   device_type: string;
   issue_description: string;
-  status: 'open' | 'in-progress' | 'resolved' | 'closed';
+  status: 'open' | 'in-progress' | 'resolved' | 'closed' | 'completed';
   priority: 'low' | 'medium' | 'high' | 'urgent';
   assigned_to?: string;
   notes?: string;

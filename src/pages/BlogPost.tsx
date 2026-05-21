@@ -576,7 +576,7 @@ export default function BlogPost() {
         title={`${postWithAuthor.title} | Yantrabyte Blog`} 
         description={postWithAuthor.excerpt || "Read our latest blog post about IT and security solutions in Bangalore."}
         type="article"
-        imageUrl={postWithAuthor.image_url}
+        imageUrl={postWithAuthor.featured_image}
       />
       <ArticleHero post={postWithAuthor} />
       <FeaturedImage post={currentPost} />
