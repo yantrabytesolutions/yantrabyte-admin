@@ -50,6 +50,12 @@ interface CustomerListItem {
   [key: string]: unknown;
 }
 
+type DeliveryPopup = {
+  status: 'sending' | 'success' | 'warning' | 'error';
+  title: string;
+  message: string;
+} | null;
+
 export default function BillingSoftware({ initialAutofillTicket, onClearAutofill }: BillingSoftwareProps) {
   const [docType, setDocType] = useState('Invoice');
   const [customerName, setCustomerName] = useState('');
@@ -77,6 +83,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const [isSaving, setIsSaving] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [printInvoiceNumber, setPrintInvoiceNumber] = useState('');
+  const [deliveryPopup, setDeliveryPopup] = useState<DeliveryPopup>(null);
 
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
   const [historyDrawerData, setHistoryDrawerData] = useState<{
@@ -390,8 +397,21 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       return;
     }
     if (action === 'email' && !email.trim()) {
+      setDeliveryPopup({
+        status: 'error',
+        title: 'Email not sent',
+        message: 'Please enter the customer email before sending the invoice.',
+      });
       showToast('Please enter the customer email before sending the invoice.', 'error');
       return;
+    }
+
+    if (action === 'email') {
+      setDeliveryPopup({
+        status: 'sending',
+        title: 'Sending invoice',
+        message: 'Saving invoice details before preparing the PDF.',
+      });
     }
 
     setIsSaving(true);
@@ -451,11 +471,23 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         await new Promise(resolve => window.setTimeout(resolve, 500));
         await generatePdf(payload.invoice_no);
       } else if (action === 'email') {
+        setDeliveryPopup({
+          status: 'sending',
+          title: 'Sending invoice',
+          message: 'Generating the invoice PDF for email and Google Drive.',
+        });
         await new Promise(resolve => window.setTimeout(resolve, 500));
         await emailInvoicePdf(payload.invoice_no);
       }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);
+      if (action === 'email') {
+        setDeliveryPopup({
+          status: 'error',
+          title: 'Invoice delivery failed',
+          message: errorMsg || 'Failed to save invoice before sending email.',
+        });
+      }
       showToast(errorMsg || 'Failed to save invoice', 'error');
     } finally {
       setIsSaving(false);
@@ -507,6 +539,12 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     const opt = getPdfOptions(invoiceNumber);
 
     try {
+      setDeliveryPopup({
+        status: 'sending',
+        title: 'Sending invoice',
+        message: 'Creating PDF attachment.',
+      });
+
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token;
       if (!token) {
@@ -515,6 +553,11 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
       const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob') as Blob;
       const pdfBase64 = await blobToBase64(pdfBlob);
+      setDeliveryPopup({
+        status: 'sending',
+        title: 'Sending invoice',
+        message: `Sending email to ${email} and saving a copy to Google Drive.`,
+      });
       const response = await fetch('/api/invoices/email', {
         method: 'POST',
         headers: {
@@ -537,9 +580,21 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       }
 
       const driveSaved = result.drive?.ok;
+      setDeliveryPopup({
+        status: driveSaved ? 'success' : 'warning',
+        title: driveSaved ? 'Invoice delivered' : 'Email sent',
+        message: driveSaved
+          ? `Invoice was emailed to ${email} and saved to Google Drive.`
+          : `Invoice was emailed to ${email}, but Google Drive did not confirm a saved copy.`,
+      });
       showToast(driveSaved ? `Invoice emailed to ${email} and saved to Google Drive` : `Invoice emailed to ${email}`);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);
+      setDeliveryPopup({
+        status: 'error',
+        title: 'Invoice delivery failed',
+        message: errorMsg || 'Failed to email invoice',
+      });
       showToast(errorMsg || 'Failed to email invoice', 'error');
     } finally {
       element.style.display = 'none';
@@ -597,6 +652,54 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         <div className={`p-4 rounded-lg flex items-center shadow-md ${toast.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
           {toast.type === 'success' ? <CheckCircle className="w-5 h-5 mr-2" /> : <Trash2 className="w-5 h-5 mr-2" />}
           {toast.message}
+        </div>
+      )}
+
+      {deliveryPopup && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/50 px-4">
+          <div className="w-full max-w-md rounded-lg bg-white p-5 shadow-2xl border border-slate-200">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div className={`mt-0.5 flex h-10 w-10 items-center justify-center rounded-full ${
+                  deliveryPopup.status === 'success' ? 'bg-emerald-100 text-emerald-700' :
+                  deliveryPopup.status === 'warning' ? 'bg-amber-100 text-amber-700' :
+                  deliveryPopup.status === 'error' ? 'bg-red-100 text-red-700' :
+                  'bg-blue-100 text-blue-700'
+                }`}>
+                  {deliveryPopup.status === 'sending' ? (
+                    <RefreshCw className="h-5 w-5 animate-spin" />
+                  ) : deliveryPopup.status === 'error' ? (
+                    <X className="h-5 w-5" />
+                  ) : (
+                    <CheckCircle className="h-5 w-5" />
+                  )}
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-slate-900">{deliveryPopup.title}</h3>
+                  <p className="mt-1 text-sm leading-6 text-slate-600">{deliveryPopup.message}</p>
+                </div>
+              </div>
+              {deliveryPopup.status !== 'sending' && (
+                <button
+                  type="button"
+                  onClick={() => setDeliveryPopup(null)}
+                  className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                  aria-label="Close notification"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              )}
+            </div>
+            {deliveryPopup.status !== 'sending' && (
+              <button
+                type="button"
+                onClick={() => setDeliveryPopup(null)}
+                className="mt-5 w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+              >
+                OK
+              </button>
+            )}
+          </div>
         </div>
       )}
 
