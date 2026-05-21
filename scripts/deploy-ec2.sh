@@ -11,10 +11,11 @@ set -euo pipefail
 BASE_DIR="/var/www/yantrabyte"
 RELEASES_DIR="${BASE_DIR}/releases"
 ACTIVE_LINK="${BASE_DIR}/dist"
+ENV_FILE="${BASE_DIR}/.env"
 USER_HOME="/home/ubuntu" # Fallback if USER is not available
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 NEW_RELEASE_DIR="${RELEASES_DIR}/release_${TIMESTAMP}"
-TARBALL="${USER_HOME}/dist.tar.gz"
+TARBALL="${USER_HOME}/app.tar.gz"
 
 echo "=== Starting deployment release_${TIMESTAMP} ==="
 
@@ -31,9 +32,23 @@ sudo mkdir -p "$NEW_RELEASE_DIR"
 echo "📦 Extracting new production assets..."
 sudo tar -xzf "$TARBALL" -C "$NEW_RELEASE_DIR"
 
+if [ -f "$ENV_FILE" ]; then
+    sudo ln -sfn "$ENV_FILE" "${NEW_RELEASE_DIR}/.env"
+else
+    echo "Runtime .env not found at $ENV_FILE. Invoice email API will not start correctly until it exists."
+fi
+
+if [ -f "${NEW_RELEASE_DIR}/package-lock.json" ]; then
+    (
+        cd "$NEW_RELEASE_DIR"
+        sudo npm ci --omit=dev
+    )
+fi
+
 # --- PERMISSIONS ENFORCEMENT ---
 echo "🔒 Correcting filesystem ownership and permissions..."
 sudo chown -R www-data:www-data "$NEW_RELEASE_DIR"
+sudo chown -h www-data:www-data "${NEW_RELEASE_DIR}/.env" 2>/dev/null || true
 sudo find "$NEW_RELEASE_DIR" -type d -exec chmod 755 {} \;
 sudo find "$NEW_RELEASE_DIR" -type f -exec chmod 644 {} \;
 
@@ -43,6 +58,18 @@ echo "🔄 Swapping active symbolic link..."
 # -f: force overwrite if it exists
 # -n: treat symlink to a directory as a normal file to avoid nesting
 sudo ln -sfn "${NEW_RELEASE_DIR}/dist" "$ACTIVE_LINK"
+
+if command -v pm2 >/dev/null 2>&1; then
+    cd "$NEW_RELEASE_DIR"
+    if pm2 describe yantrabyte-invoice-api >/dev/null 2>&1; then
+        pm2 restart yantrabyte-invoice-api --update-env
+    else
+        pm2 start npm --name yantrabyte-invoice-api -- run api
+    fi
+    pm2 save
+else
+    echo "PM2 is not installed. Run: sudo npm install -g pm2"
+fi
 
 # --- SERVER RELOAD ---
 echo "⚡ Reloading Nginx web server..."

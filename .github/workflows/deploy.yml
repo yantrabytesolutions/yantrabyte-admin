@@ -73,13 +73,13 @@ jobs:
         run: npm run build
 
       - name: 🗜️ Compress Build Folder
-        run: tar -czf dist.tar.gz dist/
+        run: tar -czf app.tar.gz dist/ server/ package.json package-lock.json
 
       - name: 📤 Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: production-build
-          path: dist.tar.gz
+          path: app.tar.gz
           retention-days: 2
 
   deploy:
@@ -103,7 +103,7 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
-          source: "dist.tar.gz,scripts/deploy-ec2.sh"
+          source: "app.tar.gz,scripts/deploy-ec2.sh"
           target: "/home/${{ secrets.EC2_USERNAME }}/"
 
       - name: 🛠️ Execute Atomic Switch on EC2 (SSH)
@@ -119,4 +119,4 @@ jobs:
             sudo chmod +x /var/www/yantrabyte/scripts/deploy-ec2.sh
             sudo /var/www/yantrabyte/scripts/deploy-ec2.sh
             # Clean up home directory
-            rm -rf /home/${{ secrets.EC2_USERNAME }}/dist.tar.gz /home/${{ secrets.EC2_USERNAME }}/scripts
+            rm -rf /home/${{ secrets.EC2_USERNAME }}/app.tar.gz /home/${{ secrets.EC2_USERNAME }}/scripts
