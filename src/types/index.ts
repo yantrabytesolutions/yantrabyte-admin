@@ -189,6 +189,7 @@ export interface Invoice {
   invoice_no: string;
   doc_type: string;
   date: string;
+  customer_id?: string | null;
   customer_name: string;
   phone: string;
   email: string;
@@ -201,7 +202,20 @@ export interface Invoice {
   grand_total: number;
   advance_paid: number;
   balance_due: number;
+  payment_mode?: string;
+  payment_status?: string;
+  due_date?: string | null;
   created_at: string;
+}
+
+export interface Customer {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  created_at: string;
+  updated_at?: string;
 }
 
 export interface Supplier {

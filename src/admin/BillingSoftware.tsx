@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-import { Invoice, InvoiceItem, ServiceTicket, Product } from '../types';
-import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt, Mail } from 'lucide-react';
+import { Invoice, InvoiceItem, ServiceTicket, Product, Customer, Purchase } from '../types';
+import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt, Mail, FileSpreadsheet } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 import { PRESET_ITEMS } from './presetItems';
 
@@ -42,22 +42,87 @@ interface BillingSoftwareProps {
   onClearAutofill?: () => void;
 }
 
-interface CustomerListItem {
-  full_name?: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  [key: string]: unknown;
-}
-
 type DeliveryPopup = {
   status: 'sending' | 'success' | 'warning' | 'error';
   title: string;
   message: string;
 } | null;
 
+const PAYMENT_MODES = ['Not specified', 'Cash', 'UPI', 'Bank Transfer', 'Card', 'Cheque'];
+
+type ExcelCell = string | number | null | undefined;
+type ExcelSheet = {
+  name: string;
+  rows: ExcelCell[][];
+};
+
+const isPersistedCustomerId = (id: string) => !!id && !id.startsWith('legacy-');
+
+const normalizePhone = (value: string) => value.trim().replace(/\s+/g, ' ');
+
+const getPaymentStatus = (docType: string, balanceDue: number, amountPaid: number) => {
+  if (docType === 'Quotation') return 'Estimate';
+  if (balanceDue <= 0) return 'Paid';
+  if (amountPaid > 0) return 'Partial';
+  return 'Due';
+};
+
+const shouldRetryLegacyInvoiceSave = (error: { message?: string; code?: string }) => {
+  const message = String(error.message || '').toLowerCase();
+  return error.code === 'PGRST204'
+    || message.includes('customer_id')
+    || message.includes('payment_mode')
+    || message.includes('payment_status')
+    || message.includes('due_date');
+};
+
+const xmlEscape = (value: ExcelCell) =>
+  String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+
+const formatItemsForExcel = (items: Array<{ description: string; qty: number; rate: number }> = []) =>
+  items.map(item => `${item.description} x${item.qty} @ ${item.rate}`).join('\n');
+
+const buildExcelWorksheet = (sheet: ExcelSheet) => {
+  const rows = sheet.rows.map(row => {
+    const cells = row.map(cell => {
+      const isNumber = typeof cell === 'number' && Number.isFinite(cell);
+      const type = isNumber ? 'Number' : 'String';
+      return `<Cell><Data ss:Type="${type}">${xmlEscape(cell)}</Data></Cell>`;
+    }).join('');
+    return `<Row>${cells}</Row>`;
+  }).join('');
+
+  return `<Worksheet ss:Name="${xmlEscape(sheet.name).slice(0, 31)}"><Table>${rows}</Table></Worksheet>`;
+};
+
+const downloadExcelWorkbook = (filename: string, sheets: ExcelSheet[]) => {
+  const workbook = `<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+${sheets.map(buildExcelWorksheet).join('')}
+</Workbook>`;
+
+  const blob = new Blob([workbook], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+};
+
 export default function BillingSoftware({ initialAutofillTicket, onClearAutofill }: BillingSoftwareProps) {
   const [docType, setDocType] = useState('Invoice');
+  const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -65,6 +130,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const [discount, setDiscount] = useState(0);
   const [tax, setTax] = useState(0);
   const [advancePaid, setAdvancePaid] = useState(0);
+  const [paymentMode, setPaymentMode] = useState('Not specified');
+  const [dueDate, setDueDate] = useState('');
   const [items, setItems] = useState<InvoiceItem[]>([]);
   
   const [itemDesc, setItemDesc] = useState('');
@@ -75,13 +142,14 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>('');
   
-  const [customersList, setCustomersList] = useState<CustomerListItem[]>([]);
+  const [customersList, setCustomersList] = useState<Customer[]>([]);
   const [serviceTicketsList, setServiceTicketsList] = useState<ServiceTicket[]>([]);
   const [productsList, setProductsList] = useState<Product[]>([]);
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [isExportingExcel, setIsExportingExcel] = useState(false);
   const [printInvoiceNumber, setPrintInvoiceNumber] = useState('');
   const [deliveryPopup, setDeliveryPopup] = useState<DeliveryPopup>(null);
 
@@ -145,10 +213,13 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
   useEffect(() => {
     if (initialAutofillTicket) {
+      setSelectedCustomerId('');
       setCustomerName(initialAutofillTicket.customer_name || '');
       setPhone(initialAutofillTicket.customer_phone || '');
       setEmail(initialAutofillTicket.customer_email || '');
       setAddress('');
+      setPaymentMode('Not specified');
+      setDueDate('');
       
       // Auto-set document type to 'Invoice'
       setDocType('Invoice');
@@ -181,21 +252,53 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   };
 
   const fetchCustomers = async () => {
-    // Attempt to fetch from 'Form Responses 1' table
-    const { data, error } = await supabase.from('Form Responses 1').select('*');
-    if (!error && data && data.length > 0) {
+    const { data, error } = await supabase
+      .from('customers')
+      .select('*')
+      .order('name', { ascending: true });
+
+    if (!error && data) {
       setCustomersList(data);
-    } else {
-      // Fallback to service_tickets
-      const { data: stData } = await supabase.from('service_tickets').select('*');
-      if (stData) {
-        setCustomersList(stData.map(st => ({
-          full_name: st.customer_name,
-          email: st.customer_email,
-          phone: st.customer_phone,
-          address: ''
-        })));
-      }
+      return;
+    }
+
+    const { data: invoiceData } = await supabase
+      .from('invoices')
+      .select('customer_name, phone, email, address, created_at')
+      .order('created_at', { ascending: false });
+
+    if (invoiceData && invoiceData.length > 0) {
+      const byKey = new Map<string, Customer>();
+      invoiceData.forEach((row, index) => {
+        const name = String(row.customer_name || '').trim();
+        if (!name) return;
+        const phoneValue = normalizePhone(String(row.phone || ''));
+        const key = phoneValue || name.toLowerCase();
+        if (!byKey.has(key)) {
+          byKey.set(key, {
+            id: `legacy-invoice-${index}`,
+            name,
+            phone: phoneValue || null,
+            email: String(row.email || '').trim() || null,
+            address: String(row.address || '').trim() || null,
+            created_at: String(row.created_at || ''),
+          });
+        }
+      });
+      setCustomersList(Array.from(byKey.values()));
+      return;
+    }
+
+    const { data: stData } = await supabase.from('service_tickets').select('*');
+    if (stData) {
+      setCustomersList(stData.map((st, index) => ({
+        id: `legacy-ticket-${index}`,
+        name: st.customer_name,
+        email: st.customer_email || null,
+        phone: st.customer_phone || null,
+        address: null,
+        created_at: st.created_at,
+      })));
     }
   };
 
@@ -234,6 +337,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const clearForm = () => {
     setSelectedInvoiceId('');
     setDocType('Invoice');
+    setSelectedCustomerId('');
     setCustomerName('');
     setPhone('');
     setEmail('');
@@ -241,13 +345,16 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setDiscount(0);
     setTax(0);
     setAdvancePaid(0);
+    setPaymentMode('Not specified');
+    setDueDate('');
     setItems([]);
   };
 
   const handleSelectCustomer = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const cust = customersList.find(c => c.full_name === e.target.value);
+    const cust = customersList.find(c => c.id === e.target.value);
     if (cust) {
-      setCustomerName(cust.full_name || '');
+      setSelectedCustomerId(isPersistedCustomerId(cust.id) ? cust.id : '');
+      setCustomerName(cust.name || '');
       setEmail(cust.email || '');
       setPhone(cust.phone || '');
       setAddress(cust.address || '');
@@ -265,7 +372,17 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       const issue = ticket.issue_description ? ticket.issue_description.trim() : '';
       const desc = `Service & Repair: ${device}${issue ? ` (${issue})` : ''}`;
       
-      const matchedCust = customersList.find(c => c.full_name?.trim().toLowerCase() === ticket.customer_name?.trim().toLowerCase());
+      const matchedCust = customersList.find(c => {
+        const samePhone = c.phone && ticket.customer_phone && normalizePhone(c.phone) === normalizePhone(ticket.customer_phone);
+        const sameName = c.name?.trim().toLowerCase() === ticket.customer_name?.trim().toLowerCase();
+        return samePhone || sameName;
+      });
+      if (matchedCust) {
+        setSelectedCustomerId(isPersistedCustomerId(matchedCust.id) ? matchedCust.id : '');
+      } else {
+        setSelectedCustomerId('');
+      }
+
       if (matchedCust && matchedCust.address) {
         setAddress(matchedCust.address);
       } else {
@@ -312,6 +429,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     if (!inv) return;
     setSelectedInvoiceId(inv.id);
     setDocType(inv.doc_type);
+    setSelectedCustomerId(inv.customer_id || '');
     setCustomerName(inv.customer_name);
     setPhone(inv.phone || '');
     setEmail(inv.email || '');
@@ -319,6 +437,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setDiscount(inv.discount);
     setTax(inv.tax);
     setAdvancePaid(inv.advance_paid);
+    setPaymentMode(inv.payment_mode || 'Not specified');
+    setDueDate(inv.due_date || '');
     setItems(inv.items || []);
   };
 
@@ -333,6 +453,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setDocType('Invoice');
     
     // Keep all customer and items details intact!
+    setSelectedCustomerId(inv.customer_id || '');
     setCustomerName(inv.customer_name);
     setPhone(inv.phone || '');
     setEmail(inv.email || '');
@@ -340,6 +461,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setDiscount(inv.discount);
     setTax(inv.tax);
     setAdvancePaid(inv.advance_paid);
+    setPaymentMode(inv.payment_mode || 'Not specified');
+    setDueDate(inv.due_date || '');
     setItems(inv.items || []);
     
     showToast(`Converted quotation ${inv.invoice_no} to a new draft Invoice! Click Save or Print to finalize.`);
@@ -352,10 +475,11 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const grandTotal = Math.round(beforeRound);
   const roundOff = grandTotal - beforeRound;
   const balanceDue = grandTotal - advancePaid;
+  const paymentStatus = getPaymentStatus(docType, balanceDue, advancePaid);
 
   // Stats dashboard calculations
   const totalBilled = invoices.filter(i => i.doc_type === 'Invoice').reduce((acc, i) => acc + (i.grand_total || 0), 0);
-  const totalOutstanding = invoices.filter(i => i.doc_type === 'Invoice').reduce((acc, i) => acc + (i.balance_due || 0), 0);
+  const totalOutstanding = invoices.filter(i => i.doc_type === 'Invoice').reduce((acc, i) => acc + Math.max(i.balance_due || 0, 0), 0);
   const invoiceCount = invoices.filter(i => i.doc_type === 'Invoice').length;
   const quoteCount = invoices.filter(i => i.doc_type === 'Quotation').length;
 
@@ -385,6 +509,112 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         }
       }
     }
+  };
+
+  const saveCustomerFromForm = async () => {
+    const name = customerName.trim();
+    if (!name) return null;
+
+    const trimmedPhone = normalizePhone(phone);
+    const customerPayload = {
+      name,
+      phone: trimmedPhone || null,
+      email: email.trim() || null,
+      address: address.trim() || null,
+      updated_at: new Date().toISOString(),
+    };
+
+    try {
+      if (isPersistedCustomerId(selectedCustomerId)) {
+        const { data, error } = await supabase
+          .from('customers')
+          .update(customerPayload)
+          .eq('id', selectedCustomerId)
+          .select('id')
+          .single();
+        if (error) throw error;
+        return data?.id || selectedCustomerId;
+      }
+
+      if (trimmedPhone) {
+        const { data: existingCustomer, error: findError } = await supabase
+          .from('customers')
+          .select('id')
+          .eq('phone', trimmedPhone)
+          .maybeSingle();
+
+        if (findError) throw findError;
+        if (existingCustomer?.id) {
+          const { data, error } = await supabase
+            .from('customers')
+            .update(customerPayload)
+            .eq('id', existingCustomer.id)
+            .select('id')
+            .single();
+          if (error) throw error;
+          setSelectedCustomerId(data?.id || existingCustomer.id);
+          return data?.id || existingCustomer.id;
+        }
+      } else {
+        const { data: existingByName, error: nameError } = await supabase
+          .from('customers')
+          .select('id')
+          .ilike('name', name)
+          .maybeSingle();
+
+        if (nameError) throw nameError;
+        if (existingByName?.id) {
+          const { data, error } = await supabase
+            .from('customers')
+            .update(customerPayload)
+            .eq('id', existingByName.id)
+            .select('id')
+            .single();
+          if (error) throw error;
+          setSelectedCustomerId(data?.id || existingByName.id);
+          return data?.id || existingByName.id;
+        }
+      }
+
+      const { data, error } = await supabase
+        .from('customers')
+        .insert([customerPayload])
+        .select('id')
+        .single();
+
+      if (error) throw error;
+      if (data?.id) {
+        setSelectedCustomerId(data.id);
+      }
+      return data?.id || null;
+    } catch (err) {
+      console.warn('Customer master save skipped:', err);
+      return null;
+    }
+  };
+
+  const persistInvoice = async (
+    isUpdate: boolean,
+    payload: Record<string, unknown>,
+    legacyPayload: Record<string, unknown>
+  ) => {
+    if (isUpdate) {
+      const { error } = await supabase.from('invoices').update(payload).eq('id', selectedInvoiceId);
+      if (!error) return null;
+      if (!shouldRetryLegacyInvoiceSave(error)) throw error;
+
+      const { error: legacyError } = await supabase.from('invoices').update(legacyPayload).eq('id', selectedInvoiceId);
+      if (legacyError) throw legacyError;
+      return null;
+    }
+
+    const { data, error } = await supabase.from('invoices').insert([payload]).select().single();
+    if (!error) return data as Invoice;
+    if (!shouldRetryLegacyInvoiceSave(error)) throw error;
+
+    const { data: legacyData, error: legacyError } = await supabase.from('invoices').insert([legacyPayload]).select().single();
+    if (legacyError) throw legacyError;
+    return legacyData as Invoice;
   };
 
   const handleSave = async (action: 'save' | 'download' | 'email' = 'save') => {
@@ -420,15 +650,16 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       const isUpdate = !!selectedInvoiceId;
       const invoiceNo = isUpdate ? invoices.find(i => i.id === selectedInvoiceId)?.invoice_no || generateInvoiceNo() : generateInvoiceNo();
       const date = new Date().toLocaleDateString('en-GB'); // dd/mm/yyyy
+      const customerId = await saveCustomerFromForm();
 
-      const payload = {
+      const legacyPayload = {
         invoice_no: invoiceNo,
         doc_type: docType,
         date: date,
-        customer_name: customerName,
-        phone: phone,
-        email: email,
-        address: address,
+        customer_name: customerName.trim(),
+        phone: phone.trim(),
+        email: email.trim(),
+        address: address.trim(),
         items: items,
         subtotal,
         discount,
@@ -437,6 +668,14 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         grand_total: grandTotal,
         advance_paid: advancePaid,
         balance_due: balanceDue,
+      };
+
+      const payload = {
+        ...legacyPayload,
+        customer_id: customerId,
+        payment_mode: paymentMode,
+        payment_status: paymentStatus,
+        due_date: dueDate || null,
       };
 
       if (isUpdate) {
@@ -448,16 +687,14 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           await adjustStock(items, -1);
         }
 
-        const { error } = await supabase.from('invoices').update(payload).eq('id', selectedInvoiceId);
-        if (error) throw error;
+        await persistInvoice(true, payload, legacyPayload);
         showToast('Invoice updated successfully!');
       } else {
         if (docType === 'Invoice') {
           await adjustStock(items, -1);
         }
 
-        const { data, error } = await supabase.from('invoices').insert([payload]).select().single();
-        if (error) throw error;
+        const data = await persistInvoice(false, payload, legacyPayload);
         if (data) {
           setSelectedInvoiceId(data.id);
         }
@@ -466,6 +703,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
       await fetchInvoices();
       await fetchProducts();
+      await fetchCustomers();
       
       if (action === 'download') {
         await new Promise(resolve => window.setTimeout(resolve, 500));
@@ -599,6 +837,126 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     }
   };
 
+  const invoiceRow = (inv: Invoice) => [
+    inv.invoice_no,
+    inv.date,
+    inv.customer_name,
+    inv.phone || '',
+    inv.email || '',
+    inv.address || '',
+    formatItemsForExcel(inv.items || []),
+    inv.subtotal || 0,
+    inv.discount || 0,
+    inv.tax || 0,
+    inv.round_off || 0,
+    inv.grand_total || 0,
+    inv.advance_paid || 0,
+    inv.balance_due || 0,
+    inv.payment_status || getPaymentStatus(inv.doc_type, inv.balance_due || 0, inv.advance_paid || 0),
+    inv.payment_mode || 'Not specified',
+    inv.due_date || '',
+  ];
+
+  const handleExportExcelLedger = async () => {
+    setIsExportingExcel(true);
+    try {
+      const [{ data: purchasesData, error: purchasesError }, { data: freshCustomers }] = await Promise.all([
+        supabase.from('purchases').select('*').order('created_at', { ascending: false }),
+        supabase.from('customers').select('*').order('name', { ascending: true }),
+      ]);
+
+      if (purchasesError) throw purchasesError;
+
+      const purchases = (purchasesData || []) as Purchase[];
+      const customers = ((freshCustomers || customersList) as Customer[])
+        .filter(customer => customer.name?.trim());
+
+      const invoiceHeaders = [
+        'No',
+        'Date',
+        'Customer',
+        'Phone',
+        'Email',
+        'Address',
+        'Items',
+        'Subtotal',
+        'Discount',
+        'Tax',
+        'Round Off',
+        'Grand Total',
+        'Amount Paid',
+        'Balance Due',
+        'Payment Status',
+        'Payment Mode',
+        'Due Date',
+      ];
+
+      const purchaseHeaders = [
+        'Purchase No',
+        'Date',
+        'Supplier',
+        'Items',
+        'Subtotal',
+        'Discount',
+        'Tax',
+        'Round Off',
+        'Grand Total',
+        'Amount Paid',
+        'Balance Due',
+      ];
+
+      const customerHeaders = ['Name', 'Phone', 'Email', 'Address', 'Created At'];
+      const bills = invoices.filter(inv => inv.doc_type === 'Invoice');
+      const quotations = invoices.filter(inv => inv.doc_type === 'Quotation');
+      const dues = bills.filter(inv => (inv.balance_due || 0) > 0);
+
+      downloadExcelWorkbook(`yantrabyte-ledger-${new Date().toISOString().slice(0, 10)}.xls`, [
+        { name: 'Bills', rows: [invoiceHeaders, ...bills.map(invoiceRow)] },
+        { name: 'Quotations', rows: [invoiceHeaders, ...quotations.map(invoiceRow)] },
+        {
+          name: 'Purchase Entries',
+          rows: [
+            purchaseHeaders,
+            ...purchases.map(purchase => [
+              purchase.purchase_no,
+              purchase.date,
+              purchase.supplier_name,
+              formatItemsForExcel(purchase.items || []),
+              purchase.subtotal || 0,
+              purchase.discount || 0,
+              purchase.tax || 0,
+              purchase.round_off || 0,
+              purchase.grand_total || 0,
+              purchase.amount_paid || 0,
+              purchase.balance_due || 0,
+            ]),
+          ],
+        },
+        {
+          name: 'Customers',
+          rows: [
+            customerHeaders,
+            ...customers.map(customer => [
+              customer.name,
+              customer.phone || '',
+              customer.email || '',
+              customer.address || '',
+              customer.created_at || '',
+            ]),
+          ],
+        },
+        { name: 'Pending Dues', rows: [invoiceHeaders, ...dues.map(invoiceRow)] },
+      ]);
+
+      showToast('Excel ledger exported successfully!');
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      showToast(errorMsg || 'Failed to export Excel ledger', 'error');
+    } finally {
+      setIsExportingExcel(false);
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       <div className="flex justify-between items-center bg-white p-6 rounded-lg shadow-sm">
@@ -607,6 +965,14 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           <p className="text-sm text-gray-500">Create, edit, and generate PDF invoices and quotations natively.</p>
         </div>
         <div className="flex space-x-3">
+          <button
+            onClick={handleExportExcelLedger}
+            disabled={isExportingExcel}
+            className="flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+          >
+            {isExportingExcel ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <FileSpreadsheet className="w-4 h-4 mr-2" />}
+            Export Excel
+          </button>
           <button onClick={clearForm} className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
             <Plus className="w-4 h-4 mr-2" /> New Document
           </button>
@@ -723,15 +1089,17 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             <div className="grid grid-cols-2 gap-4 pt-2">
               <div className="col-span-2 flex space-x-4">
                 <div className="flex-1">
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Load Customer Info</label>
-                  <select onChange={handleSelectCustomer} className="w-full text-xs border rounded-md px-2 py-1.5 text-gray-700 bg-gray-50 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Customer Master</label>
+                  <select value={selectedCustomerId} onChange={handleSelectCustomer} className="w-full text-xs border rounded-md px-2 py-1.5 text-gray-700 bg-gray-50 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
                     {customersList.length === 0 ? (
                       <option value="">No customers found...</option>
                     ) : (
                       <>
-                        <option value="">Select from Form Responses...</option>
+                        <option value="">Select saved customer...</option>
                         {customersList.map((c, i) => (
-                          <option key={i} value={c.full_name}>{c.full_name}</option>
+                          <option key={`${c.id}-${i}`} value={c.id}>
+                            {c.name}{c.phone ? ` - ${c.phone}` : ''}
+                          </option>
                         ))}
                       </>
                     )}
@@ -897,7 +1265,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               </table>
             </div>
 
-            <div className="grid grid-cols-3 gap-4 pt-4 border-t mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t mt-6">
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Discount (₹)</label>
                 <input type="number" value={discount || ''} onChange={e => setDiscount(Number(e.target.value))} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" placeholder="0" />
@@ -909,6 +1277,29 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Advance Paid (₹)</label>
                 <input type="number" value={advancePaid || ''} onChange={e => setAdvancePaid(Number(e.target.value))} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" placeholder="0" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Payment Mode</label>
+                <select value={paymentMode} onChange={e => setPaymentMode(e.target.value)} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500">
+                  {PAYMENT_MODES.map(mode => (
+                    <option key={mode} value={mode}>{mode}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Due Date</label>
+                <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Payment Status</label>
+                <div className={`w-full border rounded-md px-3 py-2 text-sm font-semibold ${
+                  paymentStatus === 'Paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                  paymentStatus === 'Partial' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                  paymentStatus === 'Estimate' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                  'bg-red-50 text-red-700 border-red-200'
+                }`}>
+                  {paymentStatus}
+                </div>
               </div>
             </div>
           </div>
@@ -927,6 +1318,9 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               <div className="flex justify-between text-lg font-bold text-gray-900"><span>Grand Total:</span> <span>₹{grandTotal.toLocaleString('en-IN')}</span></div>
               <div className="flex justify-between text-gray-600 pt-2 border-t"><span>Advance Paid:</span> <span className="font-medium">₹{advancePaid.toLocaleString('en-IN')}</span></div>
               <div className="flex justify-between font-bold text-blue-700"><span>Balance Due:</span> <span>₹{balanceDue.toLocaleString('en-IN')}</span></div>
+              <div className="flex justify-between text-gray-600 pt-2 border-t"><span>Status:</span> <span className="font-semibold">{paymentStatus}</span></div>
+              <div className="flex justify-between text-gray-600"><span>Mode:</span> <span className="font-medium">{paymentMode}</span></div>
+              {dueDate && <div className="flex justify-between text-gray-600"><span>Due Date:</span> <span className="font-medium">{dueDate}</span></div>}
             </div>
 
             <div className="mt-8 space-y-3">
@@ -962,6 +1356,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                         <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-700 font-medium">Quote</span>
                       ) : (inv.balance_due || 0) <= 0 ? (
                         <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-green-50 text-green-700 font-medium">Paid</span>
+                      ) : (inv.payment_status || getPaymentStatus(inv.doc_type, inv.balance_due || 0, inv.advance_paid || 0)) === 'Partial' ? (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 font-medium">Partial</span>
                       ) : (
                         <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 font-medium">
                           ₹{(inv.balance_due || 0).toLocaleString('en-IN')} Due
@@ -1091,6 +1487,9 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               <div className="flex justify-between p-1 px-2 font-bold border-y" style={{ backgroundColor: '#FFF2CC', borderColor: '#000000', color: '#000000' }}><span>Grand Total</span> <span className="text-base">{grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>
               <div className="flex justify-between p-1 px-2"><span style={{ color: '#333333' }}>Advance Paid</span> <span style={{ color: '#000000' }}>{advancePaid.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>
               <div className="flex justify-between p-1 px-2 font-bold border-t" style={{ backgroundColor: '#FFF2CC', borderColor: '#000000', color: '#000000' }}><span>Balance Due</span> <span className="text-base">{balanceDue.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>
+              <div className="flex justify-between p-1 px-2"><span style={{ color: '#333333' }}>Status</span> <span style={{ color: '#000000' }}>{paymentStatus}</span></div>
+              {paymentMode !== 'Not specified' && <div className="flex justify-between p-1 px-2"><span style={{ color: '#333333' }}>Mode</span> <span style={{ color: '#000000' }}>{paymentMode}</span></div>}
+              {dueDate && <div className="flex justify-between p-1 px-2"><span style={{ color: '#333333' }}>Due Date</span> <span style={{ color: '#000000' }}>{dueDate}</span></div>}
             </div>
           </div>
 
