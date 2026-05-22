@@ -10,3 +10,9 @@ BEGIN
     DELETE FROM public.customers;
   END IF;
 END $$;
+
+INSERT INTO public.site_settings (key, value)
+VALUES ('billing_customer_master_fresh_started_at', '2026-05-22T17:00:00+05:30')
+ON CONFLICT (key) DO UPDATE
+SET value = EXCLUDED.value,
+    updated_at = NOW();

@@ -49,6 +49,8 @@ type DeliveryPopup = {
 } | null;
 
 const PAYMENT_MODES = ['Not specified', 'Cash', 'UPI', 'Bank Transfer', 'Card', 'Cheque'];
+const CUSTOMER_MASTER_FRESH_KEY = 'billing_customer_master_fresh_started_at';
+const CUSTOMER_MASTER_FRESH_VALUE = '2026-05-22T17:00:00+05:30';
 
 type ExcelCell = string | number | null | undefined;
 type ExcelSheet = {
@@ -195,11 +197,59 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetchInvoices();
-    fetchCustomers();
-    fetchServiceTickets();
-    fetchProducts();
+    const loadBillingData = async () => {
+      await ensureFreshCustomerMaster();
+      fetchInvoices();
+      fetchCustomers();
+      fetchServiceTickets();
+      fetchProducts();
+    };
+
+    loadBillingData();
   }, []);
+
+  const ensureFreshCustomerMaster = async () => {
+    try {
+      const { data: setting } = await supabase
+        .from('site_settings')
+        .select('id, value')
+        .eq('key', CUSTOMER_MASTER_FRESH_KEY)
+        .maybeSingle();
+
+      if (setting?.value === CUSTOMER_MASTER_FRESH_VALUE) {
+        return;
+      }
+
+      const { error: invoiceClearError } = await supabase
+        .from('invoices')
+        .update({ customer_id: null })
+        .not('customer_id', 'is', null);
+      if (invoiceClearError) throw invoiceClearError;
+
+      const { error: customerClearError } = await supabase
+        .from('customers')
+        .delete()
+        .not('id', 'is', null);
+      if (customerClearError) throw customerClearError;
+
+      if (setting?.id) {
+        const { error: updateSettingError } = await supabase
+          .from('site_settings')
+          .update({ value: CUSTOMER_MASTER_FRESH_VALUE })
+          .eq('id', setting.id);
+        if (updateSettingError) throw updateSettingError;
+      } else {
+        const { error: insertSettingError } = await supabase
+          .from('site_settings')
+          .insert([{ key: CUSTOMER_MASTER_FRESH_KEY, value: CUSTOMER_MASTER_FRESH_VALUE }]);
+        if (insertSettingError) throw insertSettingError;
+      }
+
+      setCustomersList([]);
+    } catch (err) {
+      console.warn('Customer master fresh start check skipped:', err);
+    }
+  };
 
   const fetchProducts = async () => {
     const { data, error } = await supabase
