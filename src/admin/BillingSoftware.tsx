@@ -580,12 +580,13 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       }
 
       const driveSaved = result.drive?.ok;
+      const driveError = result.drive?.error ? ` Drive error: ${result.drive.error}` : '';
       setDeliveryPopup({
         status: driveSaved ? 'success' : 'warning',
         title: driveSaved ? 'Invoice delivered' : 'Email sent',
         message: driveSaved
           ? `Invoice was emailed to ${email} and saved to Google Drive.`
-          : `Invoice was emailed to ${email}, but Google Drive did not confirm a saved copy.`,
+          : `Invoice was emailed to ${email}, but Google Drive did not confirm a saved copy.${driveError}`,
       });
       showToast(driveSaved ? `Invoice emailed to ${email} and saved to Google Drive` : `Invoice emailed to ${email}`);
     } catch (err) {
