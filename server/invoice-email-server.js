@@ -221,22 +221,11 @@ app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {
     console.error('Invoice email failed:', getDeliveryErrorMessage(error));
   }
 
-  let driveResult;
-  try {
-    driveResult = await uploadPdfToDrive({
-        pdfBuffer,
-        filename: safeFilename,
-        customerName: cleanCustomerName,
-        invoiceNumber: cleanInvoiceNumber,
-        documentType: cleanDocumentType,
-    });
-  } catch (error) {
-    driveResult = {
-      ok: false,
-      error: getDeliveryErrorMessage(error),
-    };
-    console.error('Invoice Drive upload failed:', driveResult.error);
-  }
+  const driveResult = {
+    ok: false,
+    skipped: true,
+    error: 'Google Drive backup is currently disabled.',
+  };
 
   if (mailError) {
     return res.status(502).json({

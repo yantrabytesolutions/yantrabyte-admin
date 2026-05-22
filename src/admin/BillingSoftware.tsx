@@ -474,7 +474,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         setDeliveryPopup({
           status: 'sending',
           title: 'Sending invoice',
-          message: 'Generating the invoice PDF for email and Google Drive.',
+          message: 'Generating the invoice PDF for email.',
         });
         await new Promise(resolve => window.setTimeout(resolve, 500));
         await emailInvoicePdf(payload.invoice_no);
@@ -556,7 +556,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       setDeliveryPopup({
         status: 'sending',
         title: 'Sending invoice',
-        message: `Sending email to ${email} and saving a copy to Google Drive.`,
+        message: `Sending email to ${email}.`,
       });
       const response = await fetch('/api/invoices/email', {
         method: 'POST',
@@ -579,16 +579,12 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         throw new Error(result.error || `Invoice API failed with HTTP ${response.status}`);
       }
 
-      const driveSaved = result.drive?.ok;
-      const driveError = result.drive?.error ? ` Drive error: ${result.drive.error}` : '';
       setDeliveryPopup({
-        status: driveSaved ? 'success' : 'warning',
-        title: driveSaved ? 'Invoice delivered' : 'Email sent',
-        message: driveSaved
-          ? `Invoice was emailed to ${email} and saved to Google Drive.`
-          : `Invoice was emailed to ${email}, but Google Drive did not confirm a saved copy.${driveError}`,
+        status: 'success',
+        title: 'Email sent',
+        message: `Invoice was emailed to ${email} successfully.`,
       });
-      showToast(driveSaved ? `Invoice emailed to ${email} and saved to Google Drive` : `Invoice emailed to ${email}`);
+      showToast(`Invoice emailed to ${email}`);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);
       setDeliveryPopup({
