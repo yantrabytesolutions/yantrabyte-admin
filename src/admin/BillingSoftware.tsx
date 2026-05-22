@@ -50,7 +50,8 @@ type DeliveryPopup = {
 
 const PAYMENT_MODES = ['Not specified', 'Cash', 'UPI', 'Bank Transfer', 'Card', 'Cheque'];
 const CUSTOMER_MASTER_FRESH_KEY = 'billing_customer_master_fresh_started_at';
-const CUSTOMER_MASTER_FRESH_VALUE = '2026-05-22T17:00:00+05:30';
+const CUSTOMER_MASTER_FRESH_VALUE = '2026-05-22T19:00:00+05:30';
+const BILLING_DOCUMENTS_FRESH_KEY = 'billing_documents_fresh_started_at';
 
 type ExcelCell = string | number | null | undefined;
 type ExcelSheet = {
@@ -143,6 +144,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>('');
+  const [billingFreshStartAt, setBillingFreshStartAt] = useState('');
   
   const [customersList, setCustomersList] = useState<Customer[]>([]);
   const [serviceTicketsList, setServiceTicketsList] = useState<ServiceTicket[]>([]);
@@ -198,26 +200,43 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
   useEffect(() => {
     const loadBillingData = async () => {
-      await ensureFreshCustomerMaster();
-      fetchInvoices();
+      const freshStartAt = await ensureFreshCustomerMaster();
+      setBillingFreshStartAt(freshStartAt);
+      fetchInvoices(freshStartAt);
       fetchCustomers();
       fetchServiceTickets();
       fetchProducts();
     };
 
     loadBillingData();
+    // Fresh-start bootstrapping should run once when the billing screen opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const ensureFreshCustomerMaster = async () => {
-    try {
-      const { data: setting } = await supabase
-        .from('site_settings')
-        .select('id, value')
-        .eq('key', CUSTOMER_MASTER_FRESH_KEY)
-        .maybeSingle();
+    let freshStartAt = '';
 
-      if (setting?.value === CUSTOMER_MASTER_FRESH_VALUE) {
-        return;
+    try {
+      const { data: settings } = await supabase
+        .from('site_settings')
+        .select('id, key, value')
+        .in('key', [CUSTOMER_MASTER_FRESH_KEY, BILLING_DOCUMENTS_FRESH_KEY]);
+
+      const settingByKey = new Map((settings || []).map(setting => [String(setting.key), setting]));
+      const customerSetting = settingByKey.get(CUSTOMER_MASTER_FRESH_KEY);
+      const documentSetting = settingByKey.get(BILLING_DOCUMENTS_FRESH_KEY);
+
+      freshStartAt = String(documentSetting?.value || new Date().toISOString());
+
+      if (!documentSetting?.id) {
+        const { error: insertDocumentSettingError } = await supabase
+          .from('site_settings')
+          .insert([{ key: BILLING_DOCUMENTS_FRESH_KEY, value: freshStartAt }]);
+        if (insertDocumentSettingError) throw insertDocumentSettingError;
+      }
+
+      if (customerSetting?.value === CUSTOMER_MASTER_FRESH_VALUE) {
+        return freshStartAt;
       }
 
       const { error: invoiceClearError } = await supabase
@@ -232,11 +251,11 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         .not('id', 'is', null);
       if (customerClearError) throw customerClearError;
 
-      if (setting?.id) {
+      if (customerSetting?.id) {
         const { error: updateSettingError } = await supabase
           .from('site_settings')
           .update({ value: CUSTOMER_MASTER_FRESH_VALUE })
-          .eq('id', setting.id);
+          .eq('id', customerSetting.id);
         if (updateSettingError) throw updateSettingError;
       } else {
         const { error: insertSettingError } = await supabase
@@ -249,6 +268,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     } catch (err) {
       console.warn('Customer master fresh start check skipped:', err);
     }
+
+    return freshStartAt;
   };
 
   const fetchProducts = async () => {
@@ -315,8 +336,17 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setCustomersList([]);
   };
 
-  const fetchInvoices = async () => {
-    const { data, error } = await supabase.from('invoices').select('*').order('created_at', { ascending: false });
+  const fetchInvoices = async (freshStartAt = billingFreshStartAt) => {
+    let query = supabase
+      .from('invoices')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (freshStartAt) {
+      query = query.gte('created_at', freshStartAt);
+    }
+
+    const { data, error } = await query;
     if (!error && data) {
       setInvoices(data);
     }

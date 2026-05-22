@@ -12,7 +12,11 @@ BEGIN
 END $$;
 
 INSERT INTO public.site_settings (key, value)
-VALUES ('billing_customer_master_fresh_started_at', '2026-05-22T17:00:00+05:30')
+VALUES ('billing_customer_master_fresh_started_at', '2026-05-22T19:00:00+05:30')
 ON CONFLICT (key) DO UPDATE
 SET value = EXCLUDED.value,
     updated_at = NOW();
+
+INSERT INTO public.site_settings (key, value)
+VALUES ('billing_documents_fresh_started_at', NOW()::TEXT)
+ON CONFLICT (key) DO NOTHING;
