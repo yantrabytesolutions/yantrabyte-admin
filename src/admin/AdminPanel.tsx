@@ -10,7 +10,7 @@ import {
   Users, Briefcase, Building2, HelpCircle, Image, Award, Mail, Settings,
   LogOut, Plus, Pencil, Trash2, X, Eye, EyeOff, ChevronDown, Save,
   Loader2, AlertCircle, CheckCircle, Search, RefreshCw, Menu, Ticket, Receipt, CreditCard, MessageSquare,
-  DollarSign, Clock, Activity, TrendingUp, ArrowRight, Truck
+  DollarSign, Clock, Activity, TrendingUp, ArrowRight, Truck, ExternalLink
 } from 'lucide-react';
 
 import BillingSoftware from './BillingSoftware';
@@ -183,6 +183,7 @@ const TICKETS_FIELDS: FormField[] = [
   { key: 'customer_name', label: 'Customer Name', type: 'text', required: true },
   { key: 'customer_email', label: 'Customer Email', type: 'text' },
   { key: 'customer_phone', label: 'Customer Phone', type: 'text', required: true },
+  { key: 'customer_address', label: 'Customer Address', type: 'textarea', rows: 2 },
   { key: 'device_type', label: 'Device/Service Type', type: 'text' },
   { key: 'issue_description', label: 'Issue Description', type: 'textarea', rows: 4, required: true },
   { key: 'status', label: 'Status', type: 'select', options: [
@@ -300,6 +301,7 @@ const SECTION_COLUMNS: Record<string, { key: string; label: string }[]> = {
   tickets: [
     { key: 'ticket_number', label: 'Ticket #' },
     { key: 'customer_name', label: 'Customer' },
+    { key: 'customer_phone', label: 'Phone' },
     { key: 'device_type', label: 'Device' },
     { key: 'priority', label: 'Priority' },
     { key: 'status', label: 'Status' },
@@ -1476,16 +1478,27 @@ export default function AdminPanel() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <h2 className="text-2xl font-bold text-white">{config.label}</h2>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             {activeSection === 'tickets' && (
-              <button
-                onClick={syncFromGoogleSheet}
-                disabled={isSyncing}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium transition-all"
-              >
-                {isSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                Sync from Google Form
-              </button>
+              <>
+                <a
+                  href="/service-request"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium transition-all"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Open Customer Form
+                </a>
+                <button
+                  onClick={syncFromGoogleSheet}
+                  disabled={isSyncing}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-[#94A3B8] hover:text-white hover:border-white/20 text-sm font-medium transition-all"
+                >
+                  {isSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                  Sync Old Google Form
+                </button>
+              </>
             )}
             {fields && !isReadOnly && (
               <button

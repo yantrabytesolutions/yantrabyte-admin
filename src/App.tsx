@@ -9,6 +9,7 @@ import Testimonials from './pages/Testimonials';
 import Blog from './pages/Blog';
 import BlogPost from './pages/BlogPost';
 import Contact from './pages/Contact';
+import ServiceRequest from './pages/ServiceRequest';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import AdminPanel from './admin/AdminPanel';
@@ -27,6 +28,7 @@ function App() {
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/service-request" element={<ServiceRequest />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
         </Route>

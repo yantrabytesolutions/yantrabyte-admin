@@ -167,6 +167,7 @@ export interface ServiceTicket {
   customer_name: string;
   customer_email: string;
   customer_phone: string;
+  customer_address?: string;
   device_type: string;
   issue_description: string;
   status: 'open' | 'in-progress' | 'resolved' | 'closed' | 'completed';
