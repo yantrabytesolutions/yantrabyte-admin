@@ -262,44 +262,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       return;
     }
 
-    const { data: invoiceData } = await supabase
-      .from('invoices')
-      .select('customer_name, phone, email, address, created_at')
-      .order('created_at', { ascending: false });
-
-    if (invoiceData && invoiceData.length > 0) {
-      const byKey = new Map<string, Customer>();
-      invoiceData.forEach((row, index) => {
-        const name = String(row.customer_name || '').trim();
-        if (!name) return;
-        const phoneValue = normalizePhone(String(row.phone || ''));
-        const key = phoneValue || name.toLowerCase();
-        if (!byKey.has(key)) {
-          byKey.set(key, {
-            id: `legacy-invoice-${index}`,
-            name,
-            phone: phoneValue || null,
-            email: String(row.email || '').trim() || null,
-            address: String(row.address || '').trim() || null,
-            created_at: String(row.created_at || ''),
-          });
-        }
-      });
-      setCustomersList(Array.from(byKey.values()));
-      return;
-    }
-
-    const { data: stData } = await supabase.from('service_tickets').select('*');
-    if (stData) {
-      setCustomersList(stData.map((st, index) => ({
-        id: `legacy-ticket-${index}`,
-        name: st.customer_name,
-        email: st.customer_email || null,
-        phone: st.customer_phone || null,
-        address: null,
-        created_at: st.created_at,
-      })));
-    }
+    setCustomersList([]);
   };
 
   const fetchInvoices = async () => {
