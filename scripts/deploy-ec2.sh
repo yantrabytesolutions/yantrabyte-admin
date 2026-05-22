@@ -19,6 +19,20 @@ TARBALL="${USER_HOME}/app.tar.gz"
 
 echo "=== Starting deployment release_${TIMESTAMP} ==="
 
+ensure_swap() {
+    if swapon --show | grep -q .; then
+        return
+    fi
+
+    echo "No swap detected. Creating a 2GB swap file for npm install..."
+    if [ ! -f /swapfile ]; then
+        sudo fallocate -l 2G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=2048
+        sudo chmod 600 /swapfile
+        sudo mkswap /swapfile
+    fi
+    sudo swapon /swapfile
+}
+
 # --- PRE-CHECKS & PREPARATION ---
 if [ ! -f "$TARBALL" ]; then
     echo "❌ Error: Tarball $TARBALL not found!"
@@ -39,9 +53,11 @@ else
 fi
 
 if [ -f "${NEW_RELEASE_DIR}/package-lock.json" ]; then
+    ensure_swap
+    echo "Installing production Node dependencies..."
     (
         cd "$NEW_RELEASE_DIR"
-        sudo npm ci --omit=dev
+        sudo npm ci --omit=dev --no-audit --no-fund
     )
 fi
 

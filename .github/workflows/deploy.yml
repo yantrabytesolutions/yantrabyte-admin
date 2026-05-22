@@ -113,6 +113,7 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
+          command_timeout: 30m
           script: |
             sudo mkdir -p /var/www/yantrabyte/scripts
             sudo cp /home/${{ secrets.EC2_USERNAME }}/scripts/deploy-ec2.sh /var/www/yantrabyte/scripts/deploy-ec2.sh
