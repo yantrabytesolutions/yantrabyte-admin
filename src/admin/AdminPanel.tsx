@@ -422,35 +422,45 @@ export default function AdminPanel() {
   // --- Print Service Ticket Job Sheet / Drop-off Receipt ---
   const printJobSheet = (item: Record<string, unknown>) => {
     const ticketNo = String(item.ticket_number || 'DRAFT');
-    const element = document.createElement('div');
-    element.style.padding = '20px';
-    element.style.width = '790px';
-    element.style.fontFamily = 'Arial, sans-serif';
-    element.style.color = '#333333';
-    element.style.backgroundColor = '#ffffff';
-
+    const safeText = (value: unknown, fallback = '—') => String(value || fallback)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+    const safeMultiline = (value: unknown, fallback: string) => safeText(value, fallback).replace(/\n/g, '<br />');
+    const ticketFilename = ticketNo.toLowerCase().endsWith('.pdf') ? ticketNo : `${ticketNo}.pdf`;
     const dateStr = item.created_at ? new Date(String(item.created_at)).toLocaleDateString('en-GB') : new Date().toLocaleDateString('en-GB');
 
+    const element = document.createElement('div');
+    element.style.width = '794px';
+    element.style.boxSizing = 'border-box';
+    element.style.fontFamily = 'Arial, sans-serif';
+    element.style.color = '#111111';
+    element.style.backgroundColor = '#ffffff';
+
     element.innerHTML = `
-      <div style="border: 2px solid #000000; padding: 20px; min-height: 1020px; position: relative;">
+      <div style="width: 794px; min-height: 1123px; padding: 28px; box-sizing: border-box; background: #ffffff;">
+      <div style="border: 2px solid #000000; padding: 18px; min-height: 1067px; box-sizing: border-box;">
         <!-- Header -->
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+        <table style="width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 16px;">
           <tr>
-            <td style="width: 60%; vertical-align: top;">
-              <div style="font-size: 26px; font-weight: bold; color: #0B5394; text-transform: uppercase; letter-spacing: 0.5px;">Yantrabyte Solutions</div>
-              <div style="font-size: 11px; color: #555555; line-height: 1.4; margin-top: 5px;">
+            <td style="width: 56%; vertical-align: top; padding-right: 16px;">
+              <div style="font-size: 25px; font-weight: bold; color: #0B5394; text-transform: uppercase; letter-spacing: 0.3px;">YantraByte Solutions</div>
+              <div style="font-size: 11px; color: #444444; line-height: 1.45; margin-top: 5px;">
                 IT service, repair, and network management experts.<br />
-                Email: support@yantrabyte.com | Web: www.yantrabyte.com
+                47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br />
+                Phone: 09986742525 | Email: yantrabyte.solutions@gmail.com
               </div>
             </td>
-            <td style="width: 40%; text-align: right; vertical-align: top;">
-              <div style="background-color: #0B5394; color: #ffffff; padding: 8px 12px; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block;">
-                Job Sheet Drop-off Receipt
+            <td style="width: 44%; text-align: right; vertical-align: top;">
+              <div style="background-color: #0B5394; color: #ffffff; padding: 8px 12px; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.4px; display: inline-block;">
+                Service Ticket Receipt
               </div>
-              <div style="font-size: 12px; font-weight: bold; margin-top: 10px; color: #333333;">
-                Ticket No: <span style="color: #c2410c; font-size: 15px;">${ticketNo}</span>
+              <div style="font-size: 12px; font-weight: bold; margin-top: 10px; color: #111111;">
+                Ticket No: <span style="color: #c2410c; font-size: 15px;">${safeText(ticketNo)}</span>
               </div>
-              <div style="font-size: 11px; color: #555555; margin-top: 4px;">
+              <div style="font-size: 11px; color: #444444; margin-top: 4px;">
                 Date: ${dateStr}
               </div>
             </td>
@@ -458,21 +468,63 @@ export default function AdminPanel() {
         </table>
 
         <!-- Divider -->
-        <div style="height: 2px; background: #000000; margin-bottom: 20px;"></div>
+        <div style="height: 2px; background: #000000; margin-bottom: 16px;"></div>
+
+        <!-- Ticket Details -->
+        <table style="width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 18px; font-size: 11px;">
+          <colgroup>
+            <col style="width: 20%;" />
+            <col style="width: 30%;" />
+            <col style="width: 18%;" />
+            <col style="width: 32%;" />
+          </colgroup>
+          <tr>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Ticket ID</td>
+            <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${safeText(ticketNo)}</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Date</td>
+            <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${dateStr}</td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Customer Name</td>
+            <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${safeText(item.customer_name)}</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Phone</td>
+            <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${safeText(item.customer_phone)}</td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Email</td>
+            <td colspan="3" style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${safeText(item.customer_email)}</td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Address</td>
+            <td colspan="3" style="border: 1px solid #000000; padding: 7px 8px; line-height: 1.45; word-break: break-word;">${safeText(item.address || item.customer_address)}</td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Device</td>
+            <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${safeText(item.device || item.device_type)}</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Status</td>
+            <td style="border: 1px solid #000000; padding: 7px 8px; text-transform: uppercase; font-weight: bold; color: #0f766e; word-break: break-word;">${safeText(item.status || 'Received')}</td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Device Type</td>
+            <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${safeText(item.device_type)}</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Priority</td>
+            <td style="border: 1px solid #000000; padding: 7px 8px; text-transform: capitalize; font-weight: bold; color: ${String(item.priority) === 'high' || String(item.priority) === 'urgent' ? '#b91c1c' : '#374151'}; word-break: break-word;">${safeText(item.priority || 'Medium')}</td>
+          </tr>
+        </table>
 
         <!-- Customer & Device Details Grid -->
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px;">
+        <table style="width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 18px;">
           <tr>
             <!-- Customer info -->
             <td style="width: 50%; border: 1px solid #000000; vertical-align: top;">
               <div style="background-color: #D9EAF7; padding: 6px 10px; font-weight: bold; font-size: 12px; color: #000000; border-bottom: 1px solid #000000;">
                 CUSTOMER DETAILS
               </div>
-              <div style="padding: 10px; font-size: 12px; line-height: 1.6;">
-                <table style="width: 100%;">
-                  <tr><td style="font-weight: bold; width: 30%;">Name:</td><td>${item.customer_name || '—'}</td></tr>
-                  <tr><td style="font-weight: bold;">Phone:</td><td>${item.customer_phone || '—'}</td></tr>
-                  <tr><td style="font-weight: bold;">Email:</td><td>${item.customer_email || '—'}</td></tr>
+              <div style="padding: 10px; font-size: 11px; line-height: 1.6;">
+                <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+                  <tr><td style="font-weight: bold; width: 34%; vertical-align: top;">Name:</td><td style="word-break: break-word;">${safeText(item.customer_name)}</td></tr>
+                  <tr><td style="font-weight: bold; vertical-align: top;">Phone:</td><td style="word-break: break-word;">${safeText(item.customer_phone)}</td></tr>
+                  <tr><td style="font-weight: bold; vertical-align: top;">Email:</td><td style="word-break: break-word;">${safeText(item.customer_email)}</td></tr>
                 </table>
               </div>
             </td>
@@ -481,11 +533,11 @@ export default function AdminPanel() {
               <div style="background-color: #D9EAF7; padding: 6px 10px; font-weight: bold; font-size: 12px; color: #000000; border-bottom: 1px solid #000000;">
                 DEVICE & SERVICE DETAILS
               </div>
-              <div style="padding: 10px; font-size: 12px; line-height: 1.6;">
-                <table style="width: 100%;">
-                  <tr><td style="font-weight: bold; width: 35%;">Device/Type:</td><td>${item.device_type || '—'}</td></tr>
-                  <tr><td style="font-weight: bold;">Priority:</td><td style="text-transform: capitalize; font-weight: bold; color: ${String(item.priority) === 'high' || String(item.priority) === 'urgent' ? '#b91c1c' : '#374151'}">${item.priority || 'Medium'}</td></tr>
-                  <tr><td style="font-weight: bold;">Status:</td><td style="text-transform: uppercase; font-weight: bold; color: #0f766e">${item.status || 'Open'}</td></tr>
+              <div style="padding: 10px; font-size: 11px; line-height: 1.6;">
+                <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+                  <tr><td style="font-weight: bold; width: 38%; vertical-align: top;">Device/Type:</td><td style="word-break: break-word;">${safeText(item.device_type)}</td></tr>
+                  <tr><td style="font-weight: bold; vertical-align: top;">Priority:</td><td style="text-transform: capitalize; font-weight: bold; color: ${String(item.priority) === 'high' || String(item.priority) === 'urgent' ? '#b91c1c' : '#374151'}; word-break: break-word;">${safeText(item.priority || 'Medium')}</td></tr>
+                  <tr><td style="font-weight: bold; vertical-align: top;">Status:</td><td style="text-transform: uppercase; font-weight: bold; color: #0f766e; word-break: break-word;">${safeText(item.status || 'Open')}</td></tr>
                 </table>
               </div>
             </td>
@@ -493,27 +545,27 @@ export default function AdminPanel() {
         </table>
 
         <!-- Problem Description -->
-        <div style="border: 1px solid #000000; margin-bottom: 25px;">
+        <div style="border: 1px solid #000000; margin-bottom: 18px;">
           <div style="background-color: #D9EAF7; padding: 6px 10px; font-weight: bold; font-size: 12px; color: #000000; border-bottom: 1px solid #000000;">
             REPORTED CUSTOMER COMPLAINT / ISSUE
           </div>
-          <div style="padding: 12px; font-size: 12px; min-height: 80px; line-height: 1.6; color: #111111;">
-            ${String(item.issue_description || 'No complaints specified.').replace(/\n/g, '<br />')}
+          <div style="padding: 12px; font-size: 12px; min-height: 78px; line-height: 1.6; color: #111111; word-break: break-word;">
+            ${safeMultiline(item.issue_description, 'No complaints specified.')}
           </div>
         </div>
 
         <!-- Diagnostics & Internal Notes -->
-        <div style="border: 1px solid #000000; margin-bottom: 30px;">
+        <div style="border: 1px solid #000000; margin-bottom: 18px;">
           <div style="background-color: #D9EAF7; padding: 6px 10px; font-weight: bold; font-size: 12px; color: #000000; border-bottom: 1px solid #000000;">
             DIAGNOSTICS & INTERNAL WORKSHOP NOTES
           </div>
-          <div style="padding: 12px; font-size: 12px; min-height: 100px; line-height: 1.6; color: #333333; font-style: italic;">
-            ${item.notes ? String(item.notes).replace(/\n/g, '<br />') : 'Awaiting diagnostic feedback from the support team.'}
+          <div style="padding: 12px; font-size: 12px; min-height: 90px; line-height: 1.6; color: #333333; font-style: italic; word-break: break-word;">
+            ${safeMultiline(item.notes, 'Awaiting diagnostic feedback from the support team.')}
           </div>
         </div>
 
         <!-- Repair / Drop-off Terms -->
-        <div style="border: 1px solid #000000; padding: 12px; margin-bottom: 120px; background-color: #f8fafc;">
+        <div style="border: 1px solid #000000; padding: 12px; margin-bottom: 42px; background-color: #f8fafc;">
           <div style="font-size: 11px; font-weight: bold; margin-bottom: 6px; color: #111111;">TERMS & CONDITIONS:</div>
           <ol style="margin: 0; padding-left: 15px; font-size: 9px; color: #555555; line-height: 1.5;">
             <li>Diagnostic charges are applicable for all devices checked in for repair, even if estimate is rejected.</li>
@@ -524,21 +576,20 @@ export default function AdminPanel() {
         </div>
 
         <!-- Signatures Bottom Section -->
-        <div style="position: absolute; bottom: 30px; left: 20px; right: 20px;">
-          <table style="width: 100%; border-collapse: collapse;">
+        <div style="margin-top: 10px;">
+          <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
             <tr>
               <!-- Customer Sign -->
-              <td style="width: 50%; vertical-align: bottom;">
+              <td style="width: 50%; vertical-align: bottom; padding-right: 16px;">
                 <div style="width: 180px; border-bottom: 1px solid #555555; margin-bottom: 8px;"></div>
                 <div style="font-size: 11px; font-weight: bold; color: #333333;">Customer Drop-off Signature</div>
                 <div style="font-size: 9px; color: #777777; margin-top: 2px;">I agree to the service repair terms above.</div>
               </td>
               <!-- Yantrabyte Sign -->
-              <td style="width: 50%; text-align: right; vertical-align: bottom; position: relative;">
-                <div style="display: inline-block; text-align: left; position: relative;">
-                  <!-- Stamp/Seal overlay -->
-                  <div style="position: absolute; bottom: 10px; right: 20px; pointer-events: none; opacity: 0.85;">
-                    <img src="/seal.png" style="width: 115px; height: 115px; border-radius: 9999px; object-fit: contain;" crossOrigin="anonymous" />
+              <td style="width: 50%; text-align: right; vertical-align: bottom; padding-left: 16px;">
+                <div style="display: inline-block; text-align: left;">
+                  <div style="height: 72px; text-align: center; margin-bottom: 4px;">
+                    <img src="/seal.png" style="max-width: 95px; max-height: 72px; object-fit: contain; opacity: 0.9;" crossOrigin="anonymous" />
                   </div>
                   <div style="width: 220px; border-bottom: 1px solid #555555; margin-bottom: 8px;"></div>
                   <div style="font-size: 11px; font-weight: bold; color: #0B5394;">For Yantrabyte Solutions</div>
@@ -549,14 +600,15 @@ export default function AdminPanel() {
           </table>
         </div>
       </div>
+      </div>
     `;
 
     document.body.appendChild(element);
     const opt = {
       margin: 0,
-      filename: `YBS-JOB-${ticketNo}.pdf`,
+      filename: ticketFilename,
       image: { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, windowWidth: 800 },
+      html2canvas: { scale: 2, useCORS: true, windowWidth: 794 },
       jsPDF: { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const }
     };
 
