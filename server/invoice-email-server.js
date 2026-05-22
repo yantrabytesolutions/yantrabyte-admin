@@ -30,7 +30,29 @@ function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || ''));
 }
 
+function getDeliveryErrorMessage(error) {
+  const parts = [
+    error?.code,
+    error?.command,
+    error?.responseCode,
+    error?.response,
+    error?.message,
+  ].filter(Boolean);
+
+  return parts.length ? parts.join(' - ') : 'Unknown delivery error';
+}
+
 function getDriveAuthConfig() {
+  if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.GOOGLE_REFRESH_TOKEN) {
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      process.env.GOOGLE_REDIRECT_URI || 'https://developers.google.com/oauthplayground'
+    );
+    oauth2Client.setCredentials({ refresh_token: process.env.GOOGLE_REFRESH_TOKEN });
+    return { authClient: oauth2Client };
+  }
+
   const rawJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
   if (rawJson) {
     const credentials = JSON.parse(rawJson);
@@ -47,7 +69,7 @@ function getDriveAuthConfig() {
 function getMissingDriveEnv() {
   const missing = driveEnv.filter((key) => !process.env[key]);
   if (!getDriveAuthConfig()) {
-    missing.push('GOOGLE_SERVICE_ACCOUNT_JSON or GOOGLE_APPLICATION_CREDENTIALS');
+    missing.push('Google Drive auth: use GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET + GOOGLE_REFRESH_TOKEN, or GOOGLE_SERVICE_ACCOUNT_JSON, or GOOGLE_APPLICATION_CREDENTIALS');
   }
   return missing;
 }
@@ -62,13 +84,15 @@ async function uploadPdfToDrive({ pdfBuffer, filename, customerName, invoiceNumb
     };
   }
 
-  const auth = new google.auth.GoogleAuth({
-    ...getDriveAuthConfig(),
+  const authConfig = getDriveAuthConfig();
+  const auth = authConfig.authClient || new google.auth.GoogleAuth({
+    ...authConfig,
     scopes: ['https://www.googleapis.com/auth/drive.file'],
   });
   const drive = google.drive({ version: 'v3', auth });
 
   const response = await drive.files.create({
+    supportsAllDrives: true,
     requestBody: {
       name: filename,
       parents: [process.env.GOOGLE_DRIVE_FOLDER_ID],
@@ -162,9 +186,11 @@ app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {
     },
   });
 
+  let mailResult;
+  let mailError;
+
   try {
-    const [mailResult, driveResult] = await Promise.all([
-      transporter.sendMail({
+    mailResult = await transporter.sendMail({
       from: `"YantraByte Solutions" <${process.env.GMAIL_USER}>`,
       to,
       replyTo: process.env.GMAIL_REPLY_TO || process.env.GMAIL_USER,
@@ -189,25 +215,42 @@ app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {
           contentType: 'application/pdf',
         },
       ],
-      }),
-      uploadPdfToDrive({
+    });
+  } catch (error) {
+    mailError = error;
+    console.error('Invoice email failed:', getDeliveryErrorMessage(error));
+  }
+
+  let driveResult;
+  try {
+    driveResult = await uploadPdfToDrive({
         pdfBuffer,
         filename: safeFilename,
         customerName: cleanCustomerName,
         invoiceNumber: cleanInvoiceNumber,
         documentType: cleanDocumentType,
-      }),
-    ]);
-
-    return res.json({
-      ok: true,
-      email: { ok: true, messageId: mailResult.messageId },
-      drive: driveResult,
     });
   } catch (error) {
-    console.error('Invoice delivery failed:', error);
-    return res.status(502).json({ error: 'Failed to email invoice or upload it to Google Drive' });
+    driveResult = {
+      ok: false,
+      error: getDeliveryErrorMessage(error),
+    };
+    console.error('Invoice Drive upload failed:', driveResult.error);
   }
+
+  if (mailError) {
+    return res.status(502).json({
+      error: `Gmail send failed: ${getDeliveryErrorMessage(mailError)}`,
+      email: { ok: false },
+      drive: driveResult,
+    });
+  }
+
+  return res.json({
+    ok: true,
+    email: { ok: true, messageId: mailResult.messageId },
+    drive: driveResult,
+  });
 });
 
 app.listen(port, () => {
