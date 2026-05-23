@@ -15,6 +15,21 @@ app.use(express.json({ limit: maxPdfSize }));
 
 const requiredEnv = ['GMAIL_USER', 'GMAIL_APP_PASSWORD', 'VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'];
 const driveEnv = ['GOOGLE_DRIVE_FOLDER_ID'];
+const sheetsEnv = ['GOOGLE_SHEETS_SPREADSHEET_ID'];
+const serviceTicketHeaders = [
+  'Ticket No',
+  'Created At',
+  'Customer',
+  'Phone',
+  'Email',
+  'Address',
+  'Device / Service',
+  'Issue',
+  'Priority',
+  'Status',
+  'Assigned To',
+  'Notes',
+];
 
 function getMissingEnv() {
   return requiredEnv.filter((key) => !process.env[key]);
@@ -28,6 +43,23 @@ function sanitizeFilename(name) {
 
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || ''));
+}
+
+function serviceTicketRowFromPayload(ticket) {
+  return [
+    ticket.ticket_number || '',
+    ticket.created_at || new Date().toISOString(),
+    ticket.customer_name || '',
+    ticket.customer_phone || '',
+    ticket.customer_email || '',
+    ticket.customer_address || '',
+    ticket.device_type || '',
+    ticket.issue_description || '',
+    ticket.priority || '',
+    ticket.status || '',
+    ticket.assigned_to || '',
+    ticket.notes || '',
+  ];
 }
 
 function getDeliveryErrorMessage(error) {
@@ -74,6 +106,31 @@ function getMissingDriveEnv() {
   return missing;
 }
 
+function getSpreadsheetId() {
+  return process.env.GOOGLE_SHEETS_SPREADSHEET_ID || process.env.GOOGLE_SHEET_ID || '';
+}
+
+function getMissingSheetsEnv() {
+  const missing = sheetsEnv.filter((key) => !process.env[key] && !process.env.GOOGLE_SHEET_ID);
+  if (!getDriveAuthConfig()) {
+    missing.push('Google Sheets auth: use GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET + GOOGLE_REFRESH_TOKEN, or GOOGLE_SERVICE_ACCOUNT_JSON, or GOOGLE_APPLICATION_CREDENTIALS');
+  }
+  return missing;
+}
+
+function createGoogleAuth(scopes) {
+  const authConfig = getDriveAuthConfig();
+  if (!authConfig) return null;
+  return authConfig.authClient || new google.auth.GoogleAuth({
+    ...authConfig,
+    scopes,
+  });
+}
+
+function quoteSheetName(name) {
+  return `'${String(name || 'Sheet1').replace(/'/g, "''")}'`;
+}
+
 async function uploadPdfToDrive({ pdfBuffer, filename, customerName, invoiceNumber, documentType }) {
   const missing = getMissingDriveEnv();
   if (missing.length > 0) {
@@ -84,11 +141,7 @@ async function uploadPdfToDrive({ pdfBuffer, filename, customerName, invoiceNumb
     };
   }
 
-  const authConfig = getDriveAuthConfig();
-  const auth = authConfig.authClient || new google.auth.GoogleAuth({
-    ...authConfig,
-    scopes: ['https://www.googleapis.com/auth/drive.file'],
-  });
+  const auth = createGoogleAuth(['https://www.googleapis.com/auth/drive.file']);
   const drive = google.drive({ version: 'v3', auth });
 
   const response = await drive.files.create({
@@ -109,6 +162,69 @@ async function uploadPdfToDrive({ pdfBuffer, filename, customerName, invoiceNumb
   return {
     ok: true,
     file: response.data,
+  };
+}
+
+async function ensureSheetExists(sheets, spreadsheetId, sheetName) {
+  const spreadsheet = await sheets.spreadsheets.get({
+    spreadsheetId,
+    fields: 'sheets.properties.title',
+  });
+  const exists = (spreadsheet.data.sheets || []).some(sheet => sheet.properties?.title === sheetName);
+  if (exists) return;
+
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId,
+    requestBody: {
+      requests: [{ addSheet: { properties: { title: sheetName } } }],
+    },
+  });
+}
+
+async function appendRowToGoogleSheet({ sheetName, headers, row }) {
+  const missing = getMissingSheetsEnv();
+  if (missing.length > 0) {
+    return {
+      ok: false,
+      skipped: true,
+      error: `Missing Google Sheets configuration: ${missing.join(', ')}`,
+    };
+  }
+
+  const spreadsheetId = getSpreadsheetId();
+  const auth = createGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
+  const sheets = google.sheets({ version: 'v4', auth });
+  const safeSheetName = String(sheetName || 'Backups').slice(0, 80);
+  const quotedSheetName = quoteSheetName(safeSheetName);
+
+  await ensureSheetExists(sheets, spreadsheetId, safeSheetName);
+
+  const headerRange = `${quotedSheetName}!A1:ZZ1`;
+  const existingHeader = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range: headerRange,
+  });
+
+  if (!existingHeader.data.values || existingHeader.data.values.length === 0) {
+    await sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: `${quotedSheetName}!A1`,
+      valueInputOption: 'USER_ENTERED',
+      requestBody: { values: [headers] },
+    });
+  }
+
+  const response = await sheets.spreadsheets.values.append({
+    spreadsheetId,
+    range: `${quotedSheetName}!A2`,
+    valueInputOption: 'USER_ENTERED',
+    insertDataOption: 'INSERT_ROWS',
+    requestBody: { values: [row] },
+  });
+
+  return {
+    ok: true,
+    updatedRange: response.data.updates?.updatedRange,
   };
 }
 
@@ -153,6 +269,56 @@ app.get('/api/drive-health', (_req, res) => {
     ok: missing.length === 0,
     missing,
   });
+});
+app.get('/api/sheets-health', (_req, res) => {
+  const missing = getMissingSheetsEnv();
+  res.status(missing.length ? 500 : 200).json({
+    ok: missing.length === 0,
+    missing,
+  });
+});
+
+app.post('/api/backups/sheet-row', requireSupabaseUser, async (req, res) => {
+  const { sheetName, headers, row } = req.body || {};
+
+  if (!sheetName || !Array.isArray(headers) || !Array.isArray(row)) {
+    return res.status(400).json({ error: 'sheetName, headers, and row are required' });
+  }
+
+  try {
+    const result = await appendRowToGoogleSheet({ sheetName, headers, row });
+    return res.json(result);
+  } catch (error) {
+    console.error('Google Sheets backup failed:', getDeliveryErrorMessage(error));
+    return res.status(502).json({
+      ok: false,
+      skipped: false,
+      error: getDeliveryErrorMessage(error),
+    });
+  }
+});
+
+app.post('/api/backups/public-service-ticket', async (req, res) => {
+  const ticket = req.body || {};
+  if (!ticket.ticket_number || !ticket.customer_name || !ticket.customer_phone || !ticket.issue_description) {
+    return res.status(400).json({ error: 'ticket_number, customer_name, customer_phone, and issue_description are required' });
+  }
+
+  try {
+    const result = await appendRowToGoogleSheet({
+      sheetName: 'Service Tickets',
+      headers: serviceTicketHeaders,
+      row: serviceTicketRowFromPayload(ticket),
+    });
+    return res.json(result);
+  } catch (error) {
+    console.error('Public service ticket Google Sheets backup failed:', getDeliveryErrorMessage(error));
+    return res.status(502).json({
+      ok: false,
+      skipped: false,
+      error: getDeliveryErrorMessage(error),
+    });
+  }
 });
 
 app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {
@@ -221,10 +387,10 @@ app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {
     console.error('Invoice email failed:', getDeliveryErrorMessage(error));
   }
 
-  const driveResult = {
+  let driveResult = {
     ok: false,
     skipped: true,
-    error: 'Google Drive backup is currently disabled.',
+    error: 'Google Drive backup was not attempted because email delivery failed.',
   };
 
   if (mailError) {
@@ -233,6 +399,23 @@ app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {
       email: { ok: false },
       drive: driveResult,
     });
+  }
+
+  try {
+    driveResult = await uploadPdfToDrive({
+      pdfBuffer,
+      filename: safeFilename,
+      customerName: cleanCustomerName,
+      invoiceNumber: cleanInvoiceNumber,
+      documentType: cleanDocumentType,
+    });
+  } catch (error) {
+    driveResult = {
+      ok: false,
+      skipped: false,
+      error: getDeliveryErrorMessage(error),
+    };
+    console.error('Google Drive invoice backup failed:', getDeliveryErrorMessage(error));
   }
 
   return res.json({

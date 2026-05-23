@@ -4,6 +4,8 @@ import { Invoice, InvoiceItem, ServiceTicket, Product, Customer, Purchase } from
 import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt, Mail, FileSpreadsheet } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 import { PRESET_ITEMS } from './presetItems';
+import { downloadExcelWorkbook } from '../utils/spreadsheetXml';
+import { appendBackupRow } from '../utils/googleSheetBackup';
 
 // --- Utility Functions ---
 function numberToWords(num: number): string {
@@ -53,12 +55,6 @@ const CUSTOMER_MASTER_FRESH_KEY = 'billing_customer_master_fresh_started_at';
 const CUSTOMER_MASTER_FRESH_VALUE = '2026-05-22T19:00:00+05:30';
 const BILLING_DOCUMENTS_FRESH_KEY = 'billing_documents_fresh_started_at';
 
-type ExcelCell = string | number | null | undefined;
-type ExcelSheet = {
-  name: string;
-  rows: ExcelCell[][];
-};
-
 const isPersistedCustomerId = (id: string) => !!id && !id.startsWith('legacy-');
 
 const normalizePhone = (value: string) => value.trim().replace(/\s+/g, ' ');
@@ -79,49 +75,28 @@ const shouldRetryLegacyInvoiceSave = (error: { message?: string; code?: string }
     || message.includes('due_date');
 };
 
-const xmlEscape = (value: ExcelCell) =>
-  String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-
 const formatItemsForExcel = (items: Array<{ description: string; qty: number; rate: number }> = []) =>
   items.map(item => `${item.description} x${item.qty} @ ${item.rate}`).join('\n');
 
-const buildExcelWorksheet = (sheet: ExcelSheet) => {
-  const rows = sheet.rows.map(row => {
-    const cells = row.map(cell => {
-      const isNumber = typeof cell === 'number' && Number.isFinite(cell);
-      const type = isNumber ? 'Number' : 'String';
-      return `<Cell><Data ss:Type="${type}">${xmlEscape(cell)}</Data></Cell>`;
-    }).join('');
-    return `<Row>${cells}</Row>`;
-  }).join('');
-
-  return `<Worksheet ss:Name="${xmlEscape(sheet.name).slice(0, 31)}"><Table>${rows}</Table></Worksheet>`;
-};
-
-const downloadExcelWorkbook = (filename: string, sheets: ExcelSheet[]) => {
-  const workbook = `<?xml version="1.0"?>
-<?mso-application progid="Excel.Sheet"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
- xmlns:o="urn:schemas-microsoft-com:office:office"
- xmlns:x="urn:schemas-microsoft-com:office:excel"
- xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
-${sheets.map(buildExcelWorksheet).join('')}
-</Workbook>`;
-
-  const blob = new Blob([workbook], { type: 'application/vnd.ms-excel;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  window.setTimeout(() => URL.revokeObjectURL(url), 0);
-};
+const INVOICE_HEADERS = [
+  'No',
+  'Date',
+  'Customer',
+  'Phone',
+  'Email',
+  'Address',
+  'Items',
+  'Subtotal',
+  'Discount',
+  'Tax',
+  'Round Off',
+  'Grand Total',
+  'Amount Paid',
+  'Balance Due',
+  'Payment Status',
+  'Payment Mode',
+  'Due Date',
+];
 
 export default function BillingSoftware({ initialAutofillTicket, onClearAutofill }: BillingSoftwareProps) {
   const [docType, setDocType] = useState('Invoice');
@@ -288,7 +263,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       setCustomerName(initialAutofillTicket.customer_name || '');
       setPhone(initialAutofillTicket.customer_phone || '');
       setEmail(initialAutofillTicket.customer_email || '');
-      setAddress('');
+      setAddress(initialAutofillTicket.customer_address || '');
       setPaymentMode('Not specified');
       setDueDate('');
       
@@ -410,6 +385,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       setCustomerName(ticket.customer_name || '');
       setPhone(ticket.customer_phone || '');
       setEmail(ticket.customer_email || '');
+      setAddress(ticket.customer_address || '');
       
       const device = ticket.device_type ? ticket.device_type.trim() : '';
       const issue = ticket.issue_description ? ticket.issue_description.trim() : '';
@@ -428,8 +404,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
       if (matchedCust && matchedCust.address) {
         setAddress(matchedCust.address);
-      } else {
-        setAddress('');
+      } else if (ticket.customer_address) {
+        setAddress(ticket.customer_address);
       }
 
       const itemExists = items.some(it => it.description.startsWith('Service & Repair:'));
@@ -731,6 +707,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         }
 
         await persistInvoice(true, payload, legacyPayload);
+        backupInvoiceToGoogleSheet(payload as Invoice);
         showToast('Invoice updated successfully!');
       } else {
         if (docType === 'Invoice') {
@@ -741,6 +718,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         if (data) {
           setSelectedInvoiceId(data.id);
         }
+        backupInvoiceToGoogleSheet(payload as Invoice);
         showToast('Invoice saved successfully!');
       }
 
@@ -860,12 +838,28 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         throw new Error(result.error || `Invoice API failed with HTTP ${response.status}`);
       }
 
-      setDeliveryPopup({
-        status: 'success',
-        title: 'Email sent',
-        message: `Invoice was emailed to ${email} successfully.`,
-      });
-      showToast(`Invoice emailed to ${email}`);
+      if (result.drive?.ok) {
+        setDeliveryPopup({
+          status: 'success',
+          title: 'Email sent and Drive saved',
+          message: `Invoice was emailed to ${email} and backed up to Google Drive.`,
+        });
+        showToast(`Invoice emailed and saved to Google Drive`);
+      } else if (result.drive?.error) {
+        setDeliveryPopup({
+          status: 'warning',
+          title: 'Email sent',
+          message: `Invoice was emailed to ${email}. Google Drive backup was not completed: ${result.drive.error}`,
+        });
+        showToast(`Invoice emailed to ${email}`);
+      } else {
+        setDeliveryPopup({
+          status: 'success',
+          title: 'Email sent',
+          message: `Invoice was emailed to ${email} successfully.`,
+        });
+        showToast(`Invoice emailed to ${email}`);
+      }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);
       setDeliveryPopup({
@@ -900,6 +894,22 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     inv.due_date || '',
   ];
 
+  const backupInvoiceToGoogleSheet = (inv: Invoice) => {
+    void appendBackupRow({
+      sheetName: inv.doc_type === 'Quotation' ? 'Quotations' : 'Bills',
+      headers: INVOICE_HEADERS,
+      row: invoiceRow(inv),
+    }).then(result => {
+      if (result.ok) {
+        showToast('Google Sheet backup updated');
+      } else if (!result.skipped) {
+        console.warn('Google Sheet invoice backup failed:', result.error);
+      }
+    }).catch(error => {
+      console.warn('Google Sheet invoice backup failed:', error);
+    });
+  };
+
   const handleExportExcelLedger = async () => {
     setIsExportingExcel(true);
     try {
@@ -914,25 +924,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       const customers = ((freshCustomers || customersList) as Customer[])
         .filter(customer => customer.name?.trim());
 
-      const invoiceHeaders = [
-        'No',
-        'Date',
-        'Customer',
-        'Phone',
-        'Email',
-        'Address',
-        'Items',
-        'Subtotal',
-        'Discount',
-        'Tax',
-        'Round Off',
-        'Grand Total',
-        'Amount Paid',
-        'Balance Due',
-        'Payment Status',
-        'Payment Mode',
-        'Due Date',
-      ];
+      const invoiceHeaders = INVOICE_HEADERS;
 
       const purchaseHeaders = [
         'Purchase No',
@@ -949,6 +941,19 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       ];
 
       const customerHeaders = ['Name', 'Phone', 'Email', 'Address', 'Created At'];
+      const ticketHeaders = [
+        'Ticket No',
+        'Created At',
+        'Customer',
+        'Phone',
+        'Email',
+        'Address',
+        'Device / Service',
+        'Issue',
+        'Priority',
+        'Status',
+        'Notes',
+      ];
       const bills = invoices.filter(inv => inv.doc_type === 'Invoice');
       const quotations = invoices.filter(inv => inv.doc_type === 'Quotation');
       const dues = bills.filter(inv => (inv.balance_due || 0) > 0);
@@ -989,9 +994,28 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           ],
         },
         { name: 'Pending Dues', rows: [invoiceHeaders, ...dues.map(invoiceRow)] },
+        {
+          name: 'Service Tickets',
+          rows: [
+            ticketHeaders,
+            ...serviceTicketsList.map(ticket => [
+              ticket.ticket_number,
+              ticket.created_at || '',
+              ticket.customer_name,
+              ticket.customer_phone,
+              ticket.customer_email || '',
+              ticket.customer_address || '',
+              ticket.device_type || '',
+              ticket.issue_description || '',
+              ticket.priority || '',
+              ticket.status || '',
+              ticket.notes || '',
+            ]),
+          ],
+        },
       ]);
 
-      showToast('Excel ledger exported successfully!');
+      showToast('Excel ledger exported successfully with service tickets!');
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);
       showToast(errorMsg || 'Failed to export Excel ledger', 'error');

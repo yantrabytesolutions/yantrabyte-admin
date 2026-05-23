@@ -10,12 +10,14 @@ import {
   Users, Briefcase, Building2, HelpCircle, Image, Award, Mail, Settings,
   LogOut, Plus, Pencil, Trash2, X, Eye, EyeOff, ChevronDown, Save,
   Loader2, AlertCircle, CheckCircle, Search, RefreshCw, Menu, Ticket, Receipt, CreditCard, MessageSquare,
-  DollarSign, Clock, Activity, TrendingUp, ArrowRight, Truck, ExternalLink
+  DollarSign, Clock, Activity, TrendingUp, ArrowRight, Truck, ExternalLink, FileSpreadsheet
 } from 'lucide-react';
 
 import BillingSoftware from './BillingSoftware';
 import PurchaseSoftware from './PurchaseSoftware';
 import html2pdf from 'html2pdf.js';
+import { downloadExcelWorkbook } from '../utils/spreadsheetXml';
+import { appendBackupRow } from '../utils/googleSheetBackup';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -199,6 +201,36 @@ const TICKETS_FIELDS: FormField[] = [
     { label: 'Urgent', value: 'urgent' }
   ]},
   { key: 'notes', label: 'Internal Notes', type: 'textarea', rows: 3 }
+];
+
+const SERVICE_TICKET_HEADERS = [
+  'Ticket No',
+  'Created At',
+  'Customer',
+  'Phone',
+  'Email',
+  'Address',
+  'Device / Service',
+  'Issue',
+  'Priority',
+  'Status',
+  'Assigned To',
+  'Notes',
+];
+
+const serviceTicketRow = (ticket: Partial<ServiceTicket>) => [
+  ticket.ticket_number || '',
+  ticket.created_at || new Date().toISOString(),
+  ticket.customer_name || '',
+  ticket.customer_phone || '',
+  ticket.customer_email || '',
+  ticket.customer_address || '',
+  ticket.device_type || '',
+  ticket.issue_description || '',
+  ticket.priority || '',
+  ticket.status || '',
+  ticket.assigned_to || '',
+  ticket.notes || '',
 ];
 
 const SECTION_FIELDS: Record<string, FormField[]> = {
@@ -681,6 +713,53 @@ export default function AdminPanel() {
   }, [showToast]);
 
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isExportingTickets, setIsExportingTickets] = useState(false);
+
+  const exportServiceTicketsExcel = async () => {
+    setIsExportingTickets(true);
+    try {
+      const { data: ticketsData, error } = await supabase
+        .from('service_tickets')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const tickets = (ticketsData || []) as ServiceTicket[];
+      downloadExcelWorkbook(`service-tickets-${new Date().toISOString().slice(0, 10)}.xls`, [
+        {
+          name: 'Service Tickets',
+          rows: [
+            SERVICE_TICKET_HEADERS,
+            ...tickets.map(serviceTicketRow),
+          ],
+        },
+      ]);
+
+      showToast('Service tickets exported to Excel!');
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      showToast(errorMsg || 'Failed to export service tickets', 'error');
+    } finally {
+      setIsExportingTickets(false);
+    }
+  };
+
+  const backupTicketToGoogleSheet = (ticket: Partial<ServiceTicket>) => {
+    void appendBackupRow({
+      sheetName: 'Service Tickets',
+      headers: SERVICE_TICKET_HEADERS,
+      row: serviceTicketRow(ticket),
+    }).then(result => {
+      if (result.ok) {
+        showToast('Google Sheet backup updated');
+      } else if (!result.skipped) {
+        console.warn('Google Sheet ticket backup failed:', result.error);
+      }
+    }).catch(error => {
+      console.warn('Google Sheet ticket backup failed:', error);
+    });
+  };
 
   const syncFromGoogleSheet = async () => {
     setIsSyncing(true);
@@ -850,12 +929,18 @@ export default function AdminPanel() {
           .update(record)
           .eq('id', editingItem.id);
         if (error) throw error;
+        if (activeSection === 'tickets') {
+          backupTicketToGoogleSheet({ ...(editingItem as unknown as Partial<ServiceTicket>), ...(record as Partial<ServiceTicket>) });
+        }
         showToast('Item updated successfully');
       } else {
         const { error } = await supabase
           .from(config.table as string)
           .insert([record]);
         if (error) throw error;
+        if (activeSection === 'tickets') {
+          backupTicketToGoogleSheet(record as Partial<ServiceTicket>);
+        }
         showToast('Item created successfully');
       }
       setShowForm(false);
@@ -1497,6 +1582,14 @@ export default function AdminPanel() {
                 >
                   {isSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
                   Sync Old Google Form
+                </button>
+                <button
+                  onClick={exportServiceTicketsExcel}
+                  disabled={isExportingTickets}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-[#94A3B8] hover:text-white hover:border-white/20 text-sm font-medium transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {isExportingTickets ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
+                  Export Excel
                 </button>
               </>
             )}

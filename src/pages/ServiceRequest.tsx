@@ -78,7 +78,7 @@ export default function ServiceRequest() {
 
       for (let attempt = 0; attempt < 5; attempt += 1) {
         ticketNumber = generateTicketNumber(attempt);
-        const { error: insertError } = await supabase.from('service_tickets').insert([{
+        const ticketPayload = {
           ticket_number: ticketNumber,
           customer_name: form.customer_name.trim(),
           customer_phone: form.customer_phone.trim(),
@@ -88,9 +88,15 @@ export default function ServiceRequest() {
           issue_description: form.issue_description.trim(),
           status: 'open',
           priority: form.priority,
-        }]);
+        };
+        const { error: insertError } = await supabase.from('service_tickets').insert([ticketPayload]);
 
         if (!insertError) {
+          void fetch('/api/backups/public-service-ticket', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(ticketPayload),
+          }).catch(error => console.warn('Google Sheet ticket backup skipped:', error));
           setCreatedTicket(ticketNumber);
           setForm(initialForm);
           return;
