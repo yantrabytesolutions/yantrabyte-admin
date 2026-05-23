@@ -33,6 +33,36 @@ ensure_swap() {
     sudo swapon /swapfile
 }
 
+install_prod_dependencies() {
+    if [ ! -f "${NEW_RELEASE_DIR}/package-lock.json" ]; then
+        return
+    fi
+
+    local current_dist=""
+    local current_release=""
+
+    current_dist="$(readlink -f "$ACTIVE_LINK" 2>/dev/null || true)"
+    if [ -n "$current_dist" ]; then
+        current_release="$(dirname "$current_dist")"
+    fi
+
+    if [ -n "$current_release" ] \
+        && [ -d "${current_release}/node_modules" ] \
+        && [ -f "${current_release}/package-lock.json" ] \
+        && cmp -s "${current_release}/package-lock.json" "${NEW_RELEASE_DIR}/package-lock.json"; then
+        echo "Reusing production Node dependencies from current release..."
+        sudo cp -a "${current_release}/node_modules" "${NEW_RELEASE_DIR}/node_modules"
+        return
+    fi
+
+    ensure_swap
+    echo "Installing production Node dependencies..."
+    (
+        cd "$NEW_RELEASE_DIR"
+        sudo npm ci --omit=dev --no-audit --no-fund --prefer-offline
+    )
+}
+
 # --- PRE-CHECKS & PREPARATION ---
 if [ ! -f "$TARBALL" ]; then
     echo "❌ Error: Tarball $TARBALL not found!"
@@ -46,20 +76,18 @@ sudo mkdir -p "$NEW_RELEASE_DIR"
 echo "📦 Extracting new production assets..."
 sudo tar -xzf "$TARBALL" -C "$NEW_RELEASE_DIR"
 
+if [ ! -f "${NEW_RELEASE_DIR}/dist/service-request/index.html" ]; then
+    echo "Error: service-request route fallback missing from build artifact."
+    exit 1
+fi
+
 if [ -f "$ENV_FILE" ]; then
     sudo ln -sfn "$ENV_FILE" "${NEW_RELEASE_DIR}/.env"
 else
     echo "Runtime .env not found at $ENV_FILE. Invoice email API will not start correctly until it exists."
 fi
 
-if [ -f "${NEW_RELEASE_DIR}/package-lock.json" ]; then
-    ensure_swap
-    echo "Installing production Node dependencies..."
-    (
-        cd "$NEW_RELEASE_DIR"
-        sudo npm ci --omit=dev --no-audit --no-fund
-    )
-fi
+install_prod_dependencies
 
 # --- PERMISSIONS ENFORCEMENT ---
 echo "🔒 Correcting filesystem ownership and permissions..."
