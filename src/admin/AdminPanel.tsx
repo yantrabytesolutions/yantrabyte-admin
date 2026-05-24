@@ -4,6 +4,7 @@ import type {
   SiteSetting,
   ServiceTicket,
   Invoice,
+  Customer,
 } from '../types';
 import {
   LayoutDashboard, FileText, Wrench, Package, MessageSquareQuote, PenTool,
@@ -418,6 +419,7 @@ export default function AdminPanel() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [autofillTicket, setAutofillTicket] = useState<ServiceTicket | null>(null);
+  const [customersList, setCustomersList] = useState<Customer[]>([]);
 
   const [financialInvoices, setFinancialInvoices] = useState<Invoice[]>([]);
   const [financialTickets, setFinancialTickets] = useState<ServiceTicket[]>([]);
@@ -874,6 +876,19 @@ export default function AdminPanel() {
       }).catch(err => {
         console.error('Error loading dashboard financials:', err);
         setDashboardLoading(false);
+      });
+    }
+  }, [session, activeSection]);
+
+  // --- Fetch customers when tickets section is active ---
+  useEffect(() => {
+    if (session && activeSection === 'tickets') {
+      supabase.from('customers').select('*').order('name').then(({ data, error }) => {
+        if (error) {
+          console.error('Error fetching customers:', error);
+          return;
+        }
+        if (data) setCustomersList(data as Customer[]);
       });
     }
   }, [session, activeSection]);
@@ -1857,6 +1872,40 @@ export default function AdminPanel() {
               <div className="flex items-center gap-2 text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-xl p-3">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 {formError}
+              </div>
+            )}
+
+            {activeSection === 'tickets' && (
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">
+                  Select Existing Customer
+                </label>
+                <div className="relative">
+                  <select
+                    value=""
+                    onChange={e => {
+                      const cust = customersList.find(c => c.id === e.target.value);
+                      if (cust) {
+                        setFormData(prev => ({
+                          ...prev,
+                          customer_name: cust.name || '',
+                          customer_email: cust.email || '',
+                          customer_phone: cust.phone || '',
+                          customer_address: cust.address || '',
+                        }));
+                      }
+                    }}
+                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-[#0EA5E9]/50 appearance-none pr-10 transition-all"
+                  >
+                    <option value="" className="bg-[#0F172A]">Select customer...</option>
+                    {customersList.map(c => (
+                      <option key={c.id} value={c.id} className="bg-[#0F172A]">
+                        {c.name}{c.phone ? ` - ${c.phone}` : ''}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B] pointer-events-none" />
+                </div>
               </div>
             )}
 
