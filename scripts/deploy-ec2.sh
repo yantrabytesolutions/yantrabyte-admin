@@ -121,15 +121,12 @@ echo "node_modules exists: $(test -d node_modules && echo yes || echo no)"
 echo "server file exists: $(test -f server/invoice-email-server.js && echo yes || echo no)"
 echo "env file exists: $(test -f .env && echo yes || echo no)"
 
-if pm2 describe yantrabyte-invoice-api >/dev/null 2>&1; then
-    echo "PM2 process exists, restarting..."
-    pm2 restart yantrabyte-invoice-api --update-env
-    echo "PM2 process restarted"
-else
-    echo "Creating new PM2 process..."
-    pm2 start npm --name yantrabyte-invoice-api -- run api
-    echo "PM2 process created"
-fi
+# Kill existing PM2 process if stuck
+pm2 delete yantrabyte-invoice-api 2>/dev/null || true
+
+# Start server directly with node
+echo "Starting invoice email server via PM2..."
+pm2 start node --name yantrabyte-invoice-api -- server/invoice-email-server.js
 pm2 save
 
 echo "PM2 status:"
