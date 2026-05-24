@@ -12,12 +12,11 @@ BEGIN
 
   SELECT ticket_number INTO last_ticket
   FROM public.service_tickets
-  WHERE ticket_number LIKE 'YBS-TKT-%'
+  WHERE ticket_number LIKE today_prefix || '%'
   ORDER BY created_at DESC
   LIMIT 1;
 
   IF last_ticket IS NOT NULL THEN
-    -- Extract the suffix and increment it
     next_suffix := (regexp_replace(last_ticket, '^.*-(\d+)$', '\1'))::integer + 1;
   END IF;
 
