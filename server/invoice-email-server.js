@@ -5,6 +5,7 @@ import { Readable } from 'stream';
 import nodemailer from 'nodemailer';
 import { google } from 'googleapis';
 import { createClient } from '@supabase/supabase-js';
+import PDFDocument from 'pdfkit';
 
 dotenv.config();
 
@@ -302,6 +303,77 @@ app.post('/api/backups/sheet-row', requireSupabaseUser, async (req, res) => {
   }
 });
 
+function generateTicketPdf(ticket) {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({
+      size: 'A4',
+      margin: 50,
+      info: {
+        Title: `Service Ticket ${ticket.ticket_number}`,
+        Author: 'YantraByte Solutions',
+      },
+    });
+
+    const chunks = [];
+    doc.on('data', (chunk) => chunks.push(chunk));
+    doc.on('end', () => resolve(Buffer.concat(chunks)));
+    doc.on('error', reject);
+
+    const cleanName = String(ticket.customer_name || 'Customer');
+    const cleanTicket = String(ticket.ticket_number);
+    const cleanDevice = String(ticket.device_type || 'Device');
+
+    doc
+      .fontSize(20)
+      .font('Helvetica-Bold')
+      .text('YantraByte Solutions', { align: 'center' });
+    doc
+      .fontSize(10)
+      .font('Helvetica')
+      .text('IT Service, Repair & Network Management', { align: 'center' });
+    doc.moveDown();
+
+    doc
+      .fontSize(16)
+      .font('Helvetica-Bold')
+      .text('Service Ticket Receipt', { align: 'center' });
+    doc.moveDown();
+
+    doc.fontSize(12).font('Helvetica-Bold').text('Ticket No: ');
+    doc.font('Helvetica').text(cleanTicket);
+    doc.text(`Date: ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`);
+    doc.moveDown();
+
+    doc.font('Helvetica-Bold').text('Customer Details');
+    doc.font('Helvetica');
+    doc.text(`Name: ${cleanName}`);
+    doc.text(`Phone: ${ticket.customer_phone || 'N/A'}`);
+    if (ticket.customer_email) doc.text(`Email: ${ticket.customer_email}`);
+    if (ticket.customer_address) doc.text(`Address: ${ticket.customer_address}`);
+    doc.moveDown();
+
+    doc.font('Helvetica-Bold').text('Device & Service');
+    doc.font('Helvetica');
+    doc.text(`Device: ${cleanDevice}`);
+    doc.text(`Priority: ${ticket.priority || 'Medium'}`);
+    doc.text(`Status: ${ticket.status || 'Open'}`);
+    doc.moveDown();
+
+    doc.font('Helvetica-Bold').text('Reported Issue');
+    doc.font('Helvetica');
+    doc.text(ticket.issue_description || 'Not specified');
+    doc.moveDown(2);
+
+    doc
+      .fontSize(9)
+      .font('Helvetica')
+      .fillColor('#666')
+      .text('Thank you for choosing YantraByte Solutions.', { align: 'center' });
+
+    doc.end();
+  });
+}
+
 app.post('/api/backups/public-service-ticket', async (req, res) => {
   const ticket = req.body || {};
   if (!ticket.ticket_number || !ticket.customer_name || !ticket.customer_phone || !ticket.issue_description) {
@@ -373,6 +445,19 @@ app.post('/api/backups/public-service-ticket', async (req, res) => {
             contentType: 'application/pdf',
           },
         ];
+      } else {
+        try {
+          const serverPdf = await generateTicketPdf(ticket);
+          mailPayload.attachments = [
+            {
+              filename: `${cleanTicketNumber}.pdf`,
+              content: serverPdf,
+              contentType: 'application/pdf',
+            },
+          ];
+        } catch (pdfErr) {
+          console.error('Server PDF generation failed:', pdfErr);
+        }
       }
 
       mailResult = await transporter.sendMail(mailPayload);
