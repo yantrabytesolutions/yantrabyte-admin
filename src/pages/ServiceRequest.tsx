@@ -108,17 +108,6 @@ export default function ServiceRequest() {
       const { error: insertError } = await supabase.from('service_tickets').insert([ticketPayload]);
       if (insertError) throw insertError;
 
-      try {
-        const { error: fnError } = await supabase.functions.invoke('send-ticket-email', {
-          body: ticketPayload,
-        });
-        if (fnError) {
-          console.warn('Edge Function email send failed:', fnError);
-        }
-      } catch (fnErr) {
-        console.warn('Edge Function email send error:', fnErr);
-      }
-
       const baseUrl = import.meta.env.VITE_API_URL || '';
       try {
         const response = await fetch(`${baseUrl}/api/backups/public-service-ticket`, {
@@ -128,10 +117,10 @@ export default function ServiceRequest() {
         });
         const result = await response.json();
         if (!response.ok || !result.ok) {
-          console.warn('Google Sheet ticket backup failed:', result.error || result);
+          console.warn('Ticket backup/email failed:', result.error || result);
         }
       } catch (backupError) {
-        console.warn('Network error triggering Google Sheet backup:', backupError);
+        console.warn('Network error triggering backup:', backupError);
       }
 
       setCreatedTicket(ticketNumber);

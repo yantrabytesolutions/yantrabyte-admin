@@ -862,8 +862,11 @@ export default function AdminPanel() {
         reader.readAsDataURL(pdfBlob);
       });
 
-      const { error: fnError, data: fnData } = await supabase.functions.invoke('send-ticket-email', {
-        body: {
+      const baseUrl = import.meta.env.VITE_API_URL || '';
+      const response = await fetch(`${baseUrl}/api/backups/public-service-ticket`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           ticket_number: String(item.ticket_number || ''),
           customer_name: String(item.customer_name || 'Customer'),
           customer_phone: String(item.customer_phone || ''),
@@ -875,11 +878,10 @@ export default function AdminPanel() {
           status: String(item.status || 'open'),
           pdfBase64,
           pdfFilename: `${ticketNo}.pdf`,
-        },
+        }),
       });
-      if (fnError) {
-        showToast('Email failed: ' + fnError.message, 'error');
-      } else if (fnData?.email?.ok) {
+      const result = await response.json();
+      if (result.email?.ok) {
         showToast(`Email sent to ${email} with PDF`);
       } else {
         showToast('Email skipped (no Gmail configured or invalid email)');
