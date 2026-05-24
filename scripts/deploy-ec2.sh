@@ -108,20 +108,38 @@ sudo ln -sfn "${NEW_RELEASE_DIR}/dist" "$ACTIVE_LINK"
 
 if ! command -v pm2 >/dev/null 2>&1; then
     echo "Installing PM2 process manager..."
-    sudo npm install -g pm2
+    sudo npm install -g pm2 2>&1
 fi
 
+echo "Node version: $(node --version)"
+echo "npm version: $(npm --version)"
+echo "PM2 version: $(pm2 --version 2>/dev/null || echo 'not found')"
+
 cd "$NEW_RELEASE_DIR"
+echo "PWD: $(pwd)"
+echo "node_modules exists: $(test -d node_modules && echo yes || echo no)"
+echo "server file exists: $(test -f server/invoice-email-server.js && echo yes || echo no)"
+echo "env file exists: $(test -f .env && echo yes || echo no)"
+
 if pm2 describe yantrabyte-invoice-api >/dev/null 2>&1; then
+    echo "PM2 process exists, restarting..."
     pm2 restart yantrabyte-invoice-api --update-env
-    echo "✅ PM2 process restarted"
+    echo "PM2 process restarted"
 else
+    echo "Creating new PM2 process..."
     pm2 start npm --name yantrabyte-invoice-api -- run api
-    echo "✅ PM2 process created and started"
+    echo "PM2 process created"
 fi
 pm2 save
 
-echo "🌐 Health check: $(curl -s -o /dev/null -w "%{http_code}" http://localhost:4000/api/health || echo 'unreachable')"
+echo "PM2 status:"
+pm2 show yantrabyte-invoice-api --no-color 2>&1 || pm2 list --no-color 2>&1 || echo "PM2 list failed"
+
+echo "Waiting 3 seconds for server startup..."
+sleep 3
+echo "Local health: $(curl -s -o /dev/null -w '%{http_code}' http://localhost:4000/api/health 2>/dev/null || echo 'unreachable')"
+echo "PM2 recent logs:"
+pm2 logs yantrabyte-invoice-api --lines 5 --nostream --no-color 2>&1 || echo "No logs available"
 
 # --- SERVER RELOAD ---
 echo "⚡ Reloading Nginx web server..."
