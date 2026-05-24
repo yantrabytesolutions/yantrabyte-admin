@@ -484,8 +484,8 @@ export default function AdminPanel() {
         <table style="width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 16px;">
           <tr>
             <td style="width: 56%; vertical-align: top; padding-right: 16px;">
-              <div style="font-size: 25px; font-weight: bold; color: #0B5394; text-transform: uppercase; letter-spacing: 0.3px;">YantraByte Solutions</div>
-              <div style="font-size: 11px; color: #444444; line-height: 1.45; margin-top: 5px;">
+              <img src="/logo5.png" style="max-height: 60px; object-fit: contain; margin-bottom: 6px;" crossOrigin="anonymous" />
+              <div style="font-size: 11px; color: #444444; line-height: 1.45;">
                 IT service, repair, and network management experts.<br />
                 47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br />
                 Phone: 09986742525 | Email: yantrabyte.solutions@gmail.com
@@ -697,6 +697,201 @@ export default function AdminPanel() {
     const url = `https://wa.me/${phone}?text=${encodedText}`;
     window.open(url, '_blank');
     showToast('Opening WhatsApp chat...');
+  };
+
+  const sendTicketEmail = async (item: Record<string, unknown>) => {
+    const email = String(item.customer_email || '');
+    if (!email) {
+      showToast('No email address available for this ticket', 'error');
+      return;
+    }
+
+    showToast('Generating PDF for email...');
+
+    const ticketNo = String(item.ticket_number || '');
+    const dateStr = item.created_at ? new Date(String(item.created_at)).toLocaleDateString('en-GB') : new Date().toLocaleDateString('en-GB');
+    const safeText = (value: unknown, fallback = '—') => String(value || fallback)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    const safeMultiline = (value: unknown, fallback: string) => safeText(value, fallback).replace(/\n/g, '<br />');
+
+    const element = document.createElement('div');
+    element.style.width = '794px';
+    element.style.boxSizing = 'border-box';
+    element.style.fontFamily = 'Arial, sans-serif';
+    element.style.color = '#111111';
+    element.style.backgroundColor = '#ffffff';
+    element.style.position = 'absolute';
+    element.style.left = '-9999px';
+    element.innerHTML = `
+      <div style="width: 794px; min-height: 1123px; padding: 28px; box-sizing: border-box; background: #ffffff;">
+      <div style="border: 2px solid #000000; padding: 18px; min-height: 1067px; box-sizing: border-box;">
+        <table style="width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 16px;">
+          <tr>
+            <td style="width: 56%; vertical-align: top; padding-right: 16px;">
+              <img src="/logo5.png" style="max-height: 60px; object-fit: contain; margin-bottom: 6px;" crossOrigin="anonymous" />
+              <div style="font-size: 11px; color: #444444; line-height: 1.45;">
+                IT service, repair, and network management experts.<br />
+                47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br />
+                Phone: 09986742525 | Email: yantrabyte.solutions@gmail.com
+              </div>
+            </td>
+            <td style="width: 44%; text-align: right; vertical-align: top;">
+              <div style="background-color: #0B5394; color: #ffffff; padding: 8px 12px; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.4px; display: inline-block;">Service Ticket Receipt</div>
+              <div style="font-size: 12px; font-weight: bold; margin-top: 10px; color: #111111;">Ticket No: <span style="color: #c2410c; font-size: 15px;">${safeText(ticketNo)}</span></div>
+              <div style="font-size: 11px; color: #444444; margin-top: 4px;">Date: ${dateStr}</div>
+            </td>
+          </tr>
+        </table>
+        <div style="height: 2px; background: #000000; margin-bottom: 16px;"></div>
+        <table style="width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 18px; font-size: 11px;">
+          <colgroup><col style="width: 20%;" /><col style="width: 30%;" /><col style="width: 18%;" /><col style="width: 32%;" /></colgroup>
+          <tr>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Ticket ID</td>
+            <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${safeText(ticketNo)}</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Date</td>
+            <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${dateStr}</td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Customer Name</td>
+            <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${safeText(item.customer_name)}</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Phone</td>
+            <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${safeText(item.customer_phone)}</td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Email</td>
+            <td colspan="3" style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${safeText(item.customer_email)}</td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Address</td>
+            <td colspan="3" style="border: 1px solid #000000; padding: 7px 8px; line-height: 1.45; word-break: break-word;">${safeText(item.address || item.customer_address)}</td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Device</td>
+            <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${safeText(item.device || item.device_type)}</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Status</td>
+            <td style="border: 1px solid #000000; padding: 7px 8px; text-transform: uppercase; font-weight: bold; color: #0f766e; word-break: break-word;">${safeText(item.status || 'Received')}</td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Device Type</td>
+            <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${safeText(item.device_type)}</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Priority</td>
+            <td style="border: 1px solid #000000; padding: 7px 8px; text-transform: capitalize; font-weight: bold; word-break: break-word;">${safeText(item.priority || 'Medium')}</td>
+          </tr>
+        </table>
+        <table style="width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 18px;">
+          <tr>
+            <td style="width: 50%; border: 1px solid #000000; vertical-align: top;">
+              <div style="background-color: #D9EAF7; padding: 6px 10px; font-weight: bold; font-size: 12px; color: #000000; border-bottom: 1px solid #000000;">CUSTOMER DETAILS</div>
+              <div style="padding: 10px; font-size: 11px; line-height: 1.6;">
+                <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+                  <tr><td style="font-weight: bold; width: 34%; vertical-align: top;">Name:</td><td style="word-break: break-word;">${safeText(item.customer_name)}</td></tr>
+                  <tr><td style="font-weight: bold; vertical-align: top;">Phone:</td><td style="word-break: break-word;">${safeText(item.customer_phone)}</td></tr>
+                  <tr><td style="font-weight: bold; vertical-align: top;">Email:</td><td style="word-break: break-word;">${safeText(item.customer_email)}</td></tr>
+                </table>
+              </div>
+            </td>
+            <td style="width: 50%; border: 1px solid #000000; border-left: none; vertical-align: top;">
+              <div style="background-color: #D9EAF7; padding: 6px 10px; font-weight: bold; font-size: 12px; color: #000000; border-bottom: 1px solid #000000;">DEVICE & SERVICE DETAILS</div>
+              <div style="padding: 10px; font-size: 11px; line-height: 1.6;">
+                <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+                  <tr><td style="font-weight: bold; width: 38%; vertical-align: top;">Device/Type:</td><td style="word-break: break-word;">${safeText(item.device_type)}</td></tr>
+                  <tr><td style="font-weight: bold; vertical-align: top;">Priority:</td><td style="text-transform: capitalize; font-weight: bold; word-break: break-word;">${safeText(item.priority || 'Medium')}</td></tr>
+                  <tr><td style="font-weight: bold; vertical-align: top;">Status:</td><td style="text-transform: uppercase; font-weight: bold; color: #0f766e; word-break: break-word;">${safeText(item.status || 'Open')}</td></tr>
+                </table>
+              </div>
+            </td>
+          </tr>
+        </table>
+        <div style="border: 1px solid #000000; margin-bottom: 18px;">
+          <div style="background-color: #D9EAF7; padding: 6px 10px; font-weight: bold; font-size: 12px; color: #000000; border-bottom: 1px solid #000000;">REPORTED CUSTOMER COMPLAINT / ISSUE</div>
+          <div style="padding: 12px; font-size: 12px; min-height: 78px; line-height: 1.6; color: #111111; word-break: break-word;">${safeMultiline(item.issue_description, 'No complaints specified.')}</div>
+        </div>
+        <div style="border: 1px solid #000000; margin-bottom: 18px;">
+          <div style="background-color: #D9EAF7; padding: 6px 10px; font-weight: bold; font-size: 12px; color: #000000; border-bottom: 1px solid #000000;">DIAGNOSTICS & INTERNAL WORKSHOP NOTES</div>
+          <div style="padding: 12px; font-size: 12px; min-height: 90px; line-height: 1.6; color: #333333; font-style: italic; word-break: break-word;">${safeMultiline(item.notes, 'Awaiting diagnostic feedback from the support team.')}</div>
+        </div>
+        <div style="border: 1px solid #000000; padding: 12px; margin-bottom: 42px; background-color: #f8fafc;">
+          <div style="font-size: 11px; font-weight: bold; margin-bottom: 6px; color: #111111;">TERMS & CONDITIONS:</div>
+          <ol style="margin: 0; padding-left: 15px; font-size: 9px; color: #555555; line-height: 1.5;">
+            <li>Diagnostic charges are applicable for all devices checked in for repair, even if estimate is rejected.</li>
+            <li>Backup all data before drop-off. Yantrabyte Solutions is not liable for data loss or corruption during repair.</li>
+            <li>Devices not collected within 30 days of repair completion warning may be subject to storage fees or disposal.</li>
+            <li>Any hardware components replaced will carry their respective standard OEM manufacturer warranties.</li>
+          </ol>
+        </div>
+        <div style="margin-top: 10px;">
+          <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+            <tr>
+              <td style="width: 50%; vertical-align: bottom; padding-right: 16px;">
+                <div style="width: 180px; border-bottom: 1px solid #555555; margin-bottom: 8px;"></div>
+                <div style="font-size: 11px; font-weight: bold; color: #333333;">Customer Drop-off Signature</div>
+                <div style="font-size: 9px; color: #777777; margin-top: 2px;">I agree to the service repair terms above.</div>
+              </td>
+              <td style="width: 50%; text-align: right; vertical-align: bottom; padding-left: 16px;">
+                <div style="display: inline-block; text-align: left;">
+                  <div style="height: 72px; text-align: center; margin-bottom: 4px;">
+                    <img src="/seal.png" style="max-width: 95px; max-height: 72px; object-fit: contain; opacity: 0.9;" crossOrigin="anonymous" />
+                  </div>
+                  <div style="width: 220px; border-bottom: 1px solid #555555; margin-bottom: 8px;"></div>
+                  <div style="font-size: 11px; font-weight: bold; color: #0B5394;">For Yantrabyte Solutions</div>
+                  <div style="font-size: 9px; color: #777777; margin-top: 2px;">Authorized Workshop Executive</div>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      </div>
+    `;
+
+    document.body.appendChild(element);
+
+    try {
+      const pdfBlob = await html2pdf()
+        .set({ margin: 0, filename: `${ticketNo}.pdf`, image: { type: 'jpeg' as const, quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, windowWidth: 794 }, jsPDF: { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const } })
+        .from(element)
+        .outputPdf('blob') as Blob;
+
+      const reader = new FileReader();
+      const pdfBase64 = await new Promise<string>((resolve, reject) => {
+        reader.onloadend = () => {
+          const result = String(reader.result || '');
+          resolve(result.includes(',') ? result.split(',')[1] : result);
+        };
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(pdfBlob);
+      });
+
+      const baseUrl = import.meta.env.VITE_API_URL || '';
+      const response = await fetch(`${baseUrl}/api/backups/public-service-ticket`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ticket_number: String(item.ticket_number || ''),
+          customer_name: String(item.customer_name || 'Customer'),
+          customer_phone: String(item.customer_phone || ''),
+          customer_email: email,
+          customer_address: String(item.customer_address || ''),
+          device_type: String(item.device_type || 'Device'),
+          issue_description: String(item.issue_description || ''),
+          priority: String(item.priority || 'medium'),
+          status: String(item.status || 'open'),
+          pdfBase64,
+          pdfFilename: `${ticketNo}.pdf`,
+        }),
+      });
+      const result = await response.json();
+      if (result.email?.ok) {
+        showToast(`Email sent to ${email} with PDF`);
+      } else {
+        showToast('Email skipped (no Gmail configured or invalid email)');
+      }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      showToast('Failed to send email: ' + errorMsg, 'error');
+    } finally {
+      document.body.removeChild(element);
+    }
   };
 
   // --- Data Fetching ---
@@ -1711,6 +1906,13 @@ export default function AdminPanel() {
                                   title="Send WhatsApp Client Alert"
                                 >
                                   <MessageSquare className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => sendTicketEmail(item)}
+                                  className="p-1.5 rounded-lg hover:bg-white/5 text-[#64748B] hover:text-blue-400 transition-all"
+                                  title="Send Email to Customer"
+                                >
+                                  <Mail className="w-4 h-4" />
                                 </button>
                                 <button
                                   onClick={() => printJobSheet(item)}

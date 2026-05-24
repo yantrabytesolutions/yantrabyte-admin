@@ -77,9 +77,20 @@ export default function ServiceRequest() {
         const month = String(now.getMonth() + 1).padStart(2, '0');
         const year = String(now.getFullYear()).slice(-2);
         const prefix = `YBS-TKT-${day}${month}${year}-`;
-        const randomSuffix = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
-        ticketNumber = `${prefix}${randomSuffix}`;
-        console.warn('RPC get_next_service_ticket_number failed. Falling back to random suffix.', rpcError);
+        const { data: existing } = await supabase
+          .from('service_tickets')
+          .select('ticket_number')
+          .like('ticket_number', `${prefix}%`);
+        let maxSeq = 0;
+        if (existing) {
+          for (const t of existing) {
+            const parts = String(t.ticket_number).split('-');
+            const seqNum = parseInt(parts[parts.length - 1], 10);
+            if (!isNaN(seqNum) && seqNum > maxSeq) maxSeq = seqNum;
+          }
+        }
+        const seq = (maxSeq + 1).toString().padStart(3, '0');
+        ticketNumber = `${prefix}${seq}`;
       }
 
       const ticketPayload = {

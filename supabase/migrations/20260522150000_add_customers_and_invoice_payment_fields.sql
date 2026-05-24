@@ -33,6 +33,7 @@ ALTER TABLE public.invoices
     ADD COLUMN IF NOT EXISTS payment_status TEXT NOT NULL DEFAULT 'Due',
     ADD COLUMN IF NOT EXISTS due_date TEXT;
 
+-- Populate customers from invoices
 INSERT INTO public.customers (name, phone, email, address)
 SELECT DISTINCT ON (COALESCE(NULLIF(BTRIM(phone), ''), LOWER(BTRIM(customer_name))))
     customer_name,

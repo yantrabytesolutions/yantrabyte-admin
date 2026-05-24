@@ -339,7 +339,7 @@ app.post('/api/backups/public-service-ticket', async (req, res) => {
       const cleanTicketNumber = String(ticket.ticket_number);
       const cleanDeviceType = String(ticket.device_type || 'Device');
 
-      mailResult = await transporter.sendMail({
+      const mailPayload = {
         from: `"YantraByte Solutions" <${process.env.GMAIL_USER}>`,
         to: ticket.customer_email,
         replyTo: process.env.GMAIL_REPLY_TO || process.env.GMAIL_USER,
@@ -362,7 +362,20 @@ app.post('/api/backups/public-service-ticket', async (req, res) => {
           <p>We will keep you updated on the progress.</p>
           <p>Regards,<br/>YantraByte Solutions</p>
         `,
-      });
+      };
+
+      if (ticket.pdfBase64 && ticket.pdfFilename) {
+        const pdfBuffer = Buffer.from(ticket.pdfBase64, 'base64');
+        mailPayload.attachments = [
+          {
+            filename: String(ticket.pdfFilename).replace(/[/\\?%*:|"<>]/g, '-').slice(0, 120),
+            content: pdfBuffer,
+            contentType: 'application/pdf',
+          },
+        ];
+      }
+
+      mailResult = await transporter.sendMail(mailPayload);
     } catch (error) {
       console.error('Service ticket email failed:', getDeliveryErrorMessage(error));
     }

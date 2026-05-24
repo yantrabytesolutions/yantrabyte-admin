@@ -96,6 +96,7 @@ const INVOICE_HEADERS = [
   'Payment Status',
   'Payment Mode',
   'Due Date',
+  'Link',
 ];
 
 export default function BillingSoftware({ initialAutofillTicket, onClearAutofill }: BillingSoftwareProps) {
@@ -368,14 +369,19 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setItems([]);
   };
 
-  const handleSelectCustomer = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const cust = customersList.find(c => c.id === e.target.value);
-    if (cust) {
-      setSelectedCustomerId(isPersistedCustomerId(cust.id) ? cust.id : '');
-      setCustomerName(cust.name || '');
-      setEmail(cust.email || '');
-      setPhone(cust.phone || '');
-      setAddress(cust.address || '');
+  const handleSelectServiceTicketCustomer = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const name = e.target.value;
+    if (!name) return;
+    const tickets = serviceTicketsList
+      .filter(t => t.customer_name?.trim().toLowerCase() === name.toLowerCase())
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    const latest = tickets[0];
+    if (latest) {
+      setCustomerName(latest.customer_name || '');
+      setPhone(latest.customer_phone || '');
+      setEmail(latest.customer_email || '');
+      setAddress(latest.customer_address || '');
+      setSelectedCustomerId('');
     }
   };
 
@@ -908,6 +914,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     inv.payment_status || getPaymentStatus(inv.doc_type, inv.balance_due || 0, inv.advance_paid || 0),
     inv.payment_mode || 'Not specified',
     inv.due_date || '',
+    inv.invoice_no ? `https://yantrabyte.com/admin` : '',
   ];
 
   const backupInvoiceToGoogleSheet = (inv: Invoice) => {
@@ -1172,16 +1179,19 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             <div className="grid grid-cols-2 gap-4 pt-2">
               <div className="col-span-2 flex space-x-4">
                 <div className="flex-1">
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Customer Master</label>
-                  <select value={selectedCustomerId} onChange={handleSelectCustomer} className="w-full text-xs border rounded-md px-2 py-1.5 text-gray-700 bg-gray-50 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
-                    {customersList.length === 0 ? (
-                      <option value="">No customers found...</option>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Customer from Service Ticket</label>
+                  <select onChange={handleSelectServiceTicketCustomer} value="" className="w-full text-xs border rounded-md px-2 py-1.5 text-gray-700 bg-gray-50 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                    {serviceTicketsList.length === 0 ? (
+                      <option value="">No tickets found...</option>
                     ) : (
                       <>
-                        <option value="">Select saved customer...</option>
-                        {customersList.map((c, i) => (
-                          <option key={`${c.id}-${i}`} value={c.id}>
-                            {c.name}{c.phone ? ` - ${c.phone}` : ''}
+                        <option value="">Select customer from ticket...</option>
+                        {serviceTicketsList
+                          .filter((t, i, arr) => i === arr.findIndex(x => x.customer_name?.trim().toLowerCase() === t.customer_name?.trim().toLowerCase()))
+                          .sort((a, b) => (a.customer_name || '').localeCompare(b.customer_name || ''))
+                          .map((t, i) => (
+                          <option key={i} value={t.customer_name || ''}>
+                            {t.customer_name}{t.customer_phone ? ` - ${t.customer_phone}` : ''}
                           </option>
                         ))}
                       </>
