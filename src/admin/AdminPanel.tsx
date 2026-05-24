@@ -204,23 +204,26 @@ const TICKETS_FIELDS: FormField[] = [
   { key: 'notes', label: 'Internal Notes', type: 'textarea', rows: 3 }
 ];
 
-const SERVICE_TICKET_HEADERS = [
-  'Ticket No',
-  'Created At',
+const UNIFIED_SHEET_NAME = 'YantraByte Records';
+const UNIFIED_HEADERS = [
+  'Type',
+  'No',
+  'Date',
   'Customer',
   'Phone',
   'Email',
   'Address',
   'Device / Service',
-  'Issue',
-  'Priority',
+  'Description',
+  'Amount',
+  'Payment Status',
   'Status',
   'Assigned To',
-  'Notes',
   'Link',
 ];
 
 const serviceTicketRow = (ticket: Partial<ServiceTicket>) => [
+  'Service Ticket',
   ticket.ticket_number || '',
   ticket.created_at || new Date().toISOString(),
   ticket.customer_name || '',
@@ -229,10 +232,10 @@ const serviceTicketRow = (ticket: Partial<ServiceTicket>) => [
   ticket.customer_address || '',
   ticket.device_type || '',
   ticket.issue_description || '',
-  ticket.priority || '',
+  '',
+  '',
   ticket.status || '',
   ticket.assigned_to || '',
-  ticket.notes || '',
   ticket.ticket_number ? `https://yantrabyte.com/admin` : '',
 ];
 
@@ -929,7 +932,7 @@ export default function AdminPanel() {
         {
           name: 'Service Tickets',
           rows: [
-            SERVICE_TICKET_HEADERS,
+            UNIFIED_HEADERS,
             ...tickets.map(serviceTicketRow),
           ],
         },
@@ -946,8 +949,8 @@ export default function AdminPanel() {
 
   const backupTicketToGoogleSheet = (ticket: Partial<ServiceTicket>) => {
     void appendBackupRow({
-      sheetName: 'Service Tickets',
-      headers: SERVICE_TICKET_HEADERS,
+      sheetName: UNIFIED_SHEET_NAME,
+      headers: UNIFIED_HEADERS,
       row: serviceTicketRow(ticket),
     }).then(result => {
       if (result.ok) {

@@ -19,19 +19,21 @@ app.use(express.json({ limit: maxPdfSize }));
 const requiredEnv = ['GMAIL_USER', 'GMAIL_APP_PASSWORD', 'VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'];
 const driveEnv = ['GOOGLE_DRIVE_FOLDER_ID'];
 const sheetsEnv = ['GOOGLE_SHEETS_SPREADSHEET_ID'];
-const serviceTicketHeaders = [
-  'Ticket No',
-  'Created At',
+const UNIFIED_SHEET_NAME = 'YantraByte Records';
+const UNIFIED_HEADERS = [
+  'Type',
+  'No',
+  'Date',
   'Customer',
   'Phone',
   'Email',
   'Address',
   'Device / Service',
-  'Issue',
-  'Priority',
+  'Description',
+  'Amount',
+  'Payment Status',
   'Status',
   'Assigned To',
-  'Notes',
   'Link',
 ];
 
@@ -51,6 +53,7 @@ function isValidEmail(email) {
 
 function serviceTicketRowFromPayload(ticket) {
   return [
+    'Service Ticket',
     ticket.ticket_number || '',
     ticket.created_at || new Date().toISOString(),
     ticket.customer_name || '',
@@ -59,10 +62,10 @@ function serviceTicketRowFromPayload(ticket) {
     ticket.customer_address || '',
     ticket.device_type || '',
     ticket.issue_description || '',
-    ticket.priority || '',
+    '',
+    '',
     ticket.status || '',
     ticket.assigned_to || '',
-    ticket.notes || '',
     ticket.ticket_number ? `https://yantrabyte.com/admin` : '',
   ];
 }
@@ -383,8 +386,8 @@ app.post('/api/backups/public-service-ticket', async (req, res) => {
   let sheetResult = null;
   try {
     sheetResult = await appendRowToGoogleSheet({
-      sheetName: 'Service Tickets',
-      headers: serviceTicketHeaders,
+      sheetName: UNIFIED_SHEET_NAME,
+      headers: UNIFIED_HEADERS,
       row: serviceTicketRowFromPayload(ticket),
     });
   } catch (error) {
