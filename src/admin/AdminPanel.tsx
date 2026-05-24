@@ -480,9 +480,16 @@ export default function AdminPanel() {
     element.style.color = '#111111';
     element.style.backgroundColor = '#ffffff';
 
+    const watermarkHtml = Array(25).fill(0).map(() =>
+      '<span style="display:inline-block;font-size:26px;font-weight:bold;color:#0B5394;white-space:nowrap;letter-spacing:2px;font-family:Arial,sans-serif;margin:90px 60px;">COMPUTER HARDWARE ITEM</span>'
+    ).join('');
+
     element.innerHTML = `
-      <div style="width: 794px; min-height: 1123px; padding: 28px; box-sizing: border-box; background: #ffffff;">
-      <div style="border: 2px solid #000000; padding: 18px; min-height: 1067px; box-sizing: border-box;">
+      <div style="width: 794px; min-height: 1123px; padding: 28px; box-sizing: border-box; background: #ffffff; position: relative; overflow: hidden;">
+        <div style="position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:1;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;transform:rotate(-25deg);opacity:0.06;padding:150px 0;">
+          ${watermarkHtml}
+        </div>
+      <div style="border: 2px solid #000000; padding: 18px; min-height: 1067px; box-sizing: border-box; position: relative; z-index: 2;">
         <!-- Header -->
         <table style="width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 16px;">
           <tr>
@@ -725,9 +732,17 @@ export default function AdminPanel() {
     element.style.backgroundColor = '#ffffff';
     element.style.position = 'absolute';
     element.style.left = '-9999px';
+
+    const emailWatermarkHtml = Array(25).fill(0).map(() =>
+      '<span style="display:inline-block;font-size:26px;font-weight:bold;color:#0B5394;white-space:nowrap;letter-spacing:2px;font-family:Arial,sans-serif;margin:90px 60px;">COMPUTER HARDWARE ITEM</span>'
+    ).join('');
+
     element.innerHTML = `
-      <div style="width: 794px; min-height: 1123px; padding: 28px; box-sizing: border-box; background: #ffffff;">
-      <div style="border: 2px solid #000000; padding: 18px; min-height: 1067px; box-sizing: border-box;">
+      <div style="width: 794px; min-height: 1123px; padding: 28px; box-sizing: border-box; background: #ffffff; position: relative; overflow: hidden;">
+        <div style="position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:1;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;transform:rotate(-25deg);opacity:0.06;padding:150px 0;">
+          ${emailWatermarkHtml}
+        </div>
+      <div style="border: 2px solid #000000; padding: 18px; min-height: 1067px; box-sizing: border-box; position: relative; z-index: 2;">
         <table style="width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 16px;">
           <tr>
             <td style="width: 56%; vertical-align: top; padding-right: 16px;">

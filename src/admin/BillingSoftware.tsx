@@ -1529,8 +1529,26 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
       {/* --- HIDDEN PRINT TEMPLATE --- */}
       <div style={{ display: 'none' }}>
-        <div ref={printRef} className="bg-white p-[10px] w-full text-black" style={{ fontFamily: 'Arial, sans-serif' }}>
-          
+        <div ref={printRef} className="bg-white p-[10px] w-full text-black" style={{ fontFamily: 'Arial, sans-serif', position: 'relative', overflow: 'hidden' }}>
+
+          {/* Watermark */}
+          <div style={{
+            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+            pointerEvents: 'none', zIndex: 1,
+            display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center',
+            gap: '120px', padding: '200px 0', transform: 'rotate(-25deg)',
+            opacity: 0.06
+          }}>
+            {[...Array(30)].map((_, i) => (
+              <span key={i} style={{
+                fontSize: '28px', fontWeight: 'bold', color: '#0B5394',
+                whiteSpace: 'nowrap', letterSpacing: '2px', fontFamily: 'Arial, sans-serif'
+              }}>
+                COMPUTER HARDWARE ITEM
+              </span>
+            ))}
+          </div>
+
           {/* Header */}
           <div className="flex items-center justify-between border p-3 mb-2" style={{ borderColor: '#000000' }}>
             <div className="flex items-center space-x-4">
