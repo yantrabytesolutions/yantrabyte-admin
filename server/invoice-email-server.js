@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import express from 'express';
+import cors from 'cors';
 import { Readable } from 'stream';
 import nodemailer from 'nodemailer';
 import { google } from 'googleapis';
@@ -11,6 +12,7 @@ const app = express();
 const port = Number(process.env.INVOICE_API_PORT || process.env.PORT || 4000);
 const maxPdfSize = process.env.INVOICE_MAX_JSON_SIZE || '15mb';
 
+app.use(cors());
 app.use(express.json({ limit: maxPdfSize }));
 
 const requiredEnv = ['GMAIL_USER', 'GMAIL_APP_PASSWORD', 'VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'];
@@ -29,6 +31,7 @@ const serviceTicketHeaders = [
   'Status',
   'Assigned To',
   'Notes',
+  'Link',
 ];
 
 function getMissingEnv() {
@@ -59,6 +62,7 @@ function serviceTicketRowFromPayload(ticket) {
     ticket.status || '',
     ticket.assigned_to || '',
     ticket.notes || '',
+    ticket.ticket_number ? `https://yantrabyte.com/admin` : '',
   ];
 }
 
@@ -304,13 +308,13 @@ app.post('/api/backups/public-service-ticket', async (req, res) => {
     return res.status(400).json({ error: 'ticket_number, customer_name, customer_phone, and issue_description are required' });
   }
 
+  let sheetResult = null;
   try {
-    const result = await appendRowToGoogleSheet({
+    sheetResult = await appendRowToGoogleSheet({
       sheetName: 'Service Tickets',
       headers: serviceTicketHeaders,
       row: serviceTicketRowFromPayload(ticket),
     });
-    return res.json(result);
   } catch (error) {
     console.error('Public service ticket Google Sheets backup failed:', getDeliveryErrorMessage(error));
     return res.status(502).json({
@@ -319,6 +323,56 @@ app.post('/api/backups/public-service-ticket', async (req, res) => {
       error: getDeliveryErrorMessage(error),
     });
   }
+
+  let mailResult = null;
+  if (ticket.customer_email && isValidEmail(ticket.customer_email) && process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+    try {
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: process.env.GMAIL_USER,
+          pass: process.env.GMAIL_APP_PASSWORD,
+        },
+      });
+
+      const cleanCustomerName = String(ticket.customer_name || 'Customer');
+      const cleanTicketNumber = String(ticket.ticket_number);
+      const cleanDeviceType = String(ticket.device_type || 'Device');
+
+      mailResult = await transporter.sendMail({
+        from: `"YantraByte Solutions" <${process.env.GMAIL_USER}>`,
+        to: ticket.customer_email,
+        replyTo: process.env.GMAIL_REPLY_TO || process.env.GMAIL_USER,
+        subject: `Service Ticket ${cleanTicketNumber} Created - YantraByte Solutions`,
+        text: [
+          `Dear ${cleanCustomerName},`,
+          '',
+          `Your service ticket (${cleanTicketNumber}) for your ${cleanDeviceType} has been successfully created.`,
+          `Our team is reviewing the issue: "${ticket.issue_description}"`,
+          '',
+          'We will keep you updated on the progress.',
+          '',
+          'Regards,',
+          'YantraByte Solutions',
+        ].join('\n'),
+        html: `
+          <p>Dear ${cleanCustomerName},</p>
+          <p>Your service ticket (<strong>${cleanTicketNumber}</strong>) for your <strong>${cleanDeviceType}</strong> has been successfully created.</p>
+          <p>Our team is reviewing the issue: <em>"${ticket.issue_description}"</em></p>
+          <p>We will keep you updated on the progress.</p>
+          <p>Regards,<br/>YantraByte Solutions</p>
+        `,
+      });
+    } catch (error) {
+      console.error('Service ticket email failed:', getDeliveryErrorMessage(error));
+    }
+  }
+
+  return res.json({
+    ok: true,
+    sheet: sheetResult,
+    email: mailResult ? { ok: true, messageId: mailResult.messageId } : { ok: false, skipped: true }
+  });
 });
 
 app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {

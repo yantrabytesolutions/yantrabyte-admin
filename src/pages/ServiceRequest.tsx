@@ -42,15 +42,7 @@ const initialForm: RequestForm = {
   priority: 'medium',
 };
 
-function generateTicketNumber(attempt = 0) {
-  const now = new Date();
-  const day = String(now.getDate()).padStart(2, '0');
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const year = String(now.getFullYear()).slice(-2);
-  const random = Math.floor(Math.random() * 1000);
-  const suffix = String((random + attempt) % 1000).padStart(3, '0');
-  return `YBS-TKT-${day}${month}${year}-${suffix}`;
-}
+
 
 export default function ServiceRequest() {
   const [form, setForm] = useState<RequestForm>(initialForm);
@@ -73,42 +65,55 @@ export default function ServiceRequest() {
 
     setSubmitting(true);
     try {
-      let ticketNumber = '';
-      let lastError: unknown = null;
+      const { data: ticketNumberFromRpc, error: rpcError } = await supabase
+        .rpc('get_next_service_ticket_number');
 
-      for (let attempt = 0; attempt < 5; attempt += 1) {
-        ticketNumber = generateTicketNumber(attempt);
-        const ticketPayload = {
-          ticket_number: ticketNumber,
-          customer_name: form.customer_name.trim(),
-          customer_phone: form.customer_phone.trim(),
-          customer_email: form.customer_email.trim() || null,
-          customer_address: form.customer_address.trim() || null,
-          device_type: form.device_type || 'Other',
-          issue_description: form.issue_description.trim(),
-          status: 'open',
-          priority: form.priority,
-        };
-        const { error: insertError } = await supabase.from('service_tickets').insert([ticketPayload]);
+      let ticketNumber = ticketNumberFromRpc;
 
-        if (!insertError) {
-          void fetch('/api/backups/public-service-ticket', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(ticketPayload),
-          }).catch(error => console.warn('Google Sheet ticket backup skipped:', error));
-          setCreatedTicket(ticketNumber);
-          setForm(initialForm);
-          return;
-        }
-
-        lastError = insertError;
-        if (insertError.code !== '23505') {
-          break;
-        }
+      // Fallback if RPC fails or doesn't exist yet
+      if (rpcError || !ticketNumber) {
+        const now = new Date();
+        const day = String(now.getDate()).padStart(2, '0');
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const year = String(now.getFullYear()).slice(-2);
+        const prefix = `YBS-TKT-${day}${month}${year}-`;
+        const randomSuffix = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+        ticketNumber = `${prefix}${randomSuffix}`;
+        console.warn('RPC get_next_service_ticket_number failed. Falling back to random suffix.', rpcError);
       }
 
-      throw lastError;
+      const ticketPayload = {
+        ticket_number: ticketNumber,
+        customer_name: form.customer_name.trim(),
+        customer_phone: form.customer_phone.trim(),
+        customer_email: form.customer_email.trim() || null,
+        customer_address: form.customer_address.trim() || null,
+        device_type: form.device_type || 'Other',
+        issue_description: form.issue_description.trim(),
+        status: 'open',
+        priority: form.priority,
+      };
+
+      const { error: insertError } = await supabase.from('service_tickets').insert([ticketPayload]);
+      if (insertError) throw insertError;
+
+      const baseUrl = import.meta.env.VITE_API_URL || '';
+      try {
+        const response = await fetch(`${baseUrl}/api/backups/public-service-ticket`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(ticketPayload),
+        });
+        const result = await response.json();
+        if (!response.ok || !result.ok) {
+          console.warn('Google Sheet ticket backup or email failed:', result.error || result);
+        }
+      } catch (backupError) {
+        console.warn('Network error triggering Google Sheet backup:', backupError);
+      }
+
+      setCreatedTicket(ticketNumber);
+      setForm(initialForm);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unable to create service ticket.';
       setError(message);

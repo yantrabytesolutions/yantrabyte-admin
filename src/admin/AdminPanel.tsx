@@ -216,6 +216,7 @@ const SERVICE_TICKET_HEADERS = [
   'Status',
   'Assigned To',
   'Notes',
+  'Link',
 ];
 
 const serviceTicketRow = (ticket: Partial<ServiceTicket>) => [
@@ -231,6 +232,7 @@ const serviceTicketRow = (ticket: Partial<ServiceTicket>) => [
   ticket.status || '',
   ticket.assigned_to || '',
   ticket.notes || '',
+  ticket.ticket_number ? `https://yantrabyte.com/admin` : '',
 ];
 
 const SECTION_FIELDS: Record<string, FormField[]> = {
