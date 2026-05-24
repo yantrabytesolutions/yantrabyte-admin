@@ -502,11 +502,25 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const invoiceCount = invoices.filter(i => i.doc_type === 'Invoice').length;
   const quoteCount = invoices.filter(i => i.doc_type === 'Quotation').length;
 
-  const generateInvoiceNo = (type: string = docType) => {
-    const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const seq = (invoices.length + 1).toString().padStart(3, '0');
+  const generateInvoiceNo = async (type: string = docType) => {
+    const now = new Date();
+    const datePart = now.toISOString().slice(0, 10).replace(/-/g, '');
     const prefix = type === 'Quotation' ? 'YBQ' : 'YBS';
-    return `${prefix}-${datePart}-${seq}`;
+    const prefixMatch = `${prefix}-${datePart}-`;
+    const { data: existing } = await supabase
+      .from('invoices')
+      .select('invoice_no')
+      .like('invoice_no', `${prefixMatch}%`);
+    let maxSeq = 0;
+    if (existing) {
+      for (const inv of existing) {
+        const parts = String(inv.invoice_no).split('-');
+        const seqNum = parseInt(parts[parts.length - 1], 10);
+        if (!isNaN(seqNum) && seqNum > maxSeq) maxSeq = seqNum;
+      }
+    }
+    const seq = (maxSeq + 1).toString().padStart(3, '0');
+    return `${prefixMatch}${seq}`;
   };
 
   const adjustStock = async (itemsList: InvoiceItem[], factor: number) => {
@@ -667,7 +681,9 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setIsSendingEmail(action === 'email');
     try {
       const isUpdate = !!selectedInvoiceId;
-      const invoiceNo = isUpdate ? invoices.find(i => i.id === selectedInvoiceId)?.invoice_no || generateInvoiceNo() : generateInvoiceNo();
+      const invoiceNo = isUpdate
+        ? (invoices.find(i => i.id === selectedInvoiceId)?.invoice_no || await generateInvoiceNo())
+        : await generateInvoiceNo();
       const date = new Date().toLocaleDateString('en-GB'); // dd/mm/yyyy
       const customerId = await saveCustomerFromForm();
 
