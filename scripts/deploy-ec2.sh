@@ -83,8 +83,11 @@ fi
 
 if [ -f "$ENV_FILE" ]; then
     sudo ln -sfn "$ENV_FILE" "${NEW_RELEASE_DIR}/.env"
+    echo "Linked external .env from $ENV_FILE"
+elif [ -f "${NEW_RELEASE_DIR}/.env" ]; then
+    echo "Using .env bundled in build artifact (from CI secrets)."
 else
-    echo "Runtime .env not found at $ENV_FILE. Invoice email API will not start correctly until it exists."
+    echo "No .env found anywhere. Invoice email API will not have GMAIL credentials."
 fi
 
 install_prod_dependencies
@@ -103,17 +106,22 @@ echo "🔄 Swapping active symbolic link..."
 # -n: treat symlink to a directory as a normal file to avoid nesting
 sudo ln -sfn "${NEW_RELEASE_DIR}/dist" "$ACTIVE_LINK"
 
-if command -v pm2 >/dev/null 2>&1; then
-    cd "$NEW_RELEASE_DIR"
-    if pm2 describe yantrabyte-invoice-api >/dev/null 2>&1; then
-        pm2 restart yantrabyte-invoice-api --update-env
-    else
-        pm2 start npm --name yantrabyte-invoice-api -- run api
-    fi
-    pm2 save
-else
-    echo "PM2 is not installed. Run: sudo npm install -g pm2"
+if ! command -v pm2 >/dev/null 2>&1; then
+    echo "Installing PM2 process manager..."
+    sudo npm install -g pm2
 fi
+
+cd "$NEW_RELEASE_DIR"
+if pm2 describe yantrabyte-invoice-api >/dev/null 2>&1; then
+    pm2 restart yantrabyte-invoice-api --update-env
+    echo "✅ PM2 process restarted"
+else
+    pm2 start npm --name yantrabyte-invoice-api -- run api
+    echo "✅ PM2 process created and started"
+fi
+pm2 save
+
+echo "🌐 Health check: $(curl -s -o /dev/null -w "%{http_code}" http://localhost:4000/api/health || echo 'unreachable')"
 
 # --- SERVER RELOAD ---
 echo "⚡ Reloading Nginx web server..."
