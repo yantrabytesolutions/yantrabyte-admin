@@ -149,7 +149,7 @@ export default function ServiceRequest() {
       <SEO
         title="Service Request | YantraByte Solutions"
         description="Create a YantraByte service ticket for laptop repair, desktop repair, CCTV, networking, printer service, and IT support."
-        canonicalUrl="https://yantrabyte.com/service-request"
+        canonicalUrl="https://anantatechcare.com/service-request"
       />
 
       <section className="bg-[#0B1120] px-4 py-10 sm:px-6 lg:px-8">
