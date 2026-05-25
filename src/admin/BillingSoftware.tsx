@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Invoice, InvoiceItem, ServiceTicket, Product, Customer, Purchase } from '../types';
-import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt, Mail, FileSpreadsheet } from 'lucide-react';
+import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt, Mail, FileSpreadsheet, Eye } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 import { PRESET_ITEMS } from './presetItems';
 import { downloadExcelWorkbook } from '../utils/spreadsheetXml';
@@ -149,7 +149,15 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [isExportingExcel, setIsExportingExcel] = useState(false);
   const [printInvoiceNumber, setPrintInvoiceNumber] = useState('');
+  const [draftInvoiceNo, setDraftInvoiceNo] = useState('');
   const [deliveryPopup, setDeliveryPopup] = useState<DeliveryPopup>(null);
+
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [payments, setPayments] = useState<{ date: string; amount: number; mode: string }[]>([]);
+  const [paymentDate, setPaymentDate] = useState('');
+  const [paymentEntryAmount, setPaymentEntryAmount] = useState(0);
+  const [paymentEntryMode, setPaymentEntryMode] = useState('Cash');
 
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
   const [historyDrawerData, setHistoryDrawerData] = useState<{
@@ -306,6 +314,17 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     }
   }, [initialAutofillTicket, onClearAutofill]);
 
+  useEffect(() => {
+    if (payments.length > 0) {
+      const sum = payments.reduce((s, p) => s + (p.amount || 0), 0);
+      setAdvancePaid(sum);
+      const last = payments[payments.length - 1];
+      if (last.mode && last.mode !== 'Not specified') {
+        setPaymentMode(last.mode);
+      }
+    }
+  }, [payments]);
+
   const fetchServiceTickets = async () => {
     const { data, error } = await supabase
       .from('service_tickets')
@@ -371,8 +390,24 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setItems(items.filter((_, i) => i !== index));
   };
 
+  const handleAddPayment = () => {
+    if (!paymentDate) {
+      showToast('Please select a payment date.', 'error');
+      return;
+    }
+    if (paymentEntryAmount <= 0) {
+      showToast('Payment amount must be greater than 0.', 'error');
+      return;
+    }
+    setPayments([...payments, { date: paymentDate, amount: paymentEntryAmount, mode: paymentEntryMode }]);
+    setPaymentDate('');
+    setPaymentEntryAmount(0);
+    setPaymentEntryMode('Cash');
+  };
+
   const clearForm = () => {
     setSelectedInvoiceId('');
+    setDraftInvoiceNo('');
     setDocType('Invoice');
     setSelectedCustomerId('');
     setCustomerName('');
@@ -385,6 +420,10 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setPaymentMode('Not specified');
     setDueDate('');
     setItems([]);
+    setPayments([]);
+    setPaymentDate('');
+    setPaymentEntryAmount(0);
+    setPaymentEntryMode('Cash');
   };
 
   const handleSelectServiceTicketCustomer = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -483,6 +522,10 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setPaymentMode(inv.payment_mode || 'Not specified');
     setDueDate(inv.due_date || '');
     setItems(inv.items || []);
+    setPayments(inv.payments || []);
+    setPaymentDate('');
+    setPaymentEntryAmount(0);
+    setPaymentEntryMode('Cash');
   };
 
   const handleConvertToInvoice = (id: string) => {
@@ -491,6 +534,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     
     // Clear the selected invoice ID so that we start as a brand new unsaved Invoice!
     setSelectedInvoiceId('');
+    setDraftInvoiceNo('');
     
     // Force Document Type to 'Invoice'
     setDocType('Invoice');
@@ -507,6 +551,10 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setPaymentMode(inv.payment_mode || 'Not specified');
     setDueDate(inv.due_date || '');
     setItems(inv.items || []);
+    setPayments(inv.payments || []);
+    setPaymentDate('');
+    setPaymentEntryAmount(0);
+    setPaymentEntryMode('Cash');
     
     showToast(`Converted quotation ${inv.invoice_no} to a new draft Invoice! Click Save or Print to finalize.`);
   };
@@ -528,9 +576,12 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
   const generateInvoiceNo = async (type: string = docType) => {
     const now = new Date();
-    const datePart = now.toISOString().slice(0, 10).replace(/-/g, '');
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const dateStr = `${year}${month}${day}`;
     const prefix = type === 'Quotation' ? 'YBQ' : 'YBS';
-    const prefixMatch = `${prefix}-${datePart}-`;
+    const prefixMatch = `${prefix}-${dateStr}-`;
     const { data: existing } = await supabase
       .from('invoices')
       .select('invoice_no')
@@ -538,9 +589,11 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     let maxSeq = 0;
     if (existing) {
       for (const inv of existing) {
-        const parts = String(inv.invoice_no).split('-');
-        const seqNum = parseInt(parts[parts.length - 1], 10);
-        if (!isNaN(seqNum) && seqNum > maxSeq) maxSeq = seqNum;
+        const match = String(inv.invoice_no || '').match(/-(\d+)$/);
+        if (match) {
+          const seqNum = parseInt(match[1], 10);
+          if (!isNaN(seqNum) && seqNum > maxSeq) maxSeq = seqNum;
+        }
       }
     }
     const seq = (maxSeq + 1).toString().padStart(3, '0');
@@ -705,9 +758,13 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setIsSendingEmail(action === 'email');
     try {
       const isUpdate = !!selectedInvoiceId;
-      const invoiceNo = isUpdate
-        ? (invoices.find(i => i.id === selectedInvoiceId)?.invoice_no || await generateInvoiceNo())
-        : await generateInvoiceNo();
+      let invoiceNo: string;
+      if (isUpdate) {
+        const existing = invoices.find(i => i.id === selectedInvoiceId);
+        invoiceNo = existing?.invoice_no || draftInvoiceNo || await generateInvoiceNo();
+      } else {
+        invoiceNo = draftInvoiceNo || await generateInvoiceNo().then(n => { setDraftInvoiceNo(n); return n; });
+      }
       const date = new Date().toLocaleDateString('en-GB'); // dd/mm/yyyy
       const customerId = await saveCustomerFromForm();
 
@@ -727,6 +784,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         grand_total: grandTotal,
         advance_paid: advancePaid,
         balance_due: balanceDue,
+        payments: payments,
       };
 
       const payload = {
@@ -748,6 +806,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
         await persistInvoice(true, payload, legacyPayload);
         backupInvoiceToGoogleSheet(payload as Invoice);
+        void backupInvoiceToDrive(selectedInvoiceId, payload as Invoice);
         showToast('Invoice updated successfully!');
       } else {
         if (docType === 'Invoice') {
@@ -757,9 +816,11 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         const data = await persistInvoice(false, payload, legacyPayload);
         if (data) {
           setSelectedInvoiceId(data.id);
+          void backupInvoiceToDrive(data.id, payload as Invoice);
         }
         backupInvoiceToGoogleSheet(payload as Invoice);
         showToast('Invoice saved successfully!');
+        clearForm();
       }
 
       await fetchInvoices();
@@ -796,7 +857,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
   const getPdfOptions = (invoiceNumber: string) => ({
       margin: 0,
-      filename: `YBS-${invoiceNumber}.pdf`,
+      filename: `${invoiceNumber}.pdf`,
       image: { type: 'jpeg' as const, quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, windowWidth: 950 },
       jsPDF: { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const }
@@ -868,8 +929,9 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           customerName,
           invoiceNumber,
           documentType: docType,
-          filename: `YBS-${invoiceNumber}.pdf`,
+          filename: `${invoiceNumber}.pdf`,
           pdfBase64,
+          grandTotal,
         }),
       });
 
@@ -952,20 +1014,127 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     inv.invoice_no ? `https://yantrabyte.com/admin` : '',
   ];
 
-  const backupInvoiceToGoogleSheet = (inv: Invoice) => {
-    void appendBackupRow({
-      sheetName: UNIFIED_SHEET_NAME,
-      headers: UNIFIED_HEADERS,
-      row: unifiedInvoiceRow(inv),
-    }).then(result => {
-      if (result.ok) {
-        showToast('Google Sheet backup updated');
-      } else if (!result.skipped) {
-        console.warn('Google Sheet invoice backup failed:', result.error);
+  const INVOICE_SHEET_NAME = 'Invoices';
+  const QUOTATION_SHEET_NAME = 'Quotations';
+  const INVOICE_SHEET_HEADERS = ['Invoice No', 'Date', 'Customer', 'Phone', 'Email', 'Address', 'Items', 'Subtotal', 'Discount', 'Tax', 'Round Off', 'Grand Total', 'Amount Paid', 'Balance Due', 'Payment Status', 'Payment Mode', 'Due Date', 'PDF Link'];
+
+  const backupInvoiceToGoogleSheet = async (inv: Invoice) => {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) {
+        showToast('Backup skipped: no active session', 'error');
+        return;
       }
-    }).catch(error => {
-      console.warn('Google Sheet invoice backup failed:', error);
-    });
+      const sheetName = inv.doc_type === 'Quotation' ? QUOTATION_SHEET_NAME : INVOICE_SHEET_NAME;
+      const baseUrl = import.meta.env.VITE_API_URL || '';
+      const res = await fetch(`${baseUrl}/api/backups/sheet-row`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          sheetName,
+          headers: INVOICE_SHEET_HEADERS,
+          row: unifiedInvoiceRow(inv),
+        }),
+      });
+      const result = await res.json();
+      if (!result.ok) showToast('Google Sheet backup failed: ' + (result.error || 'unknown error'), 'error');
+    } catch (err) {
+      showToast('Google Sheet backup unavailable (server down?)', 'error');
+    }
+  };
+
+  const backupInvoiceToDrive = async (invoiceId: string, invoiceData?: Invoice) => {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) {
+        showToast('Drive backup skipped: no active session', 'error');
+        return;
+      }
+
+      if (!printRef.current) return;
+
+      const invoice = invoiceData || invoices.find(i => i.id === invoiceId);
+      if (!invoice) return;
+
+      const invoiceNo = invoice.invoice_no || 'invoice';
+      setPrintInvoiceNumber(invoiceNo);
+      await new Promise(resolve => window.setTimeout(resolve, 0));
+      printRef.current.style.display = 'block';
+      await new Promise(resolve => window.setTimeout(resolve, 100));
+
+      const opt = {
+        margin: 0,
+        filename: `${invoiceNo}.pdf`,
+        image: { type: 'jpeg' as const, quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, windowWidth: 950 },
+        jsPDF: { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const },
+      };
+
+      const pdfBlob = await html2pdf().set(opt).from(printRef.current).outputPdf('blob') as Blob;
+      printRef.current.style.display = 'none';
+      setPrintInvoiceNumber('');
+
+      const reader = new FileReader();
+      const pdfBase64 = await new Promise<string>((resolve, reject) => {
+        reader.onloadend = () => {
+          const result = String(reader.result || '');
+          resolve(result.includes(',') ? result.split(',')[1] : result);
+        };
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(pdfBlob);
+      });
+
+      const baseUrl = import.meta.env.VITE_API_URL || '';
+      const response = await fetch(`${baseUrl}/api/drive/backup-invoice`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          invoiceId,
+          pdfBase64,
+          filename: `${invoiceNo}.pdf`,
+        }),
+      });
+
+      const result = await response.json();
+      if (result.ok && result.pdfLink) {
+        showToast('PDF saved to Google Drive');
+      } else {
+        showToast('Drive backup failed: ' + (result.error || 'server error'), 'error');
+      }
+    } catch (err) {
+      showToast('Drive backup unavailable (server down?)', 'error');
+    }
+  };
+
+  const previewInvoice = async () => {
+    let invoiceNo: string;
+    if (selectedInvoiceId) {
+      const existing = invoices.find(i => i.id === selectedInvoiceId);
+      invoiceNo = existing?.invoice_no || draftInvoiceNo || '';
+    } else {
+      invoiceNo = draftInvoiceNo || await generateInvoiceNo();
+      if (!draftInvoiceNo) setDraftInvoiceNo(invoiceNo);
+    }
+    if (!invoiceNo) {
+      showToast('Please save the invoice first or enter a draft number.', 'error');
+      return;
+    }
+
+    const element = await preparePdfElement(invoiceNo);
+    if (!element) return;
+
+    const opt = getPdfOptions(invoiceNo);
+    const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob') as Blob;
+    element.style.display = 'none';
+
+    const url = URL.createObjectURL(pdfBlob);
+    setPreviewUrl(url);
+    setShowPreview(true);
   };
 
   const handleExportExcelLedger = async () => {
@@ -1430,6 +1599,71 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                 </div>
               </div>
             </div>
+
+            {/* Payments Section */}
+            <div className="border-t pt-4 mt-4">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-sm font-semibold text-gray-700">Payments</h4>
+                {payments.length > 0 && (
+                  <button
+                    onClick={() => setPayments([])}
+                    className="text-xs text-red-600 hover:text-red-800 font-medium"
+                  >
+                    Clear All Payments
+                  </button>
+                )}
+              </div>
+              {payments.length > 0 && (
+                <div className="mb-3 border rounded-md overflow-hidden">
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-gray-50 border-b text-gray-500">
+                      <tr>
+                        <th className="px-3 py-1.5 font-medium">Date</th>
+                        <th className="px-3 py-1.5 font-medium text-right">Amount</th>
+                        <th className="px-3 py-1.5 font-medium">Mode</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {payments.map((p, idx) => (
+                        <tr key={idx} className="hover:bg-gray-50">
+                          <td className="px-3 py-1.5">{p.date}</td>
+                          <td className="px-3 py-1.5 text-right font-medium">₹{(p.amount || 0).toLocaleString('en-IN')}</td>
+                          <td className="px-3 py-1.5">{p.mode}</td>
+                        </tr>
+                      ))}
+                      <tr className="bg-gray-50 font-semibold">
+                        <td className="px-3 py-1.5">Total</td>
+                        <td className="px-3 py-1.5 text-right">₹{payments.reduce((s, p) => s + (p.amount || 0), 0).toLocaleString('en-IN')}</td>
+                        <td className="px-3 py-1.5"></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              <div className="grid grid-cols-4 gap-2 items-end">
+                <div>
+                  <label className="block text-[10px] font-medium text-gray-500 mb-0.5">Date</label>
+                  <input type="date" value={paymentDate} onChange={e => setPaymentDate(e.target.value)} className="w-full bg-white text-gray-900 border border-gray-300 rounded px-2 py-1.5 text-xs" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-medium text-gray-500 mb-0.5">Amount (₹)</label>
+                  <input type="number" value={paymentEntryAmount || ''} onChange={e => setPaymentEntryAmount(Number(e.target.value))} className="w-full bg-white text-gray-900 border border-gray-300 rounded px-2 py-1.5 text-xs" placeholder="0" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-medium text-gray-500 mb-0.5">Mode</label>
+                  <select value={paymentEntryMode} onChange={e => setPaymentEntryMode(e.target.value)} className="w-full bg-white text-gray-900 border border-gray-300 rounded px-2 py-1.5 text-xs">
+                    {PAYMENT_MODES.filter(m => m !== 'Not specified').map(mode => (
+                      <option key={mode} value={mode}>{mode}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <button onClick={handleAddPayment} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-1.5 rounded text-xs flex items-center justify-center">
+                    <Plus className="w-3 h-3 mr-1" /> Add
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1462,6 +1696,9 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               <button disabled={isSaving} onClick={() => handleSave('email')} className="w-full flex items-center justify-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors shadow-sm shadow-blue-200">
                 {isSendingEmail ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Mail className="w-4 h-4 mr-2" />}
                 Save & Email PDF
+              </button>
+              <button disabled={isSaving} onClick={previewInvoice} className="w-full flex items-center justify-center px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors shadow-sm shadow-purple-200">
+                <Eye className="w-4 h-4 mr-2" /> Preview PDF
               </button>
             </div>
           </div>
@@ -1528,24 +1765,23 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       </div>
 
       {/* --- HIDDEN PRINT TEMPLATE --- */}
-      <div style={{ display: 'none' }}>
-        <div ref={printRef} className="bg-white p-[10px] w-full text-black" style={{ fontFamily: 'Arial, sans-serif', position: 'relative', overflow: 'hidden' }}>
+      <div ref={printRef} className="bg-white p-[10px] w-full text-black" style={{ fontFamily: 'Arial, sans-serif', position: 'relative', overflow: 'hidden', display: 'none' }}>
 
-          {/* Watermark */}
+          {/* Watermark - Hardware Icons */}
           <div style={{
             position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-            pointerEvents: 'none', zIndex: 1,
+            pointerEvents: 'none', zIndex: 0,
             display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center',
-            gap: '120px', padding: '200px 0', transform: 'rotate(-25deg)',
-            opacity: 0.06
+            gap: '70px 90px', padding: '60px 30px', transform: 'rotate(-15deg)',
+            opacity: 0.18
           }}>
-            {[...Array(30)].map((_, i) => (
-              <span key={i} style={{
-                fontSize: '28px', fontWeight: 'bold', color: '#0B5394',
-                whiteSpace: 'nowrap', letterSpacing: '2px', fontFamily: 'Arial, sans-serif'
-              }}>
-                COMPUTER HARDWARE ITEM
-              </span>
+            {[...Array(36)].map((_, i) => (
+              <svg key={i} viewBox="0 0 100 60" width="70" height="42" fill="none" stroke="#0B5394" strokeWidth="2" style={{ display: 'inline-block' }}>
+                {i % 4 === 0 && <><rect x="5" y="10" width="90" height="40" rx="3" fill="#0B5394" fillOpacity="0.2"/><rect x="12" y="16" width="28" height="8" rx="1" fill="#0B5394" fillOpacity="0.35"/><rect x="12" y="30" width="28" height="8" rx="1" fill="#0B5394" fillOpacity="0.35"/><rect x="48" y="16" width="28" height="8" rx="1" fill="#0B5394" fillOpacity="0.35"/><rect x="48" y="30" width="28" height="8" rx="1" fill="#0B5394" fillOpacity="0.35"/><rect x="0" y="20" width="6" height="6" rx="1" fill="#0B5394" fillOpacity="0.45"/><rect x="0" y="34" width="6" height="6" rx="1" fill="#0B5394" fillOpacity="0.45"/><rect x="94" y="20" width="6" height="6" rx="1" fill="#0B5394" fillOpacity="0.45"/><rect x="94" y="34" width="6" height="6" rx="1" fill="#0B5394" fillOpacity="0.45"/><line x1="8" y1="50" x2="50" y2="50" stroke="#0B5394"/><line x1="50" y1="50" x2="92" y2="50" stroke="#0B5394"/></>}
+                {i % 4 === 1 && <><rect x="5" y="8" width="90" height="44" rx="4" fill="#0B5394" fillOpacity="0.2"/><circle cx="50" cy="30" r="14" fill="#0B5394" fillOpacity="0.2"/><circle cx="50" cy="30" r="6" fill="#0B5394" fillOpacity="0.3"/><circle cx="50" cy="30" r="2" fill="#0B5394" fillOpacity="0.45"/><rect x="76" y="18" width="12" height="4" rx="1" fill="#0B5394" fillOpacity="0.35"/><rect x="76" y="26" width="12" height="4" rx="1" fill="#0B5394" fillOpacity="0.35"/><rect x="10" y="46" width="30" height="3" rx="1" fill="#0B5394" fillOpacity="0.35"/></>}
+                {i % 4 === 2 && <><rect x="4" y="4" width="72" height="46" rx="3" fill="#0B5394" fillOpacity="0.12"/><rect x="8" y="8" width="64" height="38" rx="2" fill="#0B5394" fillOpacity="0.2"/><rect x="36" y="50" width="8" height="6" fill="#0B5394" fillOpacity="0.35"/><rect x="28" y="56" width="24" height="4" rx="2" fill="#0B5394" fillOpacity="0.35"/><rect x="22" y="60" width="36" height="3" rx="1" fill="#0B5394" fillOpacity="0.35"/></>}
+                {i % 4 === 3 && <><rect x="4" y="14" width="14" height="22" rx="3" fill="#0B5394" fillOpacity="0.2"/><rect x="8" y="8" width="6" height="10" rx="1" fill="#0B5394" fillOpacity="0.3"/><path d="M18 18 Q35 8 50 18 Q65 28 82 18" fill="none" stroke="#0B5394" strokeOpacity="0.35" strokeWidth="2.5"/><rect x="82" y="10" width="14" height="16" rx="2" fill="#0B5394" fillOpacity="0.2"/><rect x="86" y="14" width="3" height="8" rx="1" fill="#0B5394" fillOpacity="0.35"/><rect x="92" y="14" width="3" height="8" rx="1" fill="#0B5394" fillOpacity="0.35"/></>}
+              </svg>
             ))}
           </div>
 
@@ -1643,24 +1879,27 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           <div className="flex border-x border-b text-xs mt-2" style={{ borderColor: '#000000' }}>
             <div className="w-3/5 p-2 border-r" style={{ borderColor: '#000000' }}>
               <div className="font-bold inline-block w-full p-1 mb-1 text-center" style={{ backgroundColor: '#0B5394', color: '#ffffff' }}>Terms & Conditions</div>
-              <div className="space-y-0.5 ml-2" style={{ color: '#444444' }}>
+              <div className="space-y-0.5 ml-2" style={{ color: '#444444', lineHeight: '1.4' }}>
                 {docType === 'Quotation' ? (
                   <>
-                    <p>1. Quotation is valid for 7 days from the date of issue.</p>
-                    <p>2. Prices are inclusive of all taxes unless specified.</p>
-                    <p>3. 50% advance payment required to confirm order.</p>
-                    <p>4. Delivery within 3-5 working days after confirmation.</p>
-                    <p>5. Service warranty as per manufacturer policy.</p>
-                    <p>6. Subject to Bengaluru Jurisdiction.</p>
+                    <p><strong>1.</strong> Quotation is valid for 7 days from the date of issue. Prices are subject to revision after expiry.</p>
+                    <p><strong>2.</strong> 50% advance payment required to confirm the order. Balance payable before delivery.</p>
+                    <p><strong>3.</strong> Delivery timelines commence after advance payment confirmation and stock availability.</p>
+                    <p><strong>4.</strong> Warranty as per manufacturer policy. Physical damage, liquid ingress, and electrical surges void warranty.</p>
+                    <p><strong>5.</strong> Customer is responsible for verifying specifications before placing the order.</p>
+                    <p><strong>6.</strong> Cancellation charges may apply if order is cancelled after processing has begun.</p>
+                    <p><strong>7.</strong> All disputes subject to Bengaluru jurisdiction only.</p>
                   </>
                 ) : (
                   <>
-                    <p>1. Service warranty is valid for 30 days only.</p>
-                    <p>2. No warranty for Windows installation/software issues.</p>
-                    <p>3. YantraByte Solutions is not responsible for any data loss.</p>
-                    <p>4. Customer should take backup of all important files prior.</p>
-                    <p>5. Physical, liquid or burnt damages void warranty.</p>
-                    <p>6. No warranty for swollen batteries or electrical faults.</p>
+                    <p><strong>1.</strong> Service warranty is valid for 30 days from the date of service. Covers only the specific issue addressed.</p>
+                    <p><strong>2.</strong> No warranty for software-related services including Windows installation, OS activation, or driver setup.</p>
+                    <p><strong>3.</strong> Customer must take full backup of all important data before service. YantraByte Solutions is not liable for any data loss, corruption, or damage.</p>
+                    <p><strong>4.</strong> Physical damage, liquid damage, burnt components, and swollen batteries are not covered under warranty.</p>
+                    <p><strong>5.</strong> Any tampering or unauthorized repair after service will void the warranty immediately.</p>
+                    <p><strong>6.</strong> Replacement parts carry a 6-month warranty against manufacturing defects only.</p>
+                    <p><strong>7.</strong> Devices not collected within 30 days of completion may incur storage charges at the company's discretion.</p>
+                    <p><strong>8.</strong> All disputes subject to Bengaluru jurisdiction only.</p>
                   </>
                 )}
               </div>
@@ -1668,32 +1907,77 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             <div className="w-2/5 p-2 flex flex-col justify-between">
               <div>
                 <div className="font-bold inline-block w-full p-1 mb-1 text-center" style={{ backgroundColor: '#0B5394', color: '#ffffff' }}>Bank & Payment Details</div>
-                <div className="flex items-center justify-between ml-2 mt-1">
-                  <div className="leading-snug" style={{ color: '#000000', fontSize: '11px' }}>
+                <div className="flex items-center justify-between ml-1 mt-1">
+                  <div className="leading-snug" style={{ color: '#000000', fontSize: '10px' }}>
                     <p><span className="font-bold">Bank:</span> North East Small Finance Bank</p>
                     <p><span className="font-bold">A/C Name:</span> YantraByte Solutions</p>
                     <p><span className="font-bold">A/C No:</span> 033311501023226</p>
                     <p><span className="font-bold">IFSC:</span> NESF0000333</p>
-                    <p className="mt-0.5"><span className="font-bold">UPI:</span> s0424237152@slc</p>
+                    <p className="mt-1"><span className="font-bold">UPI:</span> s0424237152@slc</p>
                   </div>
-                  <div className="w-20 h-20 flex-shrink-0 border p-0.5 mr-2" style={{ borderColor: '#dddddd' }}>
+                  <div className="w-20 h-20 flex-shrink-0 border p-0.5" style={{ borderColor: '#dddddd' }}>
                     <img src="/qr.jpg" alt="Payment QR" style={{ height: '100%', width: '100%', objectFit: 'contain' }} crossOrigin="anonymous" />
                   </div>
                 </div>
               </div>
-              <div className="text-center mt-3 pt-1 flex flex-col items-center justify-center relative">
+              <div className="text-center mt-2 pt-1 flex flex-col items-center justify-center relative">
                 <p className="font-bold mb-1" style={{ color: '#000000', fontSize: '11px' }}>For YantraByte Solutions</p>
-                <div className="h-16 w-32 flex items-center justify-center relative my-0.5">
-                  <img src="/seal.png" alt="Seal" style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} crossOrigin="anonymous" />
+                <div style={{ width: '90px', height: '90px', margin: '2px auto' }}>
+                  <svg viewBox="0 0 120 120" style={{ width: '90px', height: '90px' }}>
+                    <circle cx="60" cy="60" r="56" fill="none" stroke="#0B5394" stroke-width="2.5" />
+                    <circle cx="60" cy="60" r="50" fill="none" stroke="#0B5394" stroke-width="1" />
+                    <path d="M 60 16 A 44 44 0 1 1 59.9 16" fill="none" stroke="#0B5394" stroke-width="0.8" />
+                    <text x="60" y="42" text-anchor="middle" font-size="8" font-weight="bold" fill="#0B5394" font-family="Arial">YANTABYTE</text>
+                    <text x="60" y="52" text-anchor="middle" font-size="7" font-weight="bold" fill="#0B5394" font-family="Arial">SOLUTIONS</text>
+                    <text x="60" y="64" text-anchor="middle" font-size="5" fill="#0B5394" font-family="Arial">AUTHORIZED SERVICE</text>
+                    <text x="60" y="74" text-anchor="middle" font-size="5" fill="#0B5394" font-family="Arial">BENGALURU</text>
+                    <circle cx="60" cy="88" r="12" fill="none" stroke="#0B5394" stroke-width="0.8" />
+                    <text x="60" y="86" text-anchor="middle" font-size="7" font-weight="bold" fill="#0B5394" font-family="Arial">Ramesh A s</text>
+
+                  </svg>
                 </div>
-                <p className="font-bold mt-1" style={{ color: '#000000', fontSize: '11px' }}>RAMESH A S</p>
+                <p className="font-bold mt-0.5" style={{ color: '#000000', fontSize: '11px' }}>RAMESH A S</p>
                 <p style={{ color: '#444444', fontSize: '10px' }}>Authorized Signatory</p>
               </div>
             </div>
           </div>
 
         </div>
-      </div>
+
+      {/* --- INVOICE PREVIEW MODAL --- */}
+      {showPreview && previewUrl && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4">
+          <div className="bg-white rounded-lg overflow-hidden w-full max-w-4xl h-[90vh] flex flex-col shadow-2xl">
+            <div className="flex justify-between items-center p-4 border-b bg-gray-50">
+              <h3 className="font-semibold text-gray-800">Invoice Preview — {printInvoiceNumber || 'Draft'}</h3>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => {
+                    const a = document.createElement('a');
+                    a.href = previewUrl;
+                    a.download = `${printInvoiceNumber || 'invoice'}.pdf`;
+                    a.click();
+                  }}
+                  className="flex items-center px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
+                >
+                  <Download className="w-4 h-4 mr-1" /> Download
+                </button>
+                <button
+                  onClick={() => {
+                    setShowPreview(false);
+                    if (previewUrl) URL.revokeObjectURL(previewUrl);
+                    setPreviewUrl(null);
+                  }}
+                  className="flex items-center px-3 py-1.5 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-sm"
+                >
+                  <X className="w-4 h-4 mr-1" /> Close
+                </button>
+              </div>
+            </div>
+            <iframe src={previewUrl} className="flex-1 w-full" title="Invoice Preview" />
+          </div>
+        </div>
+      )}
 
       {/* --- CUSTOMER HISTORY DRAWER --- */}
       {showHistoryDrawer && historyDrawerData && (

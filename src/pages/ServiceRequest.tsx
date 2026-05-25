@@ -70,27 +70,31 @@ export default function ServiceRequest() {
 
       let ticketNumber = ticketNumberFromRpc;
 
-      // Fallback if RPC fails or doesn't exist yet
       if (rpcError || !ticketNumber) {
         const now = new Date();
         const day = String(now.getDate()).padStart(2, '0');
         const month = String(now.getMonth() + 1).padStart(2, '0');
-        const year = String(now.getFullYear()).slice(-2);
-        const prefix = `YBS-TKT-${day}${month}${year}-`;
+        const year = String(now.getFullYear());
+        const datePrefix = `${day}${month}${year}`;
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999).toISOString();
         const { data: existing } = await supabase
           .from('service_tickets')
           .select('ticket_number')
-          .like('ticket_number', `${prefix}%`);
+          .gte('created_at', startOfMonth)
+          .lte('created_at', endOfMonth);
         let maxSeq = 0;
         if (existing) {
           for (const t of existing) {
-            const parts = String(t.ticket_number).split('-');
-            const seqNum = parseInt(parts[parts.length - 1], 10);
-            if (!isNaN(seqNum) && seqNum > maxSeq) maxSeq = seqNum;
+            const match = String(t.ticket_number || '').match(/-(\d+)$/);
+            if (match) {
+              const seqNum = parseInt(match[1], 10);
+              if (!isNaN(seqNum) && seqNum > maxSeq) maxSeq = seqNum;
+            }
           }
         }
         const seq = (maxSeq + 1).toString().padStart(3, '0');
-        ticketNumber = `${prefix}${seq}`;
+        ticketNumber = `YBS-service-Ticket ${datePrefix}-${seq}`;
       }
 
       const ticketPayload = {
@@ -138,7 +142,7 @@ export default function ServiceRequest() {
       <SEO
         title="Service Request | YantraByte Solutions"
         description="Create a YantraByte service ticket for laptop repair, desktop repair, CCTV, networking, printer service, and IT support."
-        canonicalUrl="https://anantatechcare.com/service-request"
+        canonicalUrl="https://yantrabyte.anantatechcare.com/service-request"
       />
 
       <section className="bg-[#0B1120] px-4 py-10 sm:px-6 lg:px-8">

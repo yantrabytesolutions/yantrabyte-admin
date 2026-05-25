@@ -6,13 +6,15 @@ AS $$
 DECLARE
   next_suffix integer := 1;
   last_ticket text;
-  today_prefix text;
+  month_start date;
+  month_end date;
 BEGIN
-  today_prefix := 'YBS-TKT-' || to_char(current_date, 'DDMMYY') || '-';
+  month_start := date_trunc('month', current_date)::date;
+  month_end := (date_trunc('month', current_date) + interval '1 month - 1 day')::date;
 
   SELECT ticket_number INTO last_ticket
   FROM public.service_tickets
-  WHERE ticket_number LIKE today_prefix || '%'
+  WHERE created_at >= month_start AND created_at <= month_end
   ORDER BY created_at DESC
   LIMIT 1;
 
@@ -20,6 +22,6 @@ BEGIN
     next_suffix := (regexp_replace(last_ticket, '^.*-(\d+)$', '\1'))::integer + 1;
   END IF;
 
-  RETURN today_prefix || lpad(next_suffix::text, 3, '0');
+  RETURN 'YBS-service-Ticket ' || to_char(current_date, 'DDMMYYYY') || '-' || lpad(next_suffix::text, 3, '0');
 END;
 $$;

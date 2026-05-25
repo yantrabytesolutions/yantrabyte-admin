@@ -32,6 +32,10 @@ insert_test.js
 parse_csv.js
 add_stock_columns.js
 
+# Service account credentials
+google-service-account.json
+deep-span-*.json
+
 # Terraform
 .terraform/
 *.tfstate

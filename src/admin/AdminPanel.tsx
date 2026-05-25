@@ -480,15 +480,8 @@ export default function AdminPanel() {
     element.style.color = '#111111';
     element.style.backgroundColor = '#ffffff';
 
-    const watermarkHtml = Array(25).fill(0).map(() =>
-      '<span style="display:inline-block;font-size:26px;font-weight:bold;color:#0B5394;white-space:nowrap;letter-spacing:2px;font-family:Arial,sans-serif;margin:90px 60px;">COMPUTER HARDWARE ITEM</span>'
-    ).join('');
-
     element.innerHTML = `
       <div style="width: 794px; min-height: 1123px; padding: 28px; box-sizing: border-box; background: #ffffff; position: relative; overflow: hidden;">
-        <div style="position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:1;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;transform:rotate(-25deg);opacity:0.06;padding:150px 0;">
-          ${watermarkHtml}
-        </div>
       <div style="border: 2px solid #000000; padding: 18px; min-height: 1067px; box-sizing: border-box; position: relative; z-index: 2;">
         <!-- Header -->
         <table style="width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 16px;">
@@ -613,35 +606,59 @@ export default function AdminPanel() {
         </div>
 
         <!-- Repair / Drop-off Terms -->
-        <div style="border: 1px solid #000000; padding: 12px; margin-bottom: 42px; background-color: #f8fafc;">
-          <div style="font-size: 11px; font-weight: bold; margin-bottom: 6px; color: #111111;">TERMS & CONDITIONS:</div>
-          <ol style="margin: 0; padding-left: 15px; font-size: 9px; color: #555555; line-height: 1.5;">
-            <li>Diagnostic charges are applicable for all devices checked in for repair, even if estimate is rejected.</li>
-            <li>Backup all data before drop-off. Yantrabyte Solutions is not liable for data loss or corruption during repair.</li>
-            <li>Devices not collected within 30 days of repair completion warning may be subject to storage fees or disposal.</li>
-            <li>Any hardware components replaced will carry their respective standard OEM manufacturer warranties.</li>
-          </ol>
+        <div style="border: 1px solid #000000; margin-bottom: 18px;">
+          <div style="background-color: #D9EAF7; padding: 6px 10px; font-weight: bold; font-size: 12px; color: #000000; border-bottom: 1px solid #000000;">
+            TERMS & CONDITIONS OF SERVICE
+          </div>
+          <div style="padding: 10px; font-size: 9px; color: #444444; line-height: 1.55;">
+            <ol style="margin: 0; padding-left: 16px;">
+              <li><strong>Diagnostic Fee:</strong> A non-refundable diagnostic charge applies to all devices brought in for inspection, regardless of whether the repair estimate is approved or declined.</li>
+              <li><strong>Data Backup:</strong> Customer is solely responsible for backing up all data, files, and personal information prior to service. Yantrabyte Solutions shall not be held liable for any data loss, corruption, or damage during diagnosis, repair, or handling.</li>
+              <li><strong>Parts Warranty:</strong> All replacement parts carry a standard 6-month warranty from the date of installation unless otherwise specified. Warranty covers manufacturing defects only, not damage caused by misuse, mishandling, or unauthorized repair.</li>
+              <li><strong>Service Warranty:</strong> Labor and service work are warranted for 30 days from the date of return. Any recurring issue caused by the same fault will be rectified free of charge within this period.</li>
+              <li><strong>Collection Period:</strong> Devices not collected within 30 days of completion notification will incur a storage fee of ₹50/day. Devices unclaimed beyond 90 days will be disposed of at the company's discretion without further notice.</li>
+              <li><strong>Estimate Approval:</strong> Repairs will commence only after the customer approves the written estimate. Any additional repairs required during the process will be communicated for prior approval.</li>
+              <li><strong>E-waste Disposal:</strong> Unclaimed or obsolete electronic components will be recycled or disposed of as per environmental regulations after the notice period.</li>
+              <li><strong>Limitation of Liability:</strong> Yantrabyte Solutions' total liability shall not exceed the total invoice value of the service. We are not responsible for any consequential or incidental damages arising from the service provided.</li>
+            </ol>
+          </div>
         </div>
 
         <!-- Signatures Bottom Section -->
-        <div style="margin-top: 10px;">
+        <div style="margin-top: 16px;">
           <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
             <tr>
               <!-- Customer Sign -->
-              <td style="width: 50%; vertical-align: bottom; padding-right: 16px;">
-                <div style="width: 180px; border-bottom: 1px solid #555555; margin-bottom: 8px;"></div>
-                <div style="font-size: 11px; font-weight: bold; color: #333333;">Customer Drop-off Signature</div>
-                <div style="font-size: 9px; color: #777777; margin-top: 2px;">I agree to the service repair terms above.</div>
+              <td style="width: 45%; vertical-align: bottom; padding-right: 20px;">
+                <div style="font-size: 10px; font-weight: bold; color: #333333; margin-bottom: 4px;">Customer Acknowledgement</div>
+                <div style="width: 200px; border-bottom: 1px solid #555555; margin-bottom: 4px;"></div>
+                <div style="font-size: 10px; color: #555555;">Signature</div>
+                <div style="width: 200px; border-bottom: 1px solid #555555; margin: 8px 0 4px;"></div>
+                <div style="font-size: 10px; color: #555555;">Printed Name</div>
+                <div style="width: 200px; border-bottom: 1px solid #555555; margin: 8px 0 4px;"></div>
+                <div style="font-size: 10px; color: #555555;">Date</div>
               </td>
-              <!-- Yantrabyte Sign -->
-              <td style="width: 50%; text-align: right; vertical-align: bottom; padding-left: 16px;">
-                <div style="display: inline-block; text-align: left;">
-                  <div style="height: 72px; text-align: center; margin-bottom: 4px;">
-                    <img src="/seal.png" style="max-width: 95px; max-height: 72px; object-fit: contain; opacity: 0.9;" crossOrigin="anonymous" />
+              <!-- Yantrabyte Sign + Seal -->
+              <td style="width: 55%; text-align: right; vertical-align: bottom; padding-left: 20px;">
+                <div style="display: inline-block; text-align: center;">
+                  <!-- Round Seal SVG with Signature -->
+                  <div style="width: 120px; height: 120px; margin: 0 auto 8px;">
+                    <svg viewBox="0 0 120 120" style="width:120px;height:120px;">
+                      <circle cx="60" cy="60" r="56" fill="none" stroke="#0B5394" stroke-width="2.5" />
+                      <circle cx="60" cy="60" r="50" fill="none" stroke="#0B5394" stroke-width="1" />
+                      <path d="M 60 16 A 44 44 0 1 1 59.9 16" fill="none" stroke="#0B5394" stroke-width="0.8" />
+                      <text x="60" y="42" text-anchor="middle" font-size="8" font-weight="bold" fill="#0B5394" font-family="Arial">YANTABYTE</text>
+                      <text x="60" y="52" text-anchor="middle" font-size="7" font-weight="bold" fill="#0B5394" font-family="Arial">SOLUTIONS</text>
+                      <text x="60" y="64" text-anchor="middle" font-size="5" fill="#0B5394" font-family="Arial">AUTHORIZED SERVICE</text>
+                      <text x="60" y="74" text-anchor="middle" font-size="5" fill="#0B5394" font-family="Arial">BENGALURU</text>
+                      <circle cx="60" cy="88" r="12" fill="none" stroke="#0B5394" stroke-width="0.8" />
+                      <text x="60" y="86" text-anchor="middle" font-size="7" font-weight="bold" fill="#0B5394" font-family="Arial">Ramesh A s</text>
+
+                    </svg>
                   </div>
-                  <div style="width: 220px; border-bottom: 1px solid #555555; margin-bottom: 8px;"></div>
+                  <div style="width: 200px; border-bottom: 1px solid #555555; margin-bottom: 4px;"></div>
                   <div style="font-size: 11px; font-weight: bold; color: #0B5394;">For Yantrabyte Solutions</div>
-                  <div style="font-size: 9px; color: #777777; margin-top: 2px;">Authorized Workshop Executive</div>
+                  <div style="font-size: 9px; color: #777777; margin-top: 2px;">Authorized Signatory</div>
                 </div>
               </td>
             </tr>
@@ -733,13 +750,19 @@ export default function AdminPanel() {
     element.style.position = 'absolute';
     element.style.left = '-9999px';
 
-    const emailWatermarkHtml = Array(25).fill(0).map(() =>
-      '<span style="display:inline-block;font-size:26px;font-weight:bold;color:#0B5394;white-space:nowrap;letter-spacing:2px;font-family:Arial,sans-serif;margin:90px 60px;">COMPUTER HARDWARE ITEM</span>'
+    const emailHwSvg = [
+      '<svg viewBox="0 0 100 60" width="70" height="42" fill="none" stroke="#0B5394" stroke-width="2"><rect x="5" y="10" width="90" height="40" rx="3" fill="#0B5394" fill-opacity="0.15"/><rect x="12" y="16" width="28" height="8" rx="1" fill="#0B5394" fill-opacity="0.3"/><rect x="12" y="30" width="28" height="8" rx="1" fill="#0B5394" fill-opacity="0.3"/><rect x="48" y="16" width="28" height="8" rx="1" fill="#0B5394" fill-opacity="0.3"/><rect x="48" y="30" width="28" height="8" rx="1" fill="#0B5394" fill-opacity="0.3"/><rect x="0" y="20" width="6" height="6" rx="1" fill="#0B5394" fill-opacity="0.4"/><rect x="0" y="34" width="6" height="6" rx="1" fill="#0B5394" fill-opacity="0.4"/><rect x="94" y="20" width="6" height="6" rx="1" fill="#0B5394" fill-opacity="0.4"/><rect x="94" y="34" width="6" height="6" rx="1" fill="#0B5394" fill-opacity="0.4"/><line x1="8" y1="50" x2="50" y2="50"/><line x1="50" y1="50" x2="92" y2="50"/></svg>',
+      '<svg viewBox="0 0 100 60" width="70" height="42" fill="none" stroke="#0B5394" stroke-width="2"><rect x="5" y="8" width="90" height="44" rx="4" fill="#0B5394" fill-opacity="0.15"/><circle cx="50" cy="30" r="14" fill="#0B5394" fill-opacity="0.15"/><circle cx="50" cy="30" r="6" fill="#0B5394" fill-opacity="0.25"/><circle cx="50" cy="30" r="2" fill="#0B5394" fill-opacity="0.4"/><rect x="76" y="18" width="12" height="4" rx="1" fill="#0B5394" fill-opacity="0.3"/><rect x="76" y="26" width="12" height="4" rx="1" fill="#0B5394" fill-opacity="0.3"/><rect x="10" y="46" width="30" height="3" rx="1" fill="#0B5394" fill-opacity="0.3"/></svg>',
+      '<svg viewBox="0 0 80 70" width="56" height="49" fill="none" stroke="#0B5394" stroke-width="2"><rect x="4" y="4" width="72" height="46" rx="3" fill="#0B5394" fill-opacity="0.08"/><rect x="8" y="8" width="64" height="38" rx="2" fill="#0B5394" fill-opacity="0.15"/><rect x="36" y="50" width="8" height="6" fill="#0B5394" fill-opacity="0.3"/><rect x="28" y="56" width="24" height="4" rx="2" fill="#0B5394" fill-opacity="0.3"/><rect x="22" y="60" width="36" height="3" rx="1" fill="#0B5394" fill-opacity="0.3"/></svg>',
+      '<svg viewBox="0 0 100 50" width="70" height="35" fill="none" stroke="#0B5394" stroke-width="2"><rect x="4" y="14" width="14" height="22" rx="3" fill="#0B5394" fill-opacity="0.15"/><rect x="8" y="8" width="6" height="10" rx="1" fill="#0B5394" fill-opacity="0.25"/><path d="M18 18 Q35 8 50 18 Q65 28 82 18" fill="none" stroke="#0B5394" stroke-opacity="0.3" stroke-width="2.5"/><rect x="82" y="10" width="14" height="16" rx="2" fill="#0B5394" fill-opacity="0.15"/><rect x="86" y="14" width="3" height="8" rx="1" fill="#0B5394" fill-opacity="0.3"/><rect x="92" y="14" width="3" height="8" rx="1" fill="#0B5394" fill-opacity="0.3"/></svg>',
+    ];
+    const emailWatermarkHtml = Array(40).fill(0).map((_, i) =>
+      `<span style="display:inline-block;margin:40px 50px;">${emailHwSvg[i % 4]}</span>`
     ).join('');
 
     element.innerHTML = `
       <div style="width: 794px; min-height: 1123px; padding: 28px; box-sizing: border-box; background: #ffffff; position: relative; overflow: hidden;">
-        <div style="position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:1;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;transform:rotate(-25deg);opacity:0.06;padding:150px 0;">
+        <div style="position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:1;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;transform:rotate(-15deg);opacity:0.08;padding:60px 20px;">
           ${emailWatermarkHtml}
         </div>
       <div style="border: 2px solid #000000; padding: 18px; min-height: 1067px; box-sizing: border-box; position: relative; z-index: 2;">
@@ -828,31 +851,54 @@ export default function AdminPanel() {
           <div style="background-color: #D9EAF7; padding: 6px 10px; font-weight: bold; font-size: 12px; color: #000000; border-bottom: 1px solid #000000;">DIAGNOSTICS & INTERNAL WORKSHOP NOTES</div>
           <div style="padding: 12px; font-size: 12px; min-height: 90px; line-height: 1.6; color: #333333; font-style: italic; word-break: break-word;">${safeMultiline(item.notes, 'Awaiting diagnostic feedback from the support team.')}</div>
         </div>
-        <div style="border: 1px solid #000000; padding: 12px; margin-bottom: 42px; background-color: #f8fafc;">
-          <div style="font-size: 11px; font-weight: bold; margin-bottom: 6px; color: #111111;">TERMS & CONDITIONS:</div>
-          <ol style="margin: 0; padding-left: 15px; font-size: 9px; color: #555555; line-height: 1.5;">
-            <li>Diagnostic charges are applicable for all devices checked in for repair, even if estimate is rejected.</li>
-            <li>Backup all data before drop-off. Yantrabyte Solutions is not liable for data loss or corruption during repair.</li>
-            <li>Devices not collected within 30 days of repair completion warning may be subject to storage fees or disposal.</li>
-            <li>Any hardware components replaced will carry their respective standard OEM manufacturer warranties.</li>
-          </ol>
+        <div style="border: 1px solid #000000; margin-bottom: 18px;">
+          <div style="background-color: #D9EAF7; padding: 6px 10px; font-weight: bold; font-size: 12px; color: #000000; border-bottom: 1px solid #000000;">
+            TERMS & CONDITIONS OF SERVICE
+          </div>
+          <div style="padding: 10px; font-size: 9px; color: #444444; line-height: 1.55;">
+            <ol style="margin: 0; padding-left: 16px;">
+              <li><strong>Diagnostic Fee:</strong> A non-refundable diagnostic charge applies to all devices brought in for inspection, regardless of whether the repair estimate is approved or declined.</li>
+              <li><strong>Data Backup:</strong> Customer is solely responsible for backing up all data, files, and personal information prior to service. Yantrabyte Solutions shall not be held liable for any data loss, corruption, or damage during diagnosis, repair, or handling.</li>
+              <li><strong>Parts Warranty:</strong> All replacement parts carry a standard 6-month warranty from the date of installation unless otherwise specified. Warranty covers manufacturing defects only, not damage caused by misuse, mishandling, or unauthorized repair.</li>
+              <li><strong>Service Warranty:</strong> Labor and service work are warranted for 30 days from the date of return. Any recurring issue caused by the same fault will be rectified free of charge within this period.</li>
+              <li><strong>Collection Period:</strong> Devices not collected within 30 days of completion notification will incur a storage fee of ₹50/day. Devices unclaimed beyond 90 days will be disposed of at the company's discretion without further notice.</li>
+              <li><strong>Estimate Approval:</strong> Repairs will commence only after the customer approves the written estimate. Any additional repairs required during the process will be communicated for prior approval.</li>
+              <li><strong>E-waste Disposal:</strong> Unclaimed or obsolete electronic components will be recycled or disposed of as per environmental regulations after the notice period.</li>
+              <li><strong>Limitation of Liability:</strong> Yantrabyte Solutions' total liability shall not exceed the total invoice value of the service. We are not responsible for any consequential or incidental damages arising from the service provided.</li>
+            </ol>
+          </div>
         </div>
-        <div style="margin-top: 10px;">
+        <div style="margin-top: 16px;">
           <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
             <tr>
-              <td style="width: 50%; vertical-align: bottom; padding-right: 16px;">
-                <div style="width: 180px; border-bottom: 1px solid #555555; margin-bottom: 8px;"></div>
-                <div style="font-size: 11px; font-weight: bold; color: #333333;">Customer Drop-off Signature</div>
-                <div style="font-size: 9px; color: #777777; margin-top: 2px;">I agree to the service repair terms above.</div>
+              <td style="width: 45%; vertical-align: bottom; padding-right: 20px;">
+                <div style="font-size: 10px; font-weight: bold; color: #333333; margin-bottom: 4px;">Customer Acknowledgement</div>
+                <div style="width: 200px; border-bottom: 1px solid #555555; margin-bottom: 4px;"></div>
+                <div style="font-size: 10px; color: #555555;">Signature</div>
+                <div style="width: 200px; border-bottom: 1px solid #555555; margin: 8px 0 4px;"></div>
+                <div style="font-size: 10px; color: #555555;">Printed Name</div>
+                <div style="width: 200px; border-bottom: 1px solid #555555; margin: 8px 0 4px;"></div>
+                <div style="font-size: 10px; color: #555555;">Date</div>
               </td>
-              <td style="width: 50%; text-align: right; vertical-align: bottom; padding-left: 16px;">
-                <div style="display: inline-block; text-align: left;">
-                  <div style="height: 72px; text-align: center; margin-bottom: 4px;">
-                    <img src="/seal.png" style="max-width: 95px; max-height: 72px; object-fit: contain; opacity: 0.9;" crossOrigin="anonymous" />
+              <td style="width: 55%; text-align: right; vertical-align: bottom; padding-left: 20px;">
+                <div style="display: inline-block; text-align: center;">
+                  <div style="width: 120px; height: 120px; margin: 0 auto 8px;">
+                    <svg viewBox="0 0 120 120" style="width:120px;height:120px;">
+                      <circle cx="60" cy="60" r="56" fill="none" stroke="#0B5394" stroke-width="2.5" />
+                      <circle cx="60" cy="60" r="50" fill="none" stroke="#0B5394" stroke-width="1" />
+                      <path d="M 60 16 A 44 44 0 1 1 59.9 16" fill="none" stroke="#0B5394" stroke-width="0.8" />
+                      <text x="60" y="42" text-anchor="middle" font-size="8" font-weight="bold" fill="#0B5394" font-family="Arial">YANTABYTE</text>
+                      <text x="60" y="52" text-anchor="middle" font-size="7" font-weight="bold" fill="#0B5394" font-family="Arial">SOLUTIONS</text>
+                      <text x="60" y="64" text-anchor="middle" font-size="5" fill="#0B5394" font-family="Arial">AUTHORIZED SERVICE</text>
+                      <text x="60" y="74" text-anchor="middle" font-size="5" fill="#0B5394" font-family="Arial">BENGALURU</text>
+                      <circle cx="60" cy="88" r="12" fill="none" stroke="#0B5394" stroke-width="0.8" />
+                      <text x="60" y="86" text-anchor="middle" font-size="7" font-weight="bold" fill="#0B5394" font-family="Arial">Ramesh A s</text>
+
+                    </svg>
                   </div>
-                  <div style="width: 220px; border-bottom: 1px solid #555555; margin-bottom: 8px;"></div>
+                  <div style="width: 200px; border-bottom: 1px solid #555555; margin-bottom: 4px;"></div>
                   <div style="font-size: 11px; font-weight: bold; color: #0B5394;">For Yantrabyte Solutions</div>
-                  <div style="font-size: 9px; color: #777777; margin-top: 2px;">Authorized Workshop Executive</div>
+                  <div style="font-size: 9px; color: #777777; margin-top: 2px;">Authorized Signatory</div>
                 </div>
               </td>
             </tr>
@@ -962,20 +1008,62 @@ export default function AdminPanel() {
     }
   };
 
-  const backupTicketToGoogleSheet = (ticket: Partial<ServiceTicket>) => {
-    void appendBackupRow({
-      sheetName: UNIFIED_SHEET_NAME,
-      headers: UNIFIED_HEADERS,
-      row: serviceTicketRow(ticket),
-    }).then(result => {
+  const TICKET_SHEET_NAME = 'Service Tickets';
+  const TICKET_SHEET_HEADERS = ['Ticket No', 'Date', 'Customer', 'Phone', 'Email', 'Address', 'Device', 'Issue', 'Priority', 'Status', 'Notes', 'PDF Link'];
+
+  const backupTicketToGoogleSheet = async (ticket: Partial<ServiceTicket>) => {
+    try {
+      const result = await appendBackupRow({
+        sheetName: TICKET_SHEET_NAME,
+        headers: TICKET_SHEET_HEADERS,
+        row: [
+          ticket.ticket_number || '',
+          ticket.created_at ? new Date(ticket.created_at).toLocaleDateString('en-GB') : '',
+          ticket.customer_name || '',
+          ticket.customer_phone || '',
+          ticket.customer_email || '',
+          ticket.customer_address || '',
+          ticket.device_type || '',
+          ticket.issue_description || '',
+          ticket.priority || '',
+          ticket.status || '',
+          ticket.notes || '',
+          '',
+        ],
+      });
       if (result.ok) {
-        showToast('Google Sheet backup updated');
+        showToast('Sheet backup updated');
       } else if (!result.skipped) {
-        console.warn('Google Sheet ticket backup failed:', result.error);
+        showToast('Sheet backup failed: ' + (result.error || 'unknown'), 'error');
       }
-    }).catch(error => {
-      console.warn('Google Sheet ticket backup failed:', error);
-    });
+    } catch (err) {
+      showToast('Sheet backup unavailable (server down?)', 'error');
+    }
+  };
+
+  const backupTicketToDrive = async (ticketId: string) => {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) {
+        showToast('Drive backup skipped: no session', 'error');
+        return;
+      }
+
+      const baseUrl = import.meta.env.VITE_API_URL || '';
+      const res = await fetch(`${baseUrl}/api/drive/backup-ticket`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ ticketId }),
+      });
+      const result = await res.json().catch(() => ({}));
+      if (!result.ok) showToast('Drive backup failed: ' + (result.error || 'server error'), 'error');
+    } catch (err) {
+      showToast('Drive backup unavailable (server down?)', 'error');
+    }
   };
 
   const syncFromGoogleSheet = async () => {
@@ -1115,15 +1203,25 @@ export default function AdminPanel() {
     
     if (activeSection === 'tickets') {
       const tickets = (data.tickets || []) as ServiceTicket[];
-      let maxNum = 100;
+      const now = new Date();
+      const day = String(now.getDate()).padStart(2, '0');
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const year = String(now.getFullYear());
+      const datePrefix = `${day}${month}${year}`;
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999).toISOString();
+      let maxSeq = 0;
       tickets.forEach((t) => {
-        const match = String(t.ticket_number || '').match(/YBS-(\d+)/);
-        if (match && match[1]) {
-          const num = parseInt(match[1], 10);
-          if (num > maxNum) maxNum = num;
+        const created = t.created_at ? new Date(t.created_at) : null;
+        if (created && created >= new Date(startOfMonth) && created <= new Date(endOfMonth)) {
+          const match = String(t.ticket_number || '').match(/-(\d+)$/);
+          if (match) {
+            const num = parseInt(match[1], 10);
+            if (!isNaN(num) && num > maxSeq) maxSeq = num;
+          }
         }
       });
-      defaultData['ticket_number'] = `YBS-${maxNum + 1}`;
+      defaultData['ticket_number'] = `YBS-service-Ticket ${datePrefix}-${String(maxSeq + 1).padStart(3, '0')}`;
       defaultData['status'] = 'open';
       defaultData['priority'] = 'medium';
     }
@@ -1161,15 +1259,18 @@ export default function AdminPanel() {
         if (error) throw error;
         if (activeSection === 'tickets') {
           backupTicketToGoogleSheet({ ...(editingItem as unknown as Partial<ServiceTicket>), ...(record as Partial<ServiceTicket>) });
+          void backupTicketToDrive(String(editingItem.id));
         }
         showToast('Item updated successfully');
       } else {
-        const { error } = await supabase
+        const { data: inserted, error } = await supabase
           .from(config.table as string)
-          .insert([record]);
+          .insert([record])
+          .select('id');
         if (error) throw error;
-        if (activeSection === 'tickets') {
+        if (activeSection === 'tickets' && inserted && inserted.length > 0) {
           backupTicketToGoogleSheet(record as Partial<ServiceTicket>);
+          void backupTicketToDrive(String(inserted[0].id));
         }
         showToast('Item created successfully');
       }

@@ -207,6 +207,7 @@ export interface Invoice {
   payment_status?: string;
   due_date?: string | null;
   created_at: string;
+  payments?: { date: string; amount: number; mode: string }[];
 }
 
 export interface Customer {

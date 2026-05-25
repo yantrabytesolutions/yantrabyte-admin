@@ -20,7 +20,8 @@ export async function appendBackupRow(payload: SheetBackupPayload): Promise<Shee
     return { ok: false, skipped: true, error: 'No active admin session for Google Sheet backup.' };
   }
 
-  const response = await fetch('/api/backups/sheet-row', {
+  const baseUrl = import.meta.env.VITE_API_URL || '';
+  const response = await fetch(`${baseUrl}/api/backups/sheet-row`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
