@@ -180,6 +180,7 @@ export interface ServiceTicket {
 
 export interface InvoiceItem {
   product_id?: string;
+  item_name?: string;
   description: string;
   qty: number;
   rate: number;

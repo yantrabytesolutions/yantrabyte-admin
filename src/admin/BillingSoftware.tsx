@@ -114,6 +114,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const [dueDate, setDueDate] = useState('');
   const [items, setItems] = useState<InvoiceItem[]>([]);
   
+  const [itemName, setItemName] = useState('');
   const [itemDesc, setItemDesc] = useState('');
   const [itemQty, setItemQty] = useState(1);
   const [itemRate, setItemRate] = useState(0);
@@ -362,7 +363,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       showToast('Quantity must be at least 1.', 'error');
       return;
     }
-    setItems([...items, { product_id: itemProductId || undefined, description: itemDesc, qty: itemQty, rate: itemRate }]);
+    setItems([...items, { product_id: itemProductId || undefined, item_name: itemName.trim() || undefined, description: itemDesc, qty: itemQty, rate: itemRate }]);
+    setItemName('');
     setItemDesc('');
     setItemQty(1);
     setItemRate(0);
@@ -1438,9 +1440,9 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             <h3 className="text-lg font-semibold text-gray-800 border-b pb-4">Items & Billing</h3>
             
             <div className="grid grid-cols-12 gap-3 items-end">
-              <div className="col-span-6">
+              <div className="col-span-3">
                 <div className="flex justify-between items-center mb-1">
-                  <label className="block text-xs font-medium text-gray-600">Description</label>
+                  <label className="block text-xs font-medium text-gray-600">Item</label>
                   <div className="flex space-x-2">
                     <select 
                       onChange={(e) => {
@@ -1448,7 +1450,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                         if (selectedVal) {
                           const matched = PRESET_ITEMS.find(item => item.name === selectedVal);
                           if (matched) {
-                            setItemDesc(matched.name);
+                            setItemName(matched.name);
                             setItemRate(matched.price);
                             setItemProductId('');
                           }
@@ -1469,7 +1471,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                         if (selectedId) {
                           const matched = productsList.find(p => p.id === selectedId);
                           if (matched) {
-                            setItemDesc(matched.name);
+                            setItemName(matched.name);
                             setItemRate(Number(matched.price) || 0);
                             setItemProductId(matched.id);
                           }
@@ -1489,15 +1491,19 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                     </select>
                   </div>
                 </div>
-                <input type="text" value={itemDesc} onChange={e => {
-                  setItemDesc(e.target.value);
+                <input type="text" value={itemName} onChange={e => {
+                  setItemName(e.target.value);
                   if (itemProductId) {
                     const matched = productsList.find(p => p.id === itemProductId);
                     if (matched && matched.name !== e.target.value) {
                       setItemProductId('');
                     }
                   }
-                }} onKeyDown={e => e.key === 'Enter' && handleAddItem()} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" placeholder="Item description" />
+                }} onKeyDown={e => e.key === 'Enter' && handleAddItem()} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" placeholder="Item name" />
+              </div>
+              <div className="col-span-3">
+                <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
+                <input type="text" value={itemDesc} onChange={e => setItemDesc(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddItem()} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" placeholder="Item description" />
               </div>
               <div className="col-span-2">
                 <label className="block text-xs font-medium text-gray-600 mb-1">Qty</label>
@@ -1518,7 +1524,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               <table className="w-full text-sm text-left">
                 <thead className="bg-gray-50 border-b text-gray-600">
                   <tr>
-                    <th className="px-4 py-2 font-medium w-12">#</th>
+                    <th className="px-4 py-2 font-medium w-10">#</th>
+                    <th className="px-4 py-2 font-medium">Item</th>
                     <th className="px-4 py-2 font-medium">Description</th>
                     <th className="px-4 py-2 font-medium text-center w-16">Qty</th>
                     <th className="px-4 py-2 font-medium text-right w-24">Rate</th>
@@ -1528,11 +1535,12 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                 </thead>
                 <tbody className="divide-y">
                   {items.length === 0 ? (
-                    <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">No items added yet.</td></tr>
+                    <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">No items added yet.</td></tr>
                   ) : items.map((it, idx) => (
                     <tr key={idx} className="hover:bg-gray-50">
                       <td className="px-4 py-2 text-gray-500">{idx + 1}</td>
-                      <td className="px-4 py-2 font-medium text-gray-800">{it.description}</td>
+                      <td className="px-4 py-2 font-medium text-gray-800">{it.item_name || it.description}</td>
+                      <td className="px-4 py-2 text-gray-600 text-sm">{it.item_name ? it.description : '-'}</td>
                       <td className="px-4 py-2 text-center text-gray-600">{it.qty}</td>
                       <td className="px-4 py-2 text-right text-gray-600">₹{it.rate.toLocaleString('en-IN')}</td>
                       <td className="px-4 py-2 text-right font-medium text-gray-800">₹{(it.qty * it.rate).toLocaleString('en-IN')}</td>
@@ -1801,18 +1809,20 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           <table className="w-full mt-2 border text-sm text-left" style={{ borderColor: '#000000', borderCollapse: 'collapse' }}>
             <thead>
               <tr className="text-center" style={{ backgroundColor: '#0B5394', color: '#ffffff' }}>
-                <th className="border p-1.5 w-10" style={{ borderColor: '#000000' }}>Sl No.</th>
+                <th className="border p-1.5 w-8" style={{ borderColor: '#000000' }}>#</th>
+                <th className="border p-1.5 text-left" style={{ borderColor: '#000000' }}>Item</th>
                 <th className="border p-1.5 text-left" style={{ borderColor: '#000000' }}>Description</th>
                 <th className="border p-1.5 w-12" style={{ borderColor: '#000000' }}>Qty</th>
-                <th className="border p-1.5 w-20" style={{ borderColor: '#000000' }}>Rate</th>
-                <th className="border p-1.5 w-24 text-right" style={{ borderColor: '#000000' }}>Amount</th>
+                <th className="border p-1.5 w-18" style={{ borderColor: '#000000' }}>Rate</th>
+                <th className="border p-1.5 w-22 text-right" style={{ borderColor: '#000000' }}>Amount</th>
               </tr>
             </thead>
             <tbody>
               {items.map((it, idx) => (
                 <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? '#ffffff' : '#F8FAFC' }}>
                   <td className="border p-1.5 text-center" style={{ borderColor: '#000000', color: '#000000' }}>{idx + 1}</td>
-                  <td className="border p-1.5 font-medium" style={{ borderColor: '#000000', color: '#000000' }}>{it.description}</td>
+                  <td className="border p-1.5 font-medium" style={{ borderColor: '#000000', color: '#000000' }}>{it.item_name || it.description}</td>
+                  <td className="border p-1.5 text-xs" style={{ borderColor: '#000000', color: '#555555' }}>{it.item_name ? it.description : '-'}</td>
                   <td className="border p-1.5 text-center" style={{ borderColor: '#000000', color: '#000000' }}>{it.qty}</td>
                   <td className="border p-1.5 text-right" style={{ borderColor: '#000000', color: '#000000' }}>{it.rate.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
                   <td className="border p-1.5 text-right font-bold" style={{ borderColor: '#000000', color: '#000000' }}>{(it.qty * it.rate).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
@@ -1821,6 +1831,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               {/* Padding rows */}
               {[...Array(Math.max(0, 6 - items.length))].map((_, idx) => (
                 <tr key={`empty-${idx}`}>
+                  <td className="border-x p-1.5 text-transparent" style={{ borderColor: '#000000' }}>.</td>
                   <td className="border-x p-1.5 text-transparent" style={{ borderColor: '#000000' }}>.</td>
                   <td className="border-x p-1.5 text-transparent" style={{ borderColor: '#000000' }}>.</td>
                   <td className="border-x p-1.5 text-transparent" style={{ borderColor: '#000000' }}>.</td>
