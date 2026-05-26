@@ -1022,7 +1022,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       });
       const result = await res.json();
       if (!result.ok) showToast('Google Sheet backup failed: ' + (result.error || 'unknown error'), 'error');
-    } catch (err) {
+    } catch {
       showToast('Google Sheet backup unavailable (server down?)', 'error');
     }
   };
@@ -1089,7 +1089,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       } else {
         showToast('Drive backup failed: ' + (result.error || 'server error'), 'error');
       }
-    } catch (err) {
+    } catch {
       showToast('Drive backup unavailable (server down?)', 'error');
     }
   };

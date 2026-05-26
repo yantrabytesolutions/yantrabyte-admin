@@ -1028,7 +1028,7 @@ export default function AdminPanel() {
       } else if (!result.skipped) {
         showToast('Sheet backup failed: ' + (result.error || 'unknown'), 'error');
       }
-    } catch (err) {
+    } catch {
       showToast('Sheet backup unavailable (server down?)', 'error');
     }
   };
@@ -1053,7 +1053,7 @@ export default function AdminPanel() {
       });
       const result = await res.json().catch(() => ({}));
       if (!result.ok) showToast('Drive backup failed: ' + (result.error || 'server error'), 'error');
-    } catch (err) {
+    } catch {
       showToast('Drive backup unavailable (server down?)', 'error');
     }
   };
