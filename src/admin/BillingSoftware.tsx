@@ -743,6 +743,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setIsSendingEmail(action === 'email');
     try {
       const isUpdate = !!selectedInvoiceId;
+      let newInvoiceId: string | null = null;
       let invoiceNo: string;
       if (isUpdate) {
         const existing = invoices.find(i => i.id === selectedInvoiceId);
@@ -791,7 +792,6 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
         await persistInvoice(true, payload, legacyPayload);
         backupInvoiceToGoogleSheet(payload as Invoice);
-        void backupInvoiceToDrive(selectedInvoiceId, payload as Invoice);
         showToast('Invoice updated successfully!');
       } else {
         if (docType === 'Invoice') {
@@ -801,7 +801,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         const data = await persistInvoice(false, payload, legacyPayload);
         if (data) {
           setSelectedInvoiceId(data.id);
-          void backupInvoiceToDrive(data.id, payload as Invoice);
+          newInvoiceId = data.id;
         }
         backupInvoiceToGoogleSheet(payload as Invoice);
         showToast('Invoice saved successfully!');
@@ -811,10 +811,13 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       await fetchInvoices();
       await fetchProducts();
       await fetchCustomers();
+
+      const invoiceId = isUpdate ? selectedInvoiceId : newInvoiceId;
       
       if (action === 'download') {
         await new Promise(resolve => window.setTimeout(resolve, 500));
         await generatePdf(payload.invoice_no);
+        if (invoiceId) void backupInvoiceToDrive(invoiceId, payload as Invoice);
       } else if (action === 'email') {
         setDeliveryPopup({
           status: 'sending',
@@ -823,6 +826,9 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         });
         await new Promise(resolve => window.setTimeout(resolve, 500));
         await emailInvoicePdf(payload.invoice_no);
+        if (invoiceId) void backupInvoiceToDrive(invoiceId, payload as Invoice);
+      } else {
+        if (invoiceId) void backupInvoiceToDrive(invoiceId, payload as Invoice);
       }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);
@@ -871,11 +877,17 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     if (!element) return;
     const opt = getPdfOptions(invoiceNumber);
 
-    await html2pdf().set(opt).from(element).save().then(() => {
+    try {
+      await html2pdf().set(opt).from(element).save();
       element.style.display = 'none';
       setPrintInvoiceNumber('');
       showToast('PDF Generated successfully!');
-    });
+    } catch (err) {
+      element.style.display = 'none';
+      setPrintInvoiceNumber('');
+      const msg = err instanceof Error ? err.message : String(err);
+      showToast('PDF generation failed: ' + msg, 'error');
+    }
   };
 
   const emailInvoicePdf = async (invoiceNumber: string) => {
@@ -1113,13 +1125,20 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     const element = await preparePdfElement(invoiceNo);
     if (!element) return;
 
-    const opt = getPdfOptions(invoiceNo);
-    const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob') as Blob;
-    element.style.display = 'none';
+    try {
+      const opt = getPdfOptions(invoiceNo);
+      const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob') as Blob;
+      element.style.display = 'none';
 
-    const url = URL.createObjectURL(pdfBlob);
-    setPreviewUrl(url);
-    setShowPreview(true);
+      const url = URL.createObjectURL(pdfBlob);
+      setPreviewUrl(url);
+      setShowPreview(true);
+    } catch (err) {
+      element.style.display = 'none';
+      setPrintInvoiceNumber('');
+      const msg = err instanceof Error ? err.message : String(err);
+      showToast('PDF preview failed: ' + msg, 'error');
+    }
   };
 
   const handleExportExcelLedger = async () => {
