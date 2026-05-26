@@ -204,7 +204,6 @@ const TICKETS_FIELDS: FormField[] = [
   { key: 'notes', label: 'Internal Notes', type: 'textarea', rows: 3 }
 ];
 
-const UNIFIED_SHEET_NAME = 'YantraByte Records';
 const UNIFIED_HEADERS = [
   'Type',
   'No',

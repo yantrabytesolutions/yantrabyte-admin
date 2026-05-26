@@ -5,7 +5,6 @@ import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, U
 import html2pdf from 'html2pdf.js';
 import { PRESET_ITEMS } from './presetItems';
 import { downloadExcelWorkbook } from '../utils/spreadsheetXml';
-import { appendBackupRow } from '../utils/googleSheetBackup';
 
 // --- Utility Functions ---
 function numberToWords(num: number): string {
@@ -99,23 +98,7 @@ const INVOICE_HEADERS = [
   'Link',
 ];
 
-const UNIFIED_SHEET_NAME = 'YantraByte Records';
-const UNIFIED_HEADERS = [
-  'Type',
-  'No',
-  'Date',
-  'Customer',
-  'Phone',
-  'Email',
-  'Address',
-  'Device / Service',
-  'Description',
-  'Amount',
-  'Payment Status',
-  'Status',
-  'Assigned To',
-  'Link',
-];
+
 
 export default function BillingSoftware({ initialAutofillTicket, onClearAutofill }: BillingSoftwareProps) {
   const [docType, setDocType] = useState('Invoice');
