@@ -480,11 +480,11 @@ export default function AdminPanel() {
     element.style.backgroundColor = '#ffffff';
 
     element.innerHTML = `
-      <div style="width: 794px; min-height: 1123px; padding: 28px; box-sizing: border-box; background: #ffffff; position: relative; overflow: hidden;">
+      <div style="width: 794px; min-height: 1123px; padding: 20px; box-sizing: border-box; background: #ffffff; position: relative; overflow: hidden;">
         <div style="position:absolute;top:35%;left:-10%;right:-10%;pointer-events:none;z-index:1;display:flex;align-items:center;justify-content:center;transform:rotate(-45deg);opacity:0.05;font-size:90px;font-weight:900;color:#0B5394;white-space:nowrap;user-select:none;letter-spacing:8px;">
           YANTRABYTE SOLUTIONS
         </div>
-      <div style="border: 2px solid #000000; padding: 18px; min-height: 1067px; box-sizing: border-box; position: relative; z-index: 2;">
+      <div style="border: 2px solid #000000; padding: 14px; min-height: 1083px; box-sizing: border-box; position: relative; z-index: 2;">
         <!-- Header -->
         <table style="width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 16px;">
           <tr>
@@ -514,7 +514,7 @@ export default function AdminPanel() {
         <div style="height: 2px; background: #000000; margin-bottom: 16px;"></div>
 
         <!-- Ticket Details -->
-        <table style="width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 18px; font-size: 11px;">
+        <table style="width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 12px; font-size: 10px;">
           <colgroup>
             <col style="width: 20%;" />
             <col style="width: 30%;" />
@@ -522,41 +522,41 @@ export default function AdminPanel() {
             <col style="width: 32%;" />
           </colgroup>
           <tr>
-            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Ticket ID</td>
-            <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${safeText(ticketNo)}</td>
-            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Date</td>
-            <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${dateStr}</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 5px 8px; font-weight: bold;">Ticket ID</td>
+            <td style="border: 1px solid #000000; padding: 5px 8px; word-break: break-word;">${safeText(ticketNo)}</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 5px 8px; font-weight: bold;">Date</td>
+            <td style="border: 1px solid #000000; padding: 5px 8px; word-break: break-word;">${dateStr}</td>
           </tr>
           <tr>
-            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Customer Name</td>
-            <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${safeText(item.customer_name)}</td>
-            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Phone</td>
-            <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${safeText(item.customer_phone)}</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 5px 8px; font-weight: bold;">Customer Name</td>
+            <td style="border: 1px solid #000000; padding: 5px 8px; word-break: break-word;">${safeText(item.customer_name)}</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 5px 8px; font-weight: bold;">Phone</td>
+            <td style="border: 1px solid #000000; padding: 5px 8px; word-break: break-word;">${safeText(item.customer_phone)}</td>
           </tr>
           <tr>
-            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Email</td>
-            <td colspan="3" style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${safeText(item.customer_email)}</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 5px 8px; font-weight: bold;">Email</td>
+            <td colspan="3" style="border: 1px solid #000000; padding: 5px 8px; word-break: break-word;">${safeText(item.customer_email)}</td>
           </tr>
           <tr>
-            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Address</td>
-            <td colspan="3" style="border: 1px solid #000000; padding: 7px 8px; line-height: 1.45; word-break: break-word;">${safeText(item.address || item.customer_address)}</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 5px 8px; font-weight: bold;">Address</td>
+            <td colspan="3" style="border: 1px solid #000000; padding: 5px 8px; line-height: 1.45; word-break: break-word;">${safeText(item.address || item.customer_address)}</td>
           </tr>
           <tr>
-            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Device</td>
-            <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${safeText(item.device || item.device_type)}</td>
-            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Status</td>
-            <td style="border: 1px solid #000000; padding: 7px 8px; text-transform: uppercase; font-weight: bold; color: #0f766e; word-break: break-word;">${safeText(item.status || 'Received')}</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 5px 8px; font-weight: bold;">Device</td>
+            <td style="border: 1px solid #000000; padding: 5px 8px; word-break: break-word;">${safeText(item.device || item.device_type)}</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 5px 8px; font-weight: bold;">Status</td>
+            <td style="border: 1px solid #000000; padding: 5px 8px; text-transform: uppercase; font-weight: bold; color: #0f766e; word-break: break-word;">${safeText(item.status || 'Received')}</td>
           </tr>
           <tr>
-            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Device Type</td>
-            <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${safeText(item.device_type)}</td>
-            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Priority</td>
-            <td style="border: 1px solid #000000; padding: 7px 8px; text-transform: capitalize; font-weight: bold; color: ${String(item.priority) === 'high' || String(item.priority) === 'urgent' ? '#b91c1c' : '#374151'}; word-break: break-word;">${safeText(item.priority || 'Medium')}</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 5px 8px; font-weight: bold;">Device Type</td>
+            <td style="border: 1px solid #000000; padding: 5px 8px; word-break: break-word;">${safeText(item.device_type)}</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 5px 8px; font-weight: bold;">Priority</td>
+            <td style="border: 1px solid #000000; padding: 5px 8px; text-transform: capitalize; font-weight: bold; color: ${String(item.priority) === 'high' || String(item.priority) === 'urgent' ? '#b91c1c' : '#374151'}; word-break: break-word;">${safeText(item.priority || 'Medium')}</td>
           </tr>
         </table>
 
         <!-- Customer & Device Details Grid -->
-        <table style="width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 18px;">
+        <table style="width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 12px;">
           <tr>
             <!-- Customer info -->
             <td style="width: 50%; border: 1px solid #000000; vertical-align: top;">
@@ -588,46 +588,34 @@ export default function AdminPanel() {
         </table>
 
         <!-- Problem Description -->
-        <div style="border: 1px solid #000000; margin-bottom: 18px;">
-          <div style="background-color: #D9EAF7; padding: 6px 10px; font-weight: bold; font-size: 12px; color: #000000; border-bottom: 1px solid #000000;">
+        <div style="border: 1px solid #000000; margin-bottom: 12px;">
+          <div style="background-color: #D9EAF7; padding: 5px 10px; font-weight: bold; font-size: 11px; color: #000000; border-bottom: 1px solid #000000;">
             REPORTED CUSTOMER COMPLAINT / ISSUE
           </div>
-          <div style="padding: 12px; font-size: 12px; min-height: 78px; line-height: 1.6; color: #111111; word-break: break-word;">
+          <div style="padding: 10px; font-size: 11px; min-height: 50px; line-height: 1.5; color: #111111; word-break: break-word;">
             ${safeMultiline(item.issue_description, 'No complaints specified.')}
           </div>
         </div>
 
-        <!-- Diagnostics & Internal Notes -->
-        <div style="border: 1px solid #000000; margin-bottom: 18px;">
-          <div style="background-color: #D9EAF7; padding: 6px 10px; font-weight: bold; font-size: 12px; color: #000000; border-bottom: 1px solid #000000;">
-            DIAGNOSTICS & INTERNAL WORKSHOP NOTES
-          </div>
-          <div style="padding: 12px; font-size: 12px; min-height: 90px; line-height: 1.6; color: #333333; font-style: italic; word-break: break-word;">
-            ${safeMultiline(item.notes, 'Awaiting diagnostic feedback from the support team.')}
-          </div>
-        </div>
-
         <!-- Repair / Drop-off Terms -->
-        <div style="border: 1px solid #000000; margin-bottom: 18px;">
-          <div style="background-color: #D9EAF7; padding: 6px 10px; font-weight: bold; font-size: 12px; color: #000000; border-bottom: 1px solid #000000;">
-            TERMS & CONDITIONS OF SERVICE
+        <div style="border: 1px solid #000000; margin-bottom: 10px;">
+          <div style="background-color: #D9EAF7; padding: 4px 10px; font-weight: bold; font-size: 11px; color: #000000; border-bottom: 1px solid #000000;">
+            TERMS & CONDITIONS
           </div>
-          <div style="padding: 10px; font-size: 9px; color: #444444; line-height: 1.55;">
-            <ol style="margin: 0; padding-left: 16px;">
-              <li><strong>Diagnostic Fee:</strong> A non-refundable diagnostic charge applies to all devices brought in for inspection, regardless of whether the repair estimate is approved or declined.</li>
-              <li><strong>Data Backup:</strong> Customer is solely responsible for backing up all data, files, and personal information prior to service. Yantrabyte Solutions shall not be held liable for any data loss, corruption, or damage during diagnosis, repair, or handling.</li>
-              <li><strong>Parts Warranty:</strong> All replacement parts carry a standard 6-month warranty from the date of installation unless otherwise specified. Warranty covers manufacturing defects only, not damage caused by misuse, mishandling, or unauthorized repair.</li>
-              <li><strong>Service Warranty:</strong> Labor and service work are warranted for 30 days from the date of return. Any recurring issue caused by the same fault will be rectified free of charge within this period.</li>
-              <li><strong>Collection Period:</strong> Devices not collected within 30 days of completion notification will incur a storage fee of ₹50/day. Devices unclaimed beyond 90 days will be disposed of at the company's discretion without further notice.</li>
-              <li><strong>Estimate Approval:</strong> Repairs will commence only after the customer approves the written estimate. Any additional repairs required during the process will be communicated for prior approval.</li>
-              <li><strong>E-waste Disposal:</strong> Unclaimed or obsolete electronic components will be recycled or disposed of as per environmental regulations after the notice period.</li>
-              <li><strong>Limitation of Liability:</strong> Yantrabyte Solutions' total liability shall not exceed the total invoice value of the service. We are not responsible for any consequential or incidental damages arising from the service provided.</li>
+          <div style="padding: 8px; font-size: 8px; color: #444444; line-height: 1.5;">
+            <ol style="margin: 0; padding-left: 14px;">
+              <li><strong>Diagnostic Fee:</strong> Non-refundable diagnostic charge applies regardless of repair approval.</li>
+              <li><strong>Data Backup:</strong> Customer is responsible for backing up data. We are not liable for data loss.</li>
+              <li><strong>Parts Warranty:</strong> 6-month warranty on replacement parts covering manufacturing defects only.</li>
+              <li><strong>Service Warranty:</strong> 30-day warranty on labor for same-fault recurrence.</li>
+              <li><strong>Collection:</strong> Devices uncollected after 30 days incur ₹50/day storage; disposed after 90 days.</li>
+              <li><strong>Limitation:</strong> Our liability shall not exceed the total invoice value.</li>
             </ol>
           </div>
         </div>
 
         <!-- Signatures Bottom Section -->
-        <div style="margin-top: 16px;">
+        <div style="margin-top: 10px;">
           <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
             <tr>
               <!-- Customer Sign -->
@@ -649,7 +637,7 @@ export default function AdminPanel() {
                       <circle cx="60" cy="60" r="56" fill="none" stroke="#0B5394" stroke-width="2.5" />
                       <circle cx="60" cy="60" r="50" fill="none" stroke="#0B5394" stroke-width="1" />
                       <path d="M 60 16 A 44 44 0 1 1 59.9 16" fill="none" stroke="#0B5394" stroke-width="0.8" />
-                      <text x="60" y="42" text-anchor="middle" font-size="8" font-weight="bold" fill="#0B5394" font-family="Arial">YANTABYTE</text>
+                      <text x="60" y="42" text-anchor="middle" font-size="8" font-weight="bold" fill="#0B5394" font-family="Arial">YANTRABYTE</text>
                       <text x="60" y="52" text-anchor="middle" font-size="7" font-weight="bold" fill="#0B5394" font-family="Arial">SOLUTIONS</text>
                       <text x="60" y="64" text-anchor="middle" font-size="5" fill="#0B5394" font-family="Arial">AUTHORIZED SERVICE</text>
                       <text x="60" y="74" text-anchor="middle" font-size="5" fill="#0B5394" font-family="Arial">BENGALURU</text>

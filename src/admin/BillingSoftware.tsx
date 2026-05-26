@@ -1912,7 +1912,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                     <circle cx="60" cy="60" r="56" fill="none" stroke="#0B5394" stroke-width="2.5" />
                     <circle cx="60" cy="60" r="50" fill="none" stroke="#0B5394" stroke-width="1" />
                     <path d="M 60 16 A 44 44 0 1 1 59.9 16" fill="none" stroke="#0B5394" stroke-width="0.8" />
-                    <text x="60" y="42" text-anchor="middle" font-size="8" font-weight="bold" fill="#0B5394" font-family="Arial">YANTABYTE</text>
+                    <text x="60" y="42" text-anchor="middle" font-size="8" font-weight="bold" fill="#0B5394" font-family="Arial">YANTRABYTE</text>
                     <text x="60" y="52" text-anchor="middle" font-size="7" font-weight="bold" fill="#0B5394" font-family="Arial">SOLUTIONS</text>
                     <text x="60" y="64" text-anchor="middle" font-size="5" fill="#0B5394" font-family="Arial">AUTHORIZED SERVICE</text>
                     <text x="60" y="74" text-anchor="middle" font-size="5" fill="#0B5394" font-family="Arial">BENGALURU</text>
