@@ -334,8 +334,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   };
 
   const handleAddItem = () => {
-    if (!itemDesc.trim()) {
-      showToast('Please enter an item description.', 'error');
+    if (!itemName.trim() && !itemDesc.trim()) {
+      showToast('Please enter an item name or description.', 'error');
       return;
     }
     if (itemQty <= 0) {
