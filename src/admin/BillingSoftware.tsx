@@ -73,6 +73,15 @@ const shouldRetryLegacyInvoiceSave = (error: { message?: string; code?: string }
     || message.includes('due_date');
 };
 
+const formatError = (err: unknown): string => {
+  if (err instanceof Error) return err.message;
+  if (err && typeof err === 'object') {
+    const e = err as Record<string, unknown>;
+    return String(e.message || e.error || e.code || e.statusText || '');
+  }
+  return String(err);
+};
+
 const formatItemsForExcel = (items: Array<{ description: string; qty: number; rate: number }> = []) =>
   items.map(item => `${item.description} x${item.qty} @ ${item.rate}`).join('\n');
 
@@ -325,6 +334,11 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
     if (!error && data) {
       setInvoices(data);
+    } else if (error) {
+      const msg = formatError(error);
+      if (msg.includes('42501') || msg.includes('row-level security')) {
+        showToast('Session expired. Please logout and login again.', 'error');
+      }
     }
   };
 
@@ -465,7 +479,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       await fetchInvoices();
       await fetchProducts();
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
+      const errorMsg = formatError(err);
       showToast(errorMsg || 'Failed to delete invoice', 'error');
     }
   };
@@ -810,15 +824,17 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         if (invoiceId) void backupInvoiceToDrive(invoiceId, payload as Invoice);
       }
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
+      const errorMsg = formatError(err);
+      const isSessionExpired = errorMsg.includes('42501') || errorMsg.includes('row-level security');
+      const displayMsg = isSessionExpired ? 'Session expired. Please logout and login again.' : (errorMsg || 'Failed to save invoice');
       if (action === 'email') {
         setDeliveryPopup({
           status: 'error',
           title: 'Invoice delivery failed',
-          message: errorMsg || 'Failed to save invoice before sending email.',
+          message: displayMsg,
         });
       }
-      showToast(errorMsg || 'Failed to save invoice', 'error');
+      showToast(displayMsg, 'error');
     } finally {
       setIsSaving(false);
       setIsSendingEmail(false);
@@ -864,7 +880,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     } catch (err) {
       element.style.display = 'none';
       setPrintInvoiceNumber('');
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = formatError(err);
       showToast('PDF generation failed: ' + msg, 'error');
     }
   };
@@ -939,7 +955,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         showToast(`Invoice emailed to ${email}`);
       }
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
+      const errorMsg = formatError(err);
       setDeliveryPopup({
         status: 'error',
         title: 'Invoice delivery failed',
@@ -1115,7 +1131,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     } catch (err) {
       element.style.display = 'none';
       setPrintInvoiceNumber('');
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = formatError(err);
       showToast('PDF preview failed: ' + msg, 'error');
     }
   };
@@ -1227,7 +1243,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
       showToast('Excel ledger exported successfully with service tickets!');
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
+      const errorMsg = formatError(err);
       showToast(errorMsg || 'Failed to export Excel ledger', 'error');
     } finally {
       setIsExportingExcel(false);
