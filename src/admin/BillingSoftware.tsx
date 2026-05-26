@@ -820,7 +820,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         }
         backupInvoiceToGoogleSheet(payload as Invoice);
         showToast('Invoice saved successfully!');
-        clearForm();
+        // Keep the saved invoice loaded in the form for editing
       }
 
       await fetchInvoices();
@@ -1767,29 +1767,22 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       {/* --- HIDDEN PRINT TEMPLATE --- */}
       <div ref={printRef} className="bg-white p-[10px] w-full text-black" style={{ fontFamily: 'Arial, sans-serif', position: 'relative', overflow: 'hidden', display: 'none' }}>
 
-          {/* Watermark - Hardware Icons */}
           <div style={{
-            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+            position: 'absolute', top: '35%', left: '-10%', right: '-10%',
             pointerEvents: 'none', zIndex: 0,
-            display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center',
-            gap: '70px 90px', padding: '60px 30px', transform: 'rotate(-15deg)',
-            opacity: 0.18
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transform: 'rotate(-45deg)', opacity: 0.05,
+            fontSize: '90px', fontWeight: 900, color: '#0B5394',
+            whiteSpace: 'nowrap', userSelect: 'none', letterSpacing: '8px'
           }}>
-            {[...Array(36)].map((_, i) => (
-              <svg key={i} viewBox="0 0 100 60" width="70" height="42" fill="none" stroke="#0B5394" strokeWidth="2" style={{ display: 'inline-block' }}>
-                {i % 4 === 0 && <><rect x="5" y="10" width="90" height="40" rx="3" fill="#0B5394" fillOpacity="0.2"/><rect x="12" y="16" width="28" height="8" rx="1" fill="#0B5394" fillOpacity="0.35"/><rect x="12" y="30" width="28" height="8" rx="1" fill="#0B5394" fillOpacity="0.35"/><rect x="48" y="16" width="28" height="8" rx="1" fill="#0B5394" fillOpacity="0.35"/><rect x="48" y="30" width="28" height="8" rx="1" fill="#0B5394" fillOpacity="0.35"/><rect x="0" y="20" width="6" height="6" rx="1" fill="#0B5394" fillOpacity="0.45"/><rect x="0" y="34" width="6" height="6" rx="1" fill="#0B5394" fillOpacity="0.45"/><rect x="94" y="20" width="6" height="6" rx="1" fill="#0B5394" fillOpacity="0.45"/><rect x="94" y="34" width="6" height="6" rx="1" fill="#0B5394" fillOpacity="0.45"/><line x1="8" y1="50" x2="50" y2="50" stroke="#0B5394"/><line x1="50" y1="50" x2="92" y2="50" stroke="#0B5394"/></>}
-                {i % 4 === 1 && <><rect x="5" y="8" width="90" height="44" rx="4" fill="#0B5394" fillOpacity="0.2"/><circle cx="50" cy="30" r="14" fill="#0B5394" fillOpacity="0.2"/><circle cx="50" cy="30" r="6" fill="#0B5394" fillOpacity="0.3"/><circle cx="50" cy="30" r="2" fill="#0B5394" fillOpacity="0.45"/><rect x="76" y="18" width="12" height="4" rx="1" fill="#0B5394" fillOpacity="0.35"/><rect x="76" y="26" width="12" height="4" rx="1" fill="#0B5394" fillOpacity="0.35"/><rect x="10" y="46" width="30" height="3" rx="1" fill="#0B5394" fillOpacity="0.35"/></>}
-                {i % 4 === 2 && <><rect x="4" y="4" width="72" height="46" rx="3" fill="#0B5394" fillOpacity="0.12"/><rect x="8" y="8" width="64" height="38" rx="2" fill="#0B5394" fillOpacity="0.2"/><rect x="36" y="50" width="8" height="6" fill="#0B5394" fillOpacity="0.35"/><rect x="28" y="56" width="24" height="4" rx="2" fill="#0B5394" fillOpacity="0.35"/><rect x="22" y="60" width="36" height="3" rx="1" fill="#0B5394" fillOpacity="0.35"/></>}
-                {i % 4 === 3 && <><rect x="4" y="14" width="14" height="22" rx="3" fill="#0B5394" fillOpacity="0.2"/><rect x="8" y="8" width="6" height="10" rx="1" fill="#0B5394" fillOpacity="0.3"/><path d="M18 18 Q35 8 50 18 Q65 28 82 18" fill="none" stroke="#0B5394" strokeOpacity="0.35" strokeWidth="2.5"/><rect x="82" y="10" width="14" height="16" rx="2" fill="#0B5394" fillOpacity="0.2"/><rect x="86" y="14" width="3" height="8" rx="1" fill="#0B5394" fillOpacity="0.35"/><rect x="92" y="14" width="3" height="8" rx="1" fill="#0B5394" fillOpacity="0.35"/></>}
-              </svg>
-            ))}
+            YANTRABYTE SOLUTIONS
           </div>
 
           {/* Header */}
           <div className="flex items-center justify-between border p-3 mb-2" style={{ borderColor: '#000000' }}>
             <div className="flex items-center space-x-4">
               <div className="w-[340px] h-28 flex items-center justify-start ml-2">
-                <img src="/logo5.png" alt="YantraByte Solutions" style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} crossOrigin="anonymous" />
+                <img src="/logo5.png" alt="YantraByte Solutions" style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} />
               </div>
             </div>
             <div className="text-right">
@@ -1916,7 +1909,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                     <p className="mt-1"><span className="font-bold">UPI:</span> s0424237152@slc</p>
                   </div>
                   <div className="w-20 h-20 flex-shrink-0 border p-0.5" style={{ borderColor: '#dddddd' }}>
-                    <img src="/qr.jpg" alt="Payment QR" style={{ height: '100%', width: '100%', objectFit: 'contain' }} crossOrigin="anonymous" />
+                    <img src="/qr.jpg" alt="Payment QR" style={{ height: '100%', width: '100%', objectFit: 'contain' }} />
                   </div>
                 </div>
               </div>

@@ -482,12 +482,15 @@ export default function AdminPanel() {
 
     element.innerHTML = `
       <div style="width: 794px; min-height: 1123px; padding: 28px; box-sizing: border-box; background: #ffffff; position: relative; overflow: hidden;">
+        <div style="position:absolute;top:35%;left:-10%;right:-10%;pointer-events:none;z-index:1;display:flex;align-items:center;justify-content:center;transform:rotate(-45deg);opacity:0.05;font-size:90px;font-weight:900;color:#0B5394;white-space:nowrap;user-select:none;letter-spacing:8px;">
+          YANTRABYTE SOLUTIONS
+        </div>
       <div style="border: 2px solid #000000; padding: 18px; min-height: 1067px; box-sizing: border-box; position: relative; z-index: 2;">
         <!-- Header -->
         <table style="width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 16px;">
           <tr>
             <td style="width: 56%; vertical-align: top; padding-right: 16px;">
-              <img src="/logo5.png" style="max-height: 60px; object-fit: contain; margin-bottom: 6px;" crossOrigin="anonymous" />
+              <img src="/logo5.png" style="max-height: 60px; object-fit: contain; margin-bottom: 6px;" />
               <div style="font-size: 11px; color: #444444; line-height: 1.45;">
                 IT service, repair, and network management experts.<br />
                 47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br />
@@ -750,26 +753,16 @@ export default function AdminPanel() {
     element.style.position = 'absolute';
     element.style.left = '-9999px';
 
-    const emailHwSvg = [
-      '<svg viewBox="0 0 100 60" width="70" height="42" fill="none" stroke="#0B5394" stroke-width="2"><rect x="5" y="10" width="90" height="40" rx="3" fill="#0B5394" fill-opacity="0.15"/><rect x="12" y="16" width="28" height="8" rx="1" fill="#0B5394" fill-opacity="0.3"/><rect x="12" y="30" width="28" height="8" rx="1" fill="#0B5394" fill-opacity="0.3"/><rect x="48" y="16" width="28" height="8" rx="1" fill="#0B5394" fill-opacity="0.3"/><rect x="48" y="30" width="28" height="8" rx="1" fill="#0B5394" fill-opacity="0.3"/><rect x="0" y="20" width="6" height="6" rx="1" fill="#0B5394" fill-opacity="0.4"/><rect x="0" y="34" width="6" height="6" rx="1" fill="#0B5394" fill-opacity="0.4"/><rect x="94" y="20" width="6" height="6" rx="1" fill="#0B5394" fill-opacity="0.4"/><rect x="94" y="34" width="6" height="6" rx="1" fill="#0B5394" fill-opacity="0.4"/><line x1="8" y1="50" x2="50" y2="50"/><line x1="50" y1="50" x2="92" y2="50"/></svg>',
-      '<svg viewBox="0 0 100 60" width="70" height="42" fill="none" stroke="#0B5394" stroke-width="2"><rect x="5" y="8" width="90" height="44" rx="4" fill="#0B5394" fill-opacity="0.15"/><circle cx="50" cy="30" r="14" fill="#0B5394" fill-opacity="0.15"/><circle cx="50" cy="30" r="6" fill="#0B5394" fill-opacity="0.25"/><circle cx="50" cy="30" r="2" fill="#0B5394" fill-opacity="0.4"/><rect x="76" y="18" width="12" height="4" rx="1" fill="#0B5394" fill-opacity="0.3"/><rect x="76" y="26" width="12" height="4" rx="1" fill="#0B5394" fill-opacity="0.3"/><rect x="10" y="46" width="30" height="3" rx="1" fill="#0B5394" fill-opacity="0.3"/></svg>',
-      '<svg viewBox="0 0 80 70" width="56" height="49" fill="none" stroke="#0B5394" stroke-width="2"><rect x="4" y="4" width="72" height="46" rx="3" fill="#0B5394" fill-opacity="0.08"/><rect x="8" y="8" width="64" height="38" rx="2" fill="#0B5394" fill-opacity="0.15"/><rect x="36" y="50" width="8" height="6" fill="#0B5394" fill-opacity="0.3"/><rect x="28" y="56" width="24" height="4" rx="2" fill="#0B5394" fill-opacity="0.3"/><rect x="22" y="60" width="36" height="3" rx="1" fill="#0B5394" fill-opacity="0.3"/></svg>',
-      '<svg viewBox="0 0 100 50" width="70" height="35" fill="none" stroke="#0B5394" stroke-width="2"><rect x="4" y="14" width="14" height="22" rx="3" fill="#0B5394" fill-opacity="0.15"/><rect x="8" y="8" width="6" height="10" rx="1" fill="#0B5394" fill-opacity="0.25"/><path d="M18 18 Q35 8 50 18 Q65 28 82 18" fill="none" stroke="#0B5394" stroke-opacity="0.3" stroke-width="2.5"/><rect x="82" y="10" width="14" height="16" rx="2" fill="#0B5394" fill-opacity="0.15"/><rect x="86" y="14" width="3" height="8" rx="1" fill="#0B5394" fill-opacity="0.3"/><rect x="92" y="14" width="3" height="8" rx="1" fill="#0B5394" fill-opacity="0.3"/></svg>',
-    ];
-    const emailWatermarkHtml = Array(40).fill(0).map((_, i) =>
-      `<span style="display:inline-block;margin:40px 50px;">${emailHwSvg[i % 4]}</span>`
-    ).join('');
-
     element.innerHTML = `
       <div style="width: 794px; min-height: 1123px; padding: 28px; box-sizing: border-box; background: #ffffff; position: relative; overflow: hidden;">
-        <div style="position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:1;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;transform:rotate(-15deg);opacity:0.08;padding:60px 20px;">
-          ${emailWatermarkHtml}
+        <div style="position:absolute;top:35%;left:-10%;right:-10%;pointer-events:none;z-index:1;display:flex;align-items:center;justify-content:center;transform:rotate(-45deg);opacity:0.05;font-size:90px;font-weight:900;color:#0B5394;white-space:nowrap;user-select:none;letter-spacing:8px;">
+          YANTRABYTE SOLUTIONS
         </div>
       <div style="border: 2px solid #000000; padding: 18px; min-height: 1067px; box-sizing: border-box; position: relative; z-index: 2;">
         <table style="width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 16px;">
           <tr>
             <td style="width: 56%; vertical-align: top; padding-right: 16px;">
-              <img src="/logo5.png" style="max-height: 60px; object-fit: contain; margin-bottom: 6px;" crossOrigin="anonymous" />
+              <img src="/logo5.png" style="max-height: 60px; object-fit: contain; margin-bottom: 6px;" />
               <div style="font-size: 11px; color: #444444; line-height: 1.45;">
                 IT service, repair, and network management experts.<br />
                 47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br />
