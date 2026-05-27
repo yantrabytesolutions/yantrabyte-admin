@@ -78,8 +78,9 @@ const formatError = (err: unknown): string => {
   if (err instanceof Error) return err.message;
   if (typeof err === 'string') return err;
   if (typeof err === 'object') {
-    const e = err as any;
-    const msg = e.message || e.error?.message || e.error || e.code || e.statusText;
+    const e = err as Record<string, unknown>;
+    const eError = e.error as Record<string, unknown> | undefined;
+    const msg = e.message || eError?.message || e.error || e.code || e.statusText;
     if (typeof msg === 'string') return msg;
     try {
       return JSON.stringify(err);
@@ -229,6 +230,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     return () => {
       supabase.removeChannel(channel);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const ensureFreshCustomerMaster = async () => {
@@ -1046,6 +1048,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const backupInvoiceToDrive = async (_invoiceId: string, _invoiceData?: Invoice) => {
     // Drive backup is handled server-side when the invoice email is sent via send-invoice-email edge function
     // This stub is kept for call-site compatibility

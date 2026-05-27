@@ -100,8 +100,7 @@ Deno.serve(async (req) => {
       'Regards, YantraByte Solutions | 09986742525',
     ].filter(l => l !== undefined).join('\n');
 
-    // Decode PDF
-    const pdfBytes = Uint8Array.from(atob(pdfBase64), c => c.charCodeAt(0));
+    // Decode PDF is no longer needed since we pass the base64 directly in the multipart email
 
     // Build multipart MIME with PDF attachment
     const boundary = `----boundary_${crypto.randomUUID()}`;
