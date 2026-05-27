@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: 20
 
-      - run: npm install @supabase/supabase-js
+      - run: npm ci
 
       - name: Run backup script
         run: node scripts/backup-supabase.js
