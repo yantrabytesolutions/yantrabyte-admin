@@ -5,6 +5,7 @@ import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, U
 import html2pdf from 'html2pdf.js';
 import { PRESET_ITEMS } from './presetItems';
 import { downloadExcelWorkbook } from '../utils/spreadsheetXml';
+import { backupInvoiceToGoogleSheet, sendTelegramNotification } from '../utils/googleSheetBackup';
 
 // --- Utility Functions ---
 function numberToWords(num: number): string {
@@ -832,6 +833,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           newInvoiceId = data.id;
         }
         backupInvoiceToGoogleSheet(payload as Invoice);
+        sendTelegramNotification(`📄 New ${payload.doc_type} Created!\n\nNo: ${payload.invoice_no}\nCustomer: ${payload.customer_name}\nTotal: ₹${payload.grand_total.toLocaleString('en-IN')}`);
         showToast('Invoice saved successfully!');
         // Keep the saved invoice loaded in the form for editing
       }
