@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Phone } from "lucide-react";
 
@@ -8,6 +8,7 @@ const navLinks = [
   { name: "About", path: "/#about" },
   { name: "Services", path: "/#services" },
   { name: "Industries", path: "/#industries" },
+  { name: "Track Repair", path: "/track" },
   { name: "Blog", path: "/#blog" },
   { name: "Contact", path: "/#contact" },
 ];
@@ -16,6 +17,7 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -42,12 +44,19 @@ export default function Header() {
 
   const handleNavClick = (path: string) => {
     setMobileOpen(false);
-    const hash = path.split("#")[1];
-    if (hash) {
-      setTimeout(() => {
-        const el = document.getElementById(hash);
-        if (el) el.scrollIntoView({ behavior: "smooth" });
-      }, 100);
+    
+    if (path.startsWith("/#")) {
+      const hash = path.split("#")[1];
+      if (location.pathname !== "/") {
+        navigate(path);
+      } else {
+        setTimeout(() => {
+          const el = document.getElementById(hash);
+          if (el) el.scrollIntoView({ behavior: "smooth" });
+        }, 100);
+      }
+    } else {
+      navigate(path);
     }
   };
 
@@ -62,13 +71,12 @@ export default function Header() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between lg:h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-1 group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <span className="text-xl font-bold tracking-tight sm:text-2xl">
-              <span className="text-[#0EA5E9] transition-colors group-hover:text-[#38BDF8]">
-                Yantrabyte
-              </span>
-              <span className="text-white"> Solutions</span>
-            </span>
+          <Link to="/" className="flex items-center gap-2 group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+            <img 
+              src="/logo5.png" 
+              alt="Yantrabyte Solutions" 
+              className="h-10 w-auto sm:h-12 lg:h-14 object-contain transition-transform group-hover:scale-105" 
+            />
           </Link>
 
           {/* Desktop Navigation */}
@@ -138,10 +146,13 @@ export default function Header() {
               className="fixed top-0 right-0 bottom-0 z-50 w-[85%] max-w-sm overflow-y-auto bg-[#0B1120] shadow-2xl lg:hidden"
             >
               <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
-                <span className="text-lg font-bold">
-                  <span className="text-[#0EA5E9]">Yantrabyte</span>
-                  <span className="text-white"> Solutions</span>
-                </span>
+                <div className="flex items-center gap-2">
+                  <img 
+                    src="/logo5.png" 
+                    alt="Yantrabyte Solutions" 
+                    className="h-10 w-auto object-contain" 
+                  />
+                </div>
                 <button
                   onClick={() => setMobileOpen(false)}
                   className="rounded-lg p-2 text-gray-300 transition-colors hover:bg-white/10 hover:text-white"

@@ -58,6 +58,10 @@ Deno.serve(async (req) => {
     const cleanTotal      = grandTotal != null ? `₹${Number(grandTotal).toLocaleString('en-IN')}` : '';
     const isQuotation     = cleanDocType === 'Quotation';
 
+    const upiLink = !isQuotation && grandTotal > 0
+      ? `upi://pay?pa=yantrabyte.solutions@okaxis&pn=YantraByte Solutions&am=${grandTotal}&cu=INR&tn=Invoice ${cleanInvoiceNo}`
+      : '';
+
     const htmlBody = `
 <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
   <div style="background:#0B5394;padding:24px 32px;text-align:center">
@@ -65,22 +69,31 @@ Deno.serve(async (req) => {
     <p style="color:rgba(255,255,255,0.85);margin:4px 0 0;font-size:13px">IT Service, Repair &amp; Network Management</p>
   </div>
   <div style="padding:28px 32px">
-    <p style="color:#0f172a;font-size:15px">Dear <strong>${cleanCustomer}</strong>,</p>
-    <p style="color:#334155">Please find attached your <strong>${cleanDocType.toLowerCase()}</strong> from YantraByte Solutions.</p>
+    <p style="color:#0f172a;font-size:15px">Dear <strong>\${cleanCustomer}</strong>,</p>
+    <p style="color:#334155">Please find attached your <strong>\${cleanDocType.toLowerCase()}</strong> from YantraByte Solutions.</p>
     <div style="background:#f8fafc;border-radius:6px;padding:16px;margin:16px 0">
       <table style="width:100%;border-collapse:collapse;font-size:14px">
-        <tr><td style="padding:5px 0;color:#64748b;width:40%">${cleanDocType} No.</td><td style="color:#0f172a;font-weight:700">${cleanInvoiceNo}</td></tr>
-        ${cleanTotal ? `<tr><td style="padding:5px 0;color:#64748b">Amount</td><td style="color:#0B5394;font-weight:700;font-size:16px">${cleanTotal}</td></tr>` : ''}
+        <tr><td style="padding:5px 0;color:#64748b;width:40%">\${cleanDocType} No.</td><td style="color:#0f172a;font-weight:700">\${cleanInvoiceNo}</td></tr>
+        \${cleanTotal ? \`<tr><td style="padding:5px 0;color:#64748b">Amount</td><td style="color:#0B5394;font-weight:700;font-size:16px">\${cleanTotal}</td></tr>\` : ''}
       </table>
     </div>
-    ${isQuotation
+    \${isQuotation
       ? '<p style="color:#334155">This is an estimate. Kindly review and confirm to proceed with the service.</p>'
       : '<p style="color:#334155">Payment details and terms are included in the attached PDF. For any queries, please call us.</p>'
     }
+    ${upiLink ? `
+    <div style="margin:20px 0;padding:20px;background:#f0f9ff;border-radius:8px;text-align:center;border:1px solid #bae6fd">
+      <p style="margin:0 0 12px;font-weight:600;color:#0B5394;font-size:16px;">Pay instantly via UPI</p>
+      <a href="${upiLink}" style="display:inline-block;background:#0EA5E9;color:#fff;text-decoration:none;padding:12px 24px;border-radius:6px;font-weight:bold;margin-bottom:16px;font-size:15px;">Pay ${cleanTotal} Now</a>
+      <p style="margin:0 0 12px;font-size:13px;color:#334155">Or scan this QR code with any UPI app:</p>
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiLink)}" width="150" height="150" alt="UPI QR Code" style="border:4px solid #fff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.1);" />
+    </div>
+    ` : `
     <div style="margin:20px 0;padding:14px;background:#f0f9ff;border-radius:6px">
       <p style="margin:0 0 4px;font-weight:600;color:#0B5394">Payment Options</p>
       <p style="margin:0;font-size:13px;color:#334155">UPI: yantrabyte.solutions@okaxis &nbsp;|&nbsp; Cash at workshop</p>
     </div>
+    `}
     <p style="color:#334155;margin-top:24px">Regards,<br><strong>YantraByte Solutions</strong><br>
       <a href="tel:09986742525" style="color:#0B5394">09986742525</a> | 
       47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post, Bengaluru 560097

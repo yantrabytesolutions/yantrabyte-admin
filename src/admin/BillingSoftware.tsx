@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Invoice, InvoiceItem, ServiceTicket, Product, Customer, Purchase } from '../types';
-import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt, Mail, FileSpreadsheet, Eye } from 'lucide-react';
+import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt, Mail, FileSpreadsheet, Eye, FileEdit } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 import { PRESET_ITEMS } from './presetItems';
 import { downloadExcelWorkbook } from '../utils/spreadsheetXml';
@@ -395,6 +395,12 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setItems(items.filter((_, i) => i !== index));
   };
 
+  const updateItem = (index: number, field: keyof InvoiceItem, value: any) => {
+    const newItems = [...items];
+    newItems[index] = { ...newItems[index], [field]: value };
+    setItems(newItems);
+  };
+
   const handleAddPayment = () => {
     if (!paymentDate) {
       showToast('Please select a payment date.', 'error');
@@ -581,16 +587,18 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
   const generateInvoiceNo = async (type: string = docType) => {
     const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const dateStr = `${year}${month}${day}`;
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    const startYear = currentMonth < 3 ? currentYear - 1 : currentYear;
+    const datePrefix = `${startYear}-${startYear + 1}`;
+    
     const prefix = type === 'Quotation' ? 'YBQ' : 'YBS';
-    const prefixMatch = `${prefix}-${dateStr}-`;
+    const prefixMatch = `${prefix}-${datePrefix}-`;
     const { data: existing } = await supabase
       .from('invoices')
       .select('invoice_no')
-      .like('invoice_no', `${prefixMatch}%`);
+      .ilike('invoice_no', `${prefixMatch}%`);
+      
     let maxSeq = 0;
     if (existing) {
       for (const inv of existing) {
@@ -1505,10 +1513,40 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                   ) : items.map((it, idx) => (
                     <tr key={idx} className="hover:bg-gray-50">
                       <td className="px-4 py-2 text-gray-500">{idx + 1}</td>
-                      <td className="px-4 py-2 font-medium text-gray-800">{it.item_name || it.description}</td>
-                      <td className="px-4 py-2 text-gray-600 text-sm">{it.item_name ? it.description : '-'}</td>
-                      <td className="px-4 py-2 text-center text-gray-600">{it.qty}</td>
-                      <td className="px-4 py-2 text-right text-gray-600">₹{it.rate.toLocaleString('en-IN')}</td>
+                      <td className="px-4 py-2 font-medium text-gray-800">
+                        <input
+                          type="text"
+                          value={it.item_name || ''}
+                          onChange={(e) => updateItem(idx, 'item_name', e.target.value)}
+                          className="w-full bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 focus:outline-none transition-colors"
+                          placeholder="Item name"
+                        />
+                      </td>
+                      <td className="px-4 py-2 text-gray-600 text-sm">
+                        <input
+                          type="text"
+                          value={it.description || ''}
+                          onChange={(e) => updateItem(idx, 'description', e.target.value)}
+                          className="w-full bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 focus:outline-none transition-colors"
+                          placeholder="Description"
+                        />
+                      </td>
+                      <td className="px-4 py-2 text-center text-gray-600">
+                        <input
+                          type="number"
+                          value={it.qty || ''}
+                          onChange={(e) => updateItem(idx, 'qty', Number(e.target.value))}
+                          className="w-full text-center bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 focus:outline-none transition-colors"
+                        />
+                      </td>
+                      <td className="px-4 py-2 text-right text-gray-600">
+                        <input
+                          type="number"
+                          value={it.rate || ''}
+                          onChange={(e) => updateItem(idx, 'rate', Number(e.target.value))}
+                          className="w-full text-right bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 focus:outline-none transition-colors"
+                        />
+                      </td>
                       <td className="px-4 py-2 text-right font-medium text-gray-800">₹{(it.qty * it.rate).toLocaleString('en-IN')}</td>
                       <td className="px-4 py-2 text-center">
                         <button onClick={() => removeItem(idx)} className="text-red-400 hover:text-red-600 transition-colors"><Trash2 className="w-4 h-4" /></button>
@@ -1661,9 +1699,14 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           </div>
 
           <div className="bg-white border p-6 rounded-lg shadow-sm">
-            <h3 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
-              <FileText className="w-4 h-4 mr-2 text-gray-400" /> Saved Invoices
-            </h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-md font-semibold text-gray-800 flex items-center">
+                <FileText className="w-4 h-4 mr-2 text-gray-400" /> Saved Invoices
+              </h3>
+              <button onClick={clearForm} className="text-xs bg-blue-100 text-blue-700 px-2 py-1.5 rounded-md hover:bg-blue-200 transition-colors flex items-center font-semibold">
+                <Plus className="w-3 h-3 mr-1" /> New Document
+              </button>
+            </div>
             <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
               {invoices.map(inv => (
                 <div 
@@ -1705,6 +1748,16 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
+                        loadInvoice(inv.id);
+                      }} 
+                      className="text-gray-400 hover:text-blue-600 transition-colors p-1"
+                      title="Edit Invoice/Quotation"
+                    >
+                      <FileEdit className="w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
                         handleDeleteInvoice(inv.id, inv.invoice_no);
                       }} 
                       className="text-gray-400 hover:text-red-600 transition-colors p-1"
@@ -1729,7 +1782,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             pointerEvents: 'none', zIndex: 0,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             transform: 'rotate(-45deg)', opacity: 0.05,
-            fontSize: '90px', fontWeight: 900, color: '#0B5394',
+            fontSize: '65px', fontWeight: 900, color: '#0B5394',
             whiteSpace: 'nowrap', userSelect: 'none', letterSpacing: '8px'
           }}>
             YANTRABYTE SOLUTIONS
@@ -1738,12 +1791,12 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           {/* Header */}
           <div className="flex items-center justify-between border p-3 mb-2" style={{ borderColor: '#000000' }}>
             <div className="flex items-center space-x-4">
-              <div className="w-[340px] h-28 flex items-center justify-start ml-2">
+              <div className="w-[340px] h-36 flex items-center justify-start ml-2">
                 <img src="/logo5.png" alt="YantraByte Solutions" style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} />
               </div>
             </div>
             <div className="text-right">
-              <h1 className="text-xl font-bold" style={{ color: '#0B5394' }}>YANTRABYTE SOLUTIONS</h1>
+              <h1 className="text-3xl font-black" style={{ color: '#0B5394' }}>YANTRABYTE SOLUTIONS</h1>
               <p className="text-xs mt-1" style={{ color: '#333333' }}>47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br/>Chikkabettahalli, Bengaluru - 560097</p>
               <p className="text-xs mt-1" style={{ color: '#333333' }}>Phone: 09986742525 | Email: yantrabyte.solutions@gmail.com</p>
             </div>
@@ -1866,28 +1919,21 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                     <p><span className="font-bold">A/C Name:</span> YantraByte Solutions</p>
                     <p><span className="font-bold">A/C No:</span> 033311501023226</p>
                     <p><span className="font-bold">IFSC:</span> NESF0000333</p>
-                    <p className="mt-1"><span className="font-bold">UPI:</span> s0424237152@slc</p>
+                    <p className="mt-1"><span className="font-bold">UPI:</span> yantrabyte.solutions@okaxis</p>
                   </div>
-                  <div className="w-20 h-20 flex-shrink-0 border p-0.5" style={{ borderColor: '#dddddd' }}>
-                    <img src="/qr.jpg" alt="Payment QR" style={{ height: '100%', width: '100%', objectFit: 'contain' }} />
+                  <div className="w-20 h-20 flex-shrink-0 border p-0.5 flex items-center justify-center bg-white" style={{ borderColor: '#dddddd' }}>
+                    {balanceDue > 0 ? (
+                      <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`upi://pay?pa=yantrabyte.solutions@okaxis&pn=YantraByte Solutions&am=${balanceDue}&cu=INR&tn=${docType} ${printInvoiceNumber}`)}`} alt="Payment QR" crossOrigin="anonymous" style={{ height: '100%', width: '100%', objectFit: 'contain' }} />
+                    ) : (
+                      <div className="text-[10px] font-bold text-emerald-600 text-center uppercase">Paid in<br/>Full</div>
+                    )}
                   </div>
                 </div>
               </div>
               <div className="text-center mt-2 pt-1 flex flex-col items-center justify-center relative">
                 <p className="font-bold mb-1" style={{ color: '#000000', fontSize: '11px' }}>For YantraByte Solutions</p>
                 <div style={{ width: '90px', height: '90px', margin: '2px auto' }}>
-                  <svg viewBox="0 0 120 120" style={{ width: '90px', height: '90px' }}>
-                    <circle cx="60" cy="60" r="56" fill="none" stroke="#0B5394" stroke-width="2.5" />
-                    <circle cx="60" cy="60" r="50" fill="none" stroke="#0B5394" stroke-width="1" />
-                    <path d="M 60 16 A 44 44 0 1 1 59.9 16" fill="none" stroke="#0B5394" stroke-width="0.8" />
-                    <text x="60" y="42" text-anchor="middle" font-size="8" font-weight="bold" fill="#0B5394" font-family="Arial">YANTRABYTE</text>
-                    <text x="60" y="52" text-anchor="middle" font-size="7" font-weight="bold" fill="#0B5394" font-family="Arial">SOLUTIONS</text>
-                    <text x="60" y="64" text-anchor="middle" font-size="5" fill="#0B5394" font-family="Arial">AUTHORIZED SERVICE</text>
-                    <text x="60" y="74" text-anchor="middle" font-size="5" fill="#0B5394" font-family="Arial">BENGALURU</text>
-                    <circle cx="60" cy="88" r="12" fill="none" stroke="#0B5394" stroke-width="0.8" />
-                    <text x="60" y="86" text-anchor="middle" font-size="7" font-weight="bold" fill="#0B5394" font-family="Arial">Ramesh A s</text>
-
-                  </svg>
+                  <img src="/seal.png" alt="Company Seal" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                 </div>
                 <p className="font-bold mt-0.5" style={{ color: '#000000', fontSize: '11px' }}>RAMESH A S</p>
                 <p style={{ color: '#444444', fontSize: '10px' }}>Authorized Signatory</p>

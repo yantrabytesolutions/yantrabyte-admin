@@ -13,6 +13,7 @@ import ServiceRequest from './pages/ServiceRequest';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import AdminPanel from './admin/AdminPanel';
+import { TrackTicket } from './pages/TrackTicket';
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/service-request" element={<ServiceRequest />} />
+          <Route path="/track" element={<TrackTicket />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
         </Route>

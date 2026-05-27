@@ -11,7 +11,7 @@ import {
   Users, Briefcase, Building2, HelpCircle, Image, Award, Mail, Settings,
   LogOut, Plus, Pencil, Trash2, X, Eye, EyeOff, ChevronDown, Save,
   Loader2, AlertCircle, CheckCircle, Search, RefreshCw, Menu, Ticket, Receipt, CreditCard, MessageSquare,
-  DollarSign, Clock, Activity, TrendingUp, ArrowRight, Truck, ExternalLink, FileSpreadsheet
+  DollarSign, Clock, Activity, TrendingUp, ArrowRight, Truck, ExternalLink, FileSpreadsheet, QrCode
 } from 'lucide-react';
 
 import BillingSoftware from './BillingSoftware';
@@ -489,7 +489,7 @@ export default function AdminPanel() {
         <table style="width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 16px;">
           <tr>
             <td style="width: 56%; vertical-align: top; padding-right: 16px;">
-              <img src="/logo5.png" style="max-height: 60px; object-fit: contain; margin-bottom: 6px;" />
+              <img src="/logo5.png" style="max-height: 100px; object-fit: contain; margin-bottom: 8px;" />
               <div style="font-size: 11px; color: #444444; line-height: 1.45;">
                 IT service, repair, and network management experts.<br />
                 47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br />
@@ -631,20 +631,9 @@ export default function AdminPanel() {
               <!-- Yantrabyte Sign + Seal -->
               <td style="width: 55%; text-align: right; vertical-align: bottom; padding-left: 20px;">
                 <div style="display: inline-block; text-align: center;">
-                  <!-- Round Seal SVG with Signature -->
+                  <!-- Round Seal Image with Signature -->
                   <div style="width: 120px; height: 120px; margin: 0 auto 8px;">
-                    <svg viewBox="0 0 120 120" style="width:120px;height:120px;">
-                      <circle cx="60" cy="60" r="56" fill="none" stroke="#0B5394" stroke-width="2.5" />
-                      <circle cx="60" cy="60" r="50" fill="none" stroke="#0B5394" stroke-width="1" />
-                      <path d="M 60 16 A 44 44 0 1 1 59.9 16" fill="none" stroke="#0B5394" stroke-width="0.8" />
-                      <text x="60" y="42" text-anchor="middle" font-size="8" font-weight="bold" fill="#0B5394" font-family="Arial">YANTRABYTE</text>
-                      <text x="60" y="52" text-anchor="middle" font-size="7" font-weight="bold" fill="#0B5394" font-family="Arial">SOLUTIONS</text>
-                      <text x="60" y="64" text-anchor="middle" font-size="5" fill="#0B5394" font-family="Arial">AUTHORIZED SERVICE</text>
-                      <text x="60" y="74" text-anchor="middle" font-size="5" fill="#0B5394" font-family="Arial">BENGALURU</text>
-                      <circle cx="60" cy="88" r="12" fill="none" stroke="#0B5394" stroke-width="0.8" />
-                      <text x="60" y="86" text-anchor="middle" font-size="7" font-weight="bold" fill="#0B5394" font-family="Arial">Ramesh A s</text>
-
-                    </svg>
+                    <img src="/seal.png" alt="Company Seal" style="width: 100%; height: 100%; object-fit: contain;" />
                   </div>
                   <div style="width: 200px; border-bottom: 1px solid #555555; margin-bottom: 4px;"></div>
                   <div style="font-size: 11px; font-weight: bold; color: #0B5394;">For Yantrabyte Solutions</div>
@@ -671,6 +660,49 @@ export default function AdminPanel() {
       document.body.removeChild(element);
       showToast('Job sheet drop-off receipt downloaded!');
     });
+  };
+
+  const printLabel = (item: Record<string, unknown>) => {
+    const ticketNo = String(item.ticket_number || 'DRAFT');
+    const trackUrl = `${window.location.origin}/track?t=${encodeURIComponent(ticketNo)}`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(trackUrl)}`;
+    
+    const printWindow = window.open('', '_blank', 'width=400,height=400');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Label - ${ticketNo}</title>
+            <style>
+              body { margin: 0; padding: 10px; font-family: Arial, sans-serif; text-align: center; }
+              .label { border: 2px solid #000; padding: 10px; width: 250px; margin: 0 auto; border-radius: 8px; }
+              .title { font-size: 14px; font-weight: bold; margin-bottom: 5px; }
+              .qr { width: 120px; height: 120px; margin: 5px auto; }
+              .ticket { font-size: 18px; font-weight: bold; margin-bottom: 5px; }
+              .info { font-size: 11px; color: #333; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+              @media print {
+                @page { margin: 0; }
+                body { margin: 0.5cm; }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="label">
+              <div class="title">YantraByte Solutions</div>
+              <div class="ticket">${ticketNo}</div>
+              <img class="qr" src="${qrUrl}" alt="QR Code" />
+              <div class="info"><b>Cust:</b> ${item.customer_name || 'N/A'}</div>
+              <div class="info"><b>Device:</b> ${item.device_type || 'N/A'}</div>
+              <div class="info" style="margin-top: 4px; font-size: 10px; font-weight: bold;">Scan to track status</div>
+            </div>
+            <script>
+              setTimeout(() => { window.print(); window.close(); }, 500);
+            </script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
   };
 
   const handleInstantBill = (ticket: Record<string, unknown>) => {
@@ -749,7 +781,7 @@ export default function AdminPanel() {
         <table style="width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 16px;">
           <tr>
             <td style="width: 56%; vertical-align: top; padding-right: 16px;">
-              <img src="/logo5.png" style="max-height: 60px; object-fit: contain; margin-bottom: 6px;" />
+              <img src="/logo5.png" style="max-height: 100px; object-fit: contain; margin-bottom: 8px;" />
               <div style="font-size: 11px; color: #444444; line-height: 1.45;">
                 IT service, repair, and network management experts.<br />
                 47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br />
@@ -863,18 +895,7 @@ export default function AdminPanel() {
               <td style="width: 55%; text-align: right; vertical-align: bottom; padding-left: 20px;">
                 <div style="display: inline-block; text-align: center;">
                   <div style="width: 120px; height: 120px; margin: 0 auto 8px;">
-                    <svg viewBox="0 0 120 120" style="width:120px;height:120px;">
-                      <circle cx="60" cy="60" r="56" fill="none" stroke="#0B5394" stroke-width="2.5" />
-                      <circle cx="60" cy="60" r="50" fill="none" stroke="#0B5394" stroke-width="1" />
-                      <path d="M 60 16 A 44 44 0 1 1 59.9 16" fill="none" stroke="#0B5394" stroke-width="0.8" />
-                      <text x="60" y="42" text-anchor="middle" font-size="8" font-weight="bold" fill="#0B5394" font-family="Arial">YANTABYTE</text>
-                      <text x="60" y="52" text-anchor="middle" font-size="7" font-weight="bold" fill="#0B5394" font-family="Arial">SOLUTIONS</text>
-                      <text x="60" y="64" text-anchor="middle" font-size="5" fill="#0B5394" font-family="Arial">AUTHORIZED SERVICE</text>
-                      <text x="60" y="74" text-anchor="middle" font-size="5" fill="#0B5394" font-family="Arial">BENGALURU</text>
-                      <circle cx="60" cy="88" r="12" fill="none" stroke="#0B5394" stroke-width="0.8" />
-                      <text x="60" y="86" text-anchor="middle" font-size="7" font-weight="bold" fill="#0B5394" font-family="Arial">Ramesh A s</text>
-
-                    </svg>
+                    <img src="/seal.png" alt="Company Seal" style="width: 100%; height: 100%; object-fit: contain;" />
                   </div>
                   <div style="width: 200px; border-bottom: 1px solid #555555; margin-bottom: 4px;"></div>
                   <div style="font-size: 11px; font-weight: bold; color: #0B5394;">For Yantrabyte Solutions</div>
@@ -1212,24 +1233,23 @@ export default function AdminPanel() {
     if (activeSection === 'tickets') {
       const tickets = (data.tickets || []) as ServiceTicket[];
       const now = new Date();
-      const day = String(now.getDate()).padStart(2, '0');
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const year = String(now.getFullYear());
-      const datePrefix = `${day}${month}${year}`;
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999).toISOString();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth();
+      const startYear = currentMonth < 3 ? currentYear - 1 : currentYear;
+      const datePrefix = `${startYear}-${startYear + 1}`;
+      const prefixString = `YBS-${datePrefix}-`;
+
       let maxSeq = 0;
       tickets.forEach((t) => {
-        const created = t.created_at ? new Date(t.created_at) : null;
-        if (created && created >= new Date(startOfMonth) && created <= new Date(endOfMonth)) {
-          const match = String(t.ticket_number || '').match(/-(\d+)$/);
+        if (t.ticket_number?.startsWith(prefixString)) {
+          const match = String(t.ticket_number).match(/-(\d+)$/);
           if (match) {
             const num = parseInt(match[1], 10);
             if (!isNaN(num) && num > maxSeq) maxSeq = num;
           }
         }
       });
-      defaultData['ticket_number'] = `YBS-service-Ticket ${datePrefix}-${String(maxSeq + 1).padStart(3, '0')}`;
+      defaultData['ticket_number'] = `${prefixString}${String(maxSeq + 1).padStart(3, '0')}`;
       defaultData['status'] = 'open';
       defaultData['priority'] = 'medium';
     }
@@ -2047,6 +2067,13 @@ export default function AdminPanel() {
                                   title="Print Job Sheet / Drop-off Receipt"
                                 >
                                   <Receipt className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => printLabel(item)}
+                                  className="p-1.5 rounded-lg hover:bg-white/5 text-[#64748B] hover:text-purple-400 transition-all"
+                                  title="Print Device Sticker Label (QR)"
+                                >
+                                  <QrCode className="w-4 h-4" />
                                 </button>
                               </>
                             )}

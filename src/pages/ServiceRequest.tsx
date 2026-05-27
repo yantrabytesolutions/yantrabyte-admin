@@ -65,24 +65,21 @@ export default function ServiceRequest() {
 
     setSubmitting(true);
     try {
-      const { data: ticketNumberFromRpc, error: rpcError } = await supabase
-        .rpc('get_next_service_ticket_number');
+      let ticketNumber = '';
 
-      let ticketNumber = ticketNumberFromRpc;
-
-      if (rpcError || !ticketNumber) {
+      if (!ticketNumber) {
         const now = new Date();
-        const day = String(now.getDate()).padStart(2, '0');
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const year = String(now.getFullYear());
-        const datePrefix = `${day}${month}${year}`;
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999).toISOString();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth();
+        const startYear = currentMonth < 3 ? currentYear - 1 : currentYear;
+        const datePrefix = `${startYear}-${startYear + 1}`;
+        const prefixString = `YBS-${datePrefix}-`;
+
         const { data: existing } = await supabase
           .from('service_tickets')
           .select('ticket_number')
-          .gte('created_at', startOfMonth)
-          .lte('created_at', endOfMonth);
+          .ilike('ticket_number', `${prefixString}%`);
+          
         let maxSeq = 0;
         if (existing) {
           for (const t of existing) {
@@ -94,7 +91,7 @@ export default function ServiceRequest() {
           }
         }
         const seq = (maxSeq + 1).toString().padStart(3, '0');
-        ticketNumber = `YBS-service-Ticket ${datePrefix}-${seq}`;
+        ticketNumber = `${prefixString}${seq}`;
       }
 
       const ticketPayload = {
@@ -138,6 +135,9 @@ export default function ServiceRequest() {
       <section className="bg-[#0B1120] px-4 py-10 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.4fr]">
           <div className="pt-4 text-white">
+            <div className="mb-6">
+              <img src="/logo5.png" alt="YantraByte Solutions" className="h-16 w-auto object-contain sm:h-20" />
+            </div>
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#0EA5E9]/30 bg-[#0EA5E9]/10 px-3 py-1 text-sm font-semibold text-[#7DD3FC]">
               <ClipboardCheck className="h-4 w-4" />
               Service Ticket
