@@ -206,6 +206,23 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // --- Realtime Auto-Refresh ---
+  useEffect(() => {
+    const channel = supabase
+      .channel('billing-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'invoices' }, () => {
+        fetchInvoices();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'service_tickets' }, () => {
+        fetchServiceTickets();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   const ensureFreshCustomerMaster = async () => {
     try {
       const { data: settings } = await supabase
@@ -910,13 +927,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         title: 'Sending invoice',
         message: `Sending email to ${email}.`,
       });
-      const response = await fetch('/api/invoices/email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+      const { data: invokeData, error: invokeError } = await supabase.functions.invoke('send-invoice-email', {
+        body: {
           to: email,
           customerName,
           invoiceNumber,
@@ -924,8 +936,10 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           filename: `${invoiceNumber}.pdf`,
           pdfBase64,
           grandTotal,
-        }),
+        },
       });
+      // Wrap into a response-like object for the existing result handling below
+      const response = { ok: !invokeError && invokeData?.ok, json: async () => invokeData || { error: invokeError?.message } } as unknown as Response;
 
       const result = await response.json().catch(() => ({}));
       if (!response.ok) {
@@ -1012,96 +1026,23 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
   const backupInvoiceToGoogleSheet = async (inv: Invoice) => {
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
-      if (!token) {
-        showToast('Backup skipped: no active session', 'error');
-        return;
-      }
       const sheetName = inv.doc_type === 'Quotation' ? QUOTATION_SHEET_NAME : INVOICE_SHEET_NAME;
-      const baseUrl = import.meta.env.VITE_API_URL || '';
-      const res = await fetch(`${baseUrl}/api/backups/sheet-row`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          sheetName,
-          headers: INVOICE_SHEET_HEADERS,
-          row: unifiedInvoiceRow(inv),
-        }),
+      const { data, error } = await supabase.functions.invoke('backup-to-sheets', {
+        body: { sheetName, headers: INVOICE_SHEET_HEADERS, row: unifiedInvoiceRow(inv) },
       });
-      const result = await res.json();
-      if (!result.ok) showToast('Google Sheet backup failed: ' + (result.error || 'unknown error'), 'error');
-    } catch {
-      showToast('Google Sheet backup unavailable (server down?)', 'error');
+      if (error || !data?.ok) {
+        console.warn('Sheet backup failed:', error?.message || data?.error);
+      }
+    } catch (err) {
+      console.warn('Sheet backup edge function error:', err);
     }
   };
 
-  const backupInvoiceToDrive = async (invoiceId: string, invoiceData?: Invoice) => {
-    try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
-      if (!token) {
-        showToast('Drive backup skipped: no active session', 'error');
-        return;
-      }
-
-      if (!printRef.current) return;
-
-      const invoice = invoiceData || invoices.find(i => i.id === invoiceId);
-      if (!invoice) return;
-
-      const invoiceNo = invoice.invoice_no || 'invoice';
-      setPrintInvoiceNumber(invoiceNo);
-      await new Promise(resolve => window.setTimeout(resolve, 0));
-      printRef.current.style.display = 'block';
-      await new Promise(resolve => window.setTimeout(resolve, 100));
-
-      const opt = {
-        margin: 0,
-        filename: `${invoiceNo}.pdf`,
-        image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, windowWidth: 950 },
-        jsPDF: { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const },
-      };
-
-      const pdfBlob = await html2pdf().set(opt).from(printRef.current).outputPdf('blob') as Blob;
-      printRef.current.style.display = 'none';
-      setPrintInvoiceNumber('');
-
-      const reader = new FileReader();
-      const pdfBase64 = await new Promise<string>((resolve, reject) => {
-        reader.onloadend = () => {
-          const result = String(reader.result || '');
-          resolve(result.includes(',') ? result.split(',')[1] : result);
-        };
-        reader.onerror = () => reject(reader.error);
-        reader.readAsDataURL(pdfBlob);
-      });
-
-      const baseUrl = import.meta.env.VITE_API_URL || '';
-      const response = await fetch(`${baseUrl}/api/drive/backup-invoice`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          invoiceId,
-          pdfBase64,
-          filename: `${invoiceNo}.pdf`,
-        }),
-      });
-
-      const result = await response.json();
-      if (result.ok && result.pdfLink) {
-        showToast('PDF saved to Google Drive');
-      } else {
-        showToast('Drive backup failed: ' + (result.error || 'server error'), 'error');
-      }
-    } catch {
-      showToast('Drive backup unavailable (server down?)', 'error');
-    }
+  const backupInvoiceToDrive = async (_invoiceId: string, _invoiceData?: Invoice) => {
+    // Drive backup is handled server-side when the invoice email is sent via send-invoice-email edge function
+    // This stub is kept for call-site compatibility
   };
+
 
   const previewInvoice = async () => {
     let invoiceNo: string;

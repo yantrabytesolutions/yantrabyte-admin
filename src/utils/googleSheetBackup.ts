@@ -13,31 +13,37 @@ export type SheetBackupResult = {
   updatedRange?: string;
 };
 
+/**
+ * Appends a row to a Google Sheet via the Supabase Edge Function (backup-to-sheets).
+ * Works 24/7 from Supabase cloud — no local server needed.
+ */
 export async function appendBackupRow(payload: SheetBackupPayload): Promise<SheetBackupResult> {
-  const { data } = await supabase.auth.getSession();
-  const token = data.session?.access_token;
-  if (!token) {
-    return { ok: false, skipped: true, error: 'No active admin session for Google Sheet backup.' };
+  try {
+    const { data, error } = await supabase.functions.invoke('backup-to-sheets', {
+      body: payload,
+    });
+
+    if (error) {
+      return { ok: false, skipped: false, error: error.message || 'Edge Function error' };
+    }
+
+    return data as SheetBackupResult;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { ok: false, skipped: false, error: msg };
   }
+}
 
-  const baseUrl = import.meta.env.VITE_API_URL || '';
-  const response = await fetch(`${baseUrl}/api/backups/sheet-row`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(payload),
-  });
-
-  const result = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    return {
-      ok: false,
-      skipped: false,
-      error: result.error || `Google Sheet backup failed with HTTP ${response.status}`,
-    };
+/**
+ * Sends a Telegram notification via the notify-telegram Edge Function.
+ * Fire-and-forget — failures are silently swallowed.
+ */
+export async function sendTelegramNotification(message: string): Promise<void> {
+  try {
+    await supabase.functions.invoke('notify-telegram', {
+      body: { message },
+    });
+  } catch {
+    // Non-fatal — never block the main action for a notification failure
   }
-
-  return result;
 }

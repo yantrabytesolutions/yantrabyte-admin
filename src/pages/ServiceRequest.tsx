@@ -112,20 +112,10 @@ export default function ServiceRequest() {
       const { error: insertError } = await supabase.from('service_tickets').insert([ticketPayload]);
       if (insertError) throw insertError;
 
-      const baseUrl = import.meta.env.VITE_API_URL || '';
-      try {
-        const response = await fetch(`${baseUrl}/api/backups/public-service-ticket`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(ticketPayload),
-        });
-        const result = await response.json();
-        if (!response.ok || !result.ok) {
-          console.warn('Ticket backup/email failed:', result.error || result);
-        }
-      } catch (backupError) {
-        console.warn('Network error triggering backup:', backupError);
-      }
+      // Fire Telegram notification + customer email via Supabase Edge Function (24/7 online)
+      supabase.functions.invoke('send-ticket-email', { body: ticketPayload }).catch((err) => {
+        console.warn('Ticket notification edge function failed:', err);
+      });
 
       setCreatedTicket(ticketNumber);
       setForm(initialForm);

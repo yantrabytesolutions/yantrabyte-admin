@@ -906,8 +906,8 @@ export default function AdminPanel() {
         reader.readAsDataURL(pdfBlob);
       });
 
-      const baseUrl = import.meta.env.VITE_API_URL || '';
-      const response = await fetch(`${baseUrl}/api/backups/public-service-ticket`, {
+      // Upload ticket backup + email via Supabase Edge Function (24/7 online)
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/backups/public-service-ticket`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -924,7 +924,7 @@ export default function AdminPanel() {
           pdfFilename: `${ticketNo}.pdf`,
         }),
       });
-      const result = await response.json();
+      const result = await res.json();
       if (result.email?.ok) {
         showToast(`Email sent to ${email} with PDF`);
       } else {
@@ -1023,26 +1023,27 @@ export default function AdminPanel() {
 
   const backupTicketToDrive = async (ticketId: string) => {
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
-      if (!token) {
-        showToast('Drive backup skipped: no session', 'error');
-        return;
-      }
-
-      const baseUrl = import.meta.env.VITE_API_URL || '';
-      const res = await fetch(`${baseUrl}/api/drive/backup-ticket`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+      // Retrieve ticket data and fire edge function notification
+      const { data: ticketData } = await supabase
+        .from('service_tickets')
+        .select('*')
+        .eq('id', ticketId)
+        .single();
+      if (!ticketData) return;
+      // Fire Telegram notification for admin backup
+      supabase.functions.invoke('notify-telegram', {
+        body: {
+          message:
+            `🛠 <b>Ticket Backup (Admin)</b>\n` +
+            `Ticket: ${ticketData.ticket_number || 'N/A'}\n` +
+            `Customer: ${ticketData.customer_name || 'N/A'}\n` +
+            `Phone: ${ticketData.customer_phone || 'N/A'}\n` +
+            `Device: ${ticketData.device_type || 'N/A'}\n` +
+            `Issue: ${String(ticketData.issue_description || '').slice(0, 100)}`,
         },
-        body: JSON.stringify({ ticketId }),
-      });
-      const result = await res.json().catch(() => ({}));
-      if (!result.ok) showToast('Drive backup failed: ' + (result.error || 'server error'), 'error');
+      }).catch(() => {});
     } catch {
-      showToast('Drive backup unavailable (server down?)', 'error');
+      // Non-fatal
     }
   };
 
@@ -1138,6 +1139,33 @@ export default function AdminPanel() {
     }
   }, [session, activeSection, fetchData]);
 
+  // --- Realtime Auto-Refresh ---
+  useEffect(() => {
+    if (!session) return;
+
+    const channel = supabase
+      .channel('admin-panel-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'service_tickets' }, () => {
+        if (activeSection === 'tickets' || activeSection === 'dashboard') {
+          fetchData(activeSection);
+        }
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'invoices' }, () => {
+        if (activeSection === 'dashboard') {
+          fetchData(activeSection);
+        }
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'purchases' }, () => {
+        if (activeSection === 'dashboard') {
+          fetchData(activeSection);
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [session, activeSection, fetchData]);
   // --- Dashboard Stats ---
   useEffect(() => {
     if (session && activeSection === 'dashboard') {

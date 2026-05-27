@@ -273,9 +273,10 @@ async function appendRowToGoogleSheet({ sheetName, headers, row }) {
 }
 
 async function requireSupabaseUser(req, res, next) {
-  const missing = getMissingEnv();
-  if (missing.length > 0) {
-    return res.status(500).json({ error: `Missing server configuration: ${missing.join(', ')}` });
+  // Only check Supabase connectivity — Gmail being absent should not block
+  // Drive backups, Telegram notifications, exports, etc.
+  if (!process.env.VITE_SUPABASE_URL || !process.env.VITE_SUPABASE_ANON_KEY) {
+    return res.status(500).json({ error: 'Missing Supabase configuration (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY)' });
   }
 
   const authHeader = req.get('authorization') || '';
@@ -722,6 +723,13 @@ app.post('/api/backups/public-service-ticket', async (req, res) => {
 });
 
 app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {
+  // Gmail credentials are required specifically for this email-sending route
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+    return res.status(503).json({
+      error: 'Email service not configured. Add GMAIL_USER and GMAIL_APP_PASSWORD to the server .env file.',
+    });
+  }
+
   const {
     to,
     customerName,
