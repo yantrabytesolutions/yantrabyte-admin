@@ -1048,7 +1048,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     try {
       const sheetName = inv.doc_type === 'Quotation' ? QUOTATION_SHEET_NAME : INVOICE_SHEET_NAME;
       const { data, error } = await supabase.functions.invoke('backup-to-sheets', {
-        body: { sheetName, headers: INVOICE_SHEET_HEADERS, row: unifiedInvoiceRow(inv) },
+        body: { sheetName, headers: INVOICE_SHEET_HEADERS, row: invoiceRow(inv) },
       });
       if (error || !data?.ok) {
         console.warn('Sheet backup failed:', error?.message || data?.error);
