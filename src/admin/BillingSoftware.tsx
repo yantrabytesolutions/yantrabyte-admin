@@ -74,10 +74,18 @@ const shouldRetryLegacyInvoiceSave = (error: { message?: string; code?: string }
 };
 
 const formatError = (err: unknown): string => {
+  if (!err) return 'Unknown error';
   if (err instanceof Error) return err.message;
-  if (err && typeof err === 'object') {
-    const e = err as Record<string, unknown>;
-    return String(e.message || e.error || e.code || e.statusText || '');
+  if (typeof err === 'string') return err;
+  if (typeof err === 'object') {
+    const e = err as any;
+    const msg = e.message || e.error?.message || e.error || e.code || e.statusText;
+    if (typeof msg === 'string') return msg;
+    try {
+      return JSON.stringify(err);
+    } catch {
+      return 'Error object';
+    }
   }
   return String(err);
 };
