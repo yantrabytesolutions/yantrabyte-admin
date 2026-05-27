@@ -1,5 +1,10 @@
-import { createClient } from '@supabase/supabase-js';
 import ws from 'ws';
+// Polyfill WebSocket for Node.js < 22 (e.g. GitHub Actions Node 20)
+if (!globalThis.WebSocket) {
+  globalThis.WebSocket = ws;
+}
+
+import { createClient } from '@supabase/supabase-js';
 import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -40,7 +45,6 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: { persistSession: false },
-  realtime: { transport: ws },
 });
 
 async function backup() {
