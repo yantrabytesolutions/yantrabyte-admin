@@ -1021,7 +1021,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     inv.payment_status || getPaymentStatus(inv.doc_type, inv.balance_due || 0, inv.advance_paid || 0),
     inv.payment_mode || 'Not specified',
     inv.due_date || '',
-    inv.invoice_no ? `https://yantrabyte.com/admin` : '',
+    inv.invoice_no ? `https://yantrabyte.anantatechcare.com/admin` : '',
   ];
 
 
