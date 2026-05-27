@@ -833,7 +833,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         }
 
         await persistInvoice(true, payload, legacyPayload);
-        backupInvoiceToGoogleSheet(payload as Invoice);
+        const updatePdfUrl = await uploadPdfToStorage(payload.invoice_no);
+        backupInvoiceToGoogleSheet(payload as Invoice, updatePdfUrl);
         sendTelegramNotification(`📝 ${payload.doc_type} Updated!\n\nNo: ${payload.invoice_no}\nCustomer: ${payload.customer_name}\nTotal: ₹${payload.grand_total.toLocaleString('en-IN')}`);
         showToast('Invoice updated successfully!');
       } else {
@@ -846,7 +847,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           setSelectedInvoiceId(data.id);
           newInvoiceId = data.id;
         }
-        backupInvoiceToGoogleSheet(payload as Invoice);
+        const newPdfUrl = await uploadPdfToStorage(payload.invoice_no);
+        backupInvoiceToGoogleSheet(payload as Invoice, newPdfUrl);
         sendTelegramNotification(`📄 New ${payload.doc_type} Created!\n\nNo: ${payload.invoice_no}\nCustomer: ${payload.customer_name}\nTotal: ₹${payload.grand_total.toLocaleString('en-IN')}`);
         showToast('Invoice saved successfully!');
         // Keep the saved invoice loaded in the form for editing
@@ -1016,7 +1018,40 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     }
   };
 
-  const invoiceRow = (inv: Invoice) => [
+  const uploadPdfToStorage = async (invoiceNumber: string): Promise<string> => {
+    try {
+      const element = await preparePdfElement(invoiceNumber);
+      if (!element) return '';
+      const opt = getPdfOptions(invoiceNumber);
+      const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob') as Blob;
+      element.style.display = 'none';
+      setPrintInvoiceNumber('');
+
+      const filePath = `pdfs/${invoiceNumber}.pdf`;
+      const { error: uploadError } = await supabase.storage
+        .from('invoices')
+        .upload(filePath, pdfBlob, {
+          contentType: 'application/pdf',
+          upsert: true,
+        });
+
+      if (uploadError) {
+        console.warn('PDF upload failed:', uploadError.message);
+        return '';
+      }
+
+      const { data: urlData } = supabase.storage
+        .from('invoices')
+        .getPublicUrl(filePath);
+
+      return urlData?.publicUrl || '';
+    } catch (err) {
+      console.warn('PDF upload error:', err);
+      return '';
+    }
+  };
+
+  const invoiceRow = (inv: Invoice, pdfUrl?: string) => [
     inv.invoice_no,
     inv.date,
     inv.customer_name,
@@ -1034,20 +1069,18 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     inv.payment_status || getPaymentStatus(inv.doc_type, inv.balance_due || 0, inv.advance_paid || 0),
     inv.payment_mode || 'Not specified',
     inv.due_date || '',
-    inv.invoice_no ? `https://yantrabyte.anantatechcare.com/admin?invoice=${inv.invoice_no}` : '',
+    pdfUrl || `https://yantrabyte.anantatechcare.com/admin?invoice=${inv.invoice_no}`,
   ];
-
-
 
   const INVOICE_SHEET_NAME = 'Invoices';
   const QUOTATION_SHEET_NAME = 'Quotations';
   const INVOICE_SHEET_HEADERS = ['Invoice No', 'Date', 'Customer', 'Phone', 'Email', 'Address', 'Items', 'Subtotal', 'Discount', 'Tax', 'Round Off', 'Grand Total', 'Amount Paid', 'Balance Due', 'Payment Status', 'Payment Mode', 'Due Date', 'PDF Link'];
 
-  const backupInvoiceToGoogleSheet = async (inv: Invoice) => {
+  const backupInvoiceToGoogleSheet = async (inv: Invoice, pdfUrl?: string) => {
     try {
       const sheetName = inv.doc_type === 'Quotation' ? QUOTATION_SHEET_NAME : INVOICE_SHEET_NAME;
       const { data, error } = await supabase.functions.invoke('backup-to-sheets', {
-        body: { sheetName, headers: INVOICE_SHEET_HEADERS, row: invoiceRow(inv) },
+        body: { sheetName, headers: INVOICE_SHEET_HEADERS, row: invoiceRow(inv, pdfUrl) },
       });
       if (error || !data?.ok) {
         console.warn('Sheet backup failed:', error?.message || data?.error);
