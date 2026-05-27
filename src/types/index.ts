@@ -174,6 +174,7 @@ export interface ServiceTicket {
   priority: 'low' | 'medium' | 'high' | 'urgent';
   assigned_to?: string;
   notes?: string;
+  technician_notes?: string;
   created_at: string;
   updated_at: string;
 }
