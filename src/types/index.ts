@@ -255,3 +255,19 @@ export interface Purchase {
   balance_due: number;
   created_at: string;
 }
+
+export interface ExternalRepair {
+  id: string;
+  ticket_number?: string | null;
+  material_name: string;
+  serial_number?: string | null;
+  sent_to: string;
+  sent_date: string;
+  expected_return_date?: string | null;
+  status: 'sent' | 'received' | 'cancelled';
+  received_date?: string | null;
+  cost: number;
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+}

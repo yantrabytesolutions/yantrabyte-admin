@@ -11,11 +11,12 @@ import {
   Users, Briefcase, Building2, HelpCircle, Image, Award, Mail, Settings,
   LogOut, Plus, Pencil, Trash2, X, Eye, EyeOff, ChevronDown, Save,
   Loader2, AlertCircle, CheckCircle, Search, RefreshCw, Menu, Ticket, Receipt, CreditCard, MessageSquare,
-  DollarSign, Clock, Activity, TrendingUp, ArrowRight, Truck, ExternalLink, FileSpreadsheet, QrCode
+  DollarSign, Clock, Activity, TrendingUp, ArrowRight, Truck, ExternalLink, FileSpreadsheet, QrCode, ArrowLeftRight
 } from 'lucide-react';
 
 import BillingSoftware from './BillingSoftware';
 import PurchaseSoftware from './PurchaseSoftware';
+import ExternalRepairs from './ExternalRepairs';
 import html2pdf from 'html2pdf.js';
 import { downloadExcelWorkbook } from '../utils/spreadsheetXml';
 import { appendBackupRow } from '../utils/googleSheetBackup';
@@ -25,7 +26,7 @@ import { appendBackupRow } from '../utils/googleSheetBackup';
 type Section =
   | 'dashboard' | 'pages' | 'services' | 'products' | 'testimonials'
   | 'blog' | 'team' | 'careers' | 'industries' | 'faqs' | 'gallery'
-  | 'client-logos' | 'contacts' | 'settings' | 'tickets' | 'billing' | 'purchase';
+  | 'client-logos' | 'contacts' | 'settings' | 'tickets' | 'billing' | 'purchase' | 'external-repairs';
 
 interface FormField {
   key: string;
@@ -56,6 +57,7 @@ const SECTION_CONFIG: Record<Section, { label: string; icon: React.ElementType; 
   tickets: { label: 'Service Ticket', icon: Ticket, table: 'service_tickets', orderField: 'created_at' },
   billing: { label: 'Billing Software', icon: Receipt, table: 'invoices', orderField: 'created_at' },
   purchase: { label: 'Purchase Entry', icon: Truck, table: 'purchases', orderField: 'created_at' },
+  'external-repairs': { label: 'External Repairs', icon: ArrowLeftRight, table: 'external_repairs', orderField: 'sent_date' },
   settings: { label: 'Site Settings', icon: Settings, table: 'site_settings', orderField: 'key' },
 };
 
@@ -1531,6 +1533,7 @@ export default function AdminPanel() {
     { section: 'client-logos', label: 'Client Logos', icon: Award },
     { section: 'contacts', label: 'Contact Submissions', icon: Mail },
     { section: 'tickets', label: 'Service Ticket', icon: Ticket },
+    { section: 'external-repairs', label: 'External Repairs', icon: ArrowLeftRight },
     { section: 'billing', label: 'Billing Software', icon: Receipt },
     { section: 'purchase', label: 'Purchase Entry', icon: Truck },
     { section: 'settings', label: 'Site Settings', icon: Settings },
@@ -2384,6 +2387,7 @@ export default function AdminPanel() {
     if (activeSection === 'settings') return renderSettings();
     if (activeSection === 'billing') return <BillingSoftware initialAutofillTicket={autofillTicket} onClearAutofill={() => setAutofillTicket(null)} />;
     if (activeSection === 'purchase') return <PurchaseSoftware />;
+    if (activeSection === 'external-repairs') return <ExternalRepairs />;
     return renderDataTable();
   };
 
