@@ -523,6 +523,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     if (!inv) return;
     setSelectedInvoiceId(inv.id);
     setDocType(inv.doc_type);
+    setDraftInvoiceNo(inv.invoice_no);
     setSelectedCustomerId(inv.customer_id || '');
     setCustomerName(inv.customer_name);
     setPhone(inv.phone || '');
@@ -788,7 +789,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       let invoiceNo: string;
       if (isUpdate) {
         const existing = invoices.find(i => i.id === selectedInvoiceId);
-        invoiceNo = existing?.invoice_no || draftInvoiceNo || await generateInvoiceNo();
+        invoiceNo = draftInvoiceNo || existing?.invoice_no || await generateInvoiceNo();
       } else {
         invoiceNo = draftInvoiceNo || await generateInvoiceNo().then(n => { setDraftInvoiceNo(n); return n; });
       }
@@ -1373,6 +1374,18 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             </div>
 
             <div className="grid grid-cols-2 gap-4 pt-2">
+              <div className="col-span-2">
+                <label className="block text-xs font-semibold text-gray-500 mb-1">
+                  {docType === 'Quotation' ? 'Quotation Number' : 'Invoice Number'}
+                </label>
+                <input 
+                  type="text" 
+                  value={draftInvoiceNo} 
+                  onChange={e => setDraftInvoiceNo(e.target.value)} 
+                  className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+                  placeholder="Auto-generated if left blank"
+                />
+              </div>
               <div className="col-span-2 flex space-x-4">
                 <div className="flex-1">
                   <label className="block text-xs font-medium text-gray-500 mb-1">Customer from Service Ticket</label>
