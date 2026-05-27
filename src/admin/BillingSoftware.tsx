@@ -540,6 +540,19 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setPaymentEntryMode('Cash');
   };
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const invoiceNo = params.get('invoice');
+    if (invoiceNo && invoices.length > 0 && !selectedInvoiceId) {
+      const inv = invoices.find(i => i.invoice_no === invoiceNo);
+      if (inv) {
+        loadInvoice(inv.id);
+        // Clear the URL parameter so it doesn't get stuck on refresh
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+  }, [invoices, selectedInvoiceId]);
+
   const handleConvertToInvoice = (id: string) => {
     const inv = invoices.find(i => i.id === id);
     if (!inv) return;
@@ -1021,7 +1034,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     inv.payment_status || getPaymentStatus(inv.doc_type, inv.balance_due || 0, inv.advance_paid || 0),
     inv.payment_mode || 'Not specified',
     inv.due_date || '',
-    inv.invoice_no ? `https://yantrabyte.anantatechcare.com/admin` : '',
+    inv.invoice_no ? `https://yantrabyte.anantatechcare.com/admin?invoice=${inv.invoice_no}` : '',
   ];
 
 
