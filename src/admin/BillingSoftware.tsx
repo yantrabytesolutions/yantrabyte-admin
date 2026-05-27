@@ -821,6 +821,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
         await persistInvoice(true, payload, legacyPayload);
         backupInvoiceToGoogleSheet(payload as Invoice);
+        sendTelegramNotification(`📝 ${payload.doc_type} Updated!\n\nNo: ${payload.invoice_no}\nCustomer: ${payload.customer_name}\nTotal: ₹${payload.grand_total.toLocaleString('en-IN')}`);
         showToast('Invoice updated successfully!');
       } else {
         if (docType === 'Invoice') {
