@@ -1023,22 +1023,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     inv.invoice_no ? `https://yantrabyte.com/admin` : '',
   ];
 
-  const unifiedInvoiceRow = (inv: Invoice) => [
-    inv.doc_type === 'Quotation' ? 'Quotation' : 'Invoice',
-    inv.invoice_no,
-    inv.date,
-    inv.customer_name,
-    inv.phone || '',
-    inv.email || '',
-    inv.address || '',
-    inv.items?.map(i => i.description).filter(Boolean).join(', ') || '',
-    inv.items?.map(i => `${i.description} x${i.qty}`).join(', ') || '',
-    inv.grand_total || 0,
-    inv.payment_status || getPaymentStatus(inv.doc_type, inv.balance_due || 0, inv.advance_paid || 0),
-    inv.doc_type,
-    '',
-    inv.invoice_no ? `https://yantrabyte.com/admin` : '',
-  ];
+
 
   const INVOICE_SHEET_NAME = 'Invoices';
   const QUOTATION_SHEET_NAME = 'Quotations';
