@@ -601,17 +601,16 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
   const generateInvoiceNo = async (type: string = docType) => {
     const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth();
-    const startYear = currentMonth < 3 ? currentYear - 1 : currentYear;
-    const datePrefix = `${startYear}-${startYear + 1}`;
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const datePart = `${year}${month}${day}`;
     
     const prefix = type === 'Quotation' ? 'YBQ' : 'YBS';
-    const prefixMatch = `${prefix}-${datePrefix}-`;
     const { data: existing } = await supabase
       .from('invoices')
       .select('invoice_no')
-      .ilike('invoice_no', `${prefixMatch}%`);
+      .ilike('invoice_no', `${prefix}-%`);
       
     let maxSeq = 0;
     if (existing) {
@@ -624,7 +623,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       }
     }
     const seq = (maxSeq + 1).toString().padStart(3, '0');
-    return `${prefixMatch}${seq}`;
+    return `${prefix}-${datePart}-${seq}`;
   };
 
   const adjustStock = async (itemsList: InvoiceItem[], factor: number) => {
