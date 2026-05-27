@@ -5,7 +5,7 @@ import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, U
 import html2pdf from 'html2pdf.js';
 import { PRESET_ITEMS } from './presetItems';
 import { downloadExcelWorkbook } from '../utils/spreadsheetXml';
-import { backupInvoiceToGoogleSheet, sendTelegramNotification } from '../utils/googleSheetBackup';
+import { sendTelegramNotification } from '../utils/googleSheetBackup';
 
 // --- Utility Functions ---
 function numberToWords(num: number): string {
