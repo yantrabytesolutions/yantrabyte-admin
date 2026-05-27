@@ -30,7 +30,8 @@
     "react-dom": "^18.3.1",
     "react-helmet-async": "^3.0.0",
     "react-router-dom": "^7.15.0",
-    "tweetsodium": "^0.0.4"
+    "tweetsodium": "^0.0.4",
+    "ws": "^8.21.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
