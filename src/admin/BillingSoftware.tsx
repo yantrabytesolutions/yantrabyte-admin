@@ -1179,8 +1179,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       const dues = bills.filter(inv => (inv.balance_due || 0) > 0);
 
       downloadExcelWorkbook(`yantrabyte-ledger-${new Date().toISOString().slice(0, 10)}.xls`, [
-        { name: 'Bills', rows: [invoiceHeaders, ...bills.map(invoiceRow)] },
-        { name: 'Quotations', rows: [invoiceHeaders, ...quotations.map(invoiceRow)] },
+        { name: 'Bills', rows: [invoiceHeaders, ...bills.map(inv => invoiceRow(inv))] },
+        { name: 'Quotations', rows: [invoiceHeaders, ...quotations.map(inv => invoiceRow(inv))] },
         {
           name: 'Purchase Entries',
           rows: [
@@ -1213,7 +1213,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             ]),
           ],
         },
-        { name: 'Pending Dues', rows: [invoiceHeaders, ...dues.map(invoiceRow)] },
+        { name: 'Pending Dues', rows: [invoiceHeaders, ...dues.map(inv => invoiceRow(inv))] },
         {
           name: 'Service Tickets',
           rows: [
