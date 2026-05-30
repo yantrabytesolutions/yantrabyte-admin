@@ -15,6 +15,7 @@ const routes = [
   'blog',
   'contact',
   'service-request',
+  'servicerequest',
   'privacy',
   'terms',
 ];
