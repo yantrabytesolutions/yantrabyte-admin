@@ -450,7 +450,7 @@ function HeroSection() {
                     </div>
 
                     <div>
-                      <label className="block text-xs text-white/70 font-semibold mb-1">Email Address (Optional)</label>
+                      <label className="block text-xs text-white/70 font-semibold mb-1">Email Address</label>
                       <input
                         type="email"
                         placeholder="e.g. ramesh@example.com"
@@ -461,7 +461,7 @@ function HeroSection() {
                     </div>
 
                     <div>
-                      <label className="block text-xs text-white/70 font-semibold mb-1">Customer Address (Optional)</label>
+                      <label className="block text-xs text-white/70 font-semibold mb-1">Customer Address</label>
                       <textarea
                         rows={1}
                         placeholder="e.g. 47A 1st Cross, Bengaluru"
