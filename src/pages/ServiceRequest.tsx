@@ -240,11 +240,12 @@ export default function ServiceRequest() {
                   <label className="block">
                     <span className="text-sm font-semibold text-slate-700">Device / Service</span>
                     <select
+                      required
                       value={form.device_type}
                       onChange={e => updateField('device_type', e.target.value)}
                       className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                     >
-                      <option value="">Select type</option>
+                      <option value="" disabled hidden>Select type</option>
                       {DEVICE_OPTIONS.map(option => (
                         <option key={option} value={option}>{option}</option>
                       ))}

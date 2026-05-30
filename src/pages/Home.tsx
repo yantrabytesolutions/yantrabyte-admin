@@ -258,7 +258,7 @@ function HeroSection() {
     customer_phone: '',
     customer_email: '',
     customer_address: '',
-    device_type: 'Laptop with charger',
+    device_type: '',
     issue_description: '',
   });
   const [submitting, setSubmitting] = useState(false);
@@ -307,7 +307,7 @@ function HeroSection() {
         customer_phone: form.customer_phone.trim(),
         customer_email: form.customer_email.trim() || null,
         customer_address: form.customer_address.trim() || null,
-        device_type: form.device_type,
+        device_type: form.device_type || 'Other',
         issue_description: form.issue_description.trim(),
         status: 'open',
         priority: 'medium',
@@ -321,7 +321,7 @@ function HeroSection() {
       });
 
       setSuccessTicket(ticketNumber);
-      setForm({ customer_name: '', customer_phone: '', customer_email: '', customer_address: '', device_type: 'Laptop with charger', issue_description: '' });
+      setForm({ customer_name: '', customer_phone: '', customer_email: '', customer_address: '', device_type: '', issue_description: '' });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to submit request.');
     } finally {
@@ -426,7 +426,7 @@ function HeroSection() {
 
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-xs text-white/70 font-semibold mb-1">Your Name</label>
+                      <label className="block text-xs text-white/70 font-semibold mb-1">Name *</label>
                       <input
                         type="text"
                         required
@@ -438,11 +438,11 @@ function HeroSection() {
                     </div>
 
                     <div>
-                      <label className="block text-xs text-white/70 font-semibold mb-1">Phone Number</label>
+                      <label className="block text-xs text-white/70 font-semibold mb-1">Phone *</label>
                       <input
                         type="tel"
                         required
-                        placeholder="e.g. 9901733369"
+                        placeholder="Phone number"
                         value={form.customer_phone}
                         onChange={e => setForm(prev => ({ ...prev, customer_phone: e.target.value }))}
                         className="w-full bg-[#0B1120]/60 border border-white/10 rounded-lg py-2 px-3 text-sm text-white placeholder-white/30 focus:border-[#0EA5E9] focus:outline-none transition-colors"
@@ -473,12 +473,14 @@ function HeroSection() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="col-span-2">
-                        <label className="block text-xs text-white/70 font-semibold mb-1">Device/Service Type</label>
+                        <label className="block text-xs text-white/70 font-semibold mb-1">Device / Service</label>
                         <select
+                          required
                           value={form.device_type}
                           onChange={e => setForm(prev => ({ ...prev, device_type: e.target.value }))}
                           className="w-full bg-[#0B1120] border border-white/10 rounded-lg py-2 px-3 text-sm text-white focus:border-[#0EA5E9] focus:outline-none transition-colors"
                         >
+                          <option value="" disabled hidden>Select type</option>
                           {['Laptop with charger', 'Laptop without charger', 'Desktop', 'Printer', 'CCTV', 'Networking', 'Wi-Fi', 'Biometric', 'Server', 'Other'].map(opt => (
                             <option key={opt} value={opt} className="bg-[#0B1120]">{opt}</option>
                           ))}
@@ -487,7 +489,7 @@ function HeroSection() {
                     </div>
 
                     <div>
-                      <label className="block text-xs text-white/70 font-semibold mb-1">Issue Description</label>
+                      <label className="block text-xs text-white/70 font-semibold mb-1">Issue Description *</label>
                       <textarea
                         required
                         rows={2}
