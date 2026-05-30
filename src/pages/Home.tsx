@@ -62,6 +62,7 @@ import {
   useBlogPosts,
   submitContact,
 } from '../hooks/useSupabase';
+import { supabase } from '../lib/supabase';
 import type {
   Service,
   Testimonial,
@@ -251,6 +252,80 @@ function Section({ children, className = '', id }: { children: React.ReactNode; 
 // ─── 1. Hero Section ────────────────────────────────────────────────────────
 
 function HeroSection() {
+  const [form, setForm] = useState({
+    customer_name: '',
+    customer_phone: '',
+    device_type: 'Laptop',
+    issue_description: '',
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [successTicket, setSuccessTicket] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (!form.customer_name.trim() || !form.customer_phone.trim() || !form.issue_description.trim()) {
+      setError('Please fill in Name, Phone, and Issue Description.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth();
+      const startYear = currentMonth < 3 ? currentYear - 1 : currentYear;
+      const datePrefix = `${startYear}-${startYear + 1}`;
+      const prefixString = `YBS-${datePrefix}-`;
+
+      const { data: existing } = await supabase
+        .from('service_tickets')
+        .select('ticket_number')
+        .ilike('ticket_number', `${prefixString}%`);
+        
+      let maxSeq = 0;
+      if (existing) {
+        for (const t of existing) {
+          const match = String(t.ticket_number || '').match(/-(\d+)$/);
+          if (match) {
+            const seqNum = parseInt(match[1], 10);
+            if (!isNaN(seqNum) && seqNum > maxSeq) maxSeq = seqNum;
+          }
+        }
+      }
+      const seq = (maxSeq + 1).toString().padStart(3, '0');
+      const ticketNumber = `${prefixString}${seq}`;
+
+      const ticketPayload = {
+        ticket_number: ticketNumber,
+        customer_name: form.customer_name.trim(),
+        customer_phone: form.customer_phone.trim(),
+        customer_email: null,
+        customer_address: null,
+        device_type: form.device_type,
+        issue_description: form.issue_description.trim(),
+        status: 'open',
+        priority: 'medium',
+      };
+
+      const { error: insertError } = await supabase.from('service_tickets').insert([ticketPayload]);
+      if (insertError) throw insertError;
+
+      supabase.functions.invoke('send-ticket-email', { body: ticketPayload }).catch((err) => {
+        console.warn('Edge function error:', err);
+      });
+
+      setSuccessTicket(ticketNumber);
+      setForm({ customer_name: '', customer_phone: '', device_type: 'Laptop', issue_description: '' });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to submit request.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <section id="hero" className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-[#0B1120] via-[#111827] to-[#0B1120]">
       <div className="absolute inset-0 opacity-[0.04]" style={{
@@ -271,7 +346,7 @@ function HeroSection() {
       </div>
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#0EA5E9]/5 rounded-full blur-[120px]" />
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-16 md:py-24">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
             <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}
@@ -311,43 +386,111 @@ function HeroSection() {
           </div>
 
           <motion.div initial={{ opacity: 0, scale: 0.9, x: 40 }} animate={{ opacity: 1, scale: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.6 }} className="hidden lg:block">
-            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 shadow-2xl shadow-[#0EA5E9]/10">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Camera className="w-5 h-5 text-[#0EA5E9]" />
-                  <span className="text-white font-semibold text-sm">Live Surveillance Dashboard</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                  <span className="text-red-400 text-xs font-medium">LIVE</span>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { label: 'Front Gate', time: '14:32:05' },
-                  { label: 'Parking Lot', time: '14:32:05' },
-                  { label: 'Lobby', time: '14:32:04' },
-                  { label: 'Server Room', time: '14:32:05' },
-                ].map((cam, i) => (
-                  <div key={i} className="relative bg-[#0B1120]/80 rounded-lg overflow-hidden aspect-video border border-white/5">
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#1a2a3a]/50 to-[#0B1120]/80" />
-                    <div className="absolute top-2 left-2 flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                      <span className="text-[10px] text-white/70 font-mono">REC</span>
-                    </div>
-                    <div className="absolute bottom-2 left-2 text-[10px] text-white/50 font-mono">{cam.time}</div>
-                    <div className="absolute top-2 right-2 text-[9px] text-white/40 font-mono">CAM-{i + 1}</div>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Camera className="w-6 h-6 text-white/10" />
-                    </div>
-                    <div className="absolute bottom-2 right-2 text-[10px] text-[#0EA5E9]/60 font-medium">{cam.label}</div>
+            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 shadow-2xl shadow-[#0EA5E9]/10 max-w-lg mx-auto">
+              {successTicket ? (
+                <div className="text-center py-8 space-y-6">
+                  <div className="w-16 h-16 bg-teal-500/10 border border-teal-500/30 text-teal-400 rounded-full flex items-center justify-center mx-auto">
+                    <CheckCircle className="w-8 h-8" />
                   </div>
-                ))}
-              </div>
-              <div className="mt-4 flex items-center justify-between text-xs text-white/40">
-                <span className="font-mono">System Active | 4 Cameras Online</span>
-                <span className="font-mono">Storage: 72% | 14:32 IST</span>
-              </div>
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-bold text-white">Ticket Submitted!</h3>
+                    <p className="text-sm text-[#94A3B8]">We have received your service request.</p>
+                  </div>
+                  <div className="bg-[#0B1120]/80 border border-white/5 rounded-xl p-4 font-mono text-center">
+                    <span className="text-xs text-white/50 block mb-1">YOUR TICKET NUMBER</span>
+                    <span className="text-lg font-bold text-[#0EA5E9]">{successTicket}</span>
+                  </div>
+                  <button
+                    onClick={() => setSuccessTicket('')}
+                    className="w-full py-3 px-4 rounded-lg bg-white/5 hover:bg-white/10 text-white font-semibold border border-white/10 transition-colors"
+                  >
+                    Submit Another Request
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  <div>
+                    <h3 className="text-lg font-bold text-white mb-1">Quick Service Request</h3>
+                    <p className="text-xs text-[#94A3B8]">Request repair or assistance instantly</p>
+                  </div>
+
+                  {error && (
+                    <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-lg flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <span>{error}</span>
+                    </div>
+                  )}
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs text-white/70 font-semibold mb-1">Your Name</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Ramesh"
+                        value={form.customer_name}
+                        onChange={e => setForm(prev => ({ ...prev, customer_name: e.target.value }))}
+                        className="w-full bg-[#0B1120]/60 border border-white/10 rounded-lg py-2 px-3 text-sm text-white placeholder-white/30 focus:border-[#0EA5E9] focus:outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-white/70 font-semibold mb-1">Phone Number</label>
+                      <input
+                        type="tel"
+                        required
+                        placeholder="e.g. 9901733369"
+                        value={form.customer_phone}
+                        onChange={e => setForm(prev => ({ ...prev, customer_phone: e.target.value }))}
+                        className="w-full bg-[#0B1120]/60 border border-white/10 rounded-lg py-2 px-3 text-sm text-white placeholder-white/30 focus:border-[#0EA5E9] focus:outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="col-span-2">
+                        <label className="block text-xs text-white/70 font-semibold mb-1">Device/Service Type</label>
+                        <select
+                          value={form.device_type}
+                          onChange={e => setForm(prev => ({ ...prev, device_type: e.target.value }))}
+                          className="w-full bg-[#0B1120] border border-white/10 rounded-lg py-2 px-3 text-sm text-white focus:border-[#0EA5E9] focus:outline-none transition-colors"
+                        >
+                          {['Laptop', 'Desktop', 'Printer', 'CCTV', 'Networking', 'Wi-Fi', 'Biometric', 'Server', 'Other'].map(opt => (
+                            <option key={opt} value={opt} className="bg-[#0B1120]">{opt}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-white/70 font-semibold mb-1">Issue Description</label>
+                      <textarea
+                        required
+                        rows={2}
+                        placeholder="Describe the issue you are facing..."
+                        value={form.issue_description}
+                        onChange={e => setForm(prev => ({ ...prev, issue_description: e.target.value }))}
+                        className="w-full bg-[#0B1120]/60 border border-white/10 rounded-lg py-2 px-3 text-sm text-white placeholder-white/30 focus:border-[#0EA5E9] focus:outline-none transition-colors resize-none"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="w-full py-3 px-4 rounded-lg bg-gradient-to-r from-[#0D9488] to-[#0EA5E9] hover:from-[#0F766E] hover:to-[#0284C7] text-white font-bold transition-all duration-300 shadow-md shadow-[#0EA5E9]/10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" /> Submitting Request...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" /> Submit Service Request
+                      </>
+                    )}
+                  </button>
+                </form>
+              )}
             </div>
           </motion.div>
         </div>
