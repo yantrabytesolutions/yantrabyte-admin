@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Phone } from "lucide-react";
 
 const navLinks = [
-  { name: "Home", path: "/#hero" },
+  { name: "Home", path: "/" },
   { name: "About", path: "/#about" },
   { name: "Services", path: "/#services" },
   { name: "Industries", path: "/#industries" },
@@ -44,6 +44,15 @@ export default function Header() {
 
   const handleNavClick = (path: string) => {
     setMobileOpen(false);
+    
+    if (path === "/") {
+      if (location.pathname === "/") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else {
+        navigate("/");
+      }
+      return;
+    }
     
     if (path.startsWith("/#")) {
       const hash = path.split("#")[1];

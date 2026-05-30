@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 
 const quickLinks = [
-  { name: "Home", path: "/#hero" },
+  { name: "Home", path: "/" },
   { name: "About Us", path: "/#about" },
   { name: "Services", path: "/#services" },
   { name: "Blog", path: "/#blog" },
