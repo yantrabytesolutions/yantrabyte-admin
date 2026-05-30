@@ -293,7 +293,10 @@ function HeroSection() {
 
             <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.8 }}
               className="flex flex-wrap gap-4">
-              <a href="#contact" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg bg-[#0EA5E9] hover:bg-[#0284C7] text-white font-semibold transition-all duration-300 shadow-lg shadow-[#0EA5E9]/25 hover:shadow-[#0EA5E9]/40">
+              <a href="/service-request" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg bg-gradient-to-r from-[#0D9488] to-[#0EA5E9] hover:from-[#0F766E] hover:to-[#0284C7] text-white font-bold tracking-wider uppercase transition-all duration-300 shadow-lg shadow-[#0EA5E9]/25 hover:shadow-[#0EA5E9]/40">
+                Service Request
+              </a>
+              <a href="#contact" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg border-2 border-white/30 text-white font-semibold hover:bg-white/10 transition-all duration-300">
                 Get Free Consultation <ArrowRight className="w-4 h-4" />
               </a>
               <a href="https://wa.me/919986742525" target="_blank" rel="noopener noreferrer"
