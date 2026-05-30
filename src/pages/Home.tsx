@@ -256,6 +256,7 @@ function HeroSection() {
   const [form, setForm] = useState({
     customer_name: '',
     customer_phone: '',
+    customer_email: '',
     device_type: 'Laptop',
     issue_description: '',
   });
@@ -303,7 +304,7 @@ function HeroSection() {
         ticket_number: ticketNumber,
         customer_name: form.customer_name.trim(),
         customer_phone: form.customer_phone.trim(),
-        customer_email: null,
+        customer_email: form.customer_email.trim() || null,
         customer_address: null,
         device_type: form.device_type,
         issue_description: form.issue_description.trim(),
@@ -319,7 +320,7 @@ function HeroSection() {
       });
 
       setSuccessTicket(ticketNumber);
-      setForm({ customer_name: '', customer_phone: '', device_type: 'Laptop', issue_description: '' });
+      setForm({ customer_name: '', customer_phone: '', customer_email: '', device_type: 'Laptop', issue_description: '' });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to submit request.');
     } finally {
@@ -443,6 +444,17 @@ function HeroSection() {
                         placeholder="e.g. 9901733369"
                         value={form.customer_phone}
                         onChange={e => setForm(prev => ({ ...prev, customer_phone: e.target.value }))}
+                        className="w-full bg-[#0B1120]/60 border border-white/10 rounded-lg py-2 px-3 text-sm text-white placeholder-white/30 focus:border-[#0EA5E9] focus:outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-white/70 font-semibold mb-1">Email Address (Optional)</label>
+                      <input
+                        type="email"
+                        placeholder="e.g. ramesh@example.com"
+                        value={form.customer_email}
+                        onChange={e => setForm(prev => ({ ...prev, customer_email: e.target.value }))}
                         className="w-full bg-[#0B1120]/60 border border-white/10 rounded-lg py-2 px-3 text-sm text-white placeholder-white/30 focus:border-[#0EA5E9] focus:outline-none transition-colors"
                       />
                     </div>
