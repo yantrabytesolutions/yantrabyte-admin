@@ -16,6 +16,7 @@ const routes = [
   'contact',
   'service-request',
   'servicerequest',
+  'track',
   'privacy',
   'terms',
 ];
