@@ -257,7 +257,8 @@ function HeroSection() {
     customer_name: '',
     customer_phone: '',
     customer_email: '',
-    device_type: 'Laptop',
+    customer_address: '',
+    device_type: 'Laptop with charger',
     issue_description: '',
   });
   const [submitting, setSubmitting] = useState(false);
@@ -305,7 +306,7 @@ function HeroSection() {
         customer_name: form.customer_name.trim(),
         customer_phone: form.customer_phone.trim(),
         customer_email: form.customer_email.trim() || null,
-        customer_address: null,
+        customer_address: form.customer_address.trim() || null,
         device_type: form.device_type,
         issue_description: form.issue_description.trim(),
         status: 'open',
@@ -320,7 +321,7 @@ function HeroSection() {
       });
 
       setSuccessTicket(ticketNumber);
-      setForm({ customer_name: '', customer_phone: '', customer_email: '', device_type: 'Laptop', issue_description: '' });
+      setForm({ customer_name: '', customer_phone: '', customer_email: '', customer_address: '', device_type: 'Laptop with charger', issue_description: '' });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to submit request.');
     } finally {
@@ -459,6 +460,17 @@ function HeroSection() {
                       />
                     </div>
 
+                    <div>
+                      <label className="block text-xs text-white/70 font-semibold mb-1">Customer Address (Optional)</label>
+                      <textarea
+                        rows={1}
+                        placeholder="e.g. 47A 1st Cross, Bengaluru"
+                        value={form.customer_address}
+                        onChange={e => setForm(prev => ({ ...prev, customer_address: e.target.value }))}
+                        className="w-full bg-[#0B1120]/60 border border-white/10 rounded-lg py-2 px-3 text-sm text-white placeholder-white/30 focus:border-[#0EA5E9] focus:outline-none transition-colors resize-none"
+                      />
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                       <div className="col-span-2">
                         <label className="block text-xs text-white/70 font-semibold mb-1">Device/Service Type</label>
@@ -467,7 +479,7 @@ function HeroSection() {
                           onChange={e => setForm(prev => ({ ...prev, device_type: e.target.value }))}
                           className="w-full bg-[#0B1120] border border-white/10 rounded-lg py-2 px-3 text-sm text-white focus:border-[#0EA5E9] focus:outline-none transition-colors"
                         >
-                          {['Laptop', 'Desktop', 'Printer', 'CCTV', 'Networking', 'Wi-Fi', 'Biometric', 'Server', 'Other'].map(opt => (
+                          {['Laptop with charger', 'Laptop without charger', 'Desktop', 'Printer', 'CCTV', 'Networking', 'Wi-Fi', 'Biometric', 'Server', 'Other'].map(opt => (
                             <option key={opt} value={opt} className="bg-[#0B1120]">{opt}</option>
                           ))}
                         </select>

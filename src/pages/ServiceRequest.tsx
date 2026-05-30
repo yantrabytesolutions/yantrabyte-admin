@@ -4,7 +4,8 @@ import { supabase } from '../lib/supabase';
 import { AlertCircle, CheckCircle, ClipboardCheck, Loader2, MapPin, Phone, Send, Wrench } from 'lucide-react';
 
 const DEVICE_OPTIONS = [
-  'Laptop',
+  'Laptop with charger',
+  'Laptop without charger',
   'Desktop',
   'Printer',
   'CCTV',
