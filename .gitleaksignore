@@ -1,0 +1,5 @@
+[allowlist]
+fingerprints = [
+    "fed190a7a9584d9a81747f24c11d2ec1d4b70291:admin/yantrabyte-admin-main/check_supabase_rest.js:generic-api-key:2",
+    "fed190a7a9584d9a81747f24c11d2ec1d4b70291:admin_updated/check_supabase_rest.js:generic-api-key:2"
+]
