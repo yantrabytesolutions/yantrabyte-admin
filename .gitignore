@@ -1,0 +1,14 @@
+*.pem
+*.key
+*.env
+node_modules/
+.env
+
+aws.txt
+aws(1).txt
+deep-span*.json
+google app password.txt
+ssh*.txt
+*.pem
+*.key
+.env

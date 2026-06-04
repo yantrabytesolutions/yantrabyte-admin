@@ -1,0 +1,76 @@
+
+    // ===== DARK MODE =====
+    function toggleDark(){document.body.classList.toggle('dark');localStorage.setItem('ybs-dark',document.body.classList.contains('dark')?'1':'0');}
+    if(localStorage.getItem('ybs-dark')==='1')document.body.classList.add('dark');
+
+    // ===== TOAST =====
+    function showToast(msg,type){var t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(type?' '+type:'');setTimeout(function(){t.className='toast';},3000);}
+
+    // ===== SEARCH DASHBOARD =====
+    function searchDashboard(){var q=document.getElementById('dashSearch').value.toLowerCase().trim();if(!dashData)return;if(!q){renderDashTable(dashData.recentInvoices);return;}var f=dashData.recentInvoices.filter(function(inv){return(inv.invoiceNo+' '+inv.customerName+' '+inv.phone+' '+inv.email).toLowerCase().indexOf(q)>=0;});renderDashTable(f);}
+
+    // ===== SEARCH TICKETS =====
+    function searchTicketsFn(){var q=document.getElementById('ticketSearch').value.toLowerCase().trim();if(!q){renderTicketTable();return;}var f=ticketsData.filter(function(t){return(t.ticketId+' '+t.customerName+' '+t.phone+' '+t.device+' '+t.issue).toLowerCase().indexOf(q)>=0;});renderFilteredTickets(f);}
+    function renderFilteredTickets(arr){var tbody=document.querySelector('#ticketTable tbody');tbody.innerHTML='';if(!arr.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#999;padding:20px;">No tickets found</td></tr>';return;}arr.forEach(function(t){var st=t.status||'Received';var bc=st==='Delivered'||st==='Closed'?'badge-paid':st==='In Progress'?'badge-partial':st==='Ready'?'badge-accepted':'badge-unpaid';var tr=document.createElement('tr');tr.innerHTML='<td><strong>'+(t.ticketId||'—')+'</strong></td><td>'+t.customerName+'</td><td>'+(t.device||t.deviceType||'—')+'</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(t.issue||'—')+'</td><td><span class="badge '+bc+'">'+st+'</span></td><td><button class="btn btn-sm blue" onclick="viewTicket(\''+(t.ticketId||'')+'\')">View</button></td>';tbody.appendChild(tr);});}
+
+    // ===== SEARCH EXPENSES =====
+    function searchExpenses(){var q=document.getElementById('expenseSearch').value.toLowerCase().trim();if(!expensesData)return;if(!q){renderExpenseTable(expensesData.expenses);return;}var f=expensesData.expenses.filter(function(e){return(e.description+' '+e.vendor+' '+e.category).toLowerCase().indexOf(q)>=0;});renderExpenseTable(f);}
+
+    // ===== DELETE INVOICE =====
+    function deleteCurrentInvoice(){var inv=document.getElementById('invoiceNoDisplay').textContent;if(!inv||inv==='—'){setStatus('No invoice to delete.','error');return;}if(!confirm('Delete invoice '+inv+'? This cannot be undone!'))return;setStatus('Deleting...');google.script.run.withSuccessHandler(function(r){showToast(r.deleted+' deleted','success');cancelEdit();refreshInvoiceList();}).withFailureHandler(function(e){setStatus('Error: '+e.message,'error');}).deleteInvoice(inv);}
+
+    // ===== DELETE QUOTATION =====
+    function deleteCurrentQuote(){var q=document.getElementById('quoteNoDisplay').textContent;if(!q||q==='—'){setStatus('No quotation to delete.','error');return;}if(!confirm('Delete quotation '+q+'?'))return;setStatus('Deleting...');google.script.run.withSuccessHandler(function(r){showToast(r.deleted+' deleted','success');cancelQuoteEdit();refreshQuotationList();}).withFailureHandler(function(e){setStatus('Error: '+e.message,'error');}).deleteQuotation(q);}
+
+    // ===== ADD CUSTOMER MODAL =====
+    function openAddCustomer(){document.getElementById('addCustomerModal').classList.add('show');}
+    function closeAddCustomer(){document.getElementById('addCustomerModal').classList.remove('show');document.getElementById('newCustName').value='';document.getElementById('newCustPhone').value='';document.getElementById('newCustEmail').value='';document.getElementById('newCustAddress').value='';}
+    function saveNewCustomer(){var name=document.getElementById('newCustName').value.trim();if(!name){showToast('Name is required','error');return;}setStatus('Saving customer...');google.script.run.withSuccessHandler(function(r){showToast(r.customerName+' added!','success');closeAddCustomer();loadCustomers();}).withFailureHandler(function(e){setStatus('Error: '+e.message,'error');}).addCustomer({customerName:name,phone:document.getElementById('newCustPhone').value.trim(),email:document.getElementById('newCustEmail').value.trim(),address:document.getElementById('newCustAddress').value.trim()});}
+
+    // ===== EXPENSES =====
+    var expensesData=null;
+    function loadExpenses(){setStatus('Loading expenses...');google.script.run.withSuccessHandler(function(d){expensesData=d;document.getElementById('eTotalExp').textContent=fmt(d.totalExpenses);document.getElementById('eMonthExp').textContent=fmt(d.monthExpenses);document.getElementById('eCount').textContent=d.expenses.length;var rev=dashData?dashData.totalRevenue:0;document.getElementById('eProfit').textContent=fmt(rev-d.totalExpenses);renderExpenseTable(d.expenses);setStatus('Expenses loaded.','success');}).withFailureHandler(function(e){setStatus('Error: '+e.message,'error');}).getExpenses();}
+
+    function renderExpenseTable(arr){var tbody=document.querySelector('#expenseTable tbody');tbody.innerHTML='';if(!arr||!arr.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#999;padding:20px;">No expenses found</td></tr>';return;}arr.forEach(function(e){var tr=document.createElement('tr');tr.innerHTML='<td>'+e.date+'</td><td>'+e.description+'</td><td>'+e.vendor+'</td><td>'+e.category+'</td><td class="right">'+fmt(e.amount)+'</td>';tbody.appendChild(tr);});}
+
+    // ===== EXPORT CSV =====
+    function exportCSV(){setStatus('Generating CSV...');google.script.run.withSuccessHandler(function(csv){var blob=new Blob([csv],{type:'text/csv'});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download='invoices_export.csv';a.click();URL.revokeObjectURL(url);showToast('CSV downloaded!','success');}).withFailureHandler(function(e){setStatus('Error: '+e.message,'error');}).getInvoicesCSV();}
+
+    // ===== PAYMENT REMINDERS =====
+    function showReminders(){setStatus('Loading reminders...');google.script.run.withSuccessHandler(function(list){var tbody=document.querySelector('#reminderTable tbody');tbody.innerHTML='';if(!list.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#999;padding:20px;">No overdue invoices!</td></tr>';} else {list.forEach(function(inv){var ph=String(inv.phone||'').replace(/\D/g,'');if(ph.length===10)ph='91'+ph;var msg='Hi '+inv.customerName+', reminder for invoice *'+inv.invoiceNo+'*. Balance due: *₹'+inv.balance.toLocaleString('en-IN')+'*. Please pay at your earliest. Thank you! - YantraByte Solutions';var tr=document.createElement('tr');tr.innerHTML='<td><strong>'+inv.invoiceNo+'</strong></td><td>'+inv.customerName+'</td><td class="right">'+fmt(inv.balance)+'</td><td style="color:'+(inv.daysSince>30?'#c62828':inv.daysSince>7?'#e65100':'#555')+';">'+inv.daysSince+'d</td><td><button class="btn btn-sm whatsapp" onclick="window.open(\'https://wa.me/'+ph+'?text='+encodeURIComponent(msg)+'\',\'_blank\')">Send</button></td>';tbody.appendChild(tr);});}document.getElementById('remindersModal').classList.add('show');setStatus('Loaded '+list.length+' overdue invoices.','success');}).withFailureHandler(function(e){setStatus('Error: '+e.message,'error');}).getOverdueInvoices();}
+    function closeReminders(){document.getElementById('remindersModal').classList.remove('show');}
+
+    // ===== UPDATED SWITCH TAB (5 tabs) =====
+    function switchTab(name){document.querySelectorAll('.tab').forEach(function(t,i){t.classList.toggle('active',['invoice','quotation','dashboard','tracker','expenses'][i]===name);});document.querySelectorAll('.tab-content').forEach(function(c){c.classList.toggle('active',c.id==='tab-'+name);});if(name==='dashboard')loadDashboard();if(name==='tracker')loadServiceTickets();if(name==='expenses')loadExpenses();if(name==='quotation'&&!document.getElementById('qtCustomerName').options.length)populateQuoteCustomers();}
+
+    // ===== UPDATED STATUS CHANGE WITH AUTO EMAIL =====
+    var origChangeTicketStatus = changeTicketStatus;
+    changeTicketStatus = function(newStatus) {
+      if (!currentTicket || !currentTicket.ticketId) { setStatus('No ticket selected.', 'error'); return; }
+      setStatus('Updating status...');
+      google.script.run.withSuccessHandler(function(r) {
+        setStatus(r.ticketId + ' → ' + r.status, 'success');
+        document.getElementById('tdStatus').textContent = r.status;
+        showToast(r.ticketId + ' → ' + r.status, 'success');
+        // Auto email notification
+        if (currentTicket.email) {
+          google.script.run.withSuccessHandler(function(er) {
+            if (er.ok) showToast('Email sent to ' + er.sentTo, 'success');
+          }).withFailureHandler(function(){}).emailTicketStatusUpdate(currentTicket.ticketId, newStatus);
+        }
+        loadServiceTickets();
+      }).withFailureHandler(function(e) { setStatus('Error: ' + e.message, 'error'); }).updateTicketStatus(currentTicket.ticketId, newStatus);
+    };
+
+    // Show delete button when invoice is shown
+    var origShowInvoiceNo2 = showInvoiceNo;
+    showInvoiceNo = function(inv) { origShowInvoiceNo2(inv); document.getElementById('btnDeleteInv').style.display=''; };
+
+    // Show delete button when quote is shown
+    var origShowQuoteNo2 = showQuoteNo;
+    showQuoteNo = function(q) { origShowQuoteNo2(q); document.getElementById('btnDeleteQt').style.display=''; };
+
+    window.onload = function() { loadLogo(); loadCustomers(); loadSeal(); renderItems(); renderQuoteItems(); refreshInvoiceList(); refreshQuotationList(); };
+  </script>
+</body>
+</html>

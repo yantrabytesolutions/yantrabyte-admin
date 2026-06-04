@@ -1,0 +1,16 @@
+// ============================================
+// OTHER CHANGES NEEDED IN YOUR Code.gs
+// ============================================
+
+// CHANGE 1: In createPrintableInvoiceSheet_(), after the insertLogo_ call, add flush:
+//
+//   sh.getRange('A1:B3').merge();
+//   insertLogo_(sh);
+//   SpreadsheetApp.flush();    // <-- ADD THIS LINE
+//
+
+// CHANGE 2: In generatePdf(), increase the sleep time:
+//
+//   SpreadsheetApp.flush();
+//   Utilities.sleep(6000);     // <-- CHANGE from 3000 to 6000
+//

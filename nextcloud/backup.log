@@ -1,0 +1,19 @@
+[01-06-2026  2:00:03.43] Starting backup K: to L: 
+
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows                              
+-------------------------------------------------------------------------------
+
+  Started : 01 June 2026 02:00:03
+   Source : K:\nextcloud-data\
+     Dest = L:\nextcloud-backup\
+
+    Files : *.*
+	    
+  Options : *.* /TEE /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /Z /MT:8 /R:3 /W:10 
+
+------------------------------------------------------------------------------
+
+2026/06/01 02:00:03 ERROR 2 (0x00000002) Accessing Source Directory K:\nextcloud-data\
+The system cannot find the file specified.
+[01-06-2026  2:00:03.55] Backup complete 

@@ -1,0 +1,256 @@
+<body>
+  <div class="wrap">
+    <div class="header">
+      <div class="header-left">
+        <div id="logoContainer"><div class="logo-placeholder">YB</div></div>
+        <h2>YantraByte <span>Invoice System</span></h2>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="dark-toggle" onclick="toggleDark()" title="Toggle Dark Mode">&#127769;</button>
+        <button class="server-btn" onclick="testServer()">&#9679; Test Server</button>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('invoice')">&#128196; Invoice</button>
+      <button class="tab" onclick="switchTab('quotation')">&#128203; Quotation</button>
+      <button class="tab" onclick="switchTab('dashboard')">&#128202; Dashboard</button>
+      <button class="tab" onclick="switchTab('tracker')">&#128295; Tracker</button>
+      <button class="tab" onclick="switchTab('expenses')">&#128176; Expenses</button>
+    </div>
+
+    <!-- ==================== INVOICE TAB ==================== -->
+    <div class="tab-content active" id="tab-invoice">
+      <div class="invoice-badge" id="invoiceBadge">
+        <span class="inv-label">INVOICE:</span>
+        <span class="inv-number" id="invoiceNoDisplay">—</span>
+        <button class="btn btn-sm whatsapp" onclick="whatsappShare('invoice')" id="btnWhatsappInv" style="display:none;">&#128172; WhatsApp</button>
+        <button class="btn btn-sm purple" onclick="emailDoc('invoice')" id="btnEmailInv" style="display:none;">&#9993; Email</button>
+        <button class="btn btn-sm blue" onclick="printInvoice()" id="btnPrintInv" style="display:none;">&#128424; Print</button>
+        <button class="btn btn-sm red" onclick="deleteCurrentInvoice()" id="btnDeleteInv" style="display:none;">&#128465; Delete</button>
+      </div>
+
+      <div class="section-title">Edit Saved Invoice</div>
+      <div class="edit-bar">
+        <select id="editInvoiceSelect"><option value="">— Select Invoice to Edit —</option></select>
+        <button class="btn btn-sm blue" onclick="loadSavedInvoice()">&#128269; Load</button>
+        <button class="btn btn-sm amber" onclick="refreshInvoiceList()">&#8635; Refresh</button>
+      </div>
+      <div class="edit-mode-badge" id="editModeBadge">
+        <span class="edit-label">EDITING:</span>
+        <span class="edit-inv" id="editInvDisplay">—</span>
+        <button class="btn cancel-edit" onclick="cancelEdit()">&#10005; Cancel</button>
+      </div>
+
+      <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">Customer Details <button class="btn btn-sm blue" onclick="openAddCustomer()">&#43; Add Customer</button></div>
+      <div class="grid">
+        <div class="full"><label>Customer Name</label><select id="customerName"><option value="">— Select Customer —</option></select></div>
+        <div><label>Phone</label><input type="text" id="phone" placeholder="Phone number"></div>
+        <div><label>Email</label><input type="text" id="email" placeholder="Email address"></div>
+        <div><label>Discount (&#8377;)</label><input type="number" id="discount" value="0" min="0"></div>
+        <div class="full"><label>Address</label><textarea id="address" rows="2" placeholder="Full address"></textarea></div>
+        <div><label>Tax (&#8377;)</label><input type="number" id="tax" value="0" min="0"></div>
+        <div><label>Advance Paid (&#8377;)</label><input type="number" id="advancePaid" value="0" min="0"></div>
+      </div>
+
+      <div class="section-title">Add Items</div>
+      <div class="item-grid">
+        <div><label>Description</label><input type="text" id="itemDesc" placeholder="Item or service description"></div>
+        <div><label>Qty</label><input type="number" id="itemQty" value="1" min="1"></div>
+        <div><label>Rate (&#8377;)</label><input type="number" id="itemRate" value="0" min="0"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn blue" onclick="addItem()">&#43; Add Item</button>
+        <button class="btn red" onclick="clearItems()">&#10005; Clear Items</button>
+        <button class="btn amber" onclick="saveInvoice()">&#128190; Save Only</button>
+        <button class="btn green" onclick="generateInvoice()">&#128196; Save &amp; Generate PDF</button>
+      </div>
+      <table id="itemsTable"><thead><tr><th style="width:50px;">#</th><th>Description</th><th style="width:70px;">Qty</th><th style="width:100px;">Rate (&#8377;)</th><th style="width:120px;">Amount (&#8377;)</th></tr></thead><tbody></tbody></table>
+    </div>
+
+    <!-- ==================== QUOTATION TAB ==================== -->
+    <div class="tab-content" id="tab-quotation">
+      <div class="invoice-badge" id="quoteBadge" style="border-color:#ffcc80;background:linear-gradient(135deg,#fff8e1,#fff3e0);">
+        <span class="inv-label" style="color:#e65100;">QUOTATION:</span>
+        <span class="inv-number" id="quoteNoDisplay" style="color:#bf360c;">—</span>
+        <button class="btn btn-sm whatsapp" onclick="whatsappShare('quotation')" id="btnWhatsappQt" style="display:none;">&#128172; WhatsApp</button>
+        <button class="btn btn-sm purple" onclick="emailDoc('quotation')" id="btnEmailQt" style="display:none;">&#9993; Email</button>
+        <button class="btn btn-sm blue" onclick="convertToInvoice()" id="btnConvert" style="display:none;">&#8594; Convert to Invoice</button>
+        <button class="btn btn-sm red" onclick="deleteCurrentQuote()" id="btnDeleteQt" style="display:none;">&#128465; Delete</button>
+      </div>
+
+      <div class="section-title">Edit Saved Quotation</div>
+      <div class="edit-bar" style="background:linear-gradient(135deg,#f3e5f5,#ede7f6);border-color:#ce93d8;">
+        <select id="editQuoteSelect"><option value="">— Select Quotation to Edit —</option></select>
+        <button class="btn btn-sm blue" onclick="loadSavedQuotation()">&#128269; Load</button>
+        <button class="btn btn-sm amber" onclick="refreshQuotationList()">&#8635; Refresh</button>
+      </div>
+      <div class="edit-mode-badge" id="editQuoteModeBadge">
+        <span class="edit-label">EDITING:</span>
+        <span class="edit-inv" id="editQuoteDisplay">—</span>
+        <button class="btn cancel-edit" onclick="cancelQuoteEdit()">&#10005; Cancel</button>
+      </div>
+
+      <div class="section-title">Customer Details</div>
+      <div class="grid">
+        <div class="full"><label>Customer Name</label><select id="qtCustomerName"><option value="">— Select Customer —</option></select></div>
+        <div><label>Phone</label><input type="text" id="qtPhone" placeholder="Phone number"></div>
+        <div><label>Email</label><input type="text" id="qtEmail" placeholder="Email address"></div>
+        <div><label>Discount (&#8377;)</label><input type="number" id="qtDiscount" value="0" min="0"></div>
+        <div class="full"><label>Address</label><textarea id="qtAddress" rows="2" placeholder="Full address"></textarea></div>
+        <div><label>Tax (&#8377;)</label><input type="number" id="qtTax" value="0" min="0"></div>
+      </div>
+
+      <div class="section-title">Add Items</div>
+      <div class="item-grid">
+        <div><label>Description</label><input type="text" id="qtItemDesc" placeholder="Item or service description"></div>
+        <div><label>Qty</label><input type="number" id="qtItemQty" value="1" min="1"></div>
+        <div><label>Rate (&#8377;)</label><input type="number" id="qtItemRate" value="0" min="0"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn blue" onclick="addQuoteItem()">&#43; Add Item</button>
+        <button class="btn red" onclick="clearQuoteItems()">&#10005; Clear Items</button>
+        <button class="btn amber" onclick="saveQuotationFn()">&#128190; Save Quote</button>
+        <button class="btn green" onclick="generateQuotation()">&#128196; Save &amp; Generate PDF</button>
+      </div>
+      <table id="qtItemsTable"><thead><tr><th style="width:50px;">#</th><th>Description</th><th style="width:70px;">Qty</th><th style="width:100px;">Rate (&#8377;)</th><th style="width:120px;">Amount (&#8377;)</th></tr></thead><tbody></tbody></table>
+    </div>
+
+    <!-- ==================== DASHBOARD TAB ==================== -->
+    <div class="tab-content" id="tab-dashboard">
+      <div class="cards" id="dashCards">
+        <div class="card"><div class="card-value" id="dTotalRev">&#8377;0</div><div class="card-label">Total Revenue</div></div>
+        <div class="card red"><div class="card-value" id="dPending">&#8377;0</div><div class="card-label">Pending Balance</div></div>
+        <div class="card green"><div class="card-value" id="dPaid">0</div><div class="card-label">Paid Invoices</div></div>
+        <div class="card amber"><div class="card-value" id="dUnpaid">0</div><div class="card-label">Unpaid Invoices</div></div>
+      </div>
+
+      <div class="section-title">Recent Invoices</div>
+      <div class="search-bar">
+        <input type="text" id="dashSearch" placeholder="&#128269; Search by name, invoice no, phone..." onkeyup="searchDashboard()">
+        <button class="btn btn-sm green" onclick="exportCSV()">&#128229; Export CSV</button>
+      </div>
+      <div class="filter-row">
+        <button class="filter-btn active" onclick="filterDash('all')">All</button>
+        <button class="filter-btn" onclick="filterDash('Paid')">&#9989; Paid</button>
+        <button class="filter-btn" onclick="filterDash('Unpaid')">&#10060; Unpaid</button>
+        <button class="filter-btn" onclick="filterDash('Partial')">&#9888; Partial</button>
+        <button class="btn btn-sm blue" onclick="loadDashboard()" style="margin-left:auto;">&#8635; Refresh</button>
+        <button class="btn btn-sm amber" onclick="showReminders()">&#128276; Reminders</button>
+      </div>
+      <div class="dash-table">
+        <table id="dashTable"><thead><tr>
+          <th>Invoice</th><th>Customer</th><th>Amount</th><th>Balance</th><th>Status</th><th>Actions</th>
+        </tr></thead><tbody><tr><td colspan="6" style="text-align:center;color:#999;padding:20px;">Loading...</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- ==================== SERVICE TRACKER TAB ==================== -->
+    <div class="tab-content" id="tab-tracker">
+      <div class="section-title">Service Tickets</div>
+      <div class="search-bar">
+        <input type="text" id="ticketSearch" placeholder="&#128269; Search tickets by name, ID, device, issue..." onkeyup="searchTicketsFn()">
+      </div>
+      <div class="filter-row">
+        <button class="filter-btn active" onclick="filterTickets('all')">All</button>
+        <button class="filter-btn" onclick="filterTickets('Received')">&#128229; Received</button>
+        <button class="filter-btn" onclick="filterTickets('In Progress')">&#9881; In Progress</button>
+        <button class="filter-btn" onclick="filterTickets('Ready')">&#9989; Ready</button>
+        <button class="filter-btn" onclick="filterTickets('Delivered')">&#128230; Delivered</button>
+        <button class="filter-btn" onclick="filterTickets('Closed')">&#128274; Closed</button>
+        <button class="btn btn-sm blue" onclick="loadServiceTickets()" style="margin-left:auto;">&#8635; Refresh</button>
+      </div>
+      <div class="dash-table">
+        <table id="ticketTable"><thead><tr>
+          <th>Ticket ID</th><th>Customer</th><th>Device</th><th>Issue</th><th>Status</th><th>Actions</th>
+        </tr></thead><tbody><tr><td colspan="6" style="text-align:center;color:#999;padding:20px;">Click Refresh to load tickets</td></tr></tbody></table>
+      </div>
+
+      <!-- Ticket Detail Modal -->
+      <div id="ticketDetail" style="display:none;margin-top:16px;background:#f8fbfe;border:1px solid #d6e4f0;border-radius:12px;padding:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <h3 style="color:#0B5394;font-size:16px;" id="tdTicketId">—</h3>
+          <button class="btn btn-sm gray" onclick="document.getElementById('ticketDetail').style.display='none'">&#10005; Close</button>
+        </div>
+        <div class="grid" style="gap:10px;">
+          <div><label>Customer</label><div id="tdName" style="font-weight:600;">—</div></div>
+          <div><label>Phone</label><div id="tdPhone">—</div></div>
+          <div><label>Email</label><div id="tdEmail">—</div></div>
+          <div><label>Device</label><div id="tdDevice">—</div></div>
+          <div><label>Device Type</label><div id="tdDeviceType">—</div></div>
+          <div><label>Status</label><div id="tdStatus">—</div></div>
+          <div class="full"><label>Issue Reported</label><div id="tdIssue" style="white-space:pre-wrap;">—</div></div>
+          <div><label>Opened At</label><div id="tdOpened">—</div></div>
+          <div><label>In Progress At</label><div id="tdInProgress">—</div></div>
+          <div><label>Closed At</label><div id="tdClosed">—</div></div>
+        </div>
+        <div class="btn-row" style="margin-top:12px;">
+          <button class="btn btn-sm blue" onclick="changeTicketStatus('Received')">&#128229; Received</button>
+          <button class="btn btn-sm amber" onclick="changeTicketStatus('In Progress')">&#9881; In Progress</button>
+          <button class="btn btn-sm green" onclick="changeTicketStatus('Ready')">&#9989; Ready</button>
+          <button class="btn btn-sm purple" onclick="changeTicketStatus('Delivered')">&#128230; Delivered</button>
+          <button class="btn btn-sm gray" onclick="changeTicketStatus('Closed')">&#128274; Closed</button>
+          <button class="btn btn-sm blue" onclick="printServiceTicket()" style="margin-left:auto;">&#128424; Print Ticket</button>
+          <button class="btn btn-sm whatsapp" onclick="whatsappTicket()">&#128172; WhatsApp</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== EXPENSES TAB ==================== -->
+    <div class="tab-content" id="tab-expenses">
+      <div class="cards">
+        <div class="card red"><div class="card-value" id="eTotalExp">&#8377;0</div><div class="card-label">Total Expenses</div></div>
+        <div class="card amber"><div class="card-value" id="eMonthExp">&#8377;0</div><div class="card-label">This Month</div></div>
+        <div class="card green"><div class="card-value" id="eProfit">&#8377;0</div><div class="card-label">Net Profit</div></div>
+        <div class="card"><div class="card-value" id="eCount">0</div><div class="card-label">Total Entries</div></div>
+      </div>
+      <div class="section-title">Purchase History (from Purchases Sheet)</div>
+      <div class="search-bar">
+        <input type="text" id="expenseSearch" placeholder="&#128269; Search expenses..." onkeyup="searchExpenses()">
+        <button class="btn btn-sm blue" onclick="loadExpenses()">&#8635; Refresh</button>
+      </div>
+      <div class="dash-table">
+        <table id="expenseTable"><thead><tr>
+          <th>Date</th><th>Description</th><th>Vendor</th><th>Category</th><th>Amount</th>
+        </tr></thead><tbody><tr><td colspan="5" style="text-align:center;color:#999;padding:20px;">Click Refresh to load expenses</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- ==================== ADD CUSTOMER MODAL ==================== -->
+    <div class="modal-overlay" id="addCustomerModal">
+      <div class="modal">
+        <h3>&#128100; Add New Customer</h3>
+        <div class="grid" style="gap:12px;">
+          <div class="full"><label>Customer Name *</label><input type="text" id="newCustName" placeholder="Full name"></div>
+          <div><label>Phone</label><input type="text" id="newCustPhone" placeholder="Phone number"></div>
+          <div><label>Email</label><input type="text" id="newCustEmail" placeholder="Email"></div>
+          <div class="full"><label>Address</label><textarea id="newCustAddress" rows="2" placeholder="Address"></textarea></div>
+        </div>
+        <div class="btn-row" style="margin-top:16px;">
+          <button class="btn green" onclick="saveNewCustomer()">&#128190; Save Customer</button>
+          <button class="btn gray" onclick="closeAddCustomer()">&#10005; Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== REMINDERS MODAL ==================== -->
+    <div class="modal-overlay" id="remindersModal">
+      <div class="modal" style="max-width:650px;">
+        <h3>&#128276; Payment Reminders — Overdue Invoices</h3>
+        <div class="dash-table" style="max-height:350px;">
+          <table id="reminderTable"><thead><tr>
+            <th>Invoice</th><th>Customer</th><th>Balance</th><th>Days</th><th>Action</th>
+          </tr></thead><tbody></tbody></table>
+        </div>
+        <div class="btn-row" style="margin-top:12px;">
+          <button class="btn gray" onclick="closeReminders()">&#10005; Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast"></div>
+
+    <div class="status" id="status">Ready. Select a customer and add items to begin.</div>
+  </div>

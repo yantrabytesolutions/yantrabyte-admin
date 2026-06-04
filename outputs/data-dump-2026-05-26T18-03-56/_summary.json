@@ -1,0 +1,99 @@
+{
+  "timestamp": "2026-05-26T18-03-56",
+  "supabase_url": "https://eyajwjrafudarccvcada.supabase.co",
+  "total_tables": 18,
+  "total_rows": 56,
+  "errors": 0,
+  "tables": [
+    {
+      "table": "service_tickets",
+      "rows": 0,
+      "status": "OK"
+    },
+    {
+      "table": "invoices",
+      "rows": 0,
+      "status": "OK"
+    },
+    {
+      "table": "customers",
+      "rows": 0,
+      "status": "OK"
+    },
+    {
+      "table": "purchases",
+      "rows": 0,
+      "status": "OK"
+    },
+    {
+      "table": "suppliers",
+      "rows": 0,
+      "status": "OK"
+    },
+    {
+      "table": "services",
+      "rows": 15,
+      "status": "OK"
+    },
+    {
+      "table": "products",
+      "rows": 0,
+      "status": "OK"
+    },
+    {
+      "table": "pages",
+      "rows": 0,
+      "status": "OK"
+    },
+    {
+      "table": "blog_posts",
+      "rows": 5,
+      "status": "OK"
+    },
+    {
+      "table": "testimonials",
+      "rows": 5,
+      "status": "OK"
+    },
+    {
+      "table": "team_members",
+      "rows": 0,
+      "status": "OK"
+    },
+    {
+      "table": "careers",
+      "rows": 3,
+      "status": "OK"
+    },
+    {
+      "table": "industries",
+      "rows": 8,
+      "status": "OK"
+    },
+    {
+      "table": "faqs",
+      "rows": 8,
+      "status": "OK"
+    },
+    {
+      "table": "gallery_images",
+      "rows": 0,
+      "status": "OK"
+    },
+    {
+      "table": "client_logos",
+      "rows": 0,
+      "status": "OK"
+    },
+    {
+      "table": "contact_submissions",
+      "rows": 0,
+      "status": "OK"
+    },
+    {
+      "table": "site_settings",
+      "rows": 12,
+      "status": "OK"
+    }
+  ]
+}

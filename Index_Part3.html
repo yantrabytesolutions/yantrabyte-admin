@@ -1,0 +1,447 @@
+  <script>
+    var customers = [], items = [], qtItems = [];
+    var editInvoiceNo = null, editQuoteNo = null;
+    var lastInvoiceData = null, lastQuoteData = null;
+    var dashData = null, dashFilter = 'all';
+    var sealUrl = '';
+
+    function normalizeText(v) { return String(v||'').toLowerCase().replace(/\s+/g,' ').trim(); }
+    function setStatus(msg, type) { var el=document.getElementById('status'); el.textContent=msg; el.className='status'+(type?' '+type:''); }
+    function fmt(n) { return '\u20B9'+Number(n||0).toLocaleString('en-IN'); }
+
+    // switchTab defined below with 4 tabs
+
+    // ===== INVOICE FUNCTIONS (existing) =====
+    function showInvoiceNo(inv) { document.getElementById('invoiceNoDisplay').textContent=inv; document.getElementById('invoiceBadge').classList.add('show'); document.getElementById('btnWhatsappInv').style.display=''; document.getElementById('btnEmailInv').style.display=''; }
+    function setEditMode(inv) { editInvoiceNo=inv; document.getElementById('editInvDisplay').textContent=inv; document.getElementById('editModeBadge').classList.add('show'); }
+    function cancelEdit() { editInvoiceNo=null; lastInvoiceData=null; document.getElementById('editModeBadge').classList.remove('show'); document.getElementById('invoiceBadge').classList.remove('show'); document.getElementById('btnWhatsappInv').style.display='none'; document.getElementById('btnEmailInv').style.display='none'; document.getElementById('customerName').value=''; document.getElementById('phone').value=''; document.getElementById('email').value=''; document.getElementById('address').value=''; document.getElementById('discount').value=0; document.getElementById('tax').value=0; document.getElementById('advancePaid').value=0; items=[]; renderItems(); setStatus('Edit cancelled.','success'); }
+
+    function testServer() { setStatus('Testing...'); google.script.run.withSuccessHandler(function(r){setStatus('Server: '+r,'success');}).withFailureHandler(function(e){setStatus('Error: '+e.message,'error');}).ping(); }
+
+    function loadCustomers() {
+      google.script.run.withSuccessHandler(function(data) {
+        customers=data||[];
+        var sel=document.getElementById('customerName');
+        sel.innerHTML='<option value="">— Select Customer —</option>';
+        customers.forEach(function(c){ var o=document.createElement('option'); o.value=c.customerName; o.textContent=c.customerName; sel.appendChild(o); });
+        populateQuoteCustomers();
+        setStatus('Loaded '+customers.length+' customers.','success');
+      }).withFailureHandler(function(e){setStatus('Error: '+e.message,'error');}).getCustomers();
+    }
+
+    function populateQuoteCustomers() {
+      var sel=document.getElementById('qtCustomerName');
+      sel.innerHTML='<option value="">— Select Customer —</option>';
+      customers.forEach(function(c){ var o=document.createElement('option'); o.value=c.customerName; o.textContent=c.customerName; sel.appendChild(o); });
+    }
+
+    function onCustomerChange(prefix) {
+      var selId=prefix?prefix+'CustomerName':'customerName';
+      var phoneId=prefix?prefix+'Phone':'phone';
+      var emailId=prefix?prefix+'Email':'email';
+      var addrId=prefix?prefix+'Address':'address';
+      var selected=normalizeText(document.getElementById(selId).value);
+      var c=customers.find(function(x){return normalizeText(x.customerName)===selected;});
+      if(c){ document.getElementById(phoneId).value=c.phone||''; document.getElementById(emailId).value=c.email||''; document.getElementById(addrId).value=c.address||''; }
+      else { document.getElementById(phoneId).value=''; document.getElementById(emailId).value=''; document.getElementById(addrId).value=''; }
+    }
+    document.getElementById('customerName').addEventListener('change',function(){onCustomerChange('');});
+
+    function refreshInvoiceList() {
+      setStatus('Loading invoices...');
+      google.script.run.withSuccessHandler(function(list){
+        var sel=document.getElementById('editInvoiceSelect');
+        sel.innerHTML='<option value="">— Select Invoice to Edit —</option>';
+        (list||[]).forEach(function(inv){ var o=document.createElement('option'); o.value=inv.invoiceNo; o.textContent=inv.invoiceNo+' | '+inv.customerName+' | '+fmt(inv.grandTotal); sel.appendChild(o); });
+        setStatus('Loaded '+(list||[]).length+' invoices.','success');
+      }).withFailureHandler(function(e){setStatus('Error: '+e.message,'error');}).getSavedInvoices();
+    }
+
+    function loadSavedInvoice() {
+      var inv=document.getElementById('editInvoiceSelect').value;
+      if(!inv){setStatus('Select an invoice.','error');return;}
+      setStatus('Loading '+inv+'...');
+      google.script.run.withSuccessHandler(function(d){
+        lastInvoiceData=d;
+        var sel=document.getElementById('customerName');
+        for(var i=0;i<sel.options.length;i++){if(normalizeText(sel.options[i].value)===normalizeText(d.customerName)){sel.selectedIndex=i;break;}}
+        document.getElementById('phone').value=d.phone||'';
+        document.getElementById('email').value=d.email||'';
+        document.getElementById('address').value=d.address||'';
+        document.getElementById('discount').value=d.discount||0;
+        document.getElementById('tax').value=d.tax||0;
+        document.getElementById('advancePaid').value=d.advancePaid||0;
+        items=d.items||[]; renderItems(); setEditMode(d.invoiceNo); showInvoiceNo(d.invoiceNo);
+        setStatus('Loaded '+d.invoiceNo+' for editing.','success');
+      }).withFailureHandler(function(e){setStatus('Error: '+e.message,'error');}).loadInvoice(inv);
+    }
+
+    function addItem() {
+      var desc=document.getElementById('itemDesc').value.trim(), qty=Number(document.getElementById('itemQty').value||0), rate=Number(document.getElementById('itemRate').value||0);
+      if(!desc){setStatus('Enter description.','error');return;} if(qty<=0){setStatus('Qty must be >=1.','error');return;}
+      items.push({description:desc,qty:qty,rate:rate}); renderItems();
+      document.getElementById('itemDesc').value=''; document.getElementById('itemQty').value=1; document.getElementById('itemRate').value=0; document.getElementById('itemDesc').focus();
+      setStatus('Item added. Total: '+items.length,'success');
+    }
+    function clearItems() { items=[]; renderItems(); document.getElementById('invoiceBadge').classList.remove('show'); setStatus('Items cleared.'); }
+
+    function renderItems() { renderItemTable('itemsTable', items); }
+    function renderItemTable(tableId, arr) {
+      var tbody=document.querySelector('#'+tableId+' tbody'); tbody.innerHTML='';
+      if(!arr.length){ tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#999;padding:18px;">No items added</td></tr>'; return; }
+      var total=0;
+      arr.forEach(function(it,i){ var amt=Number(it.qty)*Number(it.rate); total+=amt;
+        var tr=document.createElement('tr');
+        tr.innerHTML='<td style="text-align:center;">'+(i+1)+'</td><td>'+it.description+'</td><td style="text-align:center;">'+it.qty+'</td><td class="right">'+fmt(it.rate)+'</td><td class="right">'+fmt(amt)+'</td>';
+        tbody.appendChild(tr);
+      });
+      var tr=document.createElement('tr'); tr.innerHTML='<td colspan="4" class="right" style="font-weight:700;color:#0B5394;">Subtotal</td><td class="right" style="font-weight:700;color:#0B5394;">'+fmt(total)+'</td>'; tbody.appendChild(tr);
+    }
+
+    function getFormData() {
+      var fd={customerName:document.getElementById('customerName').value.trim(),phone:document.getElementById('phone').value.trim(),email:document.getElementById('email').value.trim(),address:document.getElementById('address').value.trim(),discount:document.getElementById('discount').value||0,tax:document.getElementById('tax').value||0,advancePaid:document.getElementById('advancePaid').value||0,items:items};
+      if(editInvoiceNo)fd.editInvoiceNo=editInvoiceNo; return fd;
+    }
+    function validateForm(d){if(!d.customerName){setStatus('Select a customer.','error');return false;}if(!d.items.length){setStatus('Add at least one item.','error');return false;}return true;}
+
+    function saveInvoice() {
+      var d=getFormData(); if(!validateForm(d))return;
+      setStatus((editInvoiceNo?'Updating':'Saving')+' invoice...');
+      google.script.run.withSuccessHandler(function(r){ lastInvoiceData=r; showInvoiceNo(r.invoiceNo); setStatus('Invoice '+(r.isUpdate?'updated':'saved')+'!\nInvoice: '+r.invoiceNo+'\nTotal: '+fmt(r.grandTotal)+'\nBalance: '+fmt(r.balance),'success'); refreshInvoiceList();
+      }).withFailureHandler(function(e){setStatus('Error: '+e.message,'error');}).saveInvoice(d);
+    }
+
+    function generateInvoice() {
+      var d=getFormData(); if(!validateForm(d))return;
+      setStatus((editInvoiceNo?'Re-generating':'Generating')+' PDF...');
+      google.script.run.withSuccessHandler(function(r){ lastInvoiceData=r; showInvoiceNo(r.invoiceNo); setStatus('PDF '+(r.isUpdate?'re-generated':'generated')+'!\nInvoice: '+r.invoiceNo+'\nPDF: '+r.pdfUrl,'success'); window.open(r.pdfUrl,'_blank'); refreshInvoiceList();
+      }).withFailureHandler(function(e){setStatus('Error: '+e.message,'error');}).generatePdf(d);
+    }
+
+    // ===== QUOTATION FUNCTIONS =====
+    document.getElementById('qtCustomerName').addEventListener('change',function(){onCustomerChange('qt');});
+
+    function showQuoteNo(q) { document.getElementById('quoteNoDisplay').textContent=q; document.getElementById('quoteBadge').classList.add('show'); document.getElementById('btnWhatsappQt').style.display=''; document.getElementById('btnEmailQt').style.display=''; document.getElementById('btnConvert').style.display=''; }
+    function setQuoteEditMode(q) { editQuoteNo=q; document.getElementById('editQuoteDisplay').textContent=q; document.getElementById('editQuoteModeBadge').classList.add('show'); }
+    function cancelQuoteEdit() { editQuoteNo=null; lastQuoteData=null; document.getElementById('editQuoteModeBadge').classList.remove('show'); document.getElementById('quoteBadge').classList.remove('show'); document.getElementById('qtCustomerName').value=''; document.getElementById('qtPhone').value=''; document.getElementById('qtEmail').value=''; document.getElementById('qtAddress').value=''; document.getElementById('qtDiscount').value=0; document.getElementById('qtTax').value=0; qtItems=[]; renderQuoteItems(); setStatus('Quote edit cancelled.','success'); }
+
+    function addQuoteItem() {
+      var desc=document.getElementById('qtItemDesc').value.trim(), qty=Number(document.getElementById('qtItemQty').value||0), rate=Number(document.getElementById('qtItemRate').value||0);
+      if(!desc){setStatus('Enter description.','error');return;} if(qty<=0){setStatus('Qty must be >=1.','error');return;}
+      qtItems.push({description:desc,qty:qty,rate:rate}); renderQuoteItems();
+      document.getElementById('qtItemDesc').value=''; document.getElementById('qtItemQty').value=1; document.getElementById('qtItemRate').value=0; document.getElementById('qtItemDesc').focus();
+    }
+    function clearQuoteItems() { qtItems=[]; renderQuoteItems(); document.getElementById('quoteBadge').classList.remove('show'); }
+    function renderQuoteItems() { renderItemTable('qtItemsTable', qtItems); }
+
+    function getQuoteFormData() {
+      var fd={customerName:document.getElementById('qtCustomerName').value.trim(),phone:document.getElementById('qtPhone').value.trim(),email:document.getElementById('qtEmail').value.trim(),address:document.getElementById('qtAddress').value.trim(),discount:document.getElementById('qtDiscount').value||0,tax:document.getElementById('qtTax').value||0,items:qtItems};
+      if(editQuoteNo)fd.editQuoteNo=editQuoteNo; return fd;
+    }
+
+    function refreshQuotationList() {
+      google.script.run.withSuccessHandler(function(list){
+        var sel=document.getElementById('editQuoteSelect');
+        sel.innerHTML='<option value="">— Select Quotation to Edit —</option>';
+        (list||[]).forEach(function(q){ var o=document.createElement('option'); o.value=q.quoteNo; o.textContent=q.quoteNo+' | '+q.customerName+' | '+fmt(q.grandTotal)+' | '+q.status; sel.appendChild(o); });
+      }).withFailureHandler(function(e){setStatus('Error: '+e.message,'error');}).getSavedQuotations();
+    }
+
+    function loadSavedQuotation() {
+      var q=document.getElementById('editQuoteSelect').value;
+      if(!q){setStatus('Select a quotation.','error');return;}
+      google.script.run.withSuccessHandler(function(d){
+        lastQuoteData=d;
+        var sel=document.getElementById('qtCustomerName');
+        for(var i=0;i<sel.options.length;i++){if(normalizeText(sel.options[i].value)===normalizeText(d.customerName)){sel.selectedIndex=i;break;}}
+        document.getElementById('qtPhone').value=d.phone||'';
+        document.getElementById('qtEmail').value=d.email||'';
+        document.getElementById('qtAddress').value=d.address||'';
+        document.getElementById('qtDiscount').value=d.discount||0;
+        document.getElementById('qtTax').value=d.tax||0;
+        qtItems=d.items||[]; renderQuoteItems(); setQuoteEditMode(d.quoteNo); showQuoteNo(d.quoteNo);
+        setStatus('Loaded '+d.quoteNo+' for editing.','success');
+      }).withFailureHandler(function(e){setStatus('Error: '+e.message,'error');}).loadQuotation(q);
+    }
+
+    function saveQuotationFn() {
+      var d=getQuoteFormData(); if(!d.customerName||!d.items.length){setStatus('Fill customer & items.','error');return;}
+      setStatus('Saving quotation...');
+      google.script.run.withSuccessHandler(function(r){ lastQuoteData=r; showQuoteNo(r.quoteNo); setStatus('Quotation '+(r.isUpdate?'updated':'saved')+'! '+r.quoteNo,'success'); refreshQuotationList();
+      }).withFailureHandler(function(e){setStatus('Error: '+e.message,'error');}).saveQuotation(d);
+    }
+
+    function generateQuotation() {
+      var d=getQuoteFormData(); if(!d.customerName||!d.items.length){setStatus('Fill customer & items.','error');return;}
+      setStatus('Generating quotation PDF...');
+      google.script.run.withSuccessHandler(function(r){ lastQuoteData=r; showQuoteNo(r.quoteNo); setStatus('Quotation PDF generated!\n'+r.quoteNo+'\nPDF: '+r.pdfUrl,'success'); window.open(r.pdfUrl,'_blank'); refreshQuotationList();
+      }).withFailureHandler(function(e){setStatus('Error: '+e.message,'error');}).generateQuotationPdf(d);
+    }
+
+    function convertToInvoice() {
+      if(!lastQuoteData){setStatus('Load a quotation first.','error');return;}
+      switchTab('invoice');
+      var sel=document.getElementById('customerName');
+      for(var i=0;i<sel.options.length;i++){if(normalizeText(sel.options[i].value)===normalizeText(lastQuoteData.customerName||document.getElementById('qtCustomerName').value)){sel.selectedIndex=i;break;}}
+      document.getElementById('phone').value=document.getElementById('qtPhone').value;
+      document.getElementById('email').value=document.getElementById('qtEmail').value;
+      document.getElementById('address').value=document.getElementById('qtAddress').value;
+      document.getElementById('discount').value=document.getElementById('qtDiscount').value;
+      document.getElementById('tax').value=document.getElementById('qtTax').value;
+      items=JSON.parse(JSON.stringify(qtItems));
+      renderItems(); editInvoiceNo=null;
+      setStatus('Quotation data copied to Invoice. Review and save/generate.','success');
+    }
+
+    // ===== DASHBOARD =====
+    function loadDashboard() {
+      setStatus('Loading dashboard...');
+      google.script.run.withSuccessHandler(function(d){
+        dashData=d;
+        document.getElementById('dTotalRev').textContent=fmt(d.totalRevenue);
+        document.getElementById('dPending').textContent=fmt(d.pendingBalance);
+        document.getElementById('dPaid').textContent=d.paidCount;
+        document.getElementById('dUnpaid').textContent=d.unpaidCount+(d.partialCount?' + '+d.partialCount+' partial':'');
+        renderDashTable(d.recentInvoices);
+        setStatus('Dashboard loaded.','success');
+      }).withFailureHandler(function(e){setStatus('Error: '+e.message,'error');}).getDashboardData();
+    }
+
+    function filterDash(f) {
+      dashFilter=f;
+      document.querySelectorAll('.filter-btn').forEach(function(b){b.classList.toggle('active',b.textContent.toLowerCase().indexOf(f.toLowerCase())>=0||(f==='all'&&b.textContent==='All'));});
+      if(dashData) renderDashTable(dashData.recentInvoices);
+    }
+
+    function renderDashTable(invoices) {
+      var tbody=document.querySelector('#dashTable tbody'); tbody.innerHTML='';
+      var filtered=invoices.filter(function(inv){ return dashFilter==='all'||inv.status===dashFilter; });
+      if(!filtered.length){ tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#999;padding:20px;">No invoices found</td></tr>'; return; }
+      filtered.forEach(function(inv){
+        var badgeClass=inv.status==='Paid'?'badge-paid':inv.status==='Partial'?'badge-partial':'badge-unpaid';
+        var tr=document.createElement('tr');
+        tr.innerHTML='<td><strong>'+inv.invoiceNo+'</strong></td><td>'+inv.customerName+'</td><td class="right">'+fmt(inv.grandTotal)+'</td><td class="right">'+fmt(inv.balance)+'</td>'
+          +'<td><span class="badge '+badgeClass+'">'+inv.status+'</span></td>'
+          +'<td><div class="action-btns">'
+          +'<button class="btn btn-sm green" onclick="markStatus(\''+inv.invoiceNo+'\',\'Paid\')">Paid</button>'
+          +'<button class="btn btn-sm amber" onclick="markStatus(\''+inv.invoiceNo+'\',\'Partial\')">Partial</button>'
+          +'<button class="btn btn-sm whatsapp" onclick="whatsappDash(\''+inv.invoiceNo+'\',\''+inv.phone+'\',\''+inv.customerName+'\','+inv.grandTotal+',\''+inv.pdfUrl+'\')">WA</button>'
+          +'<button class="btn btn-sm purple" onclick="emailDash(\''+inv.invoiceNo+'\')">&#9993;</button>'
+          +'</div></td>';
+        tbody.appendChild(tr);
+      });
+    }
+
+    function markStatus(invNo, status) {
+      setStatus('Updating status...');
+      google.script.run.withSuccessHandler(function(r){ setStatus(r.invoiceNo+' marked as '+r.status,'success'); loadDashboard(); }).withFailureHandler(function(e){setStatus('Error: '+e.message,'error');}).updatePaymentStatus(invNo, status);
+    }
+
+    // ===== WHATSAPP =====
+    function whatsappShare(type) {
+      var phone, name, docNo, amount, pdfUrl;
+      if(type==='invoice'){ phone=document.getElementById('phone').value; name=document.getElementById('customerName').value; docNo=document.getElementById('invoiceNoDisplay').textContent; amount=lastInvoiceData?lastInvoiceData.grandTotal||'':''  ; pdfUrl=lastInvoiceData?lastInvoiceData.pdfUrl||'':''; }
+      else { phone=document.getElementById('qtPhone').value; name=document.getElementById('qtCustomerName').value; docNo=document.getElementById('quoteNoDisplay').textContent; amount=lastQuoteData?lastQuoteData.grandTotal||'':''; pdfUrl=lastQuoteData?lastQuoteData.pdfUrl||'':''; }
+      var cleanPhone=String(phone).replace(/\D/g,'');
+      if(cleanPhone.length===10) cleanPhone='91'+cleanPhone;
+      var msg='Hi '+name+', here is your '+(type==='invoice'?'invoice':'quotation')+' *'+docNo+'*.'+(amount?'\nAmount: *\u20B9'+Number(amount).toLocaleString('en-IN')+'*':'')+(pdfUrl?'\nView/Download: '+pdfUrl:'')+'\n\nThank you!\n- YantraByte Solutions';
+      window.open('https://wa.me/'+cleanPhone+'?text='+encodeURIComponent(msg),'_blank');
+    }
+
+    function whatsappDash(invNo, phone, name, amount, pdfUrl) {
+      var cleanPhone=String(phone).replace(/\D/g,''); if(cleanPhone.length===10) cleanPhone='91'+cleanPhone;
+      var msg='Hi '+name+', here is your invoice *'+invNo+'*.\nAmount: *\u20B9'+Number(amount).toLocaleString('en-IN')+'*'+(pdfUrl?'\nView/Download: '+pdfUrl:'')+'\n\nThank you!\n- YantraByte Solutions';
+      window.open('https://wa.me/'+cleanPhone+'?text='+encodeURIComponent(msg),'_blank');
+    }
+
+    // ===== EMAIL =====
+    function emailDoc(type) {
+      var docNo = type==='invoice' ? document.getElementById('invoiceNoDisplay').textContent : document.getElementById('quoteNoDisplay').textContent;
+      setStatus('Sending email...');
+      var fn = type==='invoice' ? 'emailInvoice' : 'emailQuotation';
+      google.script.run.withSuccessHandler(function(r){ setStatus('Email sent to '+r.sentTo,'success'); }).withFailureHandler(function(e){setStatus('Email error: '+e.message,'error');})[fn](docNo);
+    }
+
+    function emailDash(invNo) {
+      setStatus('Sending email...');
+      google.script.run.withSuccessHandler(function(r){ setStatus('Email sent to '+r.sentTo,'success'); }).withFailureHandler(function(e){setStatus('Email error: '+e.message,'error');}).emailInvoice(invNo);
+    }
+
+    // Enter key shortcuts
+    document.getElementById('itemRate').addEventListener('keydown',function(e){if(e.key==='Enter')addItem();});
+    document.getElementById('itemDesc').addEventListener('keydown',function(e){if(e.key==='Enter')addItem();});
+    document.getElementById('qtItemRate').addEventListener('keydown',function(e){if(e.key==='Enter')addQuoteItem();});
+    document.getElementById('qtItemDesc').addEventListener('keydown',function(e){if(e.key==='Enter')addQuoteItem();});
+
+    // ===== TABS — defined in Part4 =====
+
+    // ===== SERVICE TRACKER =====
+    var ticketsData = [], ticketFilter = 'all', currentTicket = null;
+
+    function loadServiceTickets() {
+      setStatus('Loading tickets...');
+      google.script.run.withSuccessHandler(function(data) {
+        ticketsData = data || [];
+        renderTicketTable();
+        setStatus('Loaded ' + ticketsData.length + ' tickets.', 'success');
+      }).withFailureHandler(function(e) { setStatus('Error: ' + e.message, 'error'); }).getServiceTickets();
+    }
+
+    function filterTickets(f) {
+      ticketFilter = f;
+      document.querySelectorAll('#tab-tracker .filter-btn').forEach(function(b) {
+        var txt = b.textContent.toLowerCase();
+        b.classList.toggle('active', f === 'all' ? txt === 'all' : txt.indexOf(f.toLowerCase()) >= 0);
+      });
+      renderTicketTable();
+    }
+
+    function renderTicketTable() {
+      var tbody = document.querySelector('#ticketTable tbody');
+      tbody.innerHTML = '';
+      var filtered = ticketsData.filter(function(t) {
+        if (ticketFilter === 'all') return true;
+        return (t.status || '').toLowerCase() === ticketFilter.toLowerCase();
+      });
+      if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#999;padding:20px;">No tickets found</td></tr>'; return; }
+      filtered.forEach(function(t) {
+        var st = t.status || 'Received';
+        var badgeClass = st === 'Delivered' || st === 'Closed' ? 'badge-paid' : st === 'In Progress' ? 'badge-partial' : st === 'Ready' ? 'badge-accepted' : 'badge-unpaid';
+        var tr = document.createElement('tr');
+        tr.innerHTML = '<td><strong>' + (t.ticketId || '—') + '</strong></td><td>' + t.customerName + '</td><td>' + (t.device || t.deviceType || '—') + '</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (t.issue || '—') + '</td><td><span class="badge ' + badgeClass + '">' + st + '</span></td><td><button class="btn btn-sm blue" onclick="viewTicket(\'' + (t.ticketId || '') + '\')">View</button></td>';
+        tbody.appendChild(tr);
+      });
+    }
+
+
+    function viewTicket(ticketId) {
+      var t = ticketsData.find(function(x) { return x.ticketId === ticketId; });
+      if (!t) { setStatus('Ticket not found.', 'error'); return; }
+      currentTicket = t;
+      document.getElementById('tdTicketId').textContent = t.ticketId || '—';
+      document.getElementById('tdName').textContent = t.customerName || '—';
+      document.getElementById('tdPhone').textContent = t.phone || '—';
+      document.getElementById('tdEmail').textContent = t.email || '—';
+      document.getElementById('tdDevice').textContent = t.device || '—';
+      document.getElementById('tdDeviceType').textContent = t.deviceType || '—';
+      document.getElementById('tdStatus').textContent = t.status || 'Received';
+      document.getElementById('tdIssue').textContent = t.issue || '—';
+      document.getElementById('tdOpened').textContent = t.openedAt || t.timestamp || '—';
+      document.getElementById('tdInProgress').textContent = t.inProgressAt || '—';
+      document.getElementById('tdClosed').textContent = t.closedAt || '—';
+      document.getElementById('ticketDetail').style.display = 'block';
+    }
+
+    function changeTicketStatus(newStatus) {
+      if (!currentTicket || !currentTicket.ticketId) { setStatus('No ticket selected.', 'error'); return; }
+      setStatus('Updating status...');
+      google.script.run.withSuccessHandler(function(r) {
+        setStatus(r.ticketId + ' → ' + r.status, 'success');
+        document.getElementById('tdStatus').textContent = r.status;
+        loadServiceTickets();
+      }).withFailureHandler(function(e) { setStatus('Error: ' + e.message, 'error'); }).updateTicketStatus(currentTicket.ticketId, newStatus);
+    }
+
+    function whatsappTicket() {
+      if (!currentTicket) return;
+      var phone = String(currentTicket.phone || '').replace(/\D/g, '');
+      if (phone.length === 10) phone = '91' + phone;
+      var msg = 'Hi ' + currentTicket.customerName + ',\n\nYour service ticket *' + currentTicket.ticketId + '* status: *' + (currentTicket.status || 'Received') + '*\nDevice: ' + (currentTicket.device || currentTicket.deviceType || '') + '\nIssue: ' + (currentTicket.issue || '') + '\n\nThank you!\n- YantraByte Solutions';
+      window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank');
+    }
+
+    // ===== PRINT INVOICE =====
+    function printInvoice() {
+      var invNo = document.getElementById('invoiceNoDisplay').textContent;
+      if (!invNo || invNo === '—') { setStatus('Generate an invoice first.', 'error'); return; }
+      setStatus('Loading print data...');
+      google.script.run.withSuccessHandler(function(d) {
+        var itemsHtml = '';
+        var total = 0;
+        d.items.forEach(function(it, i) {
+          itemsHtml += '<tr><td style="text-align:center;border:1px solid #ccc;padding:6px;">' + (i + 1) + '</td><td style="border:1px solid #ccc;padding:6px;">' + it.description + '</td><td style="text-align:center;border:1px solid #ccc;padding:6px;">' + it.qty + '</td><td style="text-align:right;border:1px solid #ccc;padding:6px;">' + it.rate.toFixed(2) + '</td><td style="text-align:right;border:1px solid #ccc;padding:6px;">' + it.amount.toFixed(2) + '</td></tr>';
+          total += it.amount;
+        });
+        var html = '<html><head><title>Invoice ' + d.invoiceNo + '</title><style>body{font-family:Arial,sans-serif;padding:40px;max-width:900px;margin:0 auto;position:relative;}h1{color:#0B5394;text-align:center;margin:0;font-size:28px;}p.sub{text-align:center;color:#555;font-size:13px;margin:5px 0;}table{width:100%;border-collapse:collapse;margin:20px 0;}th{background:#0B5394;color:#fff;padding:10px;font-size:14px;}td{padding:8px;font-size:14px;}.right{text-align:right;}.totals td{font-weight:bold;background:#f5f5f5;border:1px solid #ccc;padding:10px;}.footer{margin-top:40px;font-size:12px;color:#666;text-align:center;}@media print{body{padding:20px;}}</style></head><body>';
+        html += '<h1 style="color:#0B5394;">YANTRA<span style="color:#E65100;">BYTE</span> <span style="color:#1A73E8;">SOLUTIONS</span></h1>';
+        html += '<p class="sub">47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post, Bengaluru - 560097</p>';
+        html += '<p class="sub">Phone: 09986742525 | Email: yantrabyte.solutions@gmail.com</p>';
+        html += '<hr style="border:2px solid #0B5394;margin:12px 0;">';
+        html += '<h2 style="text-align:center;background:#0B5394;color:#fff;padding:8px;margin:0;">TAX INVOICE</h2>';
+        html += '<table><tr><td><strong>Invoice No:</strong> ' + d.invoiceNo + '</td><td style="text-align:right;"><strong>Date:</strong> ' + d.date + '</td></tr></table>';
+        html += '<table><tr><td><strong>Customer:</strong> ' + d.customerName + '</td></tr><tr><td>Phone: ' + d.phone + ' | Email: ' + d.email + '</td></tr><tr><td>Address: ' + d.address + '</td></tr></table>';
+        html += '<table><thead><tr><th>Sl</th><th>Description</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead><tbody>' + itemsHtml + '</tbody>';
+        html += '<tfoot><tr class="totals"><td colspan="4" class="right">Subtotal</td><td class="right">' + d.subtotal.toFixed(2) + '</td></tr>';
+        if (d.discount) html += '<tr class="totals"><td colspan="4" class="right">Discount</td><td class="right">-' + d.discount.toFixed(2) + '</td></tr>';
+        if (d.tax) html += '<tr class="totals"><td colspan="4" class="right">Tax</td><td class="right">' + d.tax.toFixed(2) + '</td></tr>';
+        html += '<tr class="totals"><td colspan="4" class="right" style="font-size:14px;">Grand Total</td><td class="right" style="font-size:14px;">\u20B9' + d.grandTotal.toFixed(2) + '</td></tr>';
+        if (d.advance) html += '<tr class="totals"><td colspan="4" class="right">Advance Paid</td><td class="right">' + d.advance.toFixed(2) + '</td></tr>';
+        html += '<tr class="totals"><td colspan="4" class="right" style="font-size:14px;">Balance Due</td><td class="right" style="font-size:14px;">\u20B9' + d.balance.toFixed(2) + '</td></tr>';
+        html += '</tfoot></table>';
+        html += '<div style="margin-top:30px; display:flex; justify-content:space-between; align-items:flex-end;">';
+        html += '<div style="border-top:1px solid #000; width:40%; text-align:center; padding-top:5px;">Customer Signature</div>';
+        html += '<div style="width:45%; text-align:right; position:relative;">';
+        html += '<p style="margin:0; font-weight:bold; color:#0B5394;">For YantraByte Solutions</p>';
+        if (sealUrl) {
+          html += '<img src="' + sealUrl + '" style="position:absolute; top:25px; right:30px; width:85px; height:85px; opacity:0.85; pointer-events:none; z-index:1;">';
+        }
+        html += '<div style="height:40px;"></div>';
+        html += '<p style="margin:0; font-weight:bold; border-bottom:1px solid #000; display:inline-block; padding:0 10px;">RAMESH A S</p><br>';
+        html += '<span style="font-size:11px;">Authorized Signature</span>';
+        html += '</div>';
+        html += '</div>';
+        html += '<p class="footer" style="margin-top:20px;">Thank you for your business! - YantraByte Solutions</p>';
+        html += '</body></html>';
+        var w = window.open('', '_blank');
+        w.document.write(html);
+        w.document.close();
+        w.print();
+        setStatus('Print window opened.', 'success');
+      }).withFailureHandler(function(e) { setStatus('Error: ' + e.message, 'error'); }).getInvoicePrintData(invNo);
+    }
+
+    // ===== PRINT SERVICE TICKET =====
+    function printServiceTicket() {
+      if (!currentTicket) { setStatus('No ticket selected.', 'error'); return; }
+      var t = currentTicket;
+      var html = '<html><head><title>Service Ticket ' + t.ticketId + '</title><style>body{font-family:Arial,sans-serif;padding:40px;max-width:750px;margin:0 auto;position:relative;}h1{color:#0B5394;text-align:center;margin:0;font-size:24px;}p.sub{text-align:center;color:#555;font-size:12px;margin:5px 0;}table{width:100%;border-collapse:collapse;margin:15px 0;}td{padding:10px;border:1px solid #ddd;font-size:14px;}td:first-child{font-weight:bold;width:35%;background:#f5f8ff;}.title{background:#0B5394;color:#fff;text-align:center;padding:12px;font-size:16px;font-weight:bold;}@media print{body{padding:20px;}}</style></head><body>';
+      html += '<h1>YANTRA<span style="color:#E65100;">BYTE</span> <span style="color:#1A73E8;">SOLUTIONS</span></h1>';
+      html += '<p class="sub">47A 1st Cross, Sainagar 2nd Stage, Bengaluru - 560097 | Phone: 09986742525</p>';
+      html += '<div class="title">SERVICE TICKET / DEVICE RECEIPT</div>';
+      html += '<table>';
+      html += '<tr><td>Ticket ID</td><td><strong>' + (t.ticketId || '—') + '</strong></td></tr>';
+      html += '<tr><td>Date</td><td>' + (t.openedAt || t.timestamp || new Date().toLocaleDateString()) + '</td></tr>';
+      html += '<tr><td>Customer Name</td><td>' + (t.customerName || '—') + '</td></tr>';
+      html += '<tr><td>Phone</td><td>' + (t.phone || '—') + '</td></tr>';
+      html += '<tr><td>Email</td><td>' + (t.email || '—') + '</td></tr>';
+      html += '<tr><td>Address</td><td>' + (t.address || '—') + '</td></tr>';
+      html += '<tr><td>Device</td><td>' + (t.device || '—') + '</td></tr>';
+      html += '<tr><td>Device Type</td><td>' + (t.deviceType || '—') + '</td></tr>';
+      html += '<tr><td>Issue Reported</td><td>' + (t.issue || '—') + '</td></tr>';
+      html += '<tr><td>Status</td><td><strong>' + (t.status || 'Received') + '</strong></td></tr>';
+      html += '</table>';
+      html += '<p style="font-size:11px;color:#666;margin-top:20px;">Terms: 1. Service warranty 30 days. 2. Not responsible for data loss. 3. Customer should backup all files. 4. Physical/liquid damage voids warranty.</p>';
+      html += '<table style="margin-top:30px;border:none;width:100%;"><tr><td style="border:none;text-align:left;vertical-align:bottom;">Customer Signature</td><td style="border:none;text-align:right;position:relative;">';
+      html += '<p style="margin:0; font-weight:bold; color:#0B5394;">For YantraByte Solutions</p>';
+      if (sealUrl) {
+        html += '<img src="' + sealUrl + '" style="position:absolute; top:25px; right:30px; width:85px; height:85px; opacity:0.85; pointer-events:none; z-index:1;">';
+      }
+      html += '<div style="height:40px;"></div>';
+      html += '<p style="margin:0; font-weight:bold; border-bottom:1px solid #000; display:inline-block; padding:0 10px;">RAMESH A S</p><br>';
+      html += '<span style="font-size:11px;">Authorized Signature</span></td></tr></table>';
+      html += '</body></html>';
+      var w = window.open('', '_blank');
+      w.document.write(html);
+      w.document.close();
+      w.print();
+    }
+
+    // Logo
+    function loadLogo(){google.script.run.withSuccessHandler(function(u){if(u){var img=document.createElement('img');img.src=u;img.className='logo-img';img.alt='YB';var c=document.getElementById('logoContainer');c.innerHTML='';c.appendChild(img);}}).withFailureHandler(function(){}).getLogoBase64();}
+    function loadSeal(){google.script.run.withSuccessHandler(function(u){if(u){sealUrl=u;}}).getSealBase64();}
+    window.onload = function() { loadCustomers(); loadProducts(); loadLogo(); loadSeal(); };
+
+    // Show print button when invoice is shown
+    var origShowInvoiceNo = showInvoiceNo;
+    showInvoiceNo = function(inv) { origShowInvoiceNo(inv); document.getElementById('btnPrintInv').style.display=''; };
+

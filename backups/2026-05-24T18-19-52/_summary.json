@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-05-24T18-19-52",
+  "total_rows": 56,
+  "tables_backed_up": 18,
+  "tables_with_errors": 2,
+  "errors": [
+    "purchases: ERROR - Could not find the table 'public.purchases' in the schema cache",
+    "suppliers: ERROR - Could not find the table 'public.suppliers' in the schema cache"
+  ]
+}

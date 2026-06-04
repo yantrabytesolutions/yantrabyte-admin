@@ -1,0 +1,820 @@
+{
+  "service_tickets": [],
+  "invoices": [],
+  "customers": [],
+  "purchases": [],
+  "suppliers": [],
+  "services": [
+    {
+      "id": "5a79cf63-e1d6-48b6-8c9a-6b9c1fd67616",
+      "title": "CCTV Installation Services",
+      "slug": "cctv-installation-bangalore",
+      "short_description": "Professional CCTV camera installation for homes and businesses across Bangalore with HD and 4K options.",
+      "full_description": "",
+      "icon": "Camera",
+      "features": [
+        "Site survey & planning",
+        "HD/4K camera setup",
+        "DVR/NVR configuration",
+        "Remote viewing setup",
+        "Night vision cameras",
+        "Annual maintenance"
+      ],
+      "benefits": [],
+      "meta_title": "",
+      "meta_description": "",
+      "is_featured": true,
+      "is_published": true,
+      "sort_order": 1,
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "05742196-faca-42a6-bf37-f5c28f8e4f50",
+      "title": "IP Camera Installation",
+      "slug": "ip-camera-installation-bangalore",
+      "short_description": "Advanced IP camera solutions with remote monitoring, cloud storage, and AI-powered analytics.",
+      "full_description": "",
+      "icon": "Wifi",
+      "features": [
+        "IP camera deployment",
+        "Cloud storage setup",
+        "AI motion detection",
+        "Mobile app monitoring",
+        "Network configuration",
+        "24/7 support"
+      ],
+      "benefits": [],
+      "meta_title": "",
+      "meta_description": "",
+      "is_featured": true,
+      "is_published": true,
+      "sort_order": 2,
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "571d3731-72b5-497f-87c8-8bb7fc9911da",
+      "title": "Laptop Repair Services",
+      "slug": "laptop-repair-bangalore",
+      "short_description": "Expert laptop repair for all brands — screen replacement, motherboard repair, data recovery, and more.",
+      "full_description": "",
+      "icon": "Laptop",
+      "features": [
+        "Screen replacement",
+        "Motherboard repair",
+        "Battery replacement",
+        "Data recovery",
+        "OS installation",
+        "Keyboard repair"
+      ],
+      "benefits": [],
+      "meta_title": "",
+      "meta_description": "",
+      "is_featured": true,
+      "is_published": true,
+      "sort_order": 3,
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "4e1938b3-2859-4ad2-bc7c-ce72ec5b73bc",
+      "title": "Desktop Repair Services",
+      "slug": "desktop-repair-bangalore",
+      "short_description": "Complete desktop computer repair including hardware upgrades, virus removal, and performance optimization.",
+      "full_description": "",
+      "icon": "Monitor",
+      "features": [
+        "Hardware repair",
+        "RAM & SSD upgrade",
+        "Virus removal",
+        "Power supply fix",
+        "Software troubleshooting",
+        "Performance optimization"
+      ],
+      "benefits": [],
+      "meta_title": "",
+      "meta_description": "",
+      "is_featured": true,
+      "is_published": true,
+      "sort_order": 4,
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "4bdf1f75-0a11-4fbd-bf8c-c9fcfbee7ddb",
+      "title": "Printer Repair & Maintenance",
+      "slug": "printer-repair-bangalore",
+      "short_description": "Printer repair and maintenance for HP, Canon, Epson, Brother, and all major brands.",
+      "full_description": "",
+      "icon": "Printer",
+      "features": [
+        "Cartridge replacement",
+        "Paper jam fix",
+        "Network printer setup",
+        "Driver installation",
+        "Toner refill",
+        "Preventive maintenance"
+      ],
+      "benefits": [],
+      "meta_title": "",
+      "meta_description": "",
+      "is_featured": true,
+      "is_published": true,
+      "sort_order": 5,
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "47df342e-0525-4028-a0a8-89d3c773d957",
+      "title": "WiFi & Networking Solutions",
+      "slug": "networking-solutions-bangalore",
+      "short_description": "Complete WiFi and networking solutions for offices, homes, and commercial spaces in Bangalore.",
+      "full_description": "",
+      "icon": "Router",
+      "features": [
+        "WiFi network design",
+        "Enterprise routing",
+        "Network cabling",
+        "VPN setup",
+        "Bandwidth management",
+        "Network security"
+      ],
+      "benefits": [],
+      "meta_title": "",
+      "meta_description": "",
+      "is_featured": true,
+      "is_published": true,
+      "sort_order": 6,
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "a1105427-32bf-4e28-ad6c-38232fa9d437",
+      "title": "Biometric Attendance Systems",
+      "slug": "biometric-installation-bangalore",
+      "short_description": "Fingerprint, face recognition, and RFID-based attendance and access control systems.",
+      "full_description": "",
+      "icon": "Fingerprint",
+      "features": [
+        "Fingerprint scanners",
+        "Face recognition",
+        "RFID cards",
+        "Attendance software",
+        "Payroll integration",
+        "Cloud reporting"
+      ],
+      "benefits": [],
+      "meta_title": "",
+      "meta_description": "",
+      "is_featured": true,
+      "is_published": true,
+      "sort_order": 7,
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "0aea9f82-4a52-4d39-8024-98b7af8c8424",
+      "title": "Firewall & Network Security",
+      "slug": "firewall-network-security-bangalore",
+      "short_description": "Enterprise-grade firewall installation, network security audits, and cyber threat protection.",
+      "full_description": "",
+      "icon": "Shield",
+      "features": [
+        "Firewall installation",
+        "Network security audit",
+        "Intrusion detection",
+        "VPN configuration",
+        "Content filtering",
+        "Threat monitoring"
+      ],
+      "benefits": [],
+      "meta_title": "",
+      "meta_description": "",
+      "is_featured": true,
+      "is_published": true,
+      "sort_order": 8,
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "6cc832f0-f18d-490f-929d-772fa99678ae",
+      "title": "Office IT Setup",
+      "slug": "office-it-setup-bangalore",
+      "short_description": "Complete office IT infrastructure setup including computers, networking, printers, and software.",
+      "full_description": "",
+      "icon": "Building",
+      "features": [
+        "IT infrastructure planning",
+        "Computer setup",
+        "Network installation",
+        "Printer configuration",
+        "Software deployment",
+        "Staff training"
+      ],
+      "benefits": [],
+      "meta_title": "",
+      "meta_description": "",
+      "is_featured": false,
+      "is_published": true,
+      "sort_order": 9,
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "d8eb9614-b973-4523-8d92-6cc5c009a7de",
+      "title": "AMC Support Services",
+      "slug": "amc-services-bangalore",
+      "short_description": "Annual Maintenance Contracts for IT equipment, CCTV systems, and office technology.",
+      "full_description": "",
+      "icon": "FileCheck",
+      "features": [
+        "Regular maintenance",
+        "Priority support",
+        "Spare parts included",
+        "Performance reports",
+        "Emergency response",
+        "Cost-effective plans"
+      ],
+      "benefits": [],
+      "meta_title": "",
+      "meta_description": "",
+      "is_featured": false,
+      "is_published": true,
+      "sort_order": 10,
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "b8888050-61e1-4906-9402-bda264ae93ec",
+      "title": "Server Installation",
+      "slug": "server-installation-bangalore",
+      "short_description": "Server setup, configuration, and maintenance for businesses of all sizes.",
+      "full_description": "",
+      "icon": "Server",
+      "features": [
+        "Server hardware setup",
+        "OS installation",
+        "RAID configuration",
+        "Backup solutions",
+        "Virtualization",
+        "Monitoring setup"
+      ],
+      "benefits": [],
+      "meta_title": "",
+      "meta_description": "",
+      "is_featured": false,
+      "is_published": true,
+      "sort_order": 11,
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "e8d4481a-42da-4a01-84d9-403efac0a7ff",
+      "title": "Remote IT Support",
+      "slug": "remote-it-support-bangalore",
+      "short_description": "Instant remote IT support for troubleshooting, software issues, and system maintenance.",
+      "full_description": "",
+      "icon": "Headphones",
+      "features": [
+        "Remote troubleshooting",
+        "Software support",
+        "System monitoring",
+        "Quick response time",
+        "Secure remote access",
+        "Ticket management"
+      ],
+      "benefits": [],
+      "meta_title": "",
+      "meta_description": "",
+      "is_featured": false,
+      "is_published": true,
+      "sort_order": 12,
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "8bfbe08b-a406-4a24-90a1-119557e4ee31",
+      "title": "Home Security Solutions",
+      "slug": "home-security-bangalore",
+      "short_description": "Complete home security packages with CCTV, video door phones, and smart locks.",
+      "full_description": "",
+      "icon": "Home",
+      "features": [
+        "CCTV for homes",
+        "Video door phones",
+        "Smart locks",
+        "Motion sensors",
+        "Mobile alerts",
+        "24/7 monitoring"
+      ],
+      "benefits": [],
+      "meta_title": "",
+      "meta_description": "",
+      "is_featured": false,
+      "is_published": true,
+      "sort_order": 13,
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "d9c40b84-3944-4ae3-937d-24aafc6ef43f",
+      "title": "Smart Office Automation",
+      "slug": "smart-office-automation-bangalore",
+      "short_description": "Automate your office with smart lighting, climate control, and IoT solutions.",
+      "full_description": "",
+      "icon": "Zap",
+      "features": [
+        "Smart lighting",
+        "Climate control",
+        "IoT sensors",
+        "Energy management",
+        "Voice control",
+        "Central dashboard"
+      ],
+      "benefits": [],
+      "meta_title": "",
+      "meta_description": "",
+      "is_featured": false,
+      "is_published": true,
+      "sort_order": 14,
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "e41032d2-5cd8-47c9-acc5-b39dc7075f08",
+      "title": "Access Control Systems",
+      "slug": "access-control-bangalore",
+      "short_description": "Card-based, biometric, and mobile access control systems for offices and buildings.",
+      "full_description": "",
+      "icon": "KeyRound",
+      "features": [
+        "Card access systems",
+        "Biometric access",
+        "Mobile credentials",
+        "Visitor management",
+        "Time zone restrictions",
+        "Audit trails"
+      ],
+      "benefits": [],
+      "meta_title": "",
+      "meta_description": "",
+      "is_featured": false,
+      "is_published": true,
+      "sort_order": 15,
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    }
+  ],
+  "products": [],
+  "pages": [],
+  "blog_posts": [
+    {
+      "id": "94278572-8e13-446a-8b10-9839269a4c62",
+      "title": "Best CCTV Camera for Office in Bangalore 2025",
+      "slug": "best-cctv-camera-office-bangalore",
+      "excerpt": "A comprehensive guide to choosing the right CCTV cameras for your Bangalore office, covering features, pricing, and installation tips.",
+      "content": "## Why Your Bangalore Office Needs CCTV\\n\\nIn today's business environment, security is not optional — it's essential. CCTV cameras protect your assets, monitor employee activity, and provide crucial evidence if incidents occur.\\n\\n## Top CCTV Cameras for Offices\\n\\n### 1. Hikvision DS-2CE5AD0T\\nBest for: Budget-conscious offices\\n- 2MP resolution\\n- Night vision up to 40m\\n- Weather-resistant\\n- Price: Starting ₹2,500/camera\\n\\n### 2. Dahua IPC-HDW2431T\\nBest for: High-quality surveillance\\n- 4MP resolution\\n- Smart motion detection\\n- PoE support\\n- Price: Starting ₹4,500/camera\\n\\n### 3. CP Plus CP-URC-DC24PL3\\nBest for: Indian conditions\\n- 2.4MP resolution\\n- Wide dynamic range\\n- Works in extreme heat\\n- Price: Starting ₹2,200/camera\\n\\n## Installation Tips\\n\\n1. Place cameras at all entry/exit points\\n2. Cover parking areas\\n3. Install at reception and common areas\\n4. Ensure proper lighting for night vision\\n5. Use NVR for better recording quality\\n\\n## Why Choose Yantrabyte\\n\\nWe provide professional CCTV installation across Bangalore with:\\n- Free site survey\\n- Same-day installation\\n- 1-year warranty\\n- 24/7 support\\n\\nContact us today for a free consultation!",
+      "category": "CCTV Tips",
+      "featured_image": "",
+      "meta_title": "",
+      "meta_description": "",
+      "is_published": true,
+      "published_at": "2026-05-16T08:56:33.051143+00:00",
+      "sort_order": 1,
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "497dbcff-808e-4f67-b1d6-895f7dbb3664",
+      "title": "Laptop Running Slow? Here's the Fix",
+      "slug": "laptop-running-slow-fix",
+      "excerpt": "Is your laptop crawling? Learn the most common causes and proven fixes to speed up your laptop without spending a fortune.",
+      "content": "## Common Reasons Your Laptop is Slow\\n\\n### 1. Too Many Startup Programs\\nMany programs start automatically when you boot your laptop. Disable unnecessary startup items to speed up boot time.\\n\\n### 2. Low RAM\\nIf your laptop has less than 8GB RAM, it may struggle with modern applications. Upgrading RAM is one of the cheapest and most effective upgrades.\\n\\n### 3. Hard Drive vs SSD\\nIf your laptop still uses a mechanical hard drive, upgrading to an SSD can make it 5-10x faster.\\n\\n### 4. Malware & Viruses\\nMalware runs in the background, consuming resources. Run a full system scan with a reliable antivirus.\\n\\n### 5. Overheating\\nDust buildup causes overheating, which slows down your CPU. Regular cleaning can restore performance.\\n\\n## Quick Fixes You Can Try\\n\\n1. Uninstall unused programs\\n2. Clear temporary files\\n3. Disable visual effects\\n4. Update drivers\\n5. Run disk cleanup\\n\\n## When to Call a Professional\\n\\nIf your laptop is still slow after trying these fixes, it may have:\\n- Failing hard drive\\n- Motherboard issues\\n- Corrupted OS\\n- Hardware damage\\n\\nAt Yantrabyte Solutions, we diagnose and fix laptop issues the same day. Call us for a free diagnosis!",
+      "category": "IT Solutions",
+      "featured_image": "",
+      "meta_title": "",
+      "meta_description": "",
+      "is_published": true,
+      "published_at": "2026-05-16T08:56:33.051143+00:00",
+      "sort_order": 2,
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "32261109-cdd6-424b-aa4b-f66dcbccd839",
+      "title": "Top Office Networking Solutions in Bangalore",
+      "slug": "top-office-networking-bangalore",
+      "excerpt": "Discover the best networking solutions for Bangalore offices, from WiFi 6 to enterprise-grade setups.",
+      "content": "## Why Office Networking Matters\\n\\nA reliable network is the backbone of modern business operations. Slow or unreliable WiFi leads to lost productivity and frustrated employees.\\n\\n## Top Networking Solutions\\n\\n### 1. Enterprise WiFi (WiFi 6)\\n- Faster speeds\\n- More device support\\n- Better range\\n- Reduced interference\\n\\n### 2. Mesh Network Systems\\n- Seamless coverage\\n- No dead zones\\n- Easy expansion\\n- Central management\\n\\n### 3. Structured Cabling\\n- Cat6/Cat6a cables\\n- Future-proof infrastructure\\n- Reliable connections\\n- Professional installation\\n\\n### 4. VPN & Remote Access\\n- Secure remote work\\n- Encrypted connections\\n- Multi-site connectivity\\n- Cloud VPN options\\n\\n## Choosing the Right Solution\\n\\nConsider these factors:\\n1. Number of users\\n2. Building size and layout\\n3. Bandwidth requirements\\n4. Budget\\n5. Future growth plans\\n\\nYantrabyte Solutions provides end-to-end networking services for Bangalore offices. Get a free network assessment today!",
+      "category": "Networking",
+      "featured_image": "",
+      "meta_title": "",
+      "meta_description": "",
+      "is_published": true,
+      "published_at": "2026-05-16T08:56:33.051143+00:00",
+      "sort_order": 3,
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "a5b60ed4-5472-4265-a3c1-85b49ceaf25d",
+      "title": "DVR vs NVR Explained: Which is Right for You?",
+      "slug": "dvr-vs-nvr-explained",
+      "excerpt": "Understanding the difference between DVR and NVR systems is crucial for choosing the right CCTV setup for your property.",
+      "content": "## What is a DVR?\\n\\nDVR (Digital Video Recorder) works with analog cameras. It converts analog signals to digital for recording and storage.\\n\\n**Pros:**\\n- Lower cost\\n- Simple setup\\n- Works with existing coaxial cables\\n\\n**Cons:**\\n- Lower image quality\\n- Limited smart features\\n- Single cable per camera\\n\\n## What is an NVR?\\n\\nNVR (Network Video Recorder) works with IP cameras. It records digital video sent over a network.\\n\\n**Pros:**\\n- Higher resolution (up to 4K)\\n- Smart features (motion detection, analytics)\\n- PoE — power + data over one cable\\n- Remote access\\n- Scalable\\n\\n**Cons:**\\n- Higher cost\\n- Requires network infrastructure\\n- More bandwidth usage\\n\\n## Which Should You Choose?\\n\\n**Choose DVR if:**\\n- Budget is tight\\n- Small setup (4-8 cameras)\\n- Basic monitoring is enough\\n\\n**Choose NVR if:**\\n- You need high-quality footage\\n- Smart features are important\\n- You plan to expand\\n- Remote monitoring is needed\\n\\nAt Yantrabyte, we help you choose the best system for your needs. Contact us for a free consultation!",
+      "category": "Security Systems",
+      "featured_image": "",
+      "meta_title": "",
+      "meta_description": "",
+      "is_published": true,
+      "published_at": "2026-05-16T08:56:33.051143+00:00",
+      "sort_order": 4,
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "cfbc4102-1880-4756-badc-59264942a3c9",
+      "title": "How to Improve Business Security in Bangalore",
+      "slug": "improve-business-security-bangalore",
+      "excerpt": "Essential security measures every Bangalore business should implement to protect assets, data, and people.",
+      "content": "## Business Security Challenges in Bangalore\\n\\nBangalore's rapid growth brings unique security challenges for businesses.\\n\\n## Essential Security Measures\\n\\n### 1. CCTV Surveillance\\n- Cover all entry points\\n- Use high-resolution cameras\\n- Enable remote monitoring\\n- Keep 30+ days of recordings\\n\\n### 2. Access Control\\n- Restrict unauthorized entry\\n- Track employee movement\\n- Visitor management\\n- Time-based access\\n\\n### 3. Network Security\\n- Enterprise firewall\\n- Regular security audits\\n- Employee training\\n- Data encryption\\n\\n### 4. Physical Security\\n- Smart locks\\n- Motion sensors\\n- Alarm systems\\n- Security signage\\n\\n### 5. Cyber Security\\n- Antivirus & anti-malware\\n- Email security\\n- Backup systems\\n- Incident response plan\\n\\n## Cost of Poor Security\\n\\n- Asset theft\\n- Data breaches\\n- Legal liability\\n- Insurance premium increases\\n- Reputation damage\\n\\nYantrabyte Solutions provides comprehensive security assessments for Bangalore businesses. Schedule yours today!",
+      "category": "Security Systems",
+      "featured_image": "",
+      "meta_title": "",
+      "meta_description": "",
+      "is_published": true,
+      "published_at": "2026-05-16T08:56:33.051143+00:00",
+      "sort_order": 5,
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    }
+  ],
+  "testimonials": [
+    {
+      "id": "a9c6f774-8159-43cf-8862-e24be20b4584",
+      "name": "Rajesh Kumar",
+      "company": "TechCorp Solutions",
+      "role": "Operations Manager",
+      "rating": 5,
+      "content": "Yantrabyte installed CCTV across our 3 office floors. The quality is outstanding and their team was extremely professional. Remote viewing works flawlessly!",
+      "avatar_url": "",
+      "is_published": true,
+      "sort_order": 1,
+      "created_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "47b7342b-6674-4e80-895a-281378327e13",
+      "name": "Priya Sharma",
+      "company": "RetailMax India",
+      "role": "Owner",
+      "rating": 5,
+      "content": "Best laptop repair service in Bangalore! They fixed my MacBook the same day at a very reasonable price. Highly recommended.",
+      "avatar_url": "",
+      "is_published": true,
+      "sort_order": 2,
+      "created_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "8a93876c-19a2-4af8-98a3-02b1113e5621",
+      "name": "Mohammed Irfan",
+      "company": "Green Valley Apartments",
+      "role": "Secretary",
+      "rating": 5,
+      "content": "Complete WiFi and CCTV setup for our 200-apartment complex. Excellent work and great after-sales support.",
+      "avatar_url": "",
+      "is_published": true,
+      "sort_order": 3,
+      "created_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "1f3738ed-5862-4948-b052-e971de308c9d",
+      "name": "Dr. Anitha Rao",
+      "company": "MediCare Clinic",
+      "role": "Director",
+      "rating": 5,
+      "content": "Their biometric attendance system integrated perfectly with our payroll. The team understood our requirements and delivered beyond expectations.",
+      "avatar_url": "",
+      "is_published": true,
+      "sort_order": 4,
+      "created_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "bf9d97a1-3b3f-4403-a960-4b1b83f41c23",
+      "name": "Vikram Patel",
+      "company": "Patel Industries",
+      "role": "MD",
+      "rating": 5,
+      "content": "We have been using their AMC service for 2 years now. Response time is excellent and they keep all our IT systems running smoothly.",
+      "avatar_url": "",
+      "is_published": true,
+      "sort_order": 5,
+      "created_at": "2026-05-16T08:56:33.051143+00:00"
+    }
+  ],
+  "team_members": [],
+  "careers": [
+    {
+      "id": "5d25a548-ce52-479a-9a6b-75fba19f72cd",
+      "title": "CCTV Installation Technician",
+      "slug": "cctv-installation-technician",
+      "description": "We are looking for experienced CCTV installation technicians to join our growing team in Bangalore.",
+      "requirements": [
+        "2+ years CCTV installation experience",
+        "Knowledge of DVR/NVR systems",
+        "Driving license preferred",
+        "Good communication skills",
+        "Own vehicle preferred"
+      ],
+      "location": "Bangalore",
+      "type": "Full-time",
+      "is_active": true,
+      "sort_order": 1,
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "95ab510b-3439-4304-8859-e397a9111381",
+      "title": "IT Support Engineer",
+      "slug": "it-support-engineer",
+      "description": "Join our IT support team to help businesses across Bangalore with their technology needs.",
+      "requirements": [
+        "1+ year IT support experience",
+        "Knowledge of Windows/Mac OS",
+        "Networking basics",
+        "Good problem-solving skills",
+        "Customer-friendly attitude"
+      ],
+      "location": "Bangalore",
+      "type": "Full-time",
+      "is_active": true,
+      "sort_order": 2,
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "0eceee43-3c7f-4205-83c1-72b3421ee231",
+      "title": "Network Engineer",
+      "slug": "network-engineer",
+      "description": "We need a skilled network engineer to design and implement networking solutions for our clients.",
+      "requirements": [
+        "3+ years networking experience",
+        "CCNA certification preferred",
+        "Knowledge of enterprise WiFi",
+        "VPN and firewall experience",
+        "Strong troubleshooting skills"
+      ],
+      "location": "Bangalore",
+      "type": "Full-time",
+      "is_active": true,
+      "sort_order": 3,
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    }
+  ],
+  "industries": [
+    {
+      "id": "cd4ec887-d2a8-48a7-9b8a-708e386dc149",
+      "name": "Corporate Offices",
+      "slug": "corporate-offices",
+      "description": "Complete IT infrastructure and security solutions for modern corporate offices.",
+      "icon": "Building",
+      "is_published": true,
+      "sort_order": 1,
+      "created_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "28f50a64-d7d1-40cd-ad15-4bab9036d39d",
+      "name": "Retail Stores",
+      "slug": "retail-stores",
+      "description": "CCTV surveillance, POS systems, and networking for retail businesses.",
+      "icon": "ShoppingCart",
+      "is_published": true,
+      "sort_order": 2,
+      "created_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "9fdaeea1-3f42-4771-8430-7d624be5ccc4",
+      "name": "Warehouses",
+      "slug": "warehouses",
+      "description": "Security cameras, access control, and network infrastructure for warehouses.",
+      "icon": "Warehouse",
+      "is_published": true,
+      "sort_order": 3,
+      "created_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "790778e6-d6a5-41e6-b793-9f4153f06ad3",
+      "name": "Apartments & Residences",
+      "slug": "apartments-residences",
+      "description": "Home security, WiFi, and IT support for residential complexes.",
+      "icon": "Home",
+      "is_published": true,
+      "sort_order": 4,
+      "created_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "a87e412b-69d6-40ac-90ca-b679105e2525",
+      "name": "Schools & Colleges",
+      "slug": "schools-colleges",
+      "description": "Campus security, IT labs, and networking for educational institutions.",
+      "icon": "GraduationCap",
+      "is_published": true,
+      "sort_order": 5,
+      "created_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "bfdaa939-4c71-45f4-b8ca-c4b38cb125fd",
+      "name": "Hospitals & Clinics",
+      "slug": "hospitals-clinics",
+      "description": "Healthcare IT, security systems, and biometric attendance for medical facilities.",
+      "icon": "HeartPulse",
+      "is_published": true,
+      "sort_order": 6,
+      "created_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "971c55a5-15c9-4b09-80ca-d3ee264185f4",
+      "name": "Factories & Manufacturing",
+      "slug": "factories-manufacturing",
+      "description": "Industrial security, networking, and IT support for manufacturing units.",
+      "icon": "Factory",
+      "is_published": true,
+      "sort_order": 7,
+      "created_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "7f40b10d-ce85-42d8-a189-f5e4e59ff6fc",
+      "name": "Homes",
+      "slug": "homes",
+      "description": "Smart home security, WiFi setup, and computer repair for residences.",
+      "icon": "House",
+      "is_published": true,
+      "sort_order": 8,
+      "created_at": "2026-05-16T08:56:33.051143+00:00"
+    }
+  ],
+  "faqs": [
+    {
+      "id": "3a1b0695-e1fc-45d8-99ae-ceb6bfe3a8c8",
+      "question": "What areas in Bangalore do you serve?",
+      "answer": "We serve all areas in Bangalore including Whitefield, Electronic City, Koramangala, Indiranagar, HSR Layout, Marathahalli, BTM Layout, Jayanagar, and more.",
+      "category": "general",
+      "is_published": true,
+      "sort_order": 1,
+      "created_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "db6394d5-5d33-4e15-9ad4-90c23d5a3134",
+      "question": "Do you provide same-day service?",
+      "answer": "Yes! We offer same-day service for most repair and installation requests. Emergency support is available 24/7.",
+      "category": "general",
+      "is_published": true,
+      "sort_order": 2,
+      "created_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "2971c2a3-d8fc-484d-b1bf-15d2ecf77317",
+      "question": "What brands of CCTV cameras do you install?",
+      "answer": "We install all major brands including Hikvision, Dahua, CP Plus, Godrej, and Samsung. We recommend the best option based on your requirements and budget.",
+      "category": "cctv",
+      "is_published": true,
+      "sort_order": 3,
+      "created_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "2d07cdc6-d0cf-48dc-8704-9704128028dd",
+      "question": "How much does CCTV installation cost?",
+      "answer": "CCTV installation costs vary based on the number of cameras, type (analog/IP), and features required. Contact us for a free site survey and customized quote.",
+      "category": "cctv",
+      "is_published": true,
+      "sort_order": 4,
+      "created_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "cbd9022a-8754-428a-8aa4-2c265820115c",
+      "question": "Do you provide warranty on repairs?",
+      "answer": "Yes, we provide a 90-day warranty on all repair services and 1-year warranty on new installations.",
+      "category": "repair",
+      "is_published": true,
+      "sort_order": 5,
+      "created_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "6c21c05b-9bfb-4694-8bf2-febce00b0af9",
+      "question": "What is included in AMC support?",
+      "answer": "Our AMC includes regular maintenance visits, priority support, spare parts (select plans), performance reports, and emergency response within 4 hours.",
+      "category": "amc",
+      "is_published": true,
+      "sort_order": 6,
+      "created_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "113a5118-a101-487e-aa38-5ca9f1789140",
+      "question": "Can I monitor CCTV from my phone?",
+      "answer": "Absolutely! All our CCTV installations come with mobile app setup so you can monitor your property from anywhere in the world.",
+      "category": "cctv",
+      "is_published": true,
+      "sort_order": 7,
+      "created_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "cf47249f-d88a-446a-a4a7-3f5613ab6080",
+      "question": "Do you offer free consultations?",
+      "answer": "Yes, we offer free on-site consultations for CCTV, networking, and office IT setup projects. Call us to schedule yours.",
+      "category": "general",
+      "is_published": true,
+      "sort_order": 8,
+      "created_at": "2026-05-16T08:56:33.051143+00:00"
+    }
+  ],
+  "gallery_images": [],
+  "client_logos": [],
+  "contact_submissions": [],
+  "site_settings": [
+    {
+      "id": "ca570c0e-f4a7-439b-beb1-9fa17e35f99a",
+      "key": "company_name",
+      "value": "Yantrabyte Solutions",
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "7e042849-1905-4c63-83dd-10e94576b53a",
+      "key": "tagline",
+      "value": "Smart Technology. Secure Future.",
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "00bd28ff-716e-45bb-aaa1-294332a3e498",
+      "key": "phone",
+      "value": "+91-9876543210",
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "ed3dbb68-f158-4044-98a5-360a252d16c7",
+      "key": "email",
+      "value": "info@yantrabyte.com",
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "2a7690a2-fbeb-4dab-b5ff-6c910ff8d25e",
+      "key": "whatsapp",
+      "value": "919876543210",
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "e81782e2-ebb2-4466-b55c-f6b1f58eee9d",
+      "key": "address",
+      "value": "Bangalore, Karnataka, India",
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "eefb5da5-e00d-411e-a229-aa4da324ee74",
+      "key": "google_maps_embed",
+      "value": "",
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "235a982c-471f-420e-9da6-064af58e97db",
+      "key": "facebook",
+      "value": "",
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "ad7aab38-d1b5-4dea-9b8f-55588444b368",
+      "key": "instagram",
+      "value": "",
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "26dc778c-f755-4006-aec4-78eeef197423",
+      "key": "linkedin",
+      "value": "",
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "3f43ff4b-29b7-4eac-a9d9-a7c8f486bd88",
+      "key": "twitter",
+      "value": "",
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    },
+    {
+      "id": "aaefc8c5-b5c1-440d-b170-bef23b5ae6a1",
+      "key": "youtube",
+      "value": "",
+      "created_at": "2026-05-16T08:56:33.051143+00:00",
+      "updated_at": "2026-05-16T08:56:33.051143+00:00"
+    }
+  ]
+}
