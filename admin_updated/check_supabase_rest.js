@@ -1,5 +1,5 @@
 async function testEndpoint(name, url) {
-  const apiKey = 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH';
+  const apiKey = process.env.SUPABASE_ANON_KEY || 'REDACTED';
   try {
     const res = await fetch(url, {
       headers: {
