@@ -1351,6 +1351,146 @@ function CTABannerSection() {
   );
 }
 
+// ─── 14b. Work Showcase ────────────────────────────────────────────────────
+
+function WorkShowcaseSection() {
+  const showcaseItems = [
+    {
+      img: '/work-cctv.png',
+      tag: 'CCTV Installation',
+      title: 'Full-Premises Surveillance Setup',
+      desc: 'Multi-camera CCTV systems installed in offices, warehouses, and retail stores with remote mobile access.',
+    },
+    {
+      img: '/work-laptop.png',
+      tag: 'Laptop & Desktop Repair',
+      title: 'Component-Level Board Repair',
+      desc: 'Motherboard-level diagnosis and repair for all major brands — Dell, HP, Lenovo, Asus, and more.',
+    },
+    {
+      img: '/work-networking.png',
+      tag: 'Networking & Cabling',
+      title: 'Structured LAN & Wi-Fi Rollouts',
+      desc: 'Neat, labeled cable management and high-performance network infrastructure for offices of any size.',
+    },
+  ];
+
+  return (
+    <Section id="our-work" className="bg-[#0F172A]/60">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div variants={fadeInUp} className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#0EA5E9]/30 bg-[#0EA5E9]/10 px-4 py-1.5 text-sm font-semibold text-[#7DD3FC] mb-4">
+            <Wrench className="h-4 w-4" /> Our Work
+          </div>
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            Real Projects,{' '}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0EA5E9] to-[#38BDF8]">Real Results</span>
+          </h2>
+          <p className="text-[#94A3B8] text-lg max-w-2xl mx-auto">
+            A glimpse of the services we deliver every day across Bangalore for homes, offices, and businesses.
+          </p>
+        </motion.div>
+
+        <motion.div variants={staggerContainer} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {showcaseItems.map((item, i) => (
+            <motion.div
+              key={i}
+              variants={staggerItem}
+              whileHover={{ y: -6 }}
+              className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl transition-all duration-300 hover:border-[#0EA5E9]/40"
+            >
+              <div className="h-52 overflow-hidden">
+                <img
+                  src={item.img}
+                  alt={item.title}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              </div>
+              <div className="p-5">
+                <span className="inline-block rounded-full bg-[#0EA5E9]/15 text-[#38BDF8] text-xs font-semibold px-3 py-1 mb-3">{item.tag}</span>
+                <h3 className="text-white font-bold text-base mb-2">{item.title}</h3>
+                <p className="text-[#94A3B8] text-sm leading-relaxed">{item.desc}</p>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        <motion.div variants={fadeInUp} className="text-center mt-10">
+          <a
+            href="/service-request"
+            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-lg bg-[#0EA5E9] hover:bg-[#0284C7] text-white font-semibold transition-all duration-300 shadow-lg shadow-[#0EA5E9]/25"
+          >
+            Book a Service <ArrowRight className="w-4 h-4" />
+          </a>
+        </motion.div>
+      </div>
+    </Section>
+  );
+}
+
+// ─── 14c. Refer a Friend ───────────────────────────────────────────────────
+
+function ReferFriendSection() {
+  const steps = [
+    { icon: MessageCircle, label: 'Refer a friend or business to us via WhatsApp or call.' },
+    { icon: Wrench, label: 'They get their device or IT issue fixed by our team.' },
+    { icon: BadgePercent, label: 'You both get a special discount on your next service!' },
+  ];
+
+  return (
+    <Section id="refer">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div
+          variants={scaleIn}
+          className="relative overflow-hidden rounded-3xl border border-[#0EA5E9]/20 bg-gradient-to-br from-[#0B1120] via-[#0F172A] to-[#0B1120] p-8 md:p-14 text-center"
+        >
+          {/* Glow */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-48 bg-[#0EA5E9]/10 rounded-full blur-[80px]" />
+
+          <div className="relative z-10">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#0EA5E9]/30 bg-[#0EA5E9]/10 px-4 py-1.5 text-sm font-semibold text-[#7DD3FC] mb-5">
+              <Heart className="h-4 w-4" /> Refer &amp; Earn
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
+              Refer a Friend,{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0EA5E9] to-[#38BDF8]">Both Save!</span>
+            </h2>
+            <p className="text-[#94A3B8] text-lg mb-10 max-w-xl mx-auto">
+              Love our service? Share us with your friends, family, or colleagues and unlock exclusive discounts for both of you.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 text-left">
+              {steps.map((step, i) => {
+                const Icon = step.icon;
+                return (
+                  <div key={i} className="flex items-start gap-4 rounded-xl bg-white/5 border border-white/10 p-5">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[#0EA5E9]/15 flex items-center justify-center">
+                      <Icon className="w-5 h-5 text-[#0EA5E9]" />
+                    </div>
+                    <div>
+                      <span className="text-[#64748B] text-xs font-bold uppercase tracking-wider">Step {i + 1}</span>
+                      <p className="text-white text-sm mt-1 leading-relaxed">{step.label}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <a
+              href={`https://wa.me/919986742525?text=${encodeURIComponent('Hi Yantrabyte! I want to refer a friend. Please tell me more about the referral discount.')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-[#25D366] hover:bg-[#1EB755] text-white font-bold text-base transition-all duration-300 shadow-lg shadow-[#25D366]/30"
+            >
+              <MessageCircle className="w-5 h-5" /> Refer via WhatsApp
+            </a>
+          </div>
+        </motion.div>
+      </div>
+    </Section>
+  );
+}
+
 // ─── 15. Emergency Banner ──────────────────────────────────────────────────
 
 function EmergencyBanner() {
@@ -1417,11 +1557,13 @@ export default function Home() {
       <TrustStatsSection />
       <ServicesSection />
       <WhyChooseUsSection />
+      <WorkShowcaseSection />
       <AboutSection />
       <IndustriesSection />
       <TestimonialsSection />
       <GoogleReviewsSection />
       <ProcessSection />
+      <ReferFriendSection />
       <BlogSection />
       <CTABannerSection />
       <FAQSection />

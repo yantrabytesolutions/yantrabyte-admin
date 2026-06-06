@@ -183,7 +183,7 @@ function ContactInfoSection() {
     {
       icon: Clock,
       label: 'Business Hours',
-      value: 'Mon-Sat 9AM-7PM, Emergency 24/7',
+      value: 'Mon–Sat: 9 AM – 7 PM  |  Sun: Closed  |  Emergency: 24/7',
       link: null,
       color: 'from-[#0284C7] to-[#38BDF8]',
     },
@@ -403,35 +403,29 @@ function ContactFormSection() {
             )}
           </motion.div>
 
-          {/* Google Maps Placeholder */}
           <motion.div variants={scaleIn} className="flex flex-col gap-6">
+            {/* Google Maps Embed */}
             <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl overflow-hidden flex-1 min-h-[400px] relative">
-              {/* Map placeholder */}
-              <div className="absolute inset-0 bg-gradient-to-br from-[#0F172A] to-[#1E293B] flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-20 h-20 mx-auto rounded-full bg-[#0EA5E9]/10 flex items-center justify-center mb-4">
-                    <MapPin className="w-10 h-10 text-[#0EA5E9]" />
-                  </div>
-                  <h3 className="text-white font-bold text-lg mb-2">Google Maps</h3>
-                  <p className="text-[#94A3B8] text-sm max-w-xs mx-auto">
-                    Yantrabyte Solutions, 47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post, Bengaluru 560097
-                  </p>
-                  <a
-                    href="https://maps.google.com/?q=Bangalore+Karnataka+India"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-[#0EA5E9] text-sm font-medium mt-3 hover:gap-2.5 transition-all duration-300"
-                  >
-                    Open in Google Maps <ArrowRight className="w-4 h-4" />
-                  </a>
-                </div>
-              </div>
-
-              {/* Grid overlay for map aesthetic */}
-              <div className="absolute inset-0 opacity-[0.03]" style={{
-                backgroundImage: `linear-gradient(rgba(14,165,233,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(14,165,233,0.5) 1px, transparent 1px)`,
-                backgroundSize: '40px 40px',
-              }} />
+              <iframe
+                title="Yantrabyte Solutions Location"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3886.265452!2d77.5499!3d13.0795!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bae23c3dea95555%3A0x1!2s47A%2C%201st%20Cross%2C%20Sainagar%202nd%20Stage%2C%20Vidyaranyapura%20Post%2C%20Bengaluru%2C%20Karnataka%20560097!5e0!3m2!1sen!2sin!4v1700000000000"
+                width="100%"
+                height="100%"
+                style={{ border: 0, minHeight: '400px' }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                className="w-full h-full"
+              />
+              {/* Open Maps overlay button */}
+              <a
+                href="https://maps.google.com/?q=47A+1st+Cross+Sainagar+2nd+Stage+Vidyaranyapura+Post+Bengaluru+560097"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 bg-white text-[#0B1120] text-xs font-semibold px-3 py-1.5 rounded-lg shadow-lg hover:bg-gray-100 transition-colors"
+              >
+                <MapPin className="w-3.5 h-3.5" /> Open in Maps
+              </a>
             </div>
 
             {/* Quick Action Buttons */}

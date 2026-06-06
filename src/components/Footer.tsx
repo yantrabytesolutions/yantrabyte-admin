@@ -1,16 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import {
-  MapPin,
-  Phone,
-  Mail,
-  Facebook,
-  Instagram,
-  Linkedin,
-  Twitter,
-  ArrowRight,
-} from "lucide-react";
+import { MapPin, Phone, Mail, Instagram, ArrowRight } from "lucide-react";
+import { supabase } from "../lib/supabase";
 
 const quickLinks = [
   { name: "Home", path: "/" },
@@ -21,17 +13,14 @@ const quickLinks = [
 ];
 
 const serviceLinks = [
-  { name: "CCTV Installation", path: "/#services" },
-  { name: "Laptop Repair", path: "/#services" },
-  { name: "Networking", path: "/#services" },
-  { name: "AMC Support", path: "/#services" },
+  { name: "CCTV Installation", path: "/services/cctv-installation" },
+  { name: "Laptop Repair", path: "/services/laptop-repair" },
+  { name: "Networking", path: "/services/networking" },
+  { name: "AMC Support", path: "/services/amc-support" },
 ];
 
 const socialLinks = [
-  { name: "Facebook", icon: Facebook, href: "https://facebook.com/yantrabyte" },
   { name: "Instagram", icon: Instagram, href: "https://instagram.com/yantrabyte" },
-  { name: "LinkedIn", icon: Linkedin, href: "https://linkedin.com/company/yantrabyte" },
-  { name: "Twitter", icon: Twitter, href: "https://twitter.com/yantrabyte" },
 ];
 
 const containerVariants = {
@@ -50,13 +39,28 @@ const itemVariants = {
 export default function Footer() {
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
+  const [subscribing, setSubscribing] = useState(false);
+  const [subError, setSubError] = useState("");
 
-  const handleNewsletterSubmit = (e: React.FormEvent) => {
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email.trim()) {
-      setSubscribed(true);
-      setEmail("");
-      setTimeout(() => setSubscribed(false), 4000);
+    if (!email.trim()) return;
+    setSubscribing(true);
+    setSubError("");
+    try {
+      const { error } = await supabase.from('newsletter_subscribers').insert([{ email: email.trim() }]);
+      if (error && error.code !== '23505') {
+        // 23505 = unique violation (already subscribed) — treat as success
+        setSubError("Could not subscribe. Please try again.");
+      } else {
+        setSubscribed(true);
+        setEmail("");
+        setTimeout(() => setSubscribed(false), 5000);
+      }
+    } catch {
+      setSubError("Network error. Please try again.");
+    } finally {
+      setSubscribing(false);
     }
   };
 
@@ -144,6 +148,15 @@ export default function Footer() {
 
           {/* Contact Info + Newsletter */}
           <motion.div variants={itemVariants} className="space-y-6">
+            {/* Working Hours */}
+            <div>
+              <h3 className="mb-2 text-sm font-semibold uppercase tracking-wider text-white">Working Hours</h3>
+              <p className="text-sm text-gray-400 leading-relaxed">
+                Mon – Sat: <span className="text-white">9:00 AM – 7:00 PM</span><br />
+                Sunday: <span className="text-white">Closed</span><br />
+                Emergency: <span className="text-[#0EA5E9]">24/7 Available</span>
+              </p>
+            </div>
             <div>
               <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-white">
                 Contact Us
@@ -151,7 +164,7 @@ export default function Footer() {
               <ul className="space-y-3">
                 <li>
                   <a
-                    href="https://maps.google.com"
+                    href="https://maps.google.com/?q=47A+1st+Cross+Sainagar+2nd+Stage+Vidyaranyapura+Post+Bengaluru+560097"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-start gap-3 text-sm text-gray-400 transition-colors hover:text-[#0EA5E9]"
@@ -202,20 +215,23 @@ export default function Footer() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Your email"
                   required
-                  className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder-gray-500 outline-none transition-colors focus:border-[#0EA5E9]/50 focus:ring-1 focus:ring-[#0EA5E9]/30"
+                  disabled={subscribing}
+                  className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder-gray-500 outline-none transition-colors focus:border-[#0EA5E9]/50 focus:ring-1 focus:ring-[#0EA5E9]/30 disabled:opacity-60"
                 />
                 <button
                   type="submit"
-                  className="flex shrink-0 items-center justify-center rounded-lg bg-[#0EA5E9] px-3.5 text-white shadow-lg shadow-[#0EA5E9]/20 transition-all hover:bg-[#0284C7] active:scale-[0.97]"
+                  disabled={subscribing}
+                  className="flex shrink-0 items-center justify-center rounded-lg bg-[#0EA5E9] px-3.5 text-white shadow-lg shadow-[#0EA5E9]/20 transition-all hover:bg-[#0284C7] active:scale-[0.97] disabled:opacity-60"
                   aria-label="Subscribe"
                 >
-                  <ArrowRight className="h-4 w-4" />
+                  {subscribing ? <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <ArrowRight className="h-4 w-4" />}
                 </button>
               </form>
               {subscribed && (
-                <p className="mt-2 text-xs font-medium text-[#0EA5E9]">
-                  Thank you for subscribing!
-                </p>
+                <p className="mt-2 text-xs font-medium text-[#0EA5E9]">✓ Subscribed! Thank you.</p>
+              )}
+              {subError && (
+                <p className="mt-2 text-xs text-red-400">{subError}</p>
               )}
             </div>
           </motion.div>

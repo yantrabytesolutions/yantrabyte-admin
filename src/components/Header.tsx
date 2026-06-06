@@ -8,6 +8,7 @@ const navLinks = [
   { name: "About", path: "/#about" },
   { name: "Services", path: "/#services" },
   { name: "Industries", path: "/#industries" },
+  { name: "Service Request", path: "/service-request" },
   { name: "Track Ticket", path: "/track" },
   { name: "Contact", path: "/#contact" },
 ];
@@ -176,11 +177,18 @@ export default function Header() {
                   +91 99867 42525
                 </a>
                 <a
-                  href="#contact"
-                  onClick={(e) => { e.preventDefault(); handleNavClick("/#contact"); }}
+                  href="/service-request"
+                  onClick={() => setMobileOpen(false)}
                   className="block w-full rounded-lg bg-[#0EA5E9] px-5 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-[#0EA5E9]/25 transition-all hover:bg-[#0284C7] active:scale-[0.97]"
                 >
-                  Get Quote
+                  Create Service Request
+                </a>
+                <a
+                  href="/track"
+                  onClick={() => setMobileOpen(false)}
+                  className="block w-full rounded-lg border border-white/10 px-5 py-3 text-center text-sm font-semibold text-gray-300 hover:bg-white/5 hover:text-white transition-all"
+                >
+                  Track My Ticket
                 </a>
               </div>
             </motion.div>
