@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell
 } from 'recharts';
-import { format, subMonths, startOfMonth, endOfMonth, parseISO, isAfter } from 'date-fns';
+import { format, subMonths, startOfMonth, parseISO } from 'date-fns';
 import { Invoice, Purchase, ServiceTicket } from '../types';
-import { AlertCircle, IndianRupee, TrendingUp, TrendingDown, Clock, CheckCircle, Receipt, MessageSquare, Mail, Loader2 } from 'lucide-react';
+import { AlertCircle, IndianRupee, TrendingDown, Clock, CheckCircle, Receipt, MessageSquare, Mail, Loader2 } from 'lucide-react';
 
 interface OutstandingClient {
   customer_name: string;
@@ -272,7 +272,7 @@ export default function Dashboard() {
                     paddingAngle={5}
                     dataKey="value"
                   >
-                    {ticketStatusData.map((entry, index) => (
+                    {ticketStatusData.map((_, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>

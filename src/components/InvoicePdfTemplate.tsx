@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import { forwardRef } from 'react';
 import type { Invoice, InvoiceItem } from '../types';
 
 export function numberToWords(num: number): string {
@@ -123,7 +123,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ invoice }
           {Number(invoice.tax || 0) > 0 && <div className="flex justify-between p-1 px-2"><span style={{ color: '#333333' }}>Tax</span> <span style={{ color: '#000000' }}>{Number(invoice.tax).toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>}
           {Number(invoice.round_off || 0) !== 0 && <div className="flex justify-between p-1 px-2"><span style={{ color: '#333333' }}>Round Off</span> <span style={{ color: '#000000' }}>{Number(invoice.round_off).toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>}
           <div className="flex justify-between p-1 px-2 font-bold border-y" style={{ backgroundColor: '#FFF2CC', borderColor: '#000000', color: '#000000' }}><span>Grand Total</span> <span className="text-base">{(invoice.grand_total || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>
-          <div className="flex justify-between p-1 px-2"><span style={{ color: '#333333' }}>Advance Paid</span> <span style={{ color: '#000000' }}>{(invoice.amount_paid || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>
+          <div className="flex justify-between p-1 px-2"><span style={{ color: '#333333' }}>Advance Paid</span> <span style={{ color: '#000000' }}>{((invoice as any).advance_paid || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>
           <div className="flex justify-between p-1 px-2 font-bold border-t" style={{ backgroundColor: '#FFF2CC', borderColor: '#000000', color: '#000000' }}><span>Balance Due</span> <span className="text-base">{(invoice.balance_due || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>
           <div className="flex justify-between p-1 px-2"><span style={{ color: '#333333' }}>Status</span> <span style={{ color: '#000000' }}>{invoice.payment_status}</span></div>
           {invoice.payment_mode !== 'Not specified' && <div className="flex justify-between p-1 px-2"><span style={{ color: '#333333' }}>Mode</span> <span style={{ color: '#000000' }}>{invoice.payment_mode}</span></div>}

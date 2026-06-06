@@ -3,14 +3,13 @@ import { supabase } from '../lib/supabase';
 import type {
   SiteSetting,
   ServiceTicket,
-  Invoice,
 } from '../types';
 import {
   LayoutDashboard, FileText, Wrench, Package, MessageSquareQuote, PenTool,
   Users, Briefcase, Building2, HelpCircle, Image, Award, Mail, Settings,
   LogOut, Plus, Pencil, Trash2, X, Eye, EyeOff, ChevronDown, Save,
   Loader2, AlertCircle, CheckCircle, Search, RefreshCw, Menu, Ticket, Receipt, CreditCard, MessageSquare,
-  DollarSign, Clock, Activity, TrendingUp, ArrowRight, Truck, ExternalLink, FileSpreadsheet
+  Truck, ExternalLink, FileSpreadsheet
 } from 'lucide-react';
 
 import BillingSoftware from './BillingSoftware';
@@ -423,9 +422,6 @@ export default function AdminPanel() {
   const [searchQuery, setSearchQuery] = useState('');
   const [autofillTicket, setAutofillTicket] = useState<ServiceTicket | null>(null);
 
-  const [financialInvoices, setFinancialInvoices] = useState<Invoice[]>([]);
-  const [financialTickets, setFinancialTickets] = useState<ServiceTicket[]>([]);
-  const [dashboardLoading, setDashboardLoading] = useState(false);
   const [userRole, setUserRole] = useState<UserRole>('admin');
 
   // --- Auth ---
@@ -869,27 +865,7 @@ export default function AdminPanel() {
   }, [session, activeSection, fetchData]);
 
   // --- Dashboard Stats ---
-  useEffect(() => {
-    if (session && activeSection === 'dashboard') {
-      setDashboardLoading(true);
-      
-      Promise.all([
-        supabase.from('invoices').select('*').order('date', { ascending: false }),
-        supabase.from('service_tickets').select('*').order('created_at', { ascending: false })
-      ]).then(([invoicesRes, ticketsRes]) => {
-        if (invoicesRes.data) {
-          setFinancialInvoices(invoicesRes.data as Invoice[]);
-        }
-        if (ticketsRes.data) {
-          setFinancialTickets(ticketsRes.data as ServiceTicket[]);
-        }
-        setDashboardLoading(false);
-      }).catch(err => {
-        console.error('Error loading dashboard financials:', err);
-        setDashboardLoading(false);
-      });
-    }
-  }, [session, activeSection]);
+  // Dashboard component fetches its own data.
 
   // --- CRUD ---
   const openAddForm = () => {
