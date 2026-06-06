@@ -690,16 +690,18 @@ export default function AdminPanel() {
     }
 
     let text = '';
+    const trackUrl = `https://yantrabyte.anantatechcare.com/track?t=${ticketNo}`;
+    
     if (status === 'open') {
-      text = `Hi ${name}, this is Yantrabyte Solutions. We have successfully registered your repair request (Ticket: ${ticketNo}) for your ${device}. Our technician will diagnose it shortly. Thank you!`;
+      text = `Hi ${name}, this is Yantrabyte Solutions. We have successfully registered your repair request (Ticket: ${ticketNo}) for your ${device}. Our technician will diagnose it shortly. Track status here: ${trackUrl}`;
     } else if (status === 'in-progress') {
-      text = `Hi ${name}, this is Yantrabyte Solutions. Your ${device} (Ticket: ${ticketNo}) is currently under active diagnostics/repair. We will notify you once completed or if parts are required.`;
+      text = `Hi ${name}, this is Yantrabyte Solutions. Your ${device} (Ticket: ${ticketNo}) is currently under active diagnostics/repair. Track status here: ${trackUrl}`;
     } else if (status === 'completed') {
       text = `Hi ${name}, great news! Your ${device} (Ticket: ${ticketNo}) has been fully repaired and tested. It is ready for pickup at our workshop. Thank you for choosing Yantrabyte Solutions!`;
     } else if (status === 'closed') {
       text = `Hi ${name}, this is Yantrabyte Solutions. Your repair ticket ${ticketNo} for ${device} has been marked as delivered and closed. Please reach out if you have any questions!`;
     } else {
-      text = `Hi ${name}, this is Yantrabyte Solutions. Update regarding your repair ticket ${ticketNo} (${device}). Status: ${status.toUpperCase()}.`;
+      text = `Hi ${name}, this is Yantrabyte Solutions. Update regarding your repair ticket ${ticketNo} (${device}). Status: ${status.toUpperCase()}. Track status here: ${trackUrl}`;
     }
 
     const encodedText = encodeURIComponent(text);

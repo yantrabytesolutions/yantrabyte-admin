@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Invoice, ServiceTicket } from '../types';
-import { FileText, LogOut, Ticket, Receipt, User, Loader2 } from 'lucide-react';
+import { FileText, LogOut, Ticket, Receipt, User, Loader2, Download } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
+import html2pdf from 'html2pdf.js';
+import { InvoicePdfTemplate } from '../components/InvoicePdfTemplate';
 
 export default function PortalDashboard() {
   const [loading, setLoading] = useState(true);
@@ -11,6 +13,10 @@ export default function PortalDashboard() {
   const [tickets, setTickets] = useState<ServiceTicket[]>([]);
   const [customerName, setCustomerName] = useState('');
   
+  const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<string | null>(null);
+  const [activeInvoiceForPdf, setActiveInvoiceForPdf] = useState<Invoice | null>(null);
+  const printRef = useRef<HTMLDivElement>(null);
+
   const navigate = useNavigate();
   const phone = sessionStorage.getItem('portal_phone');
 
@@ -25,14 +31,12 @@ export default function PortalDashboard() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch invoices where phone number contains the entered phone
       const { data: invData } = await supabase
         .from('invoices')
         .select('*')
         .ilike('phone', `%${phone}%`)
         .order('created_at', { ascending: false });
 
-      // Fetch tickets where phone number contains the entered phone
       const { data: ticketData } = await supabase
         .from('service_tickets')
         .select('*')
@@ -60,6 +64,38 @@ export default function PortalDashboard() {
   const handleLogout = () => {
     sessionStorage.removeItem('portal_phone');
     navigate('/portal');
+  };
+
+  const handleDownloadPdf = async (invoice: Invoice) => {
+    if (!printRef.current) return;
+    setDownloadingInvoiceId(invoice.id);
+    setActiveInvoiceForPdf(invoice);
+
+    // Wait for state to update and react to render the template
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    try {
+      printRef.current.style.display = 'block';
+      
+      const opt = {
+        margin: 0,
+        filename: `YBS-${invoice.invoice_no}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, windowWidth: 950 },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+      };
+
+      await html2pdf().set(opt).from(printRef.current).save();
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert("Failed to download PDF. Please try again.");
+    } finally {
+      if (printRef.current) {
+        printRef.current.style.display = 'none';
+      }
+      setDownloadingInvoiceId(null);
+      setActiveInvoiceForPdf(null);
+    }
   };
 
   if (loading) {
@@ -112,8 +148,20 @@ export default function PortalDashboard() {
                         <p className="text-sm font-medium text-teal-600 truncate">
                           {inv.invoice_no} ({inv.doc_type})
                         </p>
-                        <div className="ml-2 flex-shrink-0 flex">
-                          <p className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        <div className="ml-2 flex-shrink-0 flex gap-2">
+                          <button
+                            onClick={() => handleDownloadPdf(inv)}
+                            disabled={downloadingInvoiceId === inv.id}
+                            className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50"
+                          >
+                            {downloadingInvoiceId === inv.id ? (
+                              <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin text-teal-600" />
+                            ) : (
+                              <Download className="w-3.5 h-3.5 mr-1 text-gray-400" />
+                            )}
+                            Download PDF
+                          </button>
+                          <p className={`px-2 inline-flex items-center text-xs leading-5 font-semibold rounded-full ${
                             (inv.balance_due || 0) > 0 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
                           }`}>
                             {(inv.balance_due || 0) > 0 ? 'Due' : 'Paid'}
@@ -201,6 +249,16 @@ export default function PortalDashboard() {
           </div>
         </section>
 
+      </div>
+
+      {/* Hidden Invoice Template for PDF Generation */}
+      <div style={{ display: 'none' }}>
+        {activeInvoiceForPdf && (
+          <InvoicePdfTemplate 
+            ref={printRef} 
+            invoice={activeInvoiceForPdf} 
+          />
+        )}
       </div>
     </div>
   );
