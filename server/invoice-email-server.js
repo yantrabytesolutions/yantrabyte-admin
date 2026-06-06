@@ -479,6 +479,67 @@ app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {
   });
 });
 
+app.post('/api/invoices/reminders', requireSupabaseUser, async (req, res) => {
+  const { clients } = req.body || {};
+
+  if (!Array.isArray(clients)) {
+    return res.status(400).json({ error: 'clients array is required' });
+  }
+
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD,
+    },
+  });
+
+  const results = [];
+
+  for (const client of clients) {
+    if (!client.customer_email || !isValidEmail(client.customer_email)) {
+      results.push({ name: client.customer_name, ok: false, error: 'Invalid or missing email' });
+      continue;
+    }
+
+    try {
+      await transporter.sendMail({
+        from: `"YantraByte Solutions" <${process.env.GMAIL_USER}>`,
+        to: client.customer_email,
+        replyTo: process.env.GMAIL_REPLY_TO || process.env.GMAIL_USER,
+        subject: `Payment Reminder: Outstanding Dues - YantraByte Solutions`,
+        text: [
+          `Dear ${client.customer_name || 'Customer'},`,
+          '',
+          `This is a friendly reminder that you have an outstanding balance of ₹${(client.balance_due || 0).toLocaleString('en-IN')}.`,
+          `This balance is associated with the following invoice(s): ${client.invoices.join(', ')}.`,
+          '',
+          'Kindly clear the balance at your earliest convenience via our UPI ID: s0424237152@slc or our bank account details.',
+          '',
+          'If you have already made the payment, please ignore this email.',
+          '',
+          'Regards,',
+          'YantraByte Solutions',
+        ].join('\n'),
+        html: `
+          <p>Dear ${client.customer_name || 'Customer'},</p>
+          <p>This is a friendly reminder that you have an outstanding balance of <strong>₹${(client.balance_due || 0).toLocaleString('en-IN')}</strong>.</p>
+          <p>This balance is associated with the following invoice(s): ${client.invoices.join(', ')}.</p>
+          <p>Kindly clear the balance at your earliest convenience via our UPI ID: <strong>s0424237152@slc</strong> or our bank account details.</p>
+          <p>If you have already made the payment, please ignore this email.</p>
+          <p>Regards,<br/>YantraByte Solutions</p>
+        `,
+      });
+      results.push({ name: client.customer_name, ok: true });
+    } catch (error) {
+      console.error(`Reminder email failed for ${client.customer_email}:`, getDeliveryErrorMessage(error));
+      results.push({ name: client.customer_name, ok: false, error: getDeliveryErrorMessage(error) });
+    }
+  }
+
+  return res.json({ ok: true, results });
+});
+
 app.listen(port, () => {
   console.log(`Invoice email API listening on port ${port}`);
 });

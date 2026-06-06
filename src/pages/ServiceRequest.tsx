@@ -98,6 +98,26 @@ export default function ServiceRequest() {
       const { error: insertError } = await supabase.from('service_tickets').insert([ticketPayload]);
       if (insertError) throw insertError;
 
+      try {
+        const phoneStr = form.customer_phone.trim();
+        const { data: existingCust } = await supabase
+          .from('customers')
+          .select('id')
+          .eq('phone', phoneStr)
+          .single();
+
+        if (!existingCust) {
+          await supabase.from('customers').insert([{
+            name: form.customer_name.trim(),
+            phone: phoneStr,
+            email: form.customer_email.trim() || null,
+            address: form.customer_address.trim() || null,
+          }]);
+        }
+      } catch (custError) {
+        console.warn('Error syncing to customer master:', custError);
+      }
+
       const baseUrl = import.meta.env.VITE_API_URL || '';
       try {
         const response = await fetch(`${baseUrl}/api/backups/public-service-ticket`, {

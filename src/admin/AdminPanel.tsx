@@ -19,8 +19,10 @@ import ExternalRepairs from './ExternalRepairs';
 import html2pdf from 'html2pdf.js';
 import { downloadExcelWorkbook } from '../utils/spreadsheetXml';
 import { appendBackupRow } from '../utils/googleSheetBackup';
+import Dashboard from './Dashboard';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
+import { UserRole } from '../types';
 
 type Section =
   | 'dashboard' | 'pages' | 'services' | 'products' | 'testimonials'
@@ -424,15 +426,22 @@ export default function AdminPanel() {
   const [financialInvoices, setFinancialInvoices] = useState<Invoice[]>([]);
   const [financialTickets, setFinancialTickets] = useState<ServiceTicket[]>([]);
   const [dashboardLoading, setDashboardLoading] = useState(false);
+  const [userRole, setUserRole] = useState<UserRole>('admin');
 
   // --- Auth ---
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(!!session);
+      if (session?.user) {
+        setUserRole((session.user.user_metadata?.role as UserRole) || 'admin');
+      }
       setLoading(false);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_evt, session) => {
       setSession(!!session);
+      if (session?.user) {
+        setUserRole((session.user.user_metadata?.role as UserRole) || 'admin');
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -1161,7 +1170,7 @@ export default function AdminPanel() {
   }
 
   // --- Sidebar ---
-  const sidebarItems: { section: Section; label: string; icon: React.ElementType }[] = [
+  const allSidebarItems: { section: Section; label: string; icon: React.ElementType }[] = [
     { section: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { section: 'pages', label: 'Pages', icon: FileText },
     { section: 'services', label: 'Services', icon: Wrench },
@@ -1181,6 +1190,17 @@ export default function AdminPanel() {
     { section: 'external', label: 'External Repairs', icon: ExternalLink },
     { section: 'settings', label: 'Site Settings', icon: Settings },
   ];
+
+  const sidebarItems = allSidebarItems.filter(item => {
+    if (userRole === 'admin') return true;
+    if (userRole === 'accountant') {
+      return ['dashboard', 'billing', 'purchase', 'external', 'contacts', 'tickets'].includes(item.section);
+    }
+    if (userRole === 'staff') {
+      return ['dashboard', 'tickets', 'services', 'products', 'gallery'].includes(item.section);
+    }
+    return false;
+  });
 
   const renderCellValue = (item: Record<string, unknown>, colKey: string) => {
     const val = item[colKey];
@@ -1246,311 +1266,7 @@ export default function AdminPanel() {
 
   // --- Render Dashboard ---
   const renderDashboard = () => {
-    if (dashboardLoading) {
-      return (
-        <div className="flex flex-col items-center justify-center py-20 text-white">
-          <Loader2 className="w-10 h-10 text-[#0EA5E9] animate-spin mb-4" />
-          <p className="text-sm text-[#94A3B8]">Assembling Financial Ledger & Operational Metrics...</p>
-        </div>
-      );
-    }
-
-    const totalInvoiced = financialInvoices
-      .filter(inv => inv.doc_type === 'Invoice')
-      .reduce((sum, inv) => sum + (inv.grand_total || 0), 0);
-
-    const outstandingDues = financialInvoices
-      .filter(inv => inv.doc_type === 'Invoice')
-      .reduce((sum, inv) => sum + (inv.balance_due || 0), 0);
-
-    const collectedAmount = totalInvoiced - outstandingDues;
-
-    // Service Ticket Stats
-    const openTickets = financialTickets.filter(t => t.status === 'open').length;
-    const inProgressTickets = financialTickets.filter(t => t.status === 'in-progress').length;
-    const completedTickets = financialTickets.filter(t => t.status === 'completed').length;
-    const closedTickets = financialTickets.filter(t => t.status === 'closed').length;
-    const pendingTickets = openTickets + inProgressTickets;
-
-    interface OutstandingClient {
-      customer_name: string;
-      customer_phone: string;
-      balance_due: number;
-      invoices: string[];
-    }
-
-    // Get list of outstanding clients
-    const outstandingClients = financialInvoices
-      .filter(inv => inv.doc_type === 'Invoice' && (inv.balance_due || 0) > 0)
-      .reduce((acc: OutstandingClient[], inv) => {
-        const name = String(inv.customer_name || 'Customer');
-        const phone = String(inv.phone || '');
-        const due = inv.balance_due || 0;
-        
-        const existing = acc.find(c => c.customer_name?.toLowerCase() === name.toLowerCase());
-        if (existing) {
-          existing.balance_due += due;
-          if (!existing.invoices.includes(inv.invoice_no)) {
-            existing.invoices.push(inv.invoice_no);
-          }
-        } else {
-          acc.push({
-            customer_name: name,
-            customer_phone: phone,
-            balance_due: due,
-            invoices: [inv.invoice_no]
-          });
-        }
-        return acc;
-      }, [])
-      .sort((a, b) => b.balance_due - a.balance_due);
-
-    // Formats and opens direct WhatsApp reminder
-    const sendDuesReminder = (client: OutstandingClient) => {
-      const name = client.customer_name;
-      let phone = client.customer_phone.replace(/\D/g, '');
-      if (phone.length === 10) {
-        phone = '91' + phone;
-      }
-      if (!phone) {
-        showToast('No phone number available for client', 'error');
-        return;
-      }
-      
-      const text = `Hi ${name}, this is Ramesh from YantraByte Solutions. A friendly reminder that your outstanding balance of ₹${client.balance_due.toLocaleString('en-IN')} is due. Kindly clear the balance at your earliest convenience via UPI: s0424237152@slc or our bank account details. Thank you!`;
-      const encoded = encodeURIComponent(text);
-      window.open(`https://wa.me/${phone}?text=${encoded}`, '_blank');
-      showToast('Opening WhatsApp reminder chat...');
-    };
-
-    return (
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-bold text-white">YantraByte Solutions • Enterprise Ledger</h2>
-          <p className="text-xs text-[#94A3B8] mt-1">Real-time financial collection ledger and workshop diagnostics tracking</p>
-        </div>
-
-        {/* --- PREMIUM FINANCIAL KPI CARDS --- */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5 hover:border-indigo-500/30 transition-all duration-300">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center">
-                <DollarSign className="w-5 h-5 text-indigo-400" />
-              </div>
-              <span className="text-xs font-semibold text-[#94A3B8] uppercase">Total Invoiced</span>
-            </div>
-            <div className="text-2xl font-bold text-white font-mono">₹{totalInvoiced.toLocaleString('en-IN')}</div>
-            <p className="text-[10px] text-[#64748B] mt-1">Sum of lifetime generated invoices</p>
-          </div>
-
-          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5 hover:border-emerald-500/30 transition-all duration-300">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-emerald-400" />
-              </div>
-              <span className="text-xs font-semibold text-[#94A3B8] uppercase">Realized Revenue</span>
-            </div>
-            <div className="text-2xl font-bold text-emerald-400 font-mono">₹{collectedAmount.toLocaleString('en-IN')}</div>
-            <p className="text-[10px] text-[#64748B] mt-1">Total cash successfully collected</p>
-          </div>
-
-          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5 hover:border-rose-500/30 transition-all duration-300">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center">
-                <Clock className="w-5 h-5 text-rose-400" />
-              </div>
-              <span className="text-xs font-semibold text-[#94A3B8] uppercase">Outstanding Balance</span>
-            </div>
-            <div className="text-2xl font-bold text-rose-400 font-mono font-bold">₹{outstandingDues.toLocaleString('en-IN')}</div>
-            <p className="text-[10px] text-[#64748B] mt-1">Pending payments collection backlog</p>
-          </div>
-
-          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5 hover:border-amber-500/30 transition-all duration-300">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
-                <Activity className="w-5 h-5 text-amber-400" />
-              </div>
-              <span className="text-xs font-semibold text-[#94A3B8] uppercase">Active Service Tickets</span>
-            </div>
-            <div className="text-2xl font-bold text-amber-400 font-mono">{pendingTickets}</div>
-            <p className="text-[10px] text-[#64748B] mt-1">{openTickets} open • {inProgressTickets} in-progress</p>
-          </div>
-        </div>
-
-        {/* --- SECOND LEVEL DETAILS GRID --- */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          
-          {/* Outstanding Receivables Ledger */}
-          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col h-[380px]">
-            <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-4">
-              <h3 className="text-md font-semibold text-white flex items-center gap-2">
-                <Receipt className="w-4 h-4 text-rose-400" />
-                Outstanding Dues Ledger ({outstandingClients.length})
-              </h3>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 font-semibold font-mono">Backlog dues list</span>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-thin">
-              {outstandingClients.map((client, i) => (
-                <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-all">
-                  <div>
-                    <div className="font-semibold text-white text-sm">{client.customer_name}</div>
-                    <div className="text-[10px] text-[#94A3B8] mt-0.5">Dues for: {client.invoices.join(', ')}</div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-sm font-bold text-rose-400">₹{client.balance_due.toLocaleString('en-IN')}</span>
-                    {client.customer_phone && (
-                      <button
-                        onClick={() => sendDuesReminder(client)}
-                        className="p-1.5 rounded-lg bg-[#25D366]/10 hover:bg-[#25D366]/20 border border-[#25D366]/20 text-[#25D366] transition-all hover:scale-105"
-                        title="Send Dues Reminder WhatsApp Alert"
-                      >
-                        <MessageSquare className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-              {outstandingClients.length === 0 && (
-                <div className="text-sm text-[#64748B] italic text-center py-10">Excellent! No outstanding balances left!</div>
-              )}
-            </div>
-          </div>
-
-          {/* Workshop Tickets Status Breakdown */}
-          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col h-[380px]">
-            <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-4">
-              <h3 className="text-md font-semibold text-white flex items-center gap-2">
-                <Wrench className="w-4 h-4 text-indigo-400" />
-                Service Tickets Status Board
-              </h3>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-semibold font-mono">Live diagnostics</span>
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between text-xs text-[#94A3B8] mb-1.5">
-                  <span>Open & Registered</span>
-                  <span className="font-mono font-semibold">{openTickets}</span>
-                </div>
-                <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
-                  <div className="bg-blue-400 h-full rounded-full" style={{ width: `${financialTickets.length ? (openTickets / financialTickets.length) * 100 : 0}%` }}></div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-xs text-[#94A3B8] mb-1.5">
-                  <span>In Diagnostic/Repair Progress</span>
-                  <span className="font-mono font-semibold">{inProgressTickets}</span>
-                </div>
-                <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
-                  <div className="bg-yellow-400 h-full rounded-full" style={{ width: `${financialTickets.length ? (inProgressTickets / financialTickets.length) * 100 : 0}%` }}></div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-xs text-[#94A3B8] mb-1.5">
-                  <span>Completed (Awaiting Pickup)</span>
-                  <span className="font-mono font-semibold">{completedTickets}</span>
-                </div>
-                <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
-                  <div className="bg-emerald-400 h-full rounded-full" style={{ width: `${financialTickets.length ? (completedTickets / financialTickets.length) * 100 : 0}%` }}></div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-xs text-[#94A3B8] mb-1.5">
-                  <span>Closed & Delivered</span>
-                  <span className="font-mono font-semibold">{closedTickets}</span>
-                </div>
-                <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
-                  <div className="bg-gray-400 h-full rounded-full" style={{ width: `${financialTickets.length ? (closedTickets / financialTickets.length) * 100 : 0}%` }}></div>
-                </div>
-              </div>
-            </div>
-
-            {/* Diagnostic Workshop Logs Summary list */}
-            <div className="mt-5 border-t border-white/5 pt-4 flex-1 overflow-y-auto">
-              <div className="text-[11px] uppercase tracking-wider text-[#64748B] font-semibold mb-2">Recent Workshop Diagnostics notes</div>
-              <div className="space-y-2 max-h-[110px] overflow-y-auto pr-1">
-                {financialTickets.filter(t => t.notes).slice(0, 3).map((ticket, idx) => (
-                  <div key={idx} className="text-xs p-2 rounded bg-white/[0.02] border border-white/5 text-[#CBD5E1]">
-                    <span className="font-semibold text-blue-400 block mb-0.5">{ticket.ticket_number} ({ticket.device_type}):</span>
-                    <span className="italic">"{ticket.notes}"</span>
-                  </div>
-                ))}
-                {financialTickets.filter(t => t.notes).length === 0 && (
-                  <div className="text-xs text-[#64748B] italic py-2">No diagnostics notes registered recently.</div>
-                )}
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-        {/* --- RECENT INVOICES LEDGER TIMELINE --- */}
-        <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6">
-          <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-4">
-            <h3 className="text-md font-semibold text-white flex items-center gap-2">
-              <Receipt className="w-4 h-4 text-[#0EA5E9]" />
-              Recent Billing Transactions
-            </h3>
-            <button
-              onClick={() => setActiveSection('billing')}
-              className="text-xs font-semibold text-[#0EA5E9] hover:text-[#0284C7] transition-all flex items-center gap-1 hover:underline"
-            >
-              Go to Billing panel <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm border-collapse">
-              <thead>
-                <tr className="border-b border-white/10 text-xs text-[#94A3B8] uppercase">
-                  <th className="py-3 px-4 font-semibold">Document No</th>
-                  <th className="py-3 px-4 font-semibold">Customer</th>
-                  <th className="py-3 px-4 font-semibold">Date</th>
-                  <th className="py-3 px-4 font-semibold">Doc Type</th>
-                  <th className="py-3 px-4 font-semibold text-right">Grand Total</th>
-                  <th className="py-3 px-4 font-semibold text-right">Dues Left</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {financialInvoices.slice(0, 5).map((inv, idx) => (
-                  <tr key={idx} className="hover:bg-white/[0.01] transition-colors">
-                    <td className="py-3 px-4 font-mono font-semibold text-white">{inv.invoice_no}</td>
-                    <td className="py-3 px-4 text-[#CBD5E1]">{inv.customer_name}</td>
-                    <td className="py-3 px-4 text-xs text-[#94A3B8]">{inv.date}</td>
-                    <td className="py-3 px-4">
-                      {inv.doc_type === 'Quotation' ? (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20 font-medium">Quote</span>
-                      ) : (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 font-medium">Invoice</span>
-                      )}
-                    </td>
-                    <td className="py-3 px-4 text-right font-mono font-bold text-white">₹{(inv.grand_total || 0).toLocaleString('en-IN')}</td>
-                    <td className="py-3 px-4 text-right">
-                      {inv.doc_type === 'Quotation' ? (
-                        <span className="text-xs text-[#64748B]">—</span>
-                      ) : (inv.balance_due || 0) <= 0 ? (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold uppercase font-mono">Paid</span>
-                      ) : (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 font-semibold font-mono">₹{(inv.balance_due || 0).toLocaleString('en-IN')} due</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-                {financialInvoices.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="py-6 text-sm text-[#64748B] italic text-center">No billing transactions recorded yet.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    );
+    return <Dashboard />;
   };
 
   // --- Render Data Table ---

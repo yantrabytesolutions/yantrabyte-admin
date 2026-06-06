@@ -16,6 +16,8 @@ export interface Service {
   updated_at: string;
 }
 
+export type UserRole = 'admin' | 'accountant' | 'staff';
+
 export interface Product {
   id: string;
   name: string;

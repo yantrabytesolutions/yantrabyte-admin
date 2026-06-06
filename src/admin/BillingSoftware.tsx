@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { Invoice, InvoiceItem, ServiceTicket, Product, Customer, Purchase } from '../types';
 import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt, Mail, FileSpreadsheet } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
+import { QRCodeSVG } from 'qrcode.react';
 import { PRESET_ITEMS } from './presetItems';
 import { downloadExcelWorkbook } from '../utils/spreadsheetXml';
 import { appendBackupRow } from '../utils/googleSheetBackup';
@@ -1597,8 +1598,11 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                     <p><span className="font-bold">IFSC:</span> NESF0000333</p>
                     <p className="mt-0.5"><span className="font-bold">UPI:</span> s0424237152@slc</p>
                   </div>
-                  <div className="w-20 h-20 flex-shrink-0 border p-0.5 mr-2" style={{ borderColor: '#dddddd' }}>
-                    <img src="/qr.jpg" alt="Payment QR" style={{ height: '100%', width: '100%', objectFit: 'contain' }} crossOrigin="anonymous" />
+                  <div className="w-20 h-20 flex-shrink-0 border p-1 mr-2 flex justify-center items-center" style={{ borderColor: '#dddddd', backgroundColor: 'white' }}>
+                    <QRCodeSVG 
+                      value={`upi://pay?pa=s0424237152@slc&pn=${encodeURIComponent('YantraByte Solutions')}&am=${grandTotal}&cu=INR`} 
+                      size={70} 
+                    />
                   </div>
                 </div>
               </div>

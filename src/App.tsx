@@ -13,6 +13,8 @@ import ServiceRequest from './pages/ServiceRequest';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import AdminPanel from './admin/AdminPanel';
+import PortalLogin from './portal/PortalLogin';
+import PortalDashboard from './portal/PortalDashboard';
 
 const DomainGuard = ({ children }: { children: React.ReactNode }) => {
   const hostname = window.location.hostname;
@@ -62,6 +64,8 @@ function App() {
           <Route path="/terms" element={<Terms />} />
         </Route>
         <Route path="/admin" element={<DomainGuard><AdminPanel /></DomainGuard>} />
+        <Route path="/portal" element={<PortalLogin />} />
+        <Route path="/portal/dashboard" element={<PortalDashboard />} />
       </Routes>
     </BrowserRouter>
   );
