@@ -57,6 +57,7 @@ function App() {
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/service-request" element={<ServiceRequest />} />
+          <Route path="/servicerequest" element={<ServiceRequest />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
         </Route>
