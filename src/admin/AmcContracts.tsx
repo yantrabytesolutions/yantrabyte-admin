@@ -192,7 +192,7 @@ export default function AmcContracts({ onRenewContract }: AmcContractsProps) {
         <div className="flex items-center gap-3">
           <button
             onClick={() => {
-              navigator.clipboard.writeText("https://yantrabyte.com/amc-request");
+              navigator.clipboard.writeText("https://yantrabyte.anantatechcare.com/amc-request");
               setCopied(true);
               setTimeout(() => setCopied(false), 2000);
             }}

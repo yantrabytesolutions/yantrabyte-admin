@@ -235,7 +235,7 @@ const serviceTicketRow = (ticket: Partial<ServiceTicket>) => [
   ticket.status || '',
   ticket.assigned_to || '',
   ticket.notes || '',
-  ticket.ticket_number ? `https://yantrabyte.com/admin` : '',
+  ticket.ticket_number ? `https://yantrabyte.anantatechcare.com/admin` : '',
 ];
 
 const SECTION_FIELDS: Record<string, FormField[]> = {
