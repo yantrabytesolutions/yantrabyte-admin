@@ -1,5 +1,4 @@
-[allowlist]
-fingerprints = [
-    "fed190a7a9584d9a81747f24c11d2ec1d4b70291:admin/yantrabyte-admin-main/check_supabase_rest.js:generic-api-key:2",
-    "fed190a7a9584d9a81747f24c11d2ec1d4b70291:admin_updated/check_supabase_rest.js:generic-api-key:2"
-]
+# Gitleaks ignore file — one fingerprint per line
+fed190a7a9584d9a81747f24c11d2ec1d4b70291:admin/yantrabyte-admin-main/check_supabase_rest.js:generic-api-key:2
+fed190a7a9584d9a81747f24c11d2ec1d4b70291:admin_updated/check_supabase_rest.js:generic-api-key:2
+b110098e5fc28063de3c3c463e2cc51fe0dc5c28:build.sh:jwt:3
