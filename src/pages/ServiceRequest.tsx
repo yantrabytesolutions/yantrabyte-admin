@@ -118,17 +118,47 @@ export default function ServiceRequest() {
         console.warn('Error syncing to customer master:', custError);
       }
 
-      const baseUrl = import.meta.env.VITE_API_URL || '';
+      // Trigger Telegram and Email notification via Supabase Edge Function
       try {
-        const response = await fetch(`${baseUrl}/api/backups/public-service-ticket`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(ticketPayload),
+        const { error: edgeError } = await supabase.functions.invoke('send-ticket-email', {
+          body: ticketPayload,
         });
-        const result = await response.json();
-        if (!response.ok || !result.ok) {
-          console.warn('Google Sheet ticket backup or email failed:', result.error || result);
-        }
+        if (edgeError) console.warn('Supabase send-ticket-email failed:', edgeError);
+      } catch (e) {
+        console.warn('Network error calling send-ticket-email:', e);
+      }
+
+      // Trigger Google Sheets backup via Supabase Edge Function
+      try {
+        const headers = [
+          'Ticket No', 'Created At', 'Customer', 'Phone', 'Email',
+          'Address', 'Device / Service', 'Issue', 'Priority', 'Status',
+          'Assigned To', 'Notes', 'Link'
+        ];
+        const row = [
+          ticketPayload.ticket_number || '',
+          new Date().toISOString(),
+          ticketPayload.customer_name || '',
+          ticketPayload.customer_phone || '',
+          ticketPayload.customer_email || '',
+          ticketPayload.customer_address || '',
+          ticketPayload.device_type || '',
+          ticketPayload.issue_description || '',
+          ticketPayload.priority || '',
+          ticketPayload.status || 'open',
+          '', 
+          '', 
+          `https://yantrabyte.anantatechcare.com/admin`
+        ];
+
+        const { error: sheetError } = await supabase.functions.invoke('backup-to-sheets', {
+          body: {
+            sheetName: 'Service Tickets',
+            headers,
+            row
+          }
+        });
+        if (sheetError) console.warn('Supabase backup-to-sheets failed:', sheetError);
       } catch (backupError) {
         console.warn('Network error triggering Google Sheet backup:', backupError);
       }

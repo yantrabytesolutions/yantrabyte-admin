@@ -20,23 +20,20 @@ export async function appendBackupRow(payload: SheetBackupPayload): Promise<Shee
     return { ok: false, skipped: true, error: 'No active admin session for Google Sheet backup.' };
   }
 
-  const response = await fetch('/api/backups/sheet-row', {
-    method: 'POST',
+  const { data: result, error } = await supabase.functions.invoke('backup-to-sheets', {
+    body: payload,
     headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(payload),
+      Authorization: `Bearer ${token}`
+    }
   });
 
-  const result = await response.json().catch(() => ({}));
-  if (!response.ok) {
+  if (error) {
     return {
       ok: false,
       skipped: false,
-      error: result.error || `Google Sheet backup failed with HTTP ${response.status}`,
+      error: error.message || 'Supabase Edge Function backup-to-sheets failed',
     };
   }
 
-  return result;
+  return result || { ok: true };
 }
