@@ -114,6 +114,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const [dueDate, setDueDate] = useState('');
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurringInterval, setRecurringInterval] = useState('monthly');
+  const [termsConditions, setTermsConditions] = useState('');
   const [items, setItems] = useState<InvoiceItem[]>([]);
   
   const [itemDesc, setItemDesc] = useState('');
@@ -378,12 +379,9 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setEmail('');
     setAddress('');
     setDiscount(0);
-    setTax(0);
-    setAdvancePaid(0);
-    setPaymentMode('Not specified');
-    setDueDate('');
     setIsRecurring(false);
     setRecurringInterval('monthly');
+    setTermsConditions('');
     setItems([]);
   };
 
@@ -475,6 +473,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setDueDate(inv.due_date || '');
     setIsRecurring(inv.is_recurring || false);
     setRecurringInterval(inv.recurring_interval || 'monthly');
+    setTermsConditions(inv.terms_conditions || '');
     setItems(inv.items || []);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     showToast(`Invoice ${inv.invoice_no} loaded for editing`);
@@ -691,6 +690,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         is_recurring: true,
         recurring_interval: inv.recurring_interval,
         next_due_date: nextDue,
+        terms_conditions: inv.terms_conditions
       };
 
       const { error } = await supabase.from('invoices').insert([payload]).select().single();
@@ -760,6 +760,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         grand_total: grandTotal,
         advance_paid: advancePaid,
         balance_due: balanceDue,
+        terms_conditions: termsConditions
       };
 
       let calculatedNextDue: string | null = null;
@@ -779,6 +780,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         is_recurring: isRecurring,
         recurring_interval: isRecurring ? recurringInterval : null,
         next_due_date: calculatedNextDue,
+        terms_conditions: termsConditions
       };
 
       if (isUpdate) {
@@ -1370,6 +1372,24 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                 <textarea value={address} onChange={e => setAddress(e.target.value)} rows={2} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Full address"></textarea>
               </div>
             </div>
+            
+            <div className="mt-6 border-t pt-4">
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-xs font-medium text-gray-600">Terms & Conditions</label>
+                <div className="flex space-x-2">
+                  <button onClick={() => setTermsConditions("1. Goods once sold will not be taken back.\n2. Warranty as per manufacturer terms.\n3. Subject to local jurisdiction.")} className="text-[10px] bg-gray-100 px-2 py-1 rounded hover:bg-gray-200">General</button>
+                  <button onClick={() => setTermsConditions("1. We are not responsible for any data loss during repair. Please backup your data.\n2. 30 days warranty on repaired parts only.\n3. Physical or liquid damage voids warranty.")} className="text-[10px] bg-gray-100 px-2 py-1 rounded hover:bg-gray-200">Service</button>
+                  <button onClick={() => setTermsConditions("1. AMC covers standard service visits as per contract.\n2. Spare parts are charged extra unless specified.\n3. Contract is non-transferable.")} className="text-[10px] bg-gray-100 px-2 py-1 rounded hover:bg-gray-200">AMC</button>
+                  <button onClick={() => setTermsConditions("")} className="text-[10px] text-red-600 bg-red-50 px-2 py-1 rounded hover:bg-red-100">Clear</button>
+                </div>
+              </div>
+              <textarea 
+                value={termsConditions} 
+                onChange={e => setTermsConditions(e.target.value)}
+                className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500 h-20" 
+                placeholder="Enter terms and conditions for this invoice..."
+              ></textarea>
+            </div>
           </div>
 
           <div className="bg-white p-6 rounded-lg shadow-sm space-y-4">
@@ -1749,23 +1769,12 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             {/* Terms Box */}
             <div className="w-3/5 flex flex-col" style={{ border: '1px solid #000' }}>
               <div className="font-bold text-center p-1 text-white" style={{ backgroundColor: '#0B5394' }}>Terms & Conditions</div>
-              <div className="p-3 space-y-1" style={{ color: '#444444' }}>
-                {docType === 'Quotation' ? (
-                  <>
-                    <p>1. Estimate valid for 7 days.</p>
-                    <p>2. Advance payment of 50% required.</p>
-                    <p>3. Final amount may vary if hidden faults are found.</p>
-                  </>
+              <div className="p-3 space-y-1 whitespace-pre-wrap" style={{ color: '#444444' }}>
+                {termsConditions || (docType === 'Quotation' ? (
+                  "1. Estimate valid for 7 days.\n2. Advance payment of 50% required.\n3. Final amount may vary if hidden faults are found."
                 ) : (
-                  <>
-                    <p>1. Service warranty is valid for 30 days only.</p>
-                    <p>2. No warranty for Windows installation/software issues.</p>
-                    <p>3. YantraByte Solutions is not responsible for any data loss.</p>
-                    <p>4. Customer should take backup of all important files prior.</p>
-                    <p>5. Physical, liquid or burnt damages void warranty.</p>
-                    <p>6. No warranty for swollen batteries or electrical faults.</p>
-                  </>
-                )}
+                  "1. Service warranty is valid for 30 days only.\n2. No warranty for Windows installation/software issues.\n3. YantraByte Solutions is not responsible for any data loss.\n4. Customer should take backup of all important files prior.\n5. Physical, liquid or burnt damages void warranty.\n6. No warranty for swollen batteries or electrical faults."
+                ))}
               </div>
             </div>
 

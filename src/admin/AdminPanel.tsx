@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import { renderToString } from 'react-dom/server';
+import { QRCodeSVG } from 'qrcode.react';
 import { supabase } from '../lib/supabase';
 import type {
   SiteSetting,
@@ -483,6 +485,10 @@ export default function AdminPanel() {
       .replace(/'/g, '&#39;');
     const safeMultiline = (value: unknown, fallback: string) => safeText(value, fallback).replace(/\n/g, '<br />');
     const ticketFilename = ticketNo.toLowerCase().endsWith('.pdf') ? ticketNo : `${ticketNo}.pdf`;
+    
+    // Generate QR code for tracking URL
+    const trackUrl = `https://yantrabyte.anantatechcare.com/track?t=${ticketNo}`;
+    const qrCodeSvg = renderToString(<QRCodeSVG value={trackUrl} size={70} level="M" />);
     const dateStr = item.created_at ? new Date(String(item.created_at)).toLocaleDateString('en-GB') : new Date().toLocaleDateString('en-GB');
 
     const element = document.createElement('div');
@@ -507,15 +513,27 @@ export default function AdminPanel() {
               </div>
             </td>
             <td style="width: 44%; text-align: right; vertical-align: top;">
-              <div style="background-color: #0B5394; color: #ffffff; padding: 8px 12px; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.4px; display: inline-block;">
-                Service Ticket Receipt
-              </div>
-              <div style="font-size: 12px; font-weight: bold; margin-top: 10px; color: #111111;">
-                Ticket No: <span style="color: #c2410c; font-size: 15px;">${safeText(ticketNo)}</span>
-              </div>
-              <div style="font-size: 11px; color: #444444; margin-top: 4px;">
-                Date: ${dateStr}
-              </div>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="text-align: right; padding-right: 10px; vertical-align: top;">
+                    <div style="background-color: #0B5394; color: #ffffff; padding: 8px 12px; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.4px; display: inline-block;">
+                      Service Ticket Receipt
+                    </div>
+                    <div style="font-size: 12px; font-weight: bold; margin-top: 10px; color: #111111;">
+                      Ticket No: <span style="color: #c2410c; font-size: 15px;">${safeText(ticketNo)}</span>
+                    </div>
+                    <div style="font-size: 11px; color: #444444; margin-top: 4px;">
+                      Date: ${dateStr}
+                    </div>
+                  </td>
+                  <td style="width: 70px; vertical-align: top;">
+                    <div style="padding: 4px; background: white; border: 1px solid #ddd; border-radius: 4px; display: inline-block;">
+                      ${qrCodeSvg}
+                    </div>
+                    <div style="font-size: 8px; color: #666; text-align: center; margin-top: 2px;">Track Status</div>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
         </table>

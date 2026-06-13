@@ -212,6 +212,7 @@ export interface Invoice {
   recurring_interval?: string | null;
   next_due_date?: string | null;
   due_date?: string | null;
+  terms_conditions?: string;
   created_at: string;
 }
 
