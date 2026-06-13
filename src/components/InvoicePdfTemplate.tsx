@@ -50,7 +50,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ invoice }
         </div>
         <div className="flex items-center space-x-4">
           <div className="flex items-center justify-end mr-2">
-            <img src="/logo5.png" alt="YantraByte Solutions" style={{ height: '80px', width: 'auto' }} crossOrigin="anonymous" />
+            <img src="/logo6.png" alt="YantraByte Solutions" style={{ height: '80px', width: 'auto' }} crossOrigin="anonymous" />
           </div>
         </div>
       </div>

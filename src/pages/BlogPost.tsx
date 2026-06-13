@@ -594,7 +594,7 @@ export default function BlogPost() {
             "name": "Yantrabyte Solutions",
             "logo": {
               "@type": "ImageObject",
-              "url": "https://yantrabyte.anantatechcare.com/logo5.png"
+              "url": "https://yantrabyte.anantatechcare.com/logo6.png"
             }
           }
         }}

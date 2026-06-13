@@ -16,7 +16,7 @@ export default function SEO({
   keywords = "CCTV installation Bangalore, laptop repair Bangalore, computer repair Bangalore, networking solutions Bangalore, IT services Bangalore, biometric systems Bangalore",
   canonicalUrl,
   type = "website",
-  imageUrl = "https://yantrabyte.anantatechcare.com/logo5.png",
+  imageUrl = "https://yantrabyte.anantatechcare.com/logo6.png",
   schema
 }: SEOProps) {
   const url = canonicalUrl || (typeof window !== 'undefined' ? window.location.href : 'https://yantrabyte.anantatechcare.com');
