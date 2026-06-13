@@ -1,7 +1,7 @@
 import { forwardRef } from 'react';
 import type { Invoice, InvoiceItem } from '../types';
 
-export function numberToWords(num: number): string {
+function numberToWords(num: number): string {
   num = Math.round(Number(num || 0));
   if (num === 0) return 'Zero Rupees';
 

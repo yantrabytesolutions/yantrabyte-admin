@@ -26,6 +26,7 @@ export default function PortalDashboard() {
       return;
     }
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phone, navigate]);
 
   const fetchData = async () => {
