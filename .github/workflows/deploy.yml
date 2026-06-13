@@ -106,6 +106,17 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
+            echo "Aggressively cleaning disk space..."
+            sudo rm -f /home/${{ secrets.EC2_USERNAME }}/*.tar.gz
+            sudo apt-get clean
+            if command -v pm2 >/dev/null 2>&1; then pm2 flush; fi
+            sudo npm cache clean --force || true
+            # Clean old releases aggressively (keep only 2)
+            if [ -d /var/www/yantrabyte/releases ]; then
+              cd /var/www/yantrabyte/releases
+              ls -dt release_* 2>/dev/null | tail -n +3 | xargs -I {} sudo rm -rf {}
+            fi
+            sudo journalctl --vacuum-time=1d
             df -h
             sudo rm -rf /tmp/yantrabyte-deploy
             mkdir -p /tmp/yantrabyte-deploy
