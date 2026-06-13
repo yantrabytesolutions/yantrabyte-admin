@@ -40,12 +40,12 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ invoice }
   const items: InvoiceItem[] = Array.isArray(invoice.items) ? invoice.items : [];
   
   return (
-    <div ref={ref} className="bg-white p-[10px] text-black" style={{ width: '950px', maxWidth: 'none', fontFamily: 'Arial, sans-serif' }}>
+    <div ref={ref} className="bg-white p-[10px] text-black" style={{ width: '794px', maxWidth: 'none', fontFamily: 'Arial, sans-serif' }}>
       {/* Header */}
       <div className="flex items-center justify-between border p-3 mb-2" style={{ borderColor: '#000000' }}>
         <div className="flex items-center space-x-4">
-          <div className="w-[340px] h-28 flex items-center justify-start ml-2">
-            <img src="/logo5.png" alt="YantraByte Solutions" style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} crossOrigin="anonymous" />
+          <div className="flex items-center justify-start ml-2">
+            <img src="/logo5.png" alt="YantraByte Solutions" style={{ height: '80px', width: 'auto' }} crossOrigin="anonymous" />
           </div>
         </div>
         <div className="text-right">
@@ -96,14 +96,14 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ invoice }
           </tr>
         </thead>
         <tbody>
-          {items.map((it: InvoiceItem, idx: number) => (
+          {items.map((it: any, idx: number) => (
             <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? '#ffffff' : '#F8FAFC' }}>
               <td className="border p-1.5 text-center" style={{ borderColor: '#000000', color: '#000000' }}>{idx + 1}</td>
-              <td className="border p-1.5 font-medium" style={{ borderColor: '#000000', color: '#000000' }}>{it.description}</td>
+              <td className="border p-1.5 font-medium" style={{ borderColor: '#000000', color: '#000000' }}>{it.description || it.item || it.name || it.item_name || ''}</td>
               <td className="border p-1.5" style={{ borderColor: '#000000', color: '#000000' }}></td>
-              <td className="border p-1.5 text-center" style={{ borderColor: '#000000', color: '#000000' }}>{it.qty}</td>
-              <td className="border p-1.5 text-right" style={{ borderColor: '#000000', color: '#000000' }}>{it.rate.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-              <td className="border p-1.5 text-right font-bold" style={{ borderColor: '#000000', color: '#000000' }}>{(it.qty * it.rate).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+              <td className="border p-1.5 text-center" style={{ borderColor: '#000000', color: '#000000' }}>{it.qty || 1}</td>
+              <td className="border p-1.5 text-right" style={{ borderColor: '#000000', color: '#000000' }}>{Number(it.rate || it.price || it.amount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+              <td className="border p-1.5 text-right font-bold" style={{ borderColor: '#000000', color: '#000000' }}>{(Number(it.qty || 1) * Number(it.rate || it.price || it.amount || 0)).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
             </tr>
           ))}
           {/* Padding rows */}

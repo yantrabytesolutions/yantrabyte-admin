@@ -772,7 +772,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       margin: 0,
       filename: `YBS-${invoiceNumber}.pdf`,
       image: { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, windowWidth: 950 },
+      html2canvas: { scale: 2, useCORS: true, windowWidth: 794 },
       jsPDF: { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const }
   });
 
@@ -1540,14 +1540,14 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       </div>
 
       {/* --- HIDDEN PRINT TEMPLATE --- */}
-      <div style={{ position: 'absolute', top: '-9999px', left: '-9999px', width: '0', height: '0', overflow: 'hidden' }}>
-        <div ref={printRef} className="bg-white p-[10px] text-black" style={{ width: '950px', maxWidth: 'none', fontFamily: 'Arial, sans-serif' }}>
+      <div style={{ position: 'fixed', top: 0, left: 0, width: '794px', opacity: 0, pointerEvents: 'none', zIndex: -1000 }}>
+        <div ref={printRef} className="bg-white p-[10px] text-black" style={{ width: '794px', maxWidth: 'none', fontFamily: 'Arial, sans-serif' }}>
           
           {/* Header */}
           <div className="flex items-center justify-between border p-3 mb-2" style={{ borderColor: '#000000' }}>
             <div className="flex items-center space-x-4">
-              <div className="w-[340px] h-28 flex items-center justify-start ml-2">
-                <img src="/logo5.png" alt="YantraByte Solutions" style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} crossOrigin="anonymous" />
+              <div className="flex items-center justify-start ml-2">
+                <img src="/logo5.png" alt="YantraByte Solutions" style={{ height: '80px', width: 'auto' }} crossOrigin="anonymous" />
               </div>
             </div>
             <div className="text-right">
@@ -1598,14 +1598,14 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               </tr>
             </thead>
             <tbody>
-              {items.map((it, idx) => (
+              {items.map((it: any, idx) => (
                 <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? '#ffffff' : '#F8FAFC' }}>
                   <td className="border p-1.5 text-center" style={{ borderColor: '#000000', color: '#000000' }}>{idx + 1}</td>
-                  <td className="border p-1.5 font-medium" style={{ borderColor: '#000000', color: '#000000' }}>{it.description}</td>
+                  <td className="border p-1.5 font-medium" style={{ borderColor: '#000000', color: '#000000' }}>{it.description || it.item || it.name || it.item_name || ''}</td>
                   <td className="border p-1.5" style={{ borderColor: '#000000', color: '#000000' }}></td>
-                  <td className="border p-1.5 text-center" style={{ borderColor: '#000000', color: '#000000' }}>{it.qty}</td>
-                  <td className="border p-1.5 text-right" style={{ borderColor: '#000000', color: '#000000' }}>{it.rate.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                  <td className="border p-1.5 text-right font-bold" style={{ borderColor: '#000000', color: '#000000' }}>{(it.qty * it.rate).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                  <td className="border p-1.5 text-center" style={{ borderColor: '#000000', color: '#000000' }}>{it.qty || 1}</td>
+                  <td className="border p-1.5 text-right" style={{ borderColor: '#000000', color: '#000000' }}>{Number(it.rate || it.price || it.amount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                  <td className="border p-1.5 text-right font-bold" style={{ borderColor: '#000000', color: '#000000' }}>{(Number(it.qty || 1) * Number(it.rate || it.price || it.amount || 0)).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
                 </tr>
               ))}
               {/* Padding rows */}
