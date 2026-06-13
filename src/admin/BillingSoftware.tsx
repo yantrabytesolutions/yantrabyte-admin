@@ -312,7 +312,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setCustomersList([]);
   };
 
-  const fetchInvoices = async (freshStartAt = billingFreshStartAt) => {
+  const fetchInvoices = async (_freshStartAt = billingFreshStartAt) => {
     const query = supabase
       .from('invoices')
       .select('*')
