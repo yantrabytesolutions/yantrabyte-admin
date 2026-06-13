@@ -318,9 +318,11 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (freshStartAt) {
-      query = query.gte('created_at', freshStartAt);
-    }
+    // We intentionally ignore `freshStartAt` filtering here so that ALL historical bills 
+    // and quotations are always visible in the admin panel, as requested.
+    // if (freshStartAt) {
+    //   query = query.gte('created_at', freshStartAt);
+    // }
 
     const { data, error } = await query;
     if (!error && data) {
