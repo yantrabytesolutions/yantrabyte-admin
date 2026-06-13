@@ -353,6 +353,17 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setItems(items.filter((_, i) => i !== index));
   };
 
+  const handleEditItem = (index: number) => {
+    const it = items[index];
+    setItemDesc(it.description);
+    setItemQty(it.qty);
+    setItemRate(it.rate);
+    setItemProductId(it.product_id || '');
+    removeItem(index);
+    // Scroll slightly up to the form inputs to make sure they see it
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const clearForm = () => {
     setSelectedInvoiceId('');
     setDocType('Invoice');
@@ -1374,8 +1385,9 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                       <td className="px-4 py-2 text-center text-gray-600">{it.qty}</td>
                       <td className="px-4 py-2 text-right text-gray-600">₹{it.rate.toLocaleString('en-IN')}</td>
                       <td className="px-4 py-2 text-right font-medium text-gray-800">₹{(it.qty * it.rate).toLocaleString('en-IN')}</td>
-                      <td className="px-4 py-2 text-center">
-                        <button onClick={() => removeItem(idx)} className="text-red-400 hover:text-red-600 transition-colors"><Trash2 className="w-4 h-4" /></button>
+                      <td className="px-4 py-2 text-center flex items-center justify-center space-x-2">
+                        <button onClick={() => handleEditItem(idx)} className="text-gray-400 hover:text-blue-500 transition-colors" title="Edit Item"><Pencil className="w-4 h-4" /></button>
+                        <button onClick={() => removeItem(idx)} className="text-red-400 hover:text-red-600 transition-colors" title="Remove Item"><Trash2 className="w-4 h-4" /></button>
                       </td>
                     </tr>
                   ))}
