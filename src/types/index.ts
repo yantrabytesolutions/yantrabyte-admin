@@ -208,6 +208,9 @@ export interface Invoice {
   balance_due: number;
   payment_mode?: string;
   payment_status?: string;
+  is_recurring?: boolean;
+  recurring_interval?: string | null;
+  next_due_date?: string | null;
   due_date?: string | null;
   created_at: string;
 }

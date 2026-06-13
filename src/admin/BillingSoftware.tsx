@@ -112,6 +112,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const [advancePaid, setAdvancePaid] = useState(0);
   const [paymentMode, setPaymentMode] = useState('Not specified');
   const [dueDate, setDueDate] = useState('');
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurringInterval, setRecurringInterval] = useState('monthly');
   const [items, setItems] = useState<InvoiceItem[]>([]);
   
   const [itemDesc, setItemDesc] = useState('');
@@ -141,6 +143,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     totalSpend: number;
     outstanding: number;
   } | null>(null);
+
+  const [showRecurringModal, setShowRecurringModal] = useState(false);
 
   const openCustomerHistory = () => {
     if (!customerName.trim()) {
@@ -378,6 +382,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setAdvancePaid(0);
     setPaymentMode('Not specified');
     setDueDate('');
+    setIsRecurring(false);
+    setRecurringInterval('monthly');
     setItems([]);
   };
 
@@ -467,6 +473,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setAdvancePaid(inv.advance_paid);
     setPaymentMode(inv.payment_mode || 'Not specified');
     setDueDate(inv.due_date || '');
+    setIsRecurring(inv.is_recurring || false);
+    setRecurringInterval(inv.recurring_interval || 'monthly');
     setItems(inv.items || []);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     showToast(`Invoice ${inv.invoice_no} loaded for editing`);
@@ -644,6 +652,63 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     return savedInvoice;
   };
 
+  const generateRecurringInvoice = async (recurringInvoiceId: string) => {
+    setIsSaving(true);
+    try {
+      const inv = invoices.find(i => i.id === recurringInvoiceId);
+      if (!inv) return;
+
+      const date = new Date().toLocaleDateString('en-GB'); // dd/mm/yyyy
+      const invoiceNo = generateInvoiceNo('Invoice');
+      
+      let nextDue: string | null = null;
+      if (inv.recurring_interval) {
+        const d = new Date();
+        if (inv.recurring_interval === 'yearly') d.setFullYear(d.getFullYear() + 1);
+        else d.setMonth(d.getMonth() + 1);
+        nextDue = d.toISOString().split('T')[0];
+      }
+
+      const payload = {
+        invoice_no: invoiceNo,
+        doc_type: 'Invoice',
+        date: date,
+        customer_id: inv.customer_id,
+        customer_name: inv.customer_name,
+        phone: inv.phone,
+        email: inv.email,
+        address: inv.address,
+        items: inv.items,
+        subtotal: inv.subtotal,
+        discount: inv.discount,
+        tax: inv.tax,
+        round_off: inv.round_off,
+        grand_total: inv.grand_total,
+        advance_paid: 0,
+        balance_due: inv.grand_total,
+        payment_mode: 'Not specified',
+        payment_status: 'Unpaid',
+        is_recurring: true,
+        recurring_interval: inv.recurring_interval,
+        next_due_date: nextDue,
+      };
+
+      const { error } = await supabase.from('invoices').insert([payload]).select().single();
+      if (error) throw error;
+      
+      await supabase.from('invoices').update({ next_due_date: nextDue }).eq('id', inv.id);
+
+      showToast(`Generated new AMC Invoice ${invoiceNo}`);
+      await fetchInvoices();
+      setShowRecurringModal(false);
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to generate recurring invoice', 'error');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleSave = async (action: 'save' | 'download' | 'email' = 'save') => {
     if (!customerName.trim()) {
       showToast('Please enter a customer name.', 'error');
@@ -697,12 +762,23 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         balance_due: balanceDue,
       };
 
+      let calculatedNextDue: string | null = null;
+      if (isRecurring) {
+        const d = new Date();
+        if (recurringInterval === 'yearly') d.setFullYear(d.getFullYear() + 1);
+        else d.setMonth(d.getMonth() + 1);
+        calculatedNextDue = d.toISOString().split('T')[0];
+      }
+
       const payload = {
         ...legacyPayload,
         customer_id: customerId,
         payment_mode: paymentMode,
         payment_status: paymentStatus,
         due_date: dueDate || null,
+        is_recurring: isRecurring,
+        recurring_interval: isRecurring ? recurringInterval : null,
+        next_due_date: calculatedNextDue,
       };
 
       if (isUpdate) {
@@ -1084,6 +1160,12 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             {isExportingExcel ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <FileSpreadsheet className="w-4 h-4 mr-2" />}
             Export Excel
           </button>
+          <button 
+            onClick={() => setShowRecurringModal(true)} 
+            className="flex items-center px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" /> Recurring AMCs
+          </button>
           <button onClick={clearForm} className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
             <Plus className="w-4 h-4 mr-2" /> New Document
           </button>
@@ -1183,17 +1265,42 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         <div className="lg:col-span-2 space-y-6">
           
           <div className="bg-white p-6 rounded-lg shadow-sm space-y-4">
-            <div className="flex items-center justify-between border-b pb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-4 gap-4">
               <h3 className="text-lg font-semibold text-gray-800">Document Details</h3>
-              <div className="flex bg-gray-100 p-1 rounded-lg">
-                <button 
-                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${docType === 'Invoice' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600'}`}
-                  onClick={() => setDocType('Invoice')}
-                >Invoice</button>
-                <button 
-                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${docType === 'Quotation' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600'}`}
-                  onClick={() => setDocType('Quotation')}
-                >Quotation</button>
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                {docType === 'Invoice' && (
+                  <div className="flex items-center gap-3 bg-blue-50/50 px-3 py-1.5 rounded-lg border border-blue-100">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={isRecurring} 
+                        onChange={(e) => setIsRecurring(e.target.checked)}
+                        className="rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
+                      />
+                      <span className="text-sm font-medium text-blue-800">Recurring (AMC)</span>
+                    </label>
+                    {isRecurring && (
+                      <select 
+                        value={recurringInterval} 
+                        onChange={(e) => setRecurringInterval(e.target.value)}
+                        className="text-xs border-gray-300 rounded-md text-blue-800 bg-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      >
+                        <option value="monthly">Monthly</option>
+                        <option value="yearly">Yearly</option>
+                      </select>
+                    )}
+                  </div>
+                )}
+                <div className="flex bg-gray-100 p-1 rounded-lg">
+                  <button 
+                    className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${docType === 'Invoice' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600'}`}
+                    onClick={() => setDocType('Invoice')}
+                  >Invoice</button>
+                  <button 
+                    className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${docType === 'Quotation' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600'}`}
+                    onClick={() => setDocType('Quotation')}
+                  >Quotation</button>
+                </div>
               </div>
             </div>
 
@@ -1841,6 +1948,84 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                   </div>
 
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showRecurringModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={() => setShowRecurringModal(false)}></div>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col relative z-10 border border-slate-200">
+            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/10 rounded-lg">
+                  <RefreshCw className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Active Recurring Invoices (AMCs)</h3>
+                  <p className="text-purple-100 text-xs mt-0.5">Manage and generate invoices for active subscriptions</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowRecurringModal(false)}
+                className="text-purple-200 hover:text-white hover:bg-white/10 p-2 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto">
+              <div className="space-y-4">
+                {invoices.filter(i => i.is_recurring).length === 0 ? (
+                  <div className="text-center py-10">
+                    <RefreshCw className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <h3 className="text-lg font-medium text-gray-900">No recurring invoices found</h3>
+                    <p className="text-gray-500 mt-1">Enable "Recurring (AMC)" when creating an invoice to see it here.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto border border-gray-200 rounded-xl">
+                    <table className="w-full text-left text-sm whitespace-nowrap">
+                      <thead className="bg-gray-50 border-b border-gray-200 text-gray-600">
+                        <tr>
+                          <th className="px-4 py-3 font-semibold">Ref Invoice</th>
+                          <th className="px-4 py-3 font-semibold">Customer</th>
+                          <th className="px-4 py-3 font-semibold">Interval</th>
+                          <th className="px-4 py-3 font-semibold">Next Due Date</th>
+                          <th className="px-4 py-3 font-semibold text-right">Amount</th>
+                          <th className="px-4 py-3 font-semibold text-center">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {invoices.filter(i => i.is_recurring).map(inv => (
+                          <tr key={inv.id} className="hover:bg-gray-50/50">
+                            <td className="px-4 py-3 font-medium text-gray-900">{inv.invoice_no}</td>
+                            <td className="px-4 py-3 text-gray-600">{inv.customer_name}</td>
+                            <td className="px-4 py-3 text-gray-600 capitalize">{inv.recurring_interval}</td>
+                            <td className="px-4 py-3">
+                              {inv.next_due_date ? (
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${new Date(inv.next_due_date) < new Date() ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                                  {inv.next_due_date}
+                                </span>
+                              ) : '-'}
+                            </td>
+                            <td className="px-4 py-3 text-right font-medium text-gray-900">₹{inv.grand_total}</td>
+                            <td className="px-4 py-3 text-center">
+                              <button
+                                onClick={() => generateRecurringInvoice(inv.id)}
+                                disabled={isSaving}
+                                className="inline-flex items-center px-3 py-1.5 bg-purple-600 text-white text-xs font-medium rounded-md hover:bg-purple-700 disabled:opacity-50 transition-colors shadow-sm"
+                              >
+                                Generate Next
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             </div>
           </div>

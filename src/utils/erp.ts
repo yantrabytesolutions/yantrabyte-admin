@@ -23,6 +23,11 @@ export const ERPUtils = {
     const taxAcc = accounts['Tax Payable'];
     const cashAcc = accounts['Cash/Bank'];
     
+    // Skip journal entries and inventory for Quotes/Estimates
+    if (invoice.doc_type === 'Quote' || invoice.doc_type === 'Estimate' || invoice.doc_type === 'Quotation') {
+      return;
+    }
+
     if (!salesAcc) return; // Ensure accounts exist
 
     // 1. Get or create Customer Account

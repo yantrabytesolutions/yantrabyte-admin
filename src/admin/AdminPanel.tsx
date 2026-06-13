@@ -9,7 +9,7 @@ import {
   Users, Briefcase, Building2, HelpCircle, Image, Award, Mail, Settings,
   LogOut, Plus, Pencil, Trash2, X, Eye, EyeOff, ChevronDown, Save,
   Loader2, AlertCircle, CheckCircle, Search, RefreshCw, Menu, Ticket, Receipt, CreditCard, MessageSquare,
-  Truck, ExternalLink, FileSpreadsheet, Activity
+  Truck, ExternalLink, FileSpreadsheet, Activity, Calculator
 } from 'lucide-react';
 
 import BillingSoftware from './BillingSoftware';
@@ -23,6 +23,7 @@ import Expenses from './Expenses';
 import AccountingKhata from './AccountingKhata';
 import InventoryMovement from './InventoryMovement';
 import FinancialReports from './FinancialReports';
+import TaxReports from './TaxReports';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
@@ -32,7 +33,7 @@ import { UserRole } from '../types';
 type Section =
   | 'dashboard' | 'pages' | 'services' | 'products' | 'testimonials'
   | 'blog' | 'team' | 'careers' | 'industries' | 'faqs' | 'gallery'
-  | 'client-logos' | 'contacts' | 'settings' | 'tickets' | 'billing' | 'purchase' | 'external' | 'expenses' | 'khata' | 'inventory' | 'reports';
+  | 'client-logos' | 'contacts' | 'settings' | 'tickets' | 'billing' | 'purchase' | 'external' | 'expenses' | 'khata' | 'inventory' | 'reports' | 'tax_reports';
 
 interface FormField {
   key: string;
@@ -66,6 +67,7 @@ const SECTION_CONFIG: Record<Section, { label: string; icon: React.ElementType; 
   external: { label: 'External Repairs', icon: ExternalLink, table: '', orderField: '' },
   inventory: { label: 'Inventory Movement', icon: Package, table: 'inventory_transactions', orderField: 'transaction_date' },
   reports: { label: 'Financial Reports', icon: Activity, table: '', orderField: '' },
+  tax_reports: { label: 'GST & Tax Reports', icon: Calculator, table: '', orderField: '' },
   expenses: { label: 'Expenses', icon: CreditCard, table: 'expenses', orderField: 'date' },
   khata: { label: 'Accounting (Khata)', icon: FileSpreadsheet, table: 'accounts', orderField: 'name' },
   settings: { label: 'Site Settings', icon: Settings, table: 'site_settings', orderField: 'key' },
@@ -1729,6 +1731,7 @@ export default function AdminPanel() {
     if (activeSection === 'external') return <ExternalRepairs />;
     if (activeSection === 'inventory') return <InventoryMovement />;
     if (activeSection === 'reports') return <FinancialReports />;
+    if (activeSection === 'tax_reports') return <TaxReports />;
     if (activeSection === 'expenses') return <Expenses />;
     if (activeSection === 'khata') return <AccountingKhata />;
     return renderDataTable();
