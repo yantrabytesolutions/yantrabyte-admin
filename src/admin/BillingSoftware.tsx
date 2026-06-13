@@ -437,10 +437,6 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       return;
     }
     try {
-      const inv = invoices.find(i => i.id === id);
-      if (inv && inv.doc_type === 'Invoice') {
-
-      }
 
       const { error } = await supabase.from('invoices').delete().eq('id', id);
       if (error) throw error;
