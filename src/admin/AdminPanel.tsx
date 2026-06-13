@@ -11,7 +11,7 @@ import {
   Users, Briefcase, Building2, HelpCircle, Image, Award, Mail, Settings,
   LogOut, Plus, Pencil, Trash2, X, Eye, EyeOff, ChevronDown, Save,
   Loader2, AlertCircle, CheckCircle, Search, RefreshCw, Menu, Ticket, Receipt, CreditCard, MessageSquare,
-  Truck, ExternalLink, FileSpreadsheet, Activity, Send
+  Truck, ExternalLink, FileSpreadsheet, Activity, Send, UserCircle
 } from 'lucide-react';
 import { sendTelegramNotification } from '../utils/telegram';
 import BillingSoftware from './BillingSoftware';
@@ -34,7 +34,7 @@ import { UserRole } from '../types';
 type Section =
   | 'dashboard' | 'pages' | 'services' | 'products' | 'testimonials'
   | 'blog' | 'team' | 'careers' | 'industries' | 'faqs' | 'gallery'
-  | 'client-logos' | 'contacts' | 'settings' | 'tickets' | 'billing' | 'purchase' | 'external' | 'expenses' | 'khata' | 'inventory' | 'reports';
+  | 'client-logos' | 'contacts' | 'settings' | 'tickets' | 'billing' | 'purchase' | 'external' | 'expenses' | 'khata' | 'inventory' | 'reports' | 'customers';
 
 interface FormField {
   key: string;
@@ -71,6 +71,7 @@ const SECTION_CONFIG: Record<Section, { label: string; icon: React.ElementType; 
   expenses: { label: 'Expenses', icon: CreditCard, table: 'expenses', orderField: 'date' },
   khata: { label: 'Accounting (Khata)', icon: FileSpreadsheet, table: 'accounts', orderField: 'name' },
   settings: { label: 'Site Settings', icon: Settings, table: 'site_settings', orderField: 'key' },
+  customers: { label: 'Customers', icon: Users, table: 'customers', orderField: 'created_at' },
 };
 
 // ─── Form Field Definitions ─────────────────────────────────────────────────
@@ -218,6 +219,13 @@ const TICKETS_FIELDS: FormField[] = [
   { key: 'notes', label: 'Internal Notes', type: 'textarea', rows: 3 }
 ];
 
+const CUSTOMERS_FIELDS: FormField[] = [
+  { key: 'name', label: 'Customer Name', type: 'text', required: true },
+  { key: 'phone', label: 'Phone Number', type: 'text' },
+  { key: 'email', label: 'Email Address', type: 'text' },
+  { key: 'address', label: 'Address', type: 'textarea', rows: 3 },
+];
+
 const SERVICE_TICKET_HEADERS = [
   'Ticket No',
   'Created At',
@@ -263,11 +271,12 @@ const SECTION_FIELDS: Record<string, FormField[]> = {
   gallery: GALLERY_FIELDS,
   'client-logos': CLIENT_LOGOS_FIELDS,
   tickets: TICKETS_FIELDS,
+  customers: CUSTOMERS_FIELDS,
 };
 
 // ─── Table Column Configs ──────────────────────────────────────────────────
 
-const SECTION_COLUMNS: Record<string, { key: string; label: string }[]> = {
+const SECTION_COLUMNS: Record<string, { key: string; label: string; format?: (val: any) => string }[]> = {
   pages: [
     { key: 'title', label: 'Title' },
     { key: 'slug', label: 'Slug' },
@@ -356,6 +365,12 @@ const SECTION_COLUMNS: Record<string, { key: string; label: string }[]> = {
     { key: 'status', label: 'Status' },
     { key: 'created_at', label: 'Created' },
   ],
+  customers: [
+    { key: 'name', label: 'Name' },
+    { key: 'phone', label: 'Phone' },
+    { key: 'email', label: 'Email' },
+    { key: 'address', label: 'Address' },
+  ],
 };
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
@@ -433,6 +448,7 @@ export default function AdminPanel() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [autofillTicket, setAutofillTicket] = useState<ServiceTicket | null>(null);
+  const [allCustomers, setAllCustomers] = useState<any[]>([]);
 
   const [userRole, setUserRole] = useState<UserRole>('admin');
 
@@ -442,6 +458,9 @@ export default function AdminPanel() {
       setSession(!!session);
       if (session?.user) {
         setUserRole((session.user.user_metadata?.role as UserRole) || 'admin');
+        supabase.from('customers').select('*').order('created_at', { ascending: false }).then(res => {
+          if (res.data) setAllCustomers(res.data);
+        });
       }
       setLoading(false);
     });
@@ -1253,6 +1272,7 @@ export default function AdminPanel() {
     { section: 'gallery', label: 'Gallery', icon: Image },
     { section: 'client-logos', label: 'Client Logos', icon: Award },
     { section: 'contacts', label: 'Contact Submissions', icon: Mail },
+    { section: 'customers', label: 'Customers', icon: UserCircle },
     { section: 'tickets', label: 'Service Ticket', icon: Ticket },
     { section: 'billing', label: 'Billing Software', icon: Receipt },
     { section: 'purchase', label: 'Purchase Entry', icon: Truck },
@@ -1337,6 +1357,27 @@ export default function AdminPanel() {
     return <span className="text-white text-sm">{truncateStr(String(val || '-'), 40)}</span>;
   };
 
+  const exportCurrentTableToCSV = () => {
+    const config = SECTION_CONFIG[activeSection];
+    const columns = SECTION_COLUMNS[activeSection];
+    if (!config || !columns) return;
+    
+    // We already have the export utility available
+    import('../utils/export').then(({ exportToCSV }) => {
+      // Map data to match columns
+      const dataToExport = getFilteredData();
+      const exportData = dataToExport.map((row: any) => {
+        const exportedRow: Record<string, string> = {};
+        columns.forEach(col => {
+          const val = row[col.key];
+          exportedRow[col.label] = col.format ? col.format(val) : String(val || '');
+        });
+        return exportedRow;
+      });
+      exportToCSV(exportData, `yantrabyte_${activeSection}_export`);
+    });
+  };
+
   // --- Render Dashboard ---
   const renderDashboard = () => {
     return <Dashboard />;
@@ -1386,6 +1427,15 @@ export default function AdminPanel() {
                   Export Excel
                 </button>
               </>
+            )}
+            {activeSection !== 'tickets' && (
+              <button
+                onClick={exportCurrentTableToCSV}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-[#94A3B8] hover:text-white hover:border-white/20 text-sm font-medium transition-all"
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                Export CSV
+              </button>
             )}
             {fields && !isReadOnly && (
               <button
@@ -1690,13 +1740,40 @@ export default function AdminPanel() {
                 </label>
 
                 {field.type === 'text' && (
-                  <input
-                    type="text"
-                    value={String(formData[field.key] || '')}
-                    onChange={e => setFormData(prev => ({ ...prev, [field.key]: e.target.value }))}
-                    placeholder={field.placeholder}
-                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-[#64748B] text-sm focus:outline-none focus:border-[#0EA5E9]/50 focus:ring-1 focus:ring-[#0EA5E9]/25 transition-all"
-                  />
+                  <>
+                    <input
+                      type="text"
+                      list={field.key === 'customer_phone' ? 'customers-phone-list' : undefined}
+                      value={String(formData[field.key] || '')}
+                      onChange={e => {
+                        const val = e.target.value;
+                        setFormData(prev => ({ ...prev, [field.key]: val }));
+                        // Auto-fill other fields if a customer is selected by phone
+                        if (field.key === 'customer_phone' && activeSection === 'tickets') {
+                          const customer = allCustomers.find(c => c.phone === val || c.name === val);
+                          if (customer) {
+                            setFormData(prev => ({
+                              ...prev,
+                              customer_name: customer.name || prev.customer_name,
+                              customer_email: customer.email || prev.customer_email,
+                              customer_address: customer.address || prev.customer_address
+                            }));
+                          }
+                        }
+                      }}
+                      placeholder={field.placeholder}
+                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-[#64748B] text-sm focus:outline-none focus:border-[#0EA5E9]/50 focus:ring-1 focus:ring-[#0EA5E9]/25 transition-all"
+                    />
+                    {field.key === 'customer_phone' && activeSection === 'tickets' && (
+                      <datalist id="customers-phone-list">
+                        {allCustomers.map(c => (
+                          <option key={c.id} value={c.phone || c.name}>
+                            {c.name} {c.phone ? `- ${c.phone}` : ''}
+                          </option>
+                        ))}
+                      </datalist>
+                    )}
+                  </>
                 )}
 
                 {field.type === 'textarea' && (

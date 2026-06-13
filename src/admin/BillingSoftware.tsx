@@ -1390,7 +1390,31 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                <input type="text" value={phone} onChange={e => setPhone(e.target.value)} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Phone number" />
+                <input 
+                  type="text" 
+                  list="billing-customers-phone-list"
+                  value={phone} 
+                  onChange={e => {
+                    const val = e.target.value;
+                    setPhone(val);
+                    const customer = customersList.find(c => c.phone === val || c.name === val);
+                    if (customer) {
+                      setCustomerName(customer.name || customerName);
+                      setEmail(customer.email || email);
+                      setAddress(customer.address || address);
+                      setSelectedCustomerId(customer.id);
+                    }
+                  }} 
+                  className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500" 
+                  placeholder="Phone number" 
+                />
+                <datalist id="billing-customers-phone-list">
+                  {customersList.map(c => (
+                    <option key={c.id} value={c.phone || c.name}>
+                      {c.name} {c.phone ? `- ${c.phone}` : ''}
+                    </option>
+                  ))}
+                </datalist>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
