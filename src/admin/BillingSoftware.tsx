@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Invoice, InvoiceItem, ServiceTicket, Product, Customer, Purchase } from '../types';
-import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt, Mail, FileSpreadsheet, Pencil } from 'lucide-react';
+import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt, Mail, FileSpreadsheet, Pencil, MessageSquare, Send } from 'lucide-react';
+import { sendTelegramNotification } from '../utils/telegram';
 import html2pdf from 'html2pdf.js';
 import { QRCodeSVG } from 'qrcode.react';
 import { PRESET_ITEMS } from './presetItems';
@@ -505,7 +506,30 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     showToast(`Converted quotation ${inv.invoice_no} to a new draft Invoice! Click Save or Print to finalize.`);
   };
 
-  // Calculations
+  const sendWhatsAppInvoiceAlert = (inv: Invoice) => {
+    let phone = inv.phone.replace(/\D/g, '');
+    if (phone.length === 10) phone = '+91' + phone;
+    else if (phone.length === 12 && phone.startsWith('91')) phone = '+' + phone;
+
+    if (!phone) { showToast('No phone number available', 'error'); return; }
+    
+    const text = `Hi ${inv.customer_name}, your ${inv.doc_type || 'Invoice'} ${inv.invoice_no} for ₹${inv.grand_total} has been generated. Thank you for your business!`;
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  const sendTelegramInvoiceAlert = (inv: Invoice) => {
+    let phone = inv.phone.replace(/\D/g, '');
+    if (phone.length === 10) phone = '+91' + phone;
+    else if (phone.length === 12 && phone.startsWith('91')) phone = '+' + phone;
+
+    if (!phone) { showToast('No phone number available', 'error'); return; }
+    
+    const text = `Hi ${inv.customer_name}, your ${inv.doc_type || 'Invoice'} ${inv.invoice_no} for ₹${inv.grand_total} has been generated. Thank you for your business!`;
+    window.open(`https://t.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  // --- Printing & PDF ---
+
   // Calculations
   const subtotal = items.reduce((acc, item) => acc + (item.qty * item.rate), 0);
   const beforeRound = (subtotal - discount) + tax;
@@ -803,6 +827,11 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       if (action === 'download') {
         await new Promise(resolve => window.setTimeout(resolve, 500));
         await generatePdf(payload.invoice_no);
+        
+        // Automated internal Telegram notification for invoices
+        if (payload.doc_type !== 'Quotation') {
+          sendTelegramNotification(`💰 <b>New Invoice Generated</b>\nInvoice: #${payload.invoice_no}\nCustomer: ${payload.customer_name}\nAmount: ₹${payload.grand_total}`);
+        }
       } else if (action === 'email') {
         setDeliveryPopup({
           status: 'sending',
@@ -1614,6 +1643,26 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                         <Copy className="w-4 h-4" />
                       </button>
                     )}
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        sendWhatsAppInvoiceAlert(inv);
+                      }} 
+                      className="text-gray-400 hover:text-green-500 transition-colors p-1"
+                      title="Send WhatsApp Alert"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        sendTelegramInvoiceAlert(inv);
+                      }} 
+                      className="text-gray-400 hover:text-blue-500 transition-colors p-1"
+                      title="Send Telegram Alert"
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();

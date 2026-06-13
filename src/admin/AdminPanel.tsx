@@ -11,9 +11,9 @@ import {
   Users, Briefcase, Building2, HelpCircle, Image, Award, Mail, Settings,
   LogOut, Plus, Pencil, Trash2, X, Eye, EyeOff, ChevronDown, Save,
   Loader2, AlertCircle, CheckCircle, Search, RefreshCw, Menu, Ticket, Receipt, CreditCard, MessageSquare,
-  Truck, ExternalLink, FileSpreadsheet, Activity
+  Truck, ExternalLink, FileSpreadsheet, Activity, Send
 } from 'lucide-react';
-
+import { sendTelegramNotification } from '../utils/telegram';
 import BillingSoftware from './BillingSoftware';
 import PurchaseSoftware from './PurchaseSoftware';
 import ExternalRepairs from './ExternalRepairs';
@@ -734,6 +734,47 @@ export default function AdminPanel() {
     showToast('Opening WhatsApp chat...');
   };
 
+  const sendTelegramAlert = (item: Record<string, unknown>) => {
+    const name = String(item.customer_name || 'Customer');
+    let phone = String(item.customer_phone || '');
+    const ticketNo = String(item.ticket_number || 'DRAFT');
+    const device = String(item.device_type || 'Device');
+    const status = String(item.status || 'open');
+
+    // Format phone number to clean digits (assume Indian +91 if length is 10)
+    phone = phone.replace(/\D/g, '');
+    if (phone.length === 10) {
+      phone = '+91' + phone;
+    } else if (phone.length === 12 && phone.startsWith('91')) {
+      phone = '+' + phone;
+    }
+
+    if (!phone) {
+      showToast('No phone number available for Telegram', 'error');
+      return;
+    }
+
+    let text = '';
+    const trackUrl = `https://yantrabyte.anantatechcare.com/track?t=${ticketNo}`;
+    
+    if (status === 'open') {
+      text = `Hi ${name}, this is Yantrabyte Solutions. We have successfully registered your repair request (Ticket: ${ticketNo}) for your ${device}. Our technician will diagnose it shortly. Track status here: ${trackUrl}`;
+    } else if (status === 'in-progress') {
+      text = `Hi ${name}, this is Yantrabyte Solutions. Your ${device} (Ticket: ${ticketNo}) is currently under active diagnostics/repair. Track status here: ${trackUrl}`;
+    } else if (status === 'completed') {
+      text = `Hi ${name}, great news! Your ${device} (Ticket: ${ticketNo}) has been fully repaired and tested. It is ready for pickup at our workshop. Thank you for choosing Yantrabyte Solutions!`;
+    } else if (status === 'closed') {
+      text = `Hi ${name}, this is Yantrabyte Solutions. Your repair ticket ${ticketNo} for ${device} has been marked as delivered and closed. Please reach out if you have any questions!`;
+    } else {
+      text = `Hi ${name}, this is Yantrabyte Solutions. Update regarding your repair ticket ${ticketNo} (${device}). Status: ${status.toUpperCase()}. Track status here: ${trackUrl}`;
+    }
+
+    const encodedText = encodeURIComponent(text);
+    const url = `https://t.me/${phone}?text=${encodedText}`;
+    window.open(url, '_blank');
+    showToast('Opening Telegram chat...');
+  };
+
   const markTicketCompleted = async (item: Record<string, unknown>) => {
     if (!window.confirm(`Mark ticket ${item.ticket_number} as completed?`)) return;
     try {
@@ -744,6 +785,10 @@ export default function AdminPanel() {
       
       if (error) throw error;
       showToast('Ticket marked as completed!', 'success');
+      
+      // Internal automated alert
+      sendTelegramNotification(`✅ <b>Ticket Completed</b>\nTicket: #${item.ticket_number}\nCustomer: ${item.customer_name}\nDevice: ${item.device_type}`);
+      
       fetchData('tickets');
     } catch (err: any) {
       showToast('Error updating ticket: ' + err.message, 'error');
@@ -966,6 +1011,7 @@ export default function AdminPanel() {
         if (error) throw error;
         if (activeSection === 'tickets') {
           backupTicketToGoogleSheet({ ...(editingItem as unknown as Partial<ServiceTicket>), ...(record as Partial<ServiceTicket>) });
+          sendTelegramNotification(`🔧 <b>Ticket Updated</b>\nTicket: #${record.ticket_number}\nCustomer: ${record.customer_name}\nDevice: ${record.device_type}\nStatus: ${record.status}`);
         }
         showToast('Item updated successfully');
       } else {
@@ -975,6 +1021,7 @@ export default function AdminPanel() {
         if (error) throw error;
         if (activeSection === 'tickets') {
           backupTicketToGoogleSheet(record as Partial<ServiceTicket>);
+          sendTelegramNotification(`🆕 <b>New Ticket Created</b>\nTicket: #${record.ticket_number}\nCustomer: ${record.customer_name}\nDevice: ${record.device_type}\nIssue: ${record.issue_description}`);
         }
         showToast('Item created successfully');
       }
@@ -1443,6 +1490,13 @@ export default function AdminPanel() {
                                   <MessageSquare className="w-4 h-4" />
                                 </button>
                                 <button
+                                  onClick={() => sendTelegramAlert(item)}
+                                  className="p-1.5 rounded-lg hover:bg-white/5 text-[#64748B] hover:text-blue-400 transition-all"
+                                  title="Send Telegram Client Alert"
+                                >
+                                  <Send className="w-4 h-4" />
+                                </button>
+                                <button
                                   onClick={() => printJobSheet(item)}
                                   className="p-1.5 rounded-lg hover:bg-white/5 text-[#64748B] hover:text-emerald-400 transition-all"
                                   title="Print Job Sheet / Drop-off Receipt"
@@ -1519,6 +1573,20 @@ export default function AdminPanel() {
             {formSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             Save All
           </button>
+        </div>
+
+        {/* Telegram Integration Help */}
+        <div className="mb-6 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-sm text-blue-100">
+          <h3 className="font-bold mb-2 text-blue-400 flex items-center gap-2">
+            <Send className="w-4 h-4" /> Telegram Automated Alerts Setup
+          </h3>
+          <p className="mb-2">To receive automated internal alerts for new tickets and invoices on Telegram:</p>
+          <ul className="list-disc pl-5 space-y-1 mb-2">
+            <li>Search for <strong>@BotFather</strong> on Telegram, type <code>/newbot</code> to create a bot, and get your HTTP API Token.</li>
+            <li>Search for <strong>@userinfobot</strong> on Telegram and type <code>/start</code> to get your numeric Chat ID.</li>
+            <li>Add two new settings below: <code>telegram_bot_token</code> (paste your bot token) and <code>telegram_chat_id</code> (paste your chat ID).</li>
+          </ul>
+          <p className="text-xs text-blue-300">Once added, start a conversation with your newly created bot to allow it to message you.</p>
         </div>
 
         {/* Add new setting */}
