@@ -391,11 +391,14 @@ function HeroSection() {
           <motion.div initial={{ opacity: 0, scale: 0.9, x: 40 }} animate={{ opacity: 1, scale: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.6 }} className="hidden lg:block">
             <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 shadow-2xl shadow-[#0EA5E9]/10 max-w-lg mx-auto">
               {successTicket ? (
-                <div className="text-center py-8 space-y-6">
-                  <div className="w-16 h-16 bg-teal-500/10 border border-teal-500/30 text-teal-400 rounded-full flex items-center justify-center mx-auto">
-                    <CheckCircle className="w-8 h-8" />
-                  </div>
-                  <div className="space-y-2">
+                <div className="text-center py-8 space-y-4">
+                  {/* Official Seal */}
+                  <img
+                    src="/seal.png"
+                    alt="YantraByte Official Seal"
+                    className="w-24 h-24 object-contain mx-auto drop-shadow-lg"
+                  />
+                  <div className="space-y-1">
                     <h3 className="text-xl font-bold text-white">Ticket Submitted!</h3>
                     <p className="text-sm text-[#94A3B8]">We have received your service request.</p>
                   </div>
@@ -403,6 +406,18 @@ function HeroSection() {
                     <span className="text-xs text-white/50 block mb-1">YOUR TICKET NUMBER</span>
                     <span className="text-lg font-bold text-[#0EA5E9]">{successTicket}</span>
                   </div>
+
+                  {/* 2-Month Policy Notice */}
+                  <div className="flex items-start gap-2 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2.5 text-left text-xs text-amber-300">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                    <p>
+                      <span className="font-semibold">Important: </span>
+                      Customer must collect working or non-working materials within{' '}
+                      <span className="font-semibold">2 months</span> from the date given for service.
+                      After that, YantraByte Solutions will not be responsible for the items.
+                    </p>
+                  </div>
+
                   <button
                     onClick={() => setSuccessTicket('')}
                     className="w-full py-3 px-4 rounded-lg bg-white/5 hover:bg-white/10 text-white font-semibold border border-white/10 transition-colors"
@@ -410,6 +425,7 @@ function HeroSection() {
                     Submit Another Request
                   </button>
                 </div>
+
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div>
@@ -516,6 +532,17 @@ function HeroSection() {
                       </>
                     )}
                   </button>
+
+                  {/* Policy Notice */}
+                  <div className="flex items-start gap-2 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2.5 text-xs text-amber-300">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                    <p>
+                      <span className="font-semibold">Important: </span>
+                      Customer must collect working or non-working materials within{' '}
+                      <span className="font-semibold">2 months</span> from the date given for service.
+                      After that, YantraByte Solutions will not be responsible for the items.
+                    </p>
+                  </div>
                 </form>
               )}
             </div>

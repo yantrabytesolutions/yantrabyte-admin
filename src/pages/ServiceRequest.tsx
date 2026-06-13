@@ -1,7 +1,7 @@
 import { FormEvent, useState } from 'react';
 import SEO from '../components/SEO';
 import { supabase } from '../lib/supabase';
-import { AlertCircle, CheckCircle, ClipboardCheck, Loader2, MapPin, Phone, Send, Wrench } from 'lucide-react';
+import { AlertCircle, ClipboardCheck, Loader2, MapPin, Phone, Send, Wrench } from 'lucide-react';
 
 const DEVICE_OPTIONS = [
   'Laptop with charger',
@@ -223,22 +223,38 @@ export default function ServiceRequest() {
           <div className="rounded-lg border border-white/10 bg-white p-5 shadow-2xl sm:p-6">
             {createdTicket ? (
               <div className="flex min-h-[520px] flex-col items-center justify-center text-center">
-                <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-                  <CheckCircle className="h-9 w-9" />
-                </div>
-                <h2 className="text-2xl font-bold text-slate-900">Ticket Created</h2>
-                <p className="mt-3 text-sm text-slate-600">Please keep this ticket number for follow-up.</p>
-                <div className="mt-5 rounded-md border border-slate-200 bg-slate-50 px-5 py-3 font-mono text-lg font-bold text-slate-900">
+                {/* Official Seal */}
+                <img
+                  src="/seal.png"
+                  alt="YantraByte Official Seal"
+                  className="w-28 h-28 object-contain mb-2 drop-shadow-lg"
+                />
+                <h2 className="text-2xl font-bold text-slate-900">Ticket Created!</h2>
+                <p className="mt-2 text-sm text-slate-600">Please keep this ticket number for follow-up.</p>
+                <div className="mt-4 w-full rounded-md border border-slate-200 bg-slate-50 px-5 py-3 font-mono text-lg font-bold text-slate-900">
                   {createdTicket}
                 </div>
+
+                {/* 2-Month Collection Policy */}
+                <div className="mt-5 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-left text-xs text-amber-800">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+                  <p>
+                    <span className="font-semibold">Important: </span>
+                    Customer must collect working or non-working materials within{' '}
+                    <span className="font-semibold">2 months</span> from the date given for service.
+                    After that, YantraByte Solutions will not be responsible for the items.
+                  </p>
+                </div>
+
                 <button
                   type="button"
                   onClick={() => setCreatedTicket('')}
-                  className="mt-8 rounded-md bg-[#0EA5E9] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#0284C7]"
+                  className="mt-5 rounded-md bg-[#0EA5E9] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#0284C7]"
                 >
                   Create Another Ticket
                 </button>
               </div>
+
             ) : (
               <form onSubmit={submitTicket} className="space-y-5">
                 <div>
@@ -341,6 +357,16 @@ export default function ServiceRequest() {
                   {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                   Create Service Ticket
                 </button>
+
+                {/* Policy Notice */}
+                <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+                  <p>
+                    <span className="font-semibold">Important Notice: </span>
+                    Customer must collect working or non-working materials within <span className="font-semibold">2 months</span> from the date given for service.
+                    After that, YantraByte Solutions will not be responsible for the items.
+                  </p>
+                </div>
               </form>
             )}
           </div>

@@ -61,7 +61,7 @@ function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/service-request" element={<ServiceRequest />} />
           <Route path="/servicerequest" element={<ServiceRequest />} />
-          <Route path="/track" element={<TrackTicket />} />
+          <Route path="/track-ticket" element={<TrackTicket />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
         </Route>

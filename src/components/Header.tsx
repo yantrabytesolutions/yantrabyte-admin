@@ -8,8 +8,9 @@ const navLinks = [
   { name: "About", path: "/#about" },
   { name: "Services", path: "/#services" },
   { name: "Industries", path: "/#industries" },
-  { name: "Service Request", path: "/service-request" },
-  { name: "Track Ticket", path: "/track" },
+  { name: "Blog", path: "/#blog" },
+  { name: "Service Request", path: "/service-request", isRoute: true },
+  { name: "Track Ticket", path: "/track-ticket", isRoute: true },
   { name: "Contact", path: "/#contact" },
 ];
 
@@ -64,29 +65,34 @@ export default function Header() {
         <div className="flex h-16 items-center justify-between lg:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-1 group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <span className="text-xl font-bold tracking-tight sm:text-2xl">
-              <span className="text-[#0EA5E9] transition-colors group-hover:text-[#38BDF8]">
-                Yantrabyte
-              </span>
-              <span className="text-white"> Solutions</span>
-            </span>
+            <img src="/logo5.png" alt="Yantrabyte Solutions" className="h-10 w-auto sm:h-12" />
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden items-center gap-1 lg:flex">
-            {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.path}
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleNavClick(link.path);
-                }}
-                className="rounded-lg px-3 py-2 text-sm font-medium transition-colors text-gray-300 hover:bg-white/5 hover:text-white"
-              >
-                {link.name}
-              </a>
-            ))}
+            {navLinks.map((link) =>
+              link.isRoute ? (
+                <Link
+                  key={link.name}
+                  to={link.path}
+                  className="rounded-lg px-3 py-2 text-sm font-medium transition-colors text-gray-300 hover:bg-white/5 hover:text-white"
+                >
+                  {link.name}
+                </Link>
+              ) : (
+                <a
+                  key={link.name}
+                  href={link.path}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleNavClick(link.path);
+                  }}
+                  className="rounded-lg px-3 py-2 text-sm font-medium transition-colors text-gray-300 hover:bg-white/5 hover:text-white"
+                >
+                  {link.name}
+                </a>
+              )
+            )}
           </nav>
 
           {/* Desktop CTA */}
@@ -139,10 +145,7 @@ export default function Header() {
               className="fixed top-0 right-0 bottom-0 z-50 w-[85%] max-w-sm overflow-y-auto bg-[#0B1120] shadow-2xl lg:hidden"
             >
               <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
-                <span className="text-lg font-bold">
-                  <span className="text-[#0EA5E9]">Yantrabyte</span>
-                  <span className="text-white"> Solutions</span>
-                </span>
+                <img src="/logo5.png" alt="Yantrabyte Solutions" className="h-10 w-auto" />
                 <button
                   onClick={() => setMobileOpen(false)}
                   className="rounded-lg p-2 text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
@@ -153,19 +156,30 @@ export default function Header() {
               </div>
 
               <nav className="px-4 py-4">
-                {navLinks.map((link) => (
-                  <a
-                    key={link.name}
-                    href={link.path}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleNavClick(link.path);
-                    }}
-                    className="mt-1 block rounded-lg px-4 py-3 text-base font-medium transition-colors text-gray-300 hover:bg-white/5 hover:text-white"
-                  >
-                    {link.name}
-                  </a>
-                ))}
+                {navLinks.map((link) =>
+                  link.isRoute ? (
+                    <Link
+                      key={link.name}
+                      to={link.path}
+                      onClick={() => setMobileOpen(false)}
+                      className="mt-1 block rounded-lg px-4 py-3 text-base font-medium transition-colors text-gray-300 hover:bg-white/5 hover:text-white"
+                    >
+                      {link.name}
+                    </Link>
+                  ) : (
+                    <a
+                      key={link.name}
+                      href={link.path}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleNavClick(link.path);
+                      }}
+                      className="mt-1 block rounded-lg px-4 py-3 text-base font-medium transition-colors text-gray-300 hover:bg-white/5 hover:text-white"
+                    >
+                      {link.name}
+                    </a>
+                  )
+                )}
               </nav>
 
               <div className="border-t border-white/10 px-6 py-6 space-y-4">
@@ -184,7 +198,7 @@ export default function Header() {
                   Create Service Request
                 </a>
                 <a
-                  href="/track"
+                  href="/track-ticket"
                   onClick={() => setMobileOpen(false)}
                   className="block w-full rounded-lg border border-white/10 px-5 py-3 text-center text-sm font-semibold text-gray-300 hover:bg-white/5 hover:text-white transition-all"
                 >

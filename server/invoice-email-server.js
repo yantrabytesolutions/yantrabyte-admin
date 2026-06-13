@@ -352,17 +352,60 @@ app.post('/api/backups/public-service-ticket', async (req, res) => {
           '',
           'We will keep you updated on the progress.',
           '',
+          '⚠ IMPORTANT NOTICE:',
+          'Customer must collect working or non-working materials within 2 months from the date given for service.',
+          'After that, YantraByte Solutions will not be responsible for the items.',
+          '',
           'Regards,',
-          'YantraByte Solutions',
+          'YantraByte Solutions | 09986742525',
+          '47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post, Bengaluru 560097',
         ].join('\n'),
         html: `
-          <p>Dear ${cleanCustomerName},</p>
-          <p>Your service ticket (<strong>${cleanTicketNumber}</strong>) for your <strong>${cleanDeviceType}</strong> has been successfully created.</p>
-          <p>Our team is reviewing the issue: <em>"${ticket.issue_description}"</em></p>
-          <p>We will keep you updated on the progress.</p>
-          <p>Regards,<br/>YantraByte Solutions</p>
+          <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+            <div style="background:#0B5394;padding:24px 32px;text-align:center">
+              <h1 style="color:#fff;margin:0;font-size:20px">YantraByte Solutions</h1>
+              <p style="color:rgba(255,255,255,0.85);margin:4px 0 0;font-size:13px">IT Service, Repair &amp; Network Management</p>
+            </div>
+            <div style="padding:28px 32px">
+              <p style="color:#0f172a;font-size:15px">Dear <strong>${cleanCustomerName}</strong>,</p>
+              <p style="color:#334155">Your service ticket has been successfully created.</p>
+
+              <div style="text-align:center;margin:20px 0">
+                <img src="https://yantrabyte.anantatechcare.com/seal.png" alt="YantraByte Official Seal" width="110" height="110" style="display:inline-block;border-radius:50%;object-fit:contain" />
+              </div>
+
+              <div style="background:#f8fafc;border-radius:6px;padding:16px;margin:16px 0;border-left:4px solid #0B5394;text-align:center">
+                <p style="margin:0 0 6px;color:#64748b;font-size:13px">Ticket Number</p>
+                <p style="margin:0;font-size:22px;font-weight:700;color:#0B5394;letter-spacing:2px">${cleanTicketNumber}</p>
+              </div>
+
+              <table style="width:100%;border-collapse:collapse;font-size:14px;margin:16px 0">
+                <tr><td style="padding:6px 0;color:#64748b;width:40%">Device</td><td style="color:#0f172a;font-weight:600">${cleanDeviceType}</td></tr>
+                <tr><td style="padding:6px 0;color:#64748b">Issue Reported</td><td style="color:#0f172a">${ticket.issue_description}</td></tr>
+              </table>
+
+              <p style="color:#334155">Our team is reviewing your issue and will contact you shortly.</p>
+
+              <div style="background:#fffbeb;border:1px solid #fcd34d;border-left:4px solid #f59e0b;border-radius:6px;padding:14px 16px;margin:20px 0">
+                <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:#92400e">⚠ Important Notice</p>
+                <p style="margin:0;font-size:13px;color:#78350f;line-height:1.6">
+                  Customer must collect working or non-working materials within <strong>2 months</strong> from the date given for service.
+                  After that, <strong>YantraByte Solutions will not be responsible for the items</strong>.
+                </p>
+              </div>
+
+              <p style="color:#334155;margin-top:24px">Regards,<br/><strong>YantraByte Solutions</strong><br/>
+                <a href="tel:09986742525" style="color:#0B5394">09986742525</a> |
+                47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post, Bengaluru 560097
+              </p>
+            </div>
+            <div style="text-align:center;padding:16px;background:#f8fafc;font-size:12px;color:#94a3b8">
+              This is an automated confirmation. Please keep your ticket number for follow-up.
+            </div>
+          </div>
         `,
       });
+
     } catch (error) {
       console.error('Service ticket email failed:', getDeliveryErrorMessage(error));
     }

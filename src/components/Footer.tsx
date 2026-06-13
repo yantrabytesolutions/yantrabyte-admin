@@ -1,7 +1,16 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MapPin, Phone, Mail, Instagram, ArrowRight } from "lucide-react";
+import {
+  MapPin,
+  Phone,
+  Mail,
+  Facebook,
+  Instagram,
+  Linkedin,
+  Twitter,
+  ArrowRight,
+} from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 const quickLinks = [
@@ -9,6 +18,8 @@ const quickLinks = [
   { name: "About Us", path: "/#about" },
   { name: "Services", path: "/#services" },
   { name: "Blog", path: "/#blog" },
+  { name: "Track Ticket", path: "/track-ticket" },
+  { name: "Service Request", path: "/service-request" },
   { name: "Contact", path: "/#contact" },
 ];
 
@@ -20,7 +31,10 @@ const serviceLinks = [
 ];
 
 const socialLinks = [
-  { name: "Instagram", icon: Instagram, href: "https://instagram.com/yantrabyte" },
+  { name: "Facebook", icon: Facebook, href: "https://www.facebook.com/yantrabytesolutions" },
+  { name: "Instagram", icon: Instagram, href: "https://www.instagram.com/yantrabyte.solutions" },
+  { name: "LinkedIn", icon: Linkedin, href: "https://www.linkedin.com/company/yantrabyte-solutions" },
+  { name: "Twitter", icon: Twitter, href: "https://twitter.com/YantraByte" },
 ];
 
 const containerVariants = {
@@ -48,17 +62,20 @@ export default function Footer() {
     setSubscribing(true);
     setSubError("");
     try {
-      const { error } = await supabase.from('newsletter_subscribers').insert([{ email: email.trim() }]);
-      if (error && error.code !== '23505') {
-        // 23505 = unique violation (already subscribed) — treat as success
-        setSubError("Could not subscribe. Please try again.");
-      } else {
-        setSubscribed(true);
-        setEmail("");
-        setTimeout(() => setSubscribed(false), 5000);
-      }
+      const { error } = await supabase.from('contact_submissions').insert([{
+        name: 'Newsletter Subscriber',
+        email: email.trim(),
+        phone: '',
+        service: 'newsletter',
+        message: `Newsletter subscription from footer form. Email: ${email.trim()}`,
+        status: 'new',
+      }]);
+      if (error) throw error;
+      setSubscribed(true);
+      setEmail("");
+      setTimeout(() => setSubscribed(false), 5000);
     } catch {
-      setSubError("Network error. Please try again.");
+      setSubError("Failed to subscribe. Please try again.");
     } finally {
       setSubscribing(false);
     }
@@ -78,10 +95,7 @@ export default function Footer() {
           {/* Company Info */}
           <motion.div variants={itemVariants} className="sm:col-span-2 lg:col-span-1">
             <Link to="/" className="inline-block">
-              <span className="text-2xl font-bold tracking-tight">
-                <span className="text-[#0EA5E9]">Yantrabyte</span>
-                <span className="text-white"> Solutions</span>
-              </span>
+              <img src="/logo5.png" alt="Yantrabyte Solutions" className="h-14 w-auto mb-2" />
             </Link>
             <p className="mt-4 text-sm leading-relaxed text-gray-400">
               Smart Technology. Secure Future.
@@ -164,7 +178,7 @@ export default function Footer() {
               <ul className="space-y-3">
                 <li>
                   <a
-                    href="https://maps.google.com/?q=47A+1st+Cross+Sainagar+2nd+Stage+Vidyaranyapura+Post+Bengaluru+560097"
+                    href="https://maps.google.com/maps?q=47A+1st+Cross+Sainagar+2nd+Stage+Vidyaranyapura+Bengaluru+560097"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-start gap-3 text-sm text-gray-400 transition-colors hover:text-[#0EA5E9]"
@@ -216,7 +230,7 @@ export default function Footer() {
                   placeholder="Your email"
                   required
                   disabled={subscribing}
-                  className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder-gray-500 outline-none transition-colors focus:border-[#0EA5E9]/50 focus:ring-1 focus:ring-[#0EA5E9]/30 disabled:opacity-60"
+                  className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder-gray-500 outline-none transition-colors focus:border-[#0EA5E9]/50 focus:ring-1 focus:ring-[#0EA5E9]/30 disabled:opacity-50"
                 />
                 <button
                   type="submit"
@@ -228,10 +242,14 @@ export default function Footer() {
                 </button>
               </form>
               {subscribed && (
-                <p className="mt-2 text-xs font-medium text-[#0EA5E9]">✓ Subscribed! Thank you.</p>
+                <p className="mt-2 text-xs font-medium text-[#0EA5E9]">
+                  ✓ Thank you for subscribing!
+                </p>
               )}
               {subError && (
-                <p className="mt-2 text-xs text-red-400">{subError}</p>
+                <p className="mt-2 text-xs font-medium text-red-400">
+                  {subError}
+                </p>
               )}
             </div>
           </motion.div>
