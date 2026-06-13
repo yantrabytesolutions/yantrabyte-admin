@@ -1545,15 +1545,15 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           
           {/* Header */}
           <div className="flex items-center justify-between border p-3 mb-2" style={{ borderColor: '#000000' }}>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center justify-start ml-2">
-                <img src="/logo5.png" alt="YantraByte Solutions" style={{ height: '80px', width: 'auto' }} crossOrigin="anonymous" />
-              </div>
-            </div>
-            <div className="text-right">
+            <div className="text-left">
               <h1 className="text-xl font-bold" style={{ color: '#0B5394' }}>YANTRABYTE SOLUTIONS</h1>
               <p className="text-xs mt-1" style={{ color: '#333333' }}>47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br/>Chikkabettahalli, Bengaluru - 560097</p>
               <p className="text-xs mt-1" style={{ color: '#333333' }}>Phone: 09986742525 | Email: yantrabyte.solutions@gmail.com</p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center justify-end mr-2">
+                <img src="/logo5.png" alt="YantraByte Solutions" style={{ height: '80px', width: 'auto' }} crossOrigin="anonymous" />
+              </div>
             </div>
           </div>
 
