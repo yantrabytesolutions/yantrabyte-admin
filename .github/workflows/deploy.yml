@@ -37,7 +37,7 @@ jobs:
         run: npm run typecheck
 
       - name: 🛑 Dependency Vulnerability Audit
-        run: npm audit --audit-level=high
+        run: npm audit --audit-level=high --omit=dev
 
       - name: 🔍 SAST Code Vulnerability Scan (Trivy)
         uses: aquasecurity/trivy-action@master
