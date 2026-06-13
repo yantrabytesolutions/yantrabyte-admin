@@ -81,7 +81,7 @@ export default function PortalDashboard() {
         margin: 0,
         filename: `YBS-${invoice.invoice_no}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, windowWidth: 794 },
+        html2canvas: { scale: 2, useCORS: true, windowWidth: 794, scrollY: 0, x: 0, y: 0 },
         jsPDF: { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const }
       };
 
@@ -249,7 +249,7 @@ export default function PortalDashboard() {
       </div>
 
       {/* Hidden Invoice Template for PDF Generation */}
-      <div style={{ position: 'fixed', top: 0, left: 0, width: '794px', opacity: 0, pointerEvents: 'none', zIndex: -1000 }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, width: '794px', opacity: 0, pointerEvents: 'none', zIndex: -1000 }}>
         {activeInvoiceForPdf && (
           <InvoicePdfTemplate 
             ref={printRef} 

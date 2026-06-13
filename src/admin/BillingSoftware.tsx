@@ -772,7 +772,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       margin: 0,
       filename: `YBS-${invoiceNumber}.pdf`,
       image: { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, windowWidth: 794 },
+      html2canvas: { scale: 2, useCORS: true, windowWidth: 794, scrollY: 0, x: 0, y: 0 },
       jsPDF: { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const }
   });
 
@@ -1540,7 +1540,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       </div>
 
       {/* --- HIDDEN PRINT TEMPLATE --- */}
-      <div style={{ position: 'fixed', top: 0, left: 0, width: '794px', opacity: 0, pointerEvents: 'none', zIndex: -1000 }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, width: '794px', opacity: 0, pointerEvents: 'none', zIndex: -1000 }}>
         <div ref={printRef} className="bg-white p-[10px] text-black" style={{ width: '794px', maxWidth: 'none', fontFamily: 'Arial, sans-serif' }}>
           
           {/* Header */}
