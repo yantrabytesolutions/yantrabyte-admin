@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Invoice, InvoiceItem, ServiceTicket, Product, Customer, Purchase } from '../types';
-import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt, Mail, FileSpreadsheet } from 'lucide-react';
+import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt, Mail, FileSpreadsheet, Pencil } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 import { QRCodeSVG } from 'qrcode.react';
 import { PRESET_ITEMS } from './presetItems';
@@ -185,8 +185,6 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     };
 
     loadBillingData();
-    // Fresh-start bootstrapping should run once when the billing screen opens.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const ensureFreshCustomerMaster = async () => {
@@ -782,6 +780,57 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     reader.onerror = () => reject(reader.error);
     reader.readAsDataURL(blob);
   });
+
+  const handleViewPdf = async (id: string) => {
+    const inv = invoices.find(i => i.id === id);
+    if (!inv) return;
+
+    // Open window synchronously to bypass popup blocker
+    const newWindow = window.open('', '_blank');
+    if (newWindow) {
+      newWindow.document.write(`
+        <html>
+          <head><title>Loading ${inv.invoice_no}...</title></head>
+          <body style="display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;background:#f3f4f6;color:#374151;margin:0;">
+            <div style="text-align:center;">
+              <svg style="animation: spin 1s linear infinite; margin: 0 auto 1rem; height: 2rem; width: 2rem; color: #0EA5E9;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+              <h2>Generating PDF... Please wait.</h2>
+              <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+            </div>
+          </body>
+        </html>
+      `);
+    }
+
+    loadInvoice(id);
+
+    // Wait for React to render the hidden print template with the newly loaded data
+    setTimeout(async () => {
+      const element = await preparePdfElement(inv.invoice_no);
+      if (!element) {
+        if (newWindow) newWindow.close();
+        return;
+      }
+      
+      const opt = getPdfOptions(inv.invoice_no);
+      try {
+        const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
+        const url = URL.createObjectURL(pdfBlob);
+        if (newWindow) {
+          newWindow.location.href = url;
+        } else {
+          window.open(url, '_blank');
+        }
+      } catch (err) {
+        console.error('Error viewing PDF:', err);
+        if (newWindow) newWindow.close();
+        showToast('Failed to generate PDF for viewing', 'error');
+      } finally {
+        element.style.display = 'none';
+        setPrintInvoiceNumber('');
+      }
+    }, 500);
+  };
 
   const generatePdf = async (invoiceNumber: string) => {
     const element = await preparePdfElement(invoiceNumber);
@@ -1416,7 +1465,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               {invoices.map(inv => (
                 <div 
                   key={inv.id} 
-                  onClick={() => loadInvoice(inv.id)}
+                  onClick={() => handleViewPdf(inv.id)}
                   className={`w-full text-left p-3 rounded-md border transition-colors text-sm flex justify-between items-center cursor-pointer ${selectedInvoiceId === inv.id ? 'bg-blue-50 border-blue-200 ring-1 ring-blue-500' : 'bg-white border-gray-100 hover:bg-gray-50 hover:border-gray-300'}`}
                 >
                   <div className="flex-1">
@@ -1450,6 +1499,16 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                         <Copy className="w-4 h-4" />
                       </button>
                     )}
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        loadInvoice(inv.id);
+                      }} 
+                      className="text-gray-400 hover:text-[#0EA5E9] transition-colors p-1"
+                      title="Edit Invoice"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1670,7 +1729,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                       </h3>
                       <div className="space-y-3">
                         {historyDrawerData.invoices.map(inv => (
-                          <div key={inv.id} className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl p-4 flex justify-between items-start">
+                          <div key={inv.id} onClick={() => handleViewPdf(inv.id)} className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl p-4 flex justify-between items-start cursor-pointer hover:bg-white/10 transition-colors">
                             <div>
                               <div className="flex items-center gap-2">
                                 <span className="font-semibold text-white">{inv.invoice_no}</span>
@@ -1689,11 +1748,22 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                                 ))}
                               </div>
                             </div>
-                            <div className="text-right">
+                            <div className="text-right flex flex-col items-end">
                               <div className="text-lg font-bold text-white font-mono">₹{inv.grand_total.toLocaleString('en-IN')}</div>
                               {inv.advance_paid > 0 && (
                                 <div className="text-[10px] text-[#94A3B8] mt-1 font-mono">Advance: ₹{inv.advance_paid}</div>
                               )}
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  loadInvoice(inv.id);
+                                  setShowHistoryDrawer(false);
+                                }} 
+                                className="mt-2 text-[#94A3B8] hover:text-[#0EA5E9] transition-colors p-1"
+                                title="Edit Invoice"
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </button>
                             </div>
                           </div>
                         ))}
