@@ -1703,8 +1703,11 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                   <span className="font-bold">IFSC:</span> NESF0000333<br/>
                   <span className="font-bold">UPI:</span> s0424237152@slc
                 </div>
-                <div className="w-14 h-14 ml-2 flex-shrink-0">
-                  <img src="/qr.png" alt="QR" className="w-full h-full object-contain" />
+                <div className="w-16 h-16 ml-2 flex-shrink-0 flex justify-center items-center bg-white">
+                  <QRCodeSVG 
+                    value={`upi://pay?pa=s0424237152@slc&pn=${encodeURIComponent('YantraByte Solutions')}&am=${grandTotal}&cu=INR`} 
+                    size={60} 
+                  />
                 </div>
               </div>
               
