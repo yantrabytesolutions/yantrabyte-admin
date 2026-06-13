@@ -40,7 +40,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ invoice }
   const items: InvoiceItem[] = Array.isArray(invoice.items) ? invoice.items : [];
   
   return (
-    <div ref={ref} className="bg-white p-[10px] w-full text-black" style={{ fontFamily: 'Arial, sans-serif' }}>
+    <div ref={ref} className="bg-white p-[10px] text-black" style={{ width: '950px', maxWidth: 'none', fontFamily: 'Arial, sans-serif' }}>
       {/* Header */}
       <div className="flex items-center justify-between border p-3 mb-2" style={{ borderColor: '#000000' }}>
         <div className="flex items-center space-x-4">

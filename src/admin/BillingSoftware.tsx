@@ -1530,7 +1530,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
       {/* --- HIDDEN PRINT TEMPLATE --- */}
       <div style={{ display: 'none' }}>
-        <div ref={printRef} className="bg-white p-[10px] w-full text-black" style={{ fontFamily: 'Arial, sans-serif' }}>
+        <div ref={printRef} className="bg-white p-[10px] text-black" style={{ width: '950px', maxWidth: 'none', fontFamily: 'Arial, sans-serif' }}>
           
           {/* Header */}
           <div className="flex items-center justify-between border p-3 mb-2" style={{ borderColor: '#000000' }}>
