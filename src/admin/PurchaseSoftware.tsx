@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Supplier, Purchase, PurchaseItem, Product } from '../types';
 import { Plus, Trash2, Save, FileText, RefreshCw, Truck, UserPlus, X } from 'lucide-react';
+import { ERPUtils } from '../utils/erp';
 
 export default function PurchaseSoftware() {
   const [purchaseNo, setPurchaseNo] = useState('');
@@ -158,27 +159,7 @@ export default function PurchaseSoftware() {
     }
   };
 
-  const adjustStock = async (itemsList: PurchaseItem[], factor: number) => {
-    // factor is +1 for addition (purchasing), -1 for subtraction (reverting)
-    for (const item of itemsList) {
-      if (item.product_id) {
-        const { data: prod, error: fetchErr } = await supabase
-          .from('products')
-          .select('stock_count')
-          .eq('id', item.product_id)
-          .single();
-        
-        if (!fetchErr && prod) {
-          const currentStock = prod.stock_count || 0;
-          const newStock = currentStock + (item.qty * factor);
-          await supabase
-            .from('products')
-            .update({ stock_count: newStock })
-            .eq('id', item.product_id);
-        }
-      }
-    }
-  };
+
 
   const handleSave = async () => {
     if (!supplierName.trim()) {
@@ -211,22 +192,14 @@ export default function PurchaseSoftware() {
       };
 
       if (isUpdate) {
-        // Revert old stock increases (factor = -1) and apply new stock increases (factor = 1)
-        const oldPurchase = purchases.find(p => p.id === selectedPurchaseId);
-        if (oldPurchase) {
-          await adjustStock(oldPurchase.items, -1);
-        }
-        await adjustStock(items, 1);
-
-        const { error } = await supabase.from('purchases').update(payload).eq('id', selectedPurchaseId);
+        const { data: savedPurchase, error } = await supabase.from('purchases').update(payload).eq('id', selectedPurchaseId).select().single();
         if (error) throw error;
+        if (savedPurchase) await ERPUtils.recordPurchase(savedPurchase as Purchase);
         showToast('Purchase entry updated successfully!');
       } else {
-        // Apply stock increases (factor = 1)
-        await adjustStock(items, 1);
-
-        const { error } = await supabase.from('purchases').insert([payload]);
+        const { data: savedPurchase, error } = await supabase.from('purchases').insert([payload]).select().single();
         if (error) throw error;
+        if (savedPurchase) await ERPUtils.recordPurchase(savedPurchase as Purchase);
         showToast('Purchase entry saved successfully!');
       }
 
@@ -246,11 +219,7 @@ export default function PurchaseSoftware() {
       return;
     }
     try {
-      // Revert stock increases (factor = -1)
-      const p = purchases.find(p => p.id === id);
-      if (p) {
-        await adjustStock(p.items, -1);
-      }
+
 
       const { error } = await supabase.from('purchases').delete().eq('id', id);
       if (error) throw error;

@@ -9,7 +9,7 @@ import {
   Users, Briefcase, Building2, HelpCircle, Image, Award, Mail, Settings,
   LogOut, Plus, Pencil, Trash2, X, Eye, EyeOff, ChevronDown, Save,
   Loader2, AlertCircle, CheckCircle, Search, RefreshCw, Menu, Ticket, Receipt, CreditCard, MessageSquare,
-  Truck, ExternalLink, FileSpreadsheet
+  Truck, ExternalLink, FileSpreadsheet, Activity
 } from 'lucide-react';
 
 import BillingSoftware from './BillingSoftware';
@@ -19,6 +19,10 @@ import html2pdf from 'html2pdf.js';
 import { downloadExcelWorkbook } from '../utils/spreadsheetXml';
 import { appendBackupRow } from '../utils/googleSheetBackup';
 import Dashboard from './Dashboard';
+import Expenses from './Expenses';
+import AccountingKhata from './AccountingKhata';
+import InventoryMovement from './InventoryMovement';
+import FinancialReports from './FinancialReports';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
@@ -28,7 +32,7 @@ import { UserRole } from '../types';
 type Section =
   | 'dashboard' | 'pages' | 'services' | 'products' | 'testimonials'
   | 'blog' | 'team' | 'careers' | 'industries' | 'faqs' | 'gallery'
-  | 'client-logos' | 'contacts' | 'settings' | 'tickets' | 'billing' | 'purchase' | 'external';
+  | 'client-logos' | 'contacts' | 'settings' | 'tickets' | 'billing' | 'purchase' | 'external' | 'expenses' | 'khata' | 'inventory' | 'reports';
 
 interface FormField {
   key: string;
@@ -60,6 +64,10 @@ const SECTION_CONFIG: Record<Section, { label: string; icon: React.ElementType; 
   billing: { label: 'Billing Software', icon: Receipt, table: 'invoices', orderField: 'created_at' },
   purchase: { label: 'Purchase Entry', icon: Truck, table: 'purchases', orderField: 'created_at' },
   external: { label: 'External Repairs', icon: ExternalLink, table: '', orderField: '' },
+  inventory: { label: 'Inventory Movement', icon: Package, table: 'inventory_transactions', orderField: 'transaction_date' },
+  reports: { label: 'Financial Reports', icon: Activity, table: '', orderField: '' },
+  expenses: { label: 'Expenses', icon: CreditCard, table: 'expenses', orderField: 'date' },
+  khata: { label: 'Accounting (Khata)', icon: FileSpreadsheet, table: 'accounts', orderField: 'name' },
   settings: { label: 'Site Settings', icon: Settings, table: 'site_settings', orderField: 'key' },
 };
 
@@ -1184,13 +1192,17 @@ export default function AdminPanel() {
     { section: 'billing', label: 'Billing Software', icon: Receipt },
     { section: 'purchase', label: 'Purchase Entry', icon: Truck },
     { section: 'external', label: 'External Repairs', icon: ExternalLink },
+    { section: 'inventory', label: 'Inventory Movement', icon: Package },
+    { section: 'reports', label: 'Financial Reports', icon: Activity },
+    { section: 'expenses', label: 'Expenses', icon: CreditCard },
+    { section: 'khata', label: 'Accounting (Khata)', icon: FileSpreadsheet },
     { section: 'settings', label: 'Site Settings', icon: Settings },
   ];
 
   const sidebarItems = allSidebarItems.filter(item => {
     if (userRole === 'admin') return true;
     if (userRole === 'accountant') {
-      return ['dashboard', 'billing', 'purchase', 'external', 'contacts', 'tickets'].includes(item.section);
+      return ['dashboard', 'billing', 'purchase', 'external', 'inventory', 'reports', 'expenses', 'khata', 'contacts', 'tickets'].includes(item.section);
     }
     if (userRole === 'staff') {
       return ['dashboard', 'tickets', 'services', 'products', 'gallery'].includes(item.section);
@@ -1715,6 +1727,10 @@ export default function AdminPanel() {
     if (activeSection === 'billing') return <BillingSoftware initialAutofillTicket={autofillTicket} onClearAutofill={() => setAutofillTicket(null)} />;
     if (activeSection === 'purchase') return <PurchaseSoftware />;
     if (activeSection === 'external') return <ExternalRepairs />;
+    if (activeSection === 'inventory') return <InventoryMovement />;
+    if (activeSection === 'reports') return <FinancialReports />;
+    if (activeSection === 'expenses') return <Expenses />;
+    if (activeSection === 'khata') return <AccountingKhata />;
     return renderDataTable();
   };
 

@@ -293,3 +293,43 @@ export interface ExternalRepair {
   created_at: string;
   updated_at: string;
 }
+
+export type AccountType = 'Asset' | 'Liability' | 'Equity' | 'Revenue' | 'Expense';
+
+export interface Account {
+  id: string;
+  name: string;
+  account_type: AccountType;
+  parent_id?: string | null;
+  created_at: string;
+}
+
+export interface JournalEntryLine {
+  id: string;
+  journal_entry_id: string;
+  account_id: string;
+  debit: number;
+  credit: number;
+  created_at: string;
+}
+
+export interface JournalEntry {
+  id: string;
+  date: string;
+  description?: string | null;
+  reference_type?: string | null;
+  reference_id?: string | null;
+  created_at: string;
+  lines?: JournalEntryLine[];
+}
+
+export interface InventoryTransaction {
+  id: string;
+  product_id: string;
+  transaction_date: string;
+  quantity_change: number;
+  reference_type?: string | null;
+  reference_id?: string | null;
+  unit_cost?: number | null;
+  created_at: string;
+}

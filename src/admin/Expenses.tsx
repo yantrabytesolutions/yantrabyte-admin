@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { ERPUtils } from '../utils/erp';
 import type { Expense } from '../types';
 import { 
   Plus, 
@@ -79,16 +80,22 @@ export default function Expenses() {
 
     try {
       if (editingExpense) {
-        const { error } = await supabase
+        const { data: savedExp, error } = await supabase
           .from('expenses')
           .update(payload)
-          .eq('id', editingExpense.id);
+          .eq('id', editingExpense.id)
+          .select()
+          .single();
         if (error) throw error;
+        if (savedExp) await ERPUtils.recordExpense(savedExp as Expense);
       } else {
-        const { error } = await supabase
+        const { data: savedExp, error } = await supabase
           .from('expenses')
-          .insert([payload]);
+          .insert([payload])
+          .select()
+          .single();
         if (error) throw error;
+        if (savedExp) await ERPUtils.recordExpense(savedExp as Expense);
       }
       setShowModal(false);
       fetchExpenses();

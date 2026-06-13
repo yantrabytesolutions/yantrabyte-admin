@@ -7,6 +7,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { PRESET_ITEMS } from './presetItems';
 import { downloadExcelWorkbook } from '../utils/spreadsheetXml';
 import { appendBackupRow } from '../utils/googleSheetBackup';
+import { ERPUtils } from '../utils/erp';
 
 // --- Utility Functions ---
 function numberToWords(num: number): string {
@@ -438,7 +439,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     try {
       const inv = invoices.find(i => i.id === id);
       if (inv && inv.doc_type === 'Invoice') {
-        await adjustStock(inv.items, 1);
+
       }
 
       const { error } = await supabase.from('invoices').delete().eq('id', id);
@@ -523,26 +524,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     return `${prefix}-${datePart}-${seq}`;
   };
 
-  const adjustStock = async (itemsList: InvoiceItem[], factor: number) => {
-    for (const item of itemsList) {
-      if (item.product_id) {
-        const { data: prod, error: fetchErr } = await supabase
-          .from('products')
-          .select('stock_count')
-          .eq('id', item.product_id)
-          .single();
-        
-        if (!fetchErr && prod) {
-          const currentStock = prod.stock_count || 0;
-          const newStock = currentStock + (item.qty * factor);
-          await supabase
-            .from('products')
-            .update({ stock_count: newStock })
-            .eq('id', item.product_id);
-        }
-      }
-    }
-  };
+
 
   const saveCustomerFromForm = async () => {
     const name = customerName.trim();
@@ -626,28 +608,44 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     }
   };
 
+
   const persistInvoice = async (
     isUpdate: boolean,
     payload: Record<string, unknown>,
     legacyPayload: Record<string, unknown>
   ) => {
+    let savedInvoice: Invoice | null = null;
     if (isUpdate) {
       const { error } = await supabase.from('invoices').update(payload).eq('id', selectedInvoiceId);
-      if (!error) return null;
-      if (!shouldRetryLegacyInvoiceSave(error)) throw error;
-
-      const { error: legacyError } = await supabase.from('invoices').update(legacyPayload).eq('id', selectedInvoiceId);
-      if (legacyError) throw legacyError;
-      return null;
+      if (!error) {
+        const { data } = await supabase.from('invoices').select('*').eq('id', selectedInvoiceId).single();
+        savedInvoice = data as Invoice;
+      } else if (!shouldRetryLegacyInvoiceSave(error)) {
+        throw error;
+      } else {
+        const { error: legacyError } = await supabase.from('invoices').update(legacyPayload).eq('id', selectedInvoiceId);
+        if (legacyError) throw legacyError;
+        const { data } = await supabase.from('invoices').select('*').eq('id', selectedInvoiceId).single();
+        savedInvoice = data as Invoice;
+      }
+    } else {
+      const { data, error } = await supabase.from('invoices').insert([payload]).select().single();
+      if (!error) {
+        savedInvoice = data as Invoice;
+      } else if (!shouldRetryLegacyInvoiceSave(error)) {
+        throw error;
+      } else {
+        const { data: legacyData, error: legacyError } = await supabase.from('invoices').insert([legacyPayload]).select().single();
+        if (legacyError) throw legacyError;
+        savedInvoice = legacyData as Invoice;
+      }
     }
 
-    const { data, error } = await supabase.from('invoices').insert([payload]).select().single();
-    if (!error) return data as Invoice;
-    if (!shouldRetryLegacyInvoiceSave(error)) throw error;
-
-    const { data: legacyData, error: legacyError } = await supabase.from('invoices').insert([legacyPayload]).select().single();
-    if (legacyError) throw legacyError;
-    return legacyData as Invoice;
+    if (savedInvoice) {
+      // Trigger double-entry accounting and inventory reduction
+      await ERPUtils.recordInvoice(savedInvoice);
+    }
+    return savedInvoice;
   };
 
   const handleSave = async (action: 'save' | 'download' | 'email' = 'save') => {
@@ -712,22 +710,10 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       };
 
       if (isUpdate) {
-        if (docType === 'Invoice') {
-          const oldInvoice = invoices.find(i => i.id === selectedInvoiceId);
-          if (oldInvoice && oldInvoice.doc_type === 'Invoice') {
-            await adjustStock(oldInvoice.items, 1);
-          }
-          await adjustStock(items, -1);
-        }
-
         await persistInvoice(true, payload, legacyPayload);
         backupInvoiceToGoogleSheet(payload as Invoice);
         showToast('Invoice updated successfully!');
       } else {
-        if (docType === 'Invoice') {
-          await adjustStock(items, -1);
-        }
-
         const data = await persistInvoice(false, payload, legacyPayload);
         if (data) {
           setSelectedInvoiceId(data.id);
