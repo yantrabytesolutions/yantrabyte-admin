@@ -19,6 +19,8 @@ import html2pdf from 'html2pdf.js';
 import { downloadExcelWorkbook } from '../utils/spreadsheetXml';
 import { appendBackupRow } from '../utils/googleSheetBackup';
 import Dashboard from './Dashboard';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 import { UserRole } from '../types';
@@ -704,6 +706,22 @@ export default function AdminPanel() {
     const url = `https://wa.me/${phone}?text=${encodedText}`;
     window.open(url, '_blank');
     showToast('Opening WhatsApp chat...');
+  };
+
+  const markTicketCompleted = async (item: Record<string, unknown>) => {
+    if (!window.confirm(`Mark ticket ${item.ticket_number} as completed?`)) return;
+    try {
+      const { error } = await supabase
+        .from('service_tickets')
+        .update({ status: 'completed' })
+        .eq('id', item.id);
+      
+      if (error) throw error;
+      showToast('Ticket marked as completed!', 'success');
+      fetchData('tickets');
+    } catch (err: any) {
+      showToast('Error updating ticket: ' + err.message, 'error');
+    }
   };
 
   // --- Data Fetching ---
@@ -1401,6 +1419,15 @@ export default function AdminPanel() {
                                 >
                                   <Receipt className="w-4 h-4" />
                                 </button>
+                                {item.status !== 'completed' && item.status !== 'closed' && (
+                                  <button
+                                    onClick={() => markTicketCompleted(item)}
+                                    className="p-1.5 rounded-lg hover:bg-white/5 text-[#64748B] hover:text-green-500 transition-all"
+                                    title="Mark as Completed"
+                                  >
+                                    <CheckCircle className="w-4 h-4" />
+                                  </button>
+                                )}
                               </>
                             )}
                             <button
@@ -1575,13 +1602,24 @@ export default function AdminPanel() {
                 )}
 
                 {field.type === 'textarea' && (
-                  <textarea
-                    value={String(formData[field.key] || '')}
-                    onChange={e => setFormData(prev => ({ ...prev, [field.key]: e.target.value }))}
-                    placeholder={field.placeholder}
-                    rows={field.rows || 4}
-                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-[#64748B] text-sm focus:outline-none focus:border-[#0EA5E9]/50 focus:ring-1 focus:ring-[#0EA5E9]/25 transition-all resize-none font-mono"
-                  />
+                  (field.key === 'content' || field.key === 'description' || field.key === 'answer') ? (
+                    <div className="bg-white text-black rounded-xl overflow-hidden border border-white/10">
+                      <ReactQuill
+                        theme="snow"
+                        value={String(formData[field.key] || '')}
+                        onChange={(val) => setFormData(prev => ({ ...prev, [field.key]: val }))}
+                        className="h-64 mb-12"
+                      />
+                    </div>
+                  ) : (
+                    <textarea
+                      value={String(formData[field.key] || '')}
+                      onChange={e => setFormData(prev => ({ ...prev, [field.key]: e.target.value }))}
+                      placeholder={field.placeholder}
+                      rows={field.rows || 4}
+                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-[#64748B] text-sm focus:outline-none focus:border-[#0EA5E9]/50 focus:ring-1 focus:ring-[#0EA5E9]/25 transition-all resize-none font-mono"
+                    />
+                  )
                 )}
 
                 {field.type === 'number' && (

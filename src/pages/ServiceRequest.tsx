@@ -1,19 +1,20 @@
 import { FormEvent, useState } from 'react';
+import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { supabase } from '../lib/supabase';
-import { AlertCircle, ClipboardCheck, Loader2, MapPin, Phone, Send, Wrench } from 'lucide-react';
+import { AlertCircle, ClipboardCheck, Loader2, MapPin, Phone, Send, Wrench, Laptop, Monitor, Printer, Video, Wifi, Fingerprint, Server, Package, UploadCloud } from 'lucide-react';
 
-const DEVICE_OPTIONS = [
-  'Laptop with charger',
-  'Laptop without charger',
-  'Desktop',
-  'Printer',
-  'CCTV',
-  'Networking',
-  'Wi-Fi',
-  'Biometric',
-  'Server',
-  'Other',
+const DEVICE_CATEGORIES = [
+  { id: 'Laptop with charger', label: 'Laptop (w/ charger)', icon: Laptop },
+  { id: 'Laptop without charger', label: 'Laptop (no charger)', icon: Laptop },
+  { id: 'Desktop', label: 'Desktop', icon: Monitor },
+  { id: 'Printer', label: 'Printer', icon: Printer },
+  { id: 'CCTV', label: 'CCTV', icon: Video },
+  { id: 'Networking', label: 'Network', icon: Wifi },
+  { id: 'Wi-Fi', label: 'Wi-Fi', icon: Wifi },
+  { id: 'Biometric', label: 'Biometric', icon: Fingerprint },
+  { id: 'Server', label: 'Server', icon: Server },
+  { id: 'Other', label: 'Other', icon: Package },
 ];
 
 const PRIORITY_OPTIONS = [
@@ -50,9 +51,16 @@ export default function ServiceRequest() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [createdTicket, setCreatedTicket] = useState('');
+  const [attachment, setAttachment] = useState<File | null>(null);
 
   const updateField = (field: keyof RequestForm, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setAttachment(e.target.files[0]);
+    }
   };
 
   const submitTicket = async (e: FormEvent) => {
@@ -63,9 +71,37 @@ export default function ServiceRequest() {
       setError('Please enter name, phone number, and issue details.');
       return;
     }
+    if (!form.device_type) {
+      setError('Please select a device or service type.');
+      return;
+    }
 
     setSubmitting(true);
     try {
+      let uploadedUrl = '';
+      if (attachment) {
+        const fileExt = attachment.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const filePath = `tickets/${fileName}`;
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('service-attachments')
+          .upload(filePath, attachment, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) {
+          console.warn('Failed to upload attachment:', uploadError);
+          // Proceed without attachment if bucket is not created or fails
+        } else if (uploadData) {
+          const { data: { publicUrl } } = supabase.storage
+            .from('service-attachments')
+            .getPublicUrl(filePath);
+          uploadedUrl = publicUrl;
+        }
+      }
+
       const { data: ticketNumberFromRpc, error: rpcError } = await supabase
         .rpc('get_next_service_ticket_number');
 
@@ -83,6 +119,11 @@ export default function ServiceRequest() {
         console.warn('RPC get_next_service_ticket_number failed. Falling back to random suffix.', rpcError);
       }
 
+      let finalIssueDesc = form.issue_description.trim();
+      if (uploadedUrl) {
+        finalIssueDesc += `\n\n[Attachment: ${uploadedUrl}]`;
+      }
+
       const ticketPayload = {
         ticket_number: ticketNumber,
         customer_name: form.customer_name.trim(),
@@ -90,7 +131,7 @@ export default function ServiceRequest() {
         customer_email: form.customer_email.trim() || null,
         customer_address: form.customer_address.trim() || null,
         device_type: form.device_type || 'Other',
-        issue_description: form.issue_description.trim(),
+        issue_description: finalIssueDesc,
         status: 'open',
         priority: form.priority,
       };
@@ -246,13 +287,21 @@ export default function ServiceRequest() {
                   </p>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setCreatedTicket('')}
-                  className="mt-5 rounded-md bg-[#0EA5E9] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#0284C7]"
-                >
-                  Create Another Ticket
-                </button>
+                <div className="mt-5 flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
+                  <Link
+                    to={`/track-ticket?t=${createdTicket}`}
+                    className="flex items-center justify-center gap-2 rounded-md bg-[#0EA5E9] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[#0EA5E9]/20 transition hover:bg-[#0284C7]"
+                  >
+                    Track My Ticket
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => setCreatedTicket('')}
+                    className="flex items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                  >
+                    Create Another
+                  </button>
+                </div>
               </div>
 
             ) : (
@@ -298,20 +347,31 @@ export default function ServiceRequest() {
                       placeholder="Email address"
                     />
                   </label>
-                  <label className="block">
-                    <span className="text-sm font-semibold text-slate-700">Device / Service</span>
-                    <select
-                      required
-                      value={form.device_type}
-                      onChange={e => updateField('device_type', e.target.value)}
-                      className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
-                    >
-                      <option value="" disabled hidden>Select type</option>
-                      {DEVICE_OPTIONS.map(option => (
-                        <option key={option} value={option}>{option}</option>
-                      ))}
-                    </select>
-                  </label>
+                </div>
+
+                <div className="block">
+                  <span className="text-sm font-semibold text-slate-700">Device / Service *</span>
+                  <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                    {DEVICE_CATEGORIES.map(category => {
+                      const isSelected = form.device_type === category.id;
+                      const Icon = category.icon;
+                      return (
+                        <button
+                          key={category.id}
+                          type="button"
+                          onClick={() => updateField('device_type', category.id)}
+                          className={`flex flex-col items-center justify-center gap-2 rounded-xl border p-3 text-center transition-all ${
+                            isSelected 
+                              ? 'border-[#0EA5E9] bg-[#0EA5E9]/10 text-[#0EA5E9] shadow-sm ring-1 ring-[#0EA5E9]' 
+                              : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                          }`}
+                        >
+                          <Icon className={`h-6 w-6 ${isSelected ? 'text-[#0EA5E9]' : 'text-slate-400'}`} />
+                          <span className="text-xs font-medium leading-tight">{category.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 <label className="block">
@@ -335,6 +395,23 @@ export default function ServiceRequest() {
                     placeholder="Example: laptop not booting, printer paper jam, CCTV camera offline..."
                   />
                 </label>
+
+                <div className="block">
+                  <span className="text-sm font-semibold text-slate-700">Upload Photo (Optional)</span>
+                  <p className="text-xs text-slate-500 mb-2 mt-1">Upload a picture of the broken device or error screen.</p>
+                  <label className="mt-1 flex w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 py-6 transition hover:bg-slate-100">
+                    <UploadCloud className="h-8 w-8 text-slate-400 mb-2" />
+                    <span className="text-sm font-medium text-slate-600">
+                      {attachment ? attachment.name : 'Click to upload image'}
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
 
                 <label className="block">
                   <span className="text-sm font-semibold text-slate-700">Priority</span>
