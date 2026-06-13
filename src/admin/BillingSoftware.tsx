@@ -1490,10 +1490,6 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                 <input type="number" value={discount || ''} onChange={e => setDiscount(Number(e.target.value))} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" placeholder="0" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Tax (₹)</label>
-                <input type="number" value={tax || ''} onChange={e => setTax(Number(e.target.value))} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" placeholder="0" />
-              </div>
-              <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Advance Paid (₹)</label>
                 <input type="number" value={advancePaid || ''} onChange={e => setAdvancePaid(Number(e.target.value))} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" placeholder="0" />
               </div>
@@ -1530,8 +1526,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Invoice Summary</h3>
             <div className="space-y-3 text-sm">
               <div className="flex justify-between text-gray-600"><span>Subtotal:</span> <span className="font-medium">₹{subtotal.toLocaleString('en-IN')}</span></div>
-              <div className="flex justify-between text-gray-600"><span>Discount:</span> <span className="font-medium text-red-600">- ₹{discount.toLocaleString('en-IN')}</span></div>
-              <div className="flex justify-between text-gray-600"><span>Tax:</span> <span className="font-medium text-amber-600">+ ₹{tax.toLocaleString('en-IN')}</span></div>
+              {discount > 0 && <div className="flex justify-between text-gray-600"><span>Discount:</span> <span className="font-medium text-green-600">- ₹{discount.toLocaleString('en-IN')}</span></div>}
               <div className="flex justify-between text-gray-600"><span>Round Off:</span> <span className="font-medium">₹{roundOff.toLocaleString('en-IN')}</span></div>
               <div className="h-px bg-gray-200 my-2"></div>
               <div className="flex justify-between text-lg font-bold text-gray-900"><span>Grand Total:</span> <span>₹{grandTotal.toLocaleString('en-IN')}</span></div>
@@ -1723,12 +1718,6 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                   <div className="flex justify-between p-1.5 px-3" style={{ borderBottom: '1px solid #000' }}>
                     <span style={{ color: '#333333' }}>Discount</span>
                     <span style={{ color: '#000000' }}>{discount.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
-                  </div>
-                )}
-                {tax > 0 && (
-                  <div className="flex justify-between p-1.5 px-3" style={{ borderBottom: '1px solid #000' }}>
-                    <span style={{ color: '#333333' }}>Tax</span>
-                    <span style={{ color: '#000000' }}>{tax.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
                   </div>
                 )}
                 {roundOff !== 0 && (
