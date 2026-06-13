@@ -460,6 +460,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setPaymentMode(inv.payment_mode || 'Not specified');
     setDueDate(inv.due_date || '');
     setItems(inv.items || []);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showToast(`Invoice ${inv.invoice_no} loaded for editing`);
   };
 
   const handleConvertToInvoice = (id: string) => {
