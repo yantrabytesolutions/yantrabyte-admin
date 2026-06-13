@@ -120,7 +120,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>('');
-  const [billingFreshStartAt, setBillingFreshStartAt] = useState('');
+  // state removed
   
   const [customersList, setCustomersList] = useState<Customer[]>([]);
   const [serviceTicketsList, setServiceTicketsList] = useState<ServiceTicket[]>([]);
@@ -176,9 +176,9 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
   useEffect(() => {
     const loadBillingData = async () => {
-      const freshStartAt = await ensureFreshCustomerMaster();
-      setBillingFreshStartAt(freshStartAt);
-      fetchInvoices(freshStartAt);
+      await ensureFreshCustomerMaster();
+      // setBillingFreshStartAt removed
+      fetchInvoices();
       fetchCustomers();
       fetchServiceTickets();
       fetchProducts();
@@ -312,7 +312,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setCustomersList([]);
   };
 
-  const fetchInvoices = async (_freshStartAt = billingFreshStartAt) => {
+  const fetchInvoices = async () => {
     const query = supabase
       .from('invoices')
       .select('*')
