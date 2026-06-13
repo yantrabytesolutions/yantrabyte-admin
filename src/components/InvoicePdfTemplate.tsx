@@ -78,10 +78,17 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ invoice }
       </div>
 
       {/* Items Table */}
-      <table className="w-full mt-2 border text-sm text-left" style={{ borderColor: '#000000', borderCollapse: 'collapse' }}>
+      <div className="relative mt-2">
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10 overflow-hidden">
+          <div className="transform -rotate-[35deg] text-[80px] font-black tracking-widest whitespace-nowrap" style={{ color: '#0B5394', opacity: 0.04 }}>
+            YANTRABYTE SOLUTIONS
+          </div>
+        </div>
+        <table className="w-full border text-sm text-left relative z-0" style={{ borderColor: '#000000', borderCollapse: 'collapse' }}>
         <thead>
           <tr className="text-center" style={{ backgroundColor: '#0B5394', color: '#ffffff' }}>
-            <th className="border p-1.5 w-10" style={{ borderColor: '#000000' }}>Sl No.</th>
+            <th className="border p-1.5 w-10" style={{ borderColor: '#000000' }}>#</th>
+            <th className="border p-1.5 text-left w-40" style={{ borderColor: '#000000' }}>Item</th>
             <th className="border p-1.5 text-left" style={{ borderColor: '#000000' }}>Description</th>
             <th className="border p-1.5 w-12" style={{ borderColor: '#000000' }}>Qty</th>
             <th className="border p-1.5 w-20" style={{ borderColor: '#000000' }}>Rate</th>
@@ -93,6 +100,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ invoice }
             <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? '#ffffff' : '#F8FAFC' }}>
               <td className="border p-1.5 text-center" style={{ borderColor: '#000000', color: '#000000' }}>{idx + 1}</td>
               <td className="border p-1.5 font-medium" style={{ borderColor: '#000000', color: '#000000' }}>{it.description}</td>
+              <td className="border p-1.5" style={{ borderColor: '#000000', color: '#000000' }}></td>
               <td className="border p-1.5 text-center" style={{ borderColor: '#000000', color: '#000000' }}>{it.qty}</td>
               <td className="border p-1.5 text-right" style={{ borderColor: '#000000', color: '#000000' }}>{it.rate.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
               <td className="border p-1.5 text-right font-bold" style={{ borderColor: '#000000', color: '#000000' }}>{(it.qty * it.rate).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
@@ -106,10 +114,12 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ invoice }
               <td className="border-x p-1.5 text-transparent" style={{ borderColor: '#000000' }}>.</td>
               <td className="border-x p-1.5 text-transparent" style={{ borderColor: '#000000' }}>.</td>
               <td className="border-x p-1.5 text-transparent" style={{ borderColor: '#000000' }}>.</td>
+              <td className="border-x p-1.5 text-transparent" style={{ borderColor: '#000000' }}>.</td>
             </tr>
           ))}
         </tbody>
       </table>
+      </div>
 
       {/* Totals Box */}
       <div className="flex border-x border-b text-sm" style={{ borderColor: '#000000' }}>
@@ -144,10 +154,14 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ invoice }
               </>
             ) : (
               <>
-                <p>1. Warranty applicable only as per terms & conditions.</p>
-                <p>2. Goods once sold will not be taken back.</p>
-                <p>3. Physical damage, liquid spill, and burn are not covered under warranty.</p>
-                <p>4. All disputes subject to Bangalore jurisdiction.</p>
+                <p>1. Service warranty is valid for 30 days from the date of service. Covers only the specific issue addressed.</p>
+                <p>2. No warranty for software-related services including Windows installation, OS activation, or driver setup.</p>
+                <p>3. Customer must take full backup of all important data before service. YantraByte Solutions is not liable for any data loss, corruption, or damage.</p>
+                <p>4. Physical damage, liquid damage, burnt components, and swollen batteries are not covered under warranty.</p>
+                <p>5. Any tampering or unauthorized repair after service will void the warranty immediately.</p>
+                <p>6. Replacement parts carry a 6-month warranty against manufacturing defects only.</p>
+                <p>7. Devices not collected within 30 days of completion may incur storage charges at the company's discretion.</p>
+                <p>8. All disputes subject to Bengaluru jurisdiction only.</p>
               </>
             )}
           </div>
