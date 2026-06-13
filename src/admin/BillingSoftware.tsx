@@ -767,7 +767,6 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     if (!printRef.current) return null;
     setPrintInvoiceNumber(invoiceNumber);
     await new Promise(resolve => window.setTimeout(resolve, 0));
-    printRef.current.style.display = 'block';
     return printRef.current;
   };
 
@@ -826,7 +825,6 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         if (newWindow) newWindow.close();
         showToast('Failed to generate PDF for viewing', 'error');
       } finally {
-        element.style.display = 'none';
         setPrintInvoiceNumber('');
       }
     }, 500);
@@ -838,7 +836,6 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     const opt = getPdfOptions(invoiceNumber);
 
     await html2pdf().set(opt).from(element).save().then(() => {
-      element.style.display = 'none';
       setPrintInvoiceNumber('');
       showToast('PDF Generated successfully!');
     });
@@ -919,9 +916,9 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         title: 'Invoice delivery failed',
         message: errorMsg || 'Failed to email invoice',
       });
-      showToast(errorMsg || 'Failed to email invoice', 'error');
+      showToast('PDF generation failed', 'error');
+      return false;
     } finally {
-      element.style.display = 'none';
       setPrintInvoiceNumber('');
     }
   };
@@ -1529,7 +1526,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       </div>
 
       {/* --- HIDDEN PRINT TEMPLATE --- */}
-      <div style={{ display: 'none' }}>
+      <div style={{ position: 'absolute', top: '-9999px', left: '-9999px', width: '0', height: '0', overflow: 'hidden' }}>
         <div ref={printRef} className="bg-white p-[10px] text-black" style={{ width: '950px', maxWidth: 'none', fontFamily: 'Arial, sans-serif' }}>
           
           {/* Header */}

@@ -76,7 +76,6 @@ export default function PortalDashboard() {
     await new Promise(resolve => setTimeout(resolve, 100));
 
     try {
-      printRef.current.style.display = 'block';
       
       const opt = {
         margin: 0,
@@ -91,9 +90,6 @@ export default function PortalDashboard() {
       console.error("Error generating PDF:", error);
       alert("Failed to download PDF. Please try again.");
     } finally {
-      if (printRef.current) {
-        printRef.current.style.display = 'none';
-      }
       setDownloadingInvoiceId(null);
       setActiveInvoiceForPdf(null);
     }
@@ -253,7 +249,7 @@ export default function PortalDashboard() {
       </div>
 
       {/* Hidden Invoice Template for PDF Generation */}
-      <div style={{ display: 'none' }}>
+      <div style={{ position: 'absolute', top: '-9999px', left: '-9999px', width: '0', height: '0', overflow: 'hidden' }}>
         {activeInvoiceForPdf && (
           <InvoicePdfTemplate 
             ref={printRef} 
