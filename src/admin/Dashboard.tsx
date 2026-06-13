@@ -100,12 +100,12 @@ export default function Dashboard() {
       setOutstandingClients(clients);
 
       // Aggregate revenue and expenses by month
-      const monthlyData: Record<string, { month: string; revenue: number; expenses: number }> = {};
+      const monthlyData: Record<string, { month: string; revenue: number; expenses: number; tickets: number }> = {};
       
       for (let i = 5; i >= 0; i--) {
         const d = subMonths(new Date(), i);
         const monthLabel = format(d, 'MMM yyyy');
-        monthlyData[monthLabel] = { month: monthLabel, revenue: 0, expenses: 0 };
+        monthlyData[monthLabel] = { month: monthLabel, revenue: 0, expenses: 0, tickets: 0 };
       }
 
       invoices.filter(i => i.doc_type === 'Invoice').forEach(inv => {
@@ -124,9 +124,7 @@ export default function Dashboard() {
         }
       });
 
-      setRevenueData(Object.values(monthlyData));
-
-      // Aggregate ticket statuses
+      // Aggregate ticket statuses and monthly trends
       const statusCount: Record<string, number> = {
         'open': 0,
         'in-progress': 0,
@@ -136,8 +134,16 @@ export default function Dashboard() {
       tickets.forEach(t => {
         const s = t.status || 'open';
         if (statusCount[s] !== undefined) statusCount[s]++;
+        
+        if (t.created_at) {
+          const monthLabel = format(parseISO(t.created_at), 'MMM yyyy');
+          if (monthlyData[monthLabel]) {
+            monthlyData[monthLabel].tickets++;
+          }
+        }
       });
       
+      setRevenueData(Object.values(monthlyData));
       setTicketStatusData(Object.keys(statusCount).map(key => ({
         name: key.toUpperCase(),
         value: statusCount[key]
@@ -258,28 +264,46 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">Service Ticket Status</h3>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={ticketStatusData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {ticketStatusData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip />
-                  <Legend verticalAlign="bottom" height={36}/>
-                </PieChart>
-              </ResponsiveContainer>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Service Ticket Status</h3>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={ticketStatusData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {ticketStatusData.map((_, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip />
+                    <Legend verticalAlign="bottom" height={36}/>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Ticket Trends (Last 6 Months)</h3>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={revenueData} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} allowDecimals={false} />
+                    <RechartsTooltip />
+                    <Legend verticalAlign="bottom" height={36}/>
+                    <Line type="monotone" dataKey="tickets" name="Tickets Logged" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
         </div>
