@@ -106,7 +106,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           source: "app.tar.gz,scripts/deploy-ec2.sh"
-          target: "/home/${{ secrets.EC2_USERNAME }}/"
+          target: "/tmp/yantrabyte-deploy"
 
       - name: 🛠️ Execute Atomic Switch on EC2 (SSH)
         uses: appleboy/ssh-action@master
@@ -118,11 +118,14 @@ jobs:
           command_timeout: 30m
           script: |
             sudo mkdir -p /var/www/yantrabyte/scripts
-            sudo cp /home/${{ secrets.EC2_USERNAME }}/scripts/deploy-ec2.sh /var/www/yantrabyte/scripts/deploy-ec2.sh
+            sudo cp /tmp/yantrabyte-deploy/scripts/deploy-ec2.sh /var/www/yantrabyte/scripts/deploy-ec2.sh
             sudo chmod +x /var/www/yantrabyte/scripts/deploy-ec2.sh
+            # Move the archive to where the deploy script expects it
+            sudo cp /tmp/yantrabyte-deploy/app.tar.gz /home/${{ secrets.EC2_USERNAME }}/app.tar.gz
+            # Run the deployment script
             sudo /var/www/yantrabyte/scripts/deploy-ec2.sh
-            # Clean up home directory
-            rm -rf /home/${{ secrets.EC2_USERNAME }}/app.tar.gz /home/${{ secrets.EC2_USERNAME }}/scripts
+            # Clean up
+            sudo rm -rf /tmp/yantrabyte-deploy /home/${{ secrets.EC2_USERNAME }}/app.tar.gz /home/${{ secrets.EC2_USERNAME }}/scripts
 
   deploy-edge-functions:
     name: ☁️ Deploy Supabase Edge Functions
