@@ -73,6 +73,8 @@ const shouldRetryLegacyInvoiceSave = (error: { message?: string; code?: string }
   const message = String(error.message || '').toLowerCase();
   return error.code === 'PGRST204'
     || error.code === '42703'
+    || message.includes('could not find the')
+    || message.includes('column')
     || message.includes('customer_id')
     || message.includes('payment_mode')
     || message.includes('payment_status')
@@ -913,8 +915,9 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           throw new Error('Failed to generate PDF for emailing.');
         }
       }
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
+    } catch (err: any) {
+      console.error("handleSave caught error:", err);
+      const errorMsg = err?.message || (typeof err === 'string' ? err : JSON.stringify(err));
       if (action === 'email') {
         setDeliveryPopup({
           status: 'error',
