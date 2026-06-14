@@ -1008,12 +1008,12 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
   const uploadPdfToSupabase = async (blob: Blob, invoiceNo: string): Promise<string | null> => {
     try {
-      const fileName = `invoices/YBS-${invoiceNo}-${Date.now()}.pdf`;
-      const file = new File([blob], `YBS-${invoiceNo}.pdf`, { type: 'application/pdf' });
+      const fileName = `pdfs/${invoiceNo}.pdf`;
+      const file = new File([blob], `${invoiceNo}.pdf`, { type: 'application/pdf' });
       
       const { error } = await supabase.storage
         .from('invoices')
-        .upload(fileName, file, { cacheControl: '3600', upsert: false });
+        .upload(fileName, file, { cacheControl: '3600', upsert: true });
         
       if (error) {
         console.error('Supabase upload error:', error);
