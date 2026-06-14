@@ -494,7 +494,7 @@ export default function AdminPanel() {
   }, []);
 
   // --- Print Service Ticket Job Sheet / Drop-off Receipt ---
-  const printJobSheet = (item: Record<string, unknown>) => {
+  const generateTicketPdfElement = (item: Record<string, unknown>) => {
     const ticketNo = String(item.ticket_number || 'DRAFT');
     const safeText = (value: unknown, fallback = '—') => String(value || fallback)
       .replace(/&/g, '&amp;')
@@ -706,15 +706,15 @@ export default function AdminPanel() {
     return element;
   };
 
-  const downloadTicketJobSheet = async (item: Record<string, unknown>) => {
+  const printJobSheet = async (item: Record<string, unknown>) => {
     const element = generateTicketPdfElement(item);
     const ticketFilename = `JobSheet-${item.ticket_number || 'DRAFT'}.pdf`;
     const opt = {
       margin: 0,
       filename: ticketFilename,
-      image: { type: 'jpeg', quality: 0.98 },
+      image: { type: 'jpeg' as const, quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, windowWidth: 794 },
-      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+      jsPDF: { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const }
     };
     await html2pdf().set(opt).from(element).save();
     document.body.removeChild(element);
@@ -728,11 +728,11 @@ export default function AdminPanel() {
       const opt = {
         margin: 0,
         filename: ticketFilename,
-        image: { type: 'jpeg', quality: 0.98 },
+        image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, windowWidth: 794 },
-        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+        jsPDF: { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const }
       };
-      const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
+      const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob') as Blob;
       document.body.removeChild(element);
       
       const fileName = `pdfs/Ticket-${item.ticket_number || Date.now()}.pdf`;
