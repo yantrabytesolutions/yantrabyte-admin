@@ -901,7 +901,7 @@ export default function AdminPanel() {
 
   const backupTicketToGoogleSheet = (ticket: Partial<ServiceTicket>) => {
     void appendBackupRow({
-      sheetName: 'service ticket',
+      sheetName: 'Service Tickets',
       headers: SERVICE_TICKET_HEADERS,
       row: serviceTicketRow(ticket),
     }).then(result => {
