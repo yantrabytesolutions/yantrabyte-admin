@@ -695,13 +695,6 @@ export default function AdminPanel() {
     `;
 
     document.body.appendChild(element);
-    const opt = {
-      margin: 0,
-      filename: ticketFilename,
-      image: { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, windowWidth: 794 },
-      jsPDF: { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const }
-    };
 
     return element;
   };
@@ -1072,6 +1065,8 @@ export default function AdminPanel() {
           .eq('id', editingItem.id);
         if (error) throw error;
         if (activeSection === 'tickets') {
+          const pdfUrl = await uploadTicketPdfToSupabase(record);
+          if (pdfUrl) (record as any).link = pdfUrl;
           backupTicketToGoogleSheet({ ...(editingItem as unknown as Partial<ServiceTicket>), ...(record as Partial<ServiceTicket>) });
           sendTelegramNotification(`🔧 <b>Ticket Updated</b>\nTicket: #${record.ticket_number}\nCustomer: ${record.customer_name}\nDevice: ${record.device_type}\nStatus: ${record.status}`);
         }
@@ -1082,6 +1077,8 @@ export default function AdminPanel() {
           .insert([record]);
         if (error) throw error;
         if (activeSection === 'tickets') {
+          const pdfUrl = await uploadTicketPdfToSupabase(record);
+          if (pdfUrl) (record as any).link = pdfUrl;
           backupTicketToGoogleSheet(record as Partial<ServiceTicket>);
           sendTelegramNotification(`🆕 <b>New Ticket Created</b>\nTicket: #${record.ticket_number}\nCustomer: ${record.customer_name}\nDevice: ${record.device_type}\nIssue: ${record.issue_description}`);
         }
