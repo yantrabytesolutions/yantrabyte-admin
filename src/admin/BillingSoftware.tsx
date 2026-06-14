@@ -1012,7 +1012,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       const file = new File([blob], `YBS-${invoiceNo}.pdf`, { type: 'application/pdf' });
       
       const { error } = await supabase.storage
-        .from('service-attachments')
+        .from('invoices')
         .upload(fileName, file, { cacheControl: '3600', upsert: false });
         
       if (error) {
@@ -1021,7 +1021,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       }
       
       const { data: { publicUrl } } = supabase.storage
-        .from('service-attachments')
+        .from('invoices')
         .getPublicUrl(fileName);
         
       return publicUrl;
