@@ -953,7 +953,8 @@ export default function AdminPanel() {
     setIsSyncing(true);
     try {
       // Fetching the Google Sheet CSV with multi-stage robust fallbacks (direct first, then proxies)
-      const csvUrl = 'https://docs.google.com/spreadsheets/d/1y6dyRVn0seq5qZfVmThTXJHiEoyG9kgoLeOj9WZbBOc/export?format=csv&gid=1073064749';
+      // New Spreadsheet ID: 17nAWzE_OZ6b0ANksVsAn08aqTcMGncbMqgKJAdjdejk, gid: 0
+      const csvUrl = 'https://docs.google.com/spreadsheets/d/17nAWzE_OZ6b0ANksVsAn08aqTcMGncbMqgKJAdjdejk/export?format=csv&gid=0';
       let response;
       let csvText = '';
       
