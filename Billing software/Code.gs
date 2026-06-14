@@ -3,7 +3,7 @@ const APP = {
   INVOICE_SHEET:  'Invoices',
   PURCHASE_SHEET: 'Purchases',
   PRINT_SHEET:    'Print_Invoice',
-  PDF_FOLDER_ID:  '1bYata0tAmAwVOIDRQNb8oBOLGvn2efMu',
+  PDF_FOLDER_ID:  '1rdQton10P87ZR7RlUAdgtB1QVm8K2qg_',
   LOGO_FILE_ID:   '16R4HC_X6wlhVuIyb4aAgN6sFaseUMzLf',
   TIMEZONE:       Session.getScriptTimeZone() || 'Asia/Kolkata'
 };
@@ -33,7 +33,7 @@ function getLogoBase64() {
 }
 
 function getCustomers() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = SpreadsheetApp.openById('17nAWzE_OZ6b0ANksVsAn08aqTcMGncbMqgKJAdjdejk');
   const sh = ss.getSheetByName(APP.CUSTOMER_SHEET);
   if (!sh) throw new Error('"Form Responses 1" sheet not found.');
 
@@ -76,7 +76,7 @@ function getCustomers() {
 }
 
 function getOrCreateInvoiceSheet_() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = SpreadsheetApp.openById('17nAWzE_OZ6b0ANksVsAn08aqTcMGncbMqgKJAdjdejk');
   let sh = ss.getSheetByName(APP.INVOICE_SHEET);
   if (!sh) sh = ss.insertSheet(APP.INVOICE_SHEET);
 
@@ -266,7 +266,7 @@ function saveInvoice(data) {
 // GENERATE PDF (new or re-generate for existing)
 // =============================================
 function generatePdf(data) {
-  const ss       = SpreadsheetApp.getActiveSpreadsheet();
+  const ss       = SpreadsheetApp.openById('17nAWzE_OZ6b0ANksVsAn08aqTcMGncbMqgKJAdjdejk');
   const logSheet = getOrCreateInvoiceSheet_();
   if (!data.items || !data.items.length) throw new Error('Add at least one item');
 
@@ -337,7 +337,7 @@ function generatePdf(data) {
 // ============================================================
 
 function getOrCreatePurchaseSheet_() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = SpreadsheetApp.openById('17nAWzE_OZ6b0ANksVsAn08aqTcMGncbMqgKJAdjdejk');
   let sh = ss.getSheetByName(APP.PURCHASE_SHEET);
   if (!sh) sh = ss.insertSheet(APP.PURCHASE_SHEET);
 

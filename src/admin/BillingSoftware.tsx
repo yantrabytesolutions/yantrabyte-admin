@@ -99,6 +99,7 @@ const INVOICE_HEADERS = [
   'Payment Status',
   'Payment Mode',
   'Due Date',
+  'Invoice Link',
 ];
 
 export default function BillingSoftware({ initialAutofillTicket, onClearAutofill }: BillingSoftwareProps) {
@@ -807,6 +808,40 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         terms_conditions: termsConditions
       };
 
+      let pdfUrl: string | null = null;
+      let pdfBlob: Blob | null = null;
+
+      if (action === 'download' || action === 'email') {
+        if (action === 'email') {
+          setDeliveryPopup({
+            status: 'sending',
+            title: 'Sending invoice',
+            message: 'Generating the invoice PDF for email.',
+          });
+        }
+        const element = await preparePdfElement(payload.invoice_no);
+        if (element) {
+          const opt = getPdfOptions(payload.invoice_no);
+          try {
+            pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob') as Blob;
+            pdfUrl = await uploadPdfToSupabase(pdfBlob, payload.invoice_no);
+            if (action === 'download') {
+              await html2pdf().set(opt).from(element).save();
+              showToast('PDF Generated successfully!');
+            }
+          } catch (e) {
+            console.error('Failed to generate/upload PDF', e);
+            if (action === 'download') showToast('Failed to generate PDF', 'error');
+          } finally {
+            setPrintInvoiceNumber('');
+          }
+        }
+      }
+
+      if (pdfUrl) {
+        (payload as any).pdf_url = pdfUrl;
+      }
+
       if (isUpdate) {
         await persistInvoice(true, payload, legacyPayload);
         backupInvoiceToGoogleSheet(payload as Invoice);
@@ -825,21 +860,53 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       await fetchCustomers();
       
       if (action === 'download') {
-        await new Promise(resolve => window.setTimeout(resolve, 500));
-        await generatePdf(payload.invoice_no);
-        
         // Automated internal Telegram notification for invoices
         if (payload.doc_type !== 'Quotation') {
-          sendTelegramNotification(`💰 <b>New Invoice Generated</b>\nInvoice: #${payload.invoice_no}\nCustomer: ${payload.customer_name}\nAmount: ₹${payload.grand_total}`);
+          sendTelegramNotification(`💰 <b>New Invoice Generated</b>\nInvoice: #${payload.invoice_no}\nCustomer: ${payload.customer_name}\nAmount: ₹${payload.grand_total}\nLink: ${pdfUrl || 'N/A'}`);
         }
       } else if (action === 'email') {
-        setDeliveryPopup({
-          status: 'sending',
-          title: 'Sending invoice',
-          message: 'Generating the invoice PDF for email.',
-        });
-        await new Promise(resolve => window.setTimeout(resolve, 500));
-        await emailInvoicePdf(payload.invoice_no);
+        // We already have pdfBlob, just send the email!
+        if (pdfBlob) {
+          setDeliveryPopup({
+            status: 'sending',
+            title: 'Sending invoice',
+            message: `Sending email to ${email}.`,
+          });
+          const { data: sessionData } = await supabase.auth.getSession();
+          const token = sessionData.session?.access_token;
+          if (!token) throw new Error('Please login again before sending email.');
+          
+          const pdfBase64 = await blobToBase64(pdfBlob);
+          const response = await fetch('/api/invoices/email', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              to: email,
+              customerName,
+              invoiceNumber: payload.invoice_no,
+              documentType: docType,
+              filename: `YBS-${payload.invoice_no}.pdf`,
+              pdfBase64,
+            }),
+          });
+          
+          if (!response.ok) {
+            const result = await response.json().catch(() => ({}));
+            throw new Error(result.error || `Invoice API failed with HTTP ${response.status}`);
+          }
+          
+          setDeliveryPopup({
+            status: 'success',
+            title: 'Email sent',
+            message: `Invoice was emailed to ${email} successfully.`,
+          });
+          showToast(`Invoice emailed to ${email}`);
+        } else {
+          throw new Error('Failed to generate PDF for emailing.');
+        }
       }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);
@@ -932,20 +999,55 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     }, 500);
   };
 
+  const uploadPdfToSupabase = async (blob: Blob, invoiceNo: string): Promise<string | null> => {
+    try {
+      const fileName = `invoices/YBS-${invoiceNo}-${Date.now()}.pdf`;
+      const file = new File([blob], `YBS-${invoiceNo}.pdf`, { type: 'application/pdf' });
+      
+      const { data, error } = await supabase.storage
+        .from('service-attachments')
+        .upload(fileName, file, { cacheControl: '3600', upsert: false });
+        
+      if (error) {
+        console.error('Supabase upload error:', error);
+        return null;
+      }
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('service-attachments')
+        .getPublicUrl(fileName);
+        
+      return publicUrl;
+    } catch (e) {
+      console.error('Failed to upload PDF', e);
+      return null;
+    }
+  };
+
   const generatePdf = async (invoiceNumber: string) => {
     const element = await preparePdfElement(invoiceNumber);
-    if (!element) return;
+    if (!element) return null;
     const opt = getPdfOptions(invoiceNumber);
 
-    await html2pdf().set(opt).from(element).save().then(() => {
+    try {
+      const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob') as Blob;
+      const pdfUrl = await uploadPdfToSupabase(pdfBlob, invoiceNumber);
+      
+      await html2pdf().set(opt).from(element).save();
       setPrintInvoiceNumber('');
       showToast('PDF Generated successfully!');
-    });
+      return pdfUrl;
+    } catch (err) {
+      console.error(err);
+      setPrintInvoiceNumber('');
+      showToast('PDF generation failed', 'error');
+      return null;
+    }
   };
 
   const emailInvoicePdf = async (invoiceNumber: string) => {
     const element = await preparePdfElement(invoiceNumber);
-    if (!element) return;
+    if (!element) return null;
     const opt = getPdfOptions(invoiceNumber);
 
     try {
@@ -963,6 +1065,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
       const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob') as Blob;
       const pdfBase64 = await blobToBase64(pdfBlob);
+      const pdfUrl = await uploadPdfToSupabase(pdfBlob, invoiceNumber);
+
       setDeliveryPopup({
         status: 'sending',
         title: 'Sending invoice',
@@ -989,28 +1093,13 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         throw new Error(result.error || `Invoice API failed with HTTP ${response.status}`);
       }
 
-      if (result.drive?.ok) {
-        setDeliveryPopup({
-          status: 'success',
-          title: 'Email sent and Drive saved',
-          message: `Invoice was emailed to ${email} and backed up to Google Drive.`,
-        });
-        showToast(`Invoice emailed and saved to Google Drive`);
-      } else if (result.drive?.error) {
-        setDeliveryPopup({
-          status: 'warning',
-          title: 'Email sent',
-          message: `Invoice was emailed to ${email}. Google Drive backup was not completed: ${result.drive.error}`,
-        });
-        showToast(`Invoice emailed to ${email}`);
-      } else {
-        setDeliveryPopup({
-          status: 'success',
-          title: 'Email sent',
-          message: `Invoice was emailed to ${email} successfully.`,
-        });
-        showToast(`Invoice emailed to ${email}`);
-      }
+      setDeliveryPopup({
+        status: 'success',
+        title: 'Email sent',
+        message: `Invoice was emailed to ${email} successfully.`,
+      });
+      showToast(`Invoice emailed to ${email}`);
+      return pdfUrl;
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);
       setDeliveryPopup({
@@ -1018,8 +1107,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         title: 'Invoice delivery failed',
         message: errorMsg || 'Failed to email invoice',
       });
-      showToast('PDF generation failed', 'error');
-      return false;
+      showToast('PDF email failed', 'error');
+      return null;
     } finally {
       setPrintInvoiceNumber('');
     }
@@ -1043,6 +1132,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     inv.payment_status || getPaymentStatus(inv.doc_type, inv.balance_due || 0, inv.advance_paid || 0),
     inv.payment_mode || 'Not specified',
     inv.due_date || '',
+    (inv as any).pdf_url || '',
   ];
 
   const backupInvoiceToGoogleSheet = (inv: Invoice) => {
