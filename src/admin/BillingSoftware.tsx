@@ -513,6 +513,36 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     showToast(`Converted quotation ${inv.invoice_no} to a new draft Invoice! Click Save or Print to finalize.`);
   };
 
+  const handleMarkAsPaid = async (id: string) => {
+    const inv = invoices.find(i => i.id === id);
+    if (!inv) return;
+    try {
+      const { error } = await supabase
+        .from('invoices')
+        .update({
+          advance_paid: inv.grand_total,
+          balance_due: 0,
+          payment_status: 'Paid',
+          payment_mode: 'UPI' // default to UPI or keep existing if you want, let's use UPI
+        })
+        .eq('id', id);
+        
+      if (error) throw error;
+      
+      setInvoices(invoices.map(i => i.id === id ? { 
+        ...i, 
+        advance_paid: i.grand_total, 
+        balance_due: 0, 
+        payment_status: 'Paid',
+        payment_mode: 'UPI'
+      } : i));
+      
+      showToast(`Invoice ${inv.invoice_no} marked as Paid!`);
+    } catch (e: any) {
+      showToast('Error: ' + e.message, 'error');
+    }
+  };
+
   const sendWhatsAppInvoiceAlert = (inv: Invoice) => {
     let phone = inv.phone.replace(/\D/g, '');
     if (phone.length === 10) phone = '+91' + phone;
@@ -1674,6 +1704,18 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                         title="Convert to Invoice"
                       >
                         <Copy className="w-4 h-4" />
+                      </button>
+                    )}
+                    {inv.doc_type === 'Invoice' && (inv.balance_due || 0) > 0 && (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleMarkAsPaid(inv.id);
+                        }} 
+                        className="text-gray-400 hover:text-green-600 transition-colors p-1"
+                        title="Mark as Paid"
+                      >
+                        <CheckCircle className="w-4 h-4" />
                       </button>
                     )}
                     <button 
