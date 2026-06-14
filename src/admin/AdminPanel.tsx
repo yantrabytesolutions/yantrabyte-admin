@@ -503,7 +503,6 @@ export default function AdminPanel() {
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
     const safeMultiline = (value: unknown, fallback: string) => safeText(value, fallback).replace(/\n/g, '<br />');
-    const ticketFilename = ticketNo.toLowerCase().endsWith('.pdf') ? ticketNo : `${ticketNo}.pdf`;
     
     // Generate QR code for tracking URL
     const trackUrl = `https://yantrabyte.anantatechcare.com/track?t=${ticketNo}`;
