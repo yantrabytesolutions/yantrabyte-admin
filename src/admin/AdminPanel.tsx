@@ -915,6 +915,40 @@ export default function AdminPanel() {
     });
   };
 
+  const pushAllTicketsToGoogleSheet = async () => {
+    setIsSyncing(true);
+    showToast('Starting bulk sync of all tickets to Google Sheet... This may take a minute.', 'success');
+    try {
+      const { data: tickets, error } = await supabase
+        .from('tickets')
+        .select('*')
+        .order('created_at', { ascending: true });
+        
+      if (error) throw error;
+      if (!tickets || tickets.length === 0) {
+        showToast('No tickets found to sync.');
+        setIsSyncing(false);
+        return;
+      }
+
+      let successCount = 0;
+      for (const ticket of tickets) {
+        const result = await appendBackupRow({
+          sheetName: 'Service Tickets',
+          headers: SERVICE_TICKET_HEADERS,
+          row: serviceTicketRow(ticket as Partial<ServiceTicket>),
+        });
+        if (result.ok) successCount++;
+      }
+      
+      showToast(`Successfully pushed ${successCount}/${tickets.length} tickets to Google Sheet!`, 'success');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      showToast(`Failed to push tickets: ${msg}`, 'error');
+    }
+    setIsSyncing(false);
+  };
+
   const syncFromGoogleSheet = async () => {
     setIsSyncing(true);
     try {
@@ -1449,6 +1483,14 @@ export default function AdminPanel() {
                   <ExternalLink className="w-4 h-4" />
                   Open Customer Form
                 </a>
+                <button
+                  onClick={pushAllTicketsToGoogleSheet}
+                  disabled={isSyncing}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium transition-all"
+                >
+                  {isSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                  Push All to Google Sheet
+                </button>
                 <button
                   onClick={syncFromGoogleSheet}
                   disabled={isSyncing}
