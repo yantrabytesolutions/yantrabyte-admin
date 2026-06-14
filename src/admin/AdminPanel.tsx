@@ -854,10 +854,16 @@ export default function AdminPanel() {
     const config = SECTION_CONFIG[section];
     if (!config.table) return;
     setDataLoading(true);
+    
+    // Default to descending (newest first) for these tables
+    const descendingTables = ['service_tickets', 'invoices', 'purchases', 'inventory_transactions', 'expenses', 'contact_submissions', 'customers'];
+    const isAscending = !descendingTables.includes(config.table as string);
+
     const { data: rows, error } = await supabase
       .from(config.table as string)
       .select('*')
-      .order(config.orderField as string, { ascending: true });
+      .order(config.orderField as string, { ascending: isAscending });
+      
     if (error) {
       showToast('Error loading data: ' + error.message, 'error');
     } else {
@@ -920,7 +926,7 @@ export default function AdminPanel() {
     showToast('Starting bulk sync of all tickets to Google Sheet... This may take a minute.', 'success');
     try {
       const { data: tickets, error } = await supabase
-        .from('tickets')
+        .from('service_tickets')
         .select('*')
         .order('created_at', { ascending: true });
         
