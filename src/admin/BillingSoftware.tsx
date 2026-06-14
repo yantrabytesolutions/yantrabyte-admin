@@ -1049,7 +1049,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
   const backupInvoiceToGoogleSheet = (inv: Invoice) => {
     void appendBackupRow({
-      sheetName: 'invoice',
+      sheetName: 'Invoices',
       headers: INVOICE_HEADERS,
       row: invoiceRow(inv),
     }).then(result => {
