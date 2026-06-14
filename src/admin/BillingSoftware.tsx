@@ -1710,6 +1710,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                           handleConvertToInvoice(inv.id);
                         }} 
                         onPointerDown={(e) => e.stopPropagation()}
+                        onTouchStart={(e) => e.stopPropagation()}
                         className="text-[#0EA5E9] hover:text-[#0284C7] transition-colors p-2 md:p-1"
                         title="Convert to Invoice"
                       >
@@ -1725,6 +1726,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                           handleMarkAsPaid(inv.id);
                         }} 
                         onPointerDown={(e) => e.stopPropagation()}
+                        onTouchStart={(e) => e.stopPropagation()}
                         className="text-gray-400 hover:text-green-600 transition-colors p-2 md:p-1 rounded-full bg-gray-50 hover:bg-green-50 border border-gray-200 shadow-sm"
                         title="Mark as Paid"
                       >
@@ -1740,6 +1742,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                         sendWhatsAppInvoiceAlert(inv);
                       }} 
                       onPointerDown={(e) => e.stopPropagation()}
+                      onTouchStart={(e) => e.stopPropagation()}
                       className="text-gray-400 hover:text-green-500 transition-colors p-2 md:p-1"
                       title="Send WhatsApp Alert"
                     >
@@ -1753,6 +1756,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                         sendTelegramInvoiceAlert(inv);
                       }} 
                       onPointerDown={(e) => e.stopPropagation()}
+                      onTouchStart={(e) => e.stopPropagation()}
                       className="text-gray-400 hover:text-blue-500 transition-colors p-2 md:p-1"
                       title="Send Telegram Alert"
                     >
@@ -1766,6 +1770,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                         loadInvoice(inv.id);
                       }} 
                       onPointerDown={(e) => e.stopPropagation()}
+                      onTouchStart={(e) => e.stopPropagation()}
                       className="text-gray-400 hover:text-[#0EA5E9] transition-colors p-2 md:p-1"
                       title="Edit Invoice"
                     >
@@ -1779,6 +1784,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                         handleDeleteInvoice(inv.id, inv.invoice_no);
                       }} 
                       onPointerDown={(e) => e.stopPropagation()}
+                      onTouchStart={(e) => e.stopPropagation()}
                       className="text-gray-400 hover:text-red-600 transition-colors p-2 md:p-1"
                       title="Delete Invoice"
                     >
@@ -2042,17 +2048,39 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                               {inv.advance_paid > 0 && (
                                 <div className="text-[10px] text-[#94A3B8] mt-1 font-mono">Advance: ₹{inv.advance_paid}</div>
                               )}
-                              <button 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  loadInvoice(inv.id);
-                                  setShowHistoryDrawer(false);
-                                }} 
-                                className="mt-2 text-[#94A3B8] hover:text-[#0EA5E9] transition-colors p-1"
-                                title="Edit Invoice"
-                              >
-                                <Pencil className="w-4 h-4" />
-                              </button>
+                              <div className="flex gap-2 mt-2">
+                                {inv.doc_type === 'Invoice' && (inv.balance_due || 0) > 0 && (
+                                  <button 
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handleMarkAsPaid(inv.id);
+                                    }} 
+                                    onPointerDown={(e) => e.stopPropagation()}
+                                    onTouchStart={(e) => e.stopPropagation()}
+                                    className="text-[#94A3B8] hover:text-emerald-400 transition-colors p-1"
+                                    title="Mark as Paid"
+                                  >
+                                    <CheckCircle className="w-4 h-4" />
+                                  </button>
+                                )}
+                                <button 
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    loadInvoice(inv.id);
+                                    setShowHistoryDrawer(false);
+                                  }} 
+                                  onPointerDown={(e) => e.stopPropagation()}
+                                  onTouchStart={(e) => e.stopPropagation()}
+                                  className="text-[#94A3B8] hover:text-[#0EA5E9] transition-colors p-1"
+                                  title="Edit Invoice"
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                </button>
+                              </div>
                             </div>
                           </div>
                         ))}
