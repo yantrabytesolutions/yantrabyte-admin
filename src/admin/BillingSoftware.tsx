@@ -1056,7 +1056,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
   const backupInvoiceToGoogleSheet = (inv: Invoice) => {
     void appendBackupRow({
-      sheetName: 'invoice',
+      sheetName: inv.doc_type === 'Quotation' ? 'quotation' : 'invoice',
       headers: INVOICE_HEADERS,
       row: invoiceRow(inv),
     }).then(result => {
@@ -1772,7 +1772,13 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             </div>
 
             {/* Items Table */}
-            <table className="w-full text-sm text-left" style={{ borderCollapse: 'collapse', borderBottom: '1px solid #000' }}>
+            <div className="relative mt-2">
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10 overflow-hidden">
+                <div className="transform -rotate-[35deg] text-[80px] font-black tracking-widest whitespace-nowrap" style={{ color: '#0B5394', opacity: 0.04 }}>
+                  YANTRABYTE SOLUTIONS
+                </div>
+              </div>
+              <table className="w-full text-sm text-left relative z-0" style={{ borderCollapse: 'collapse', borderBottom: '1px solid #000' }}>
               <thead>
                 <tr className="text-center text-white" style={{ backgroundColor: '#0B5394' }}>
                   <th className="p-2 w-12" style={{ border: '1px solid #000' }}>Sl<br/>No.</th>
@@ -1804,6 +1810,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                 ))}
               </tbody>
             </table>
+            </div>
 
             {/* Totals Box */}
             <div className="flex text-sm">

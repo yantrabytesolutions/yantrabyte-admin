@@ -665,6 +665,7 @@ export default function AdminPanel() {
           </ol>
         </div>
 
+        </div>
         <!-- Signatures Bottom Section -->
         <div style="margin-top: 10px;">
           <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
@@ -702,10 +703,52 @@ export default function AdminPanel() {
       jsPDF: { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const }
     };
 
-    html2pdf().set(opt).from(element).save().then(() => {
+    return element;
+  };
+
+  const downloadTicketJobSheet = async (item: Record<string, unknown>) => {
+    const element = generateTicketPdfElement(item);
+    const ticketFilename = `JobSheet-${item.ticket_number || 'DRAFT'}.pdf`;
+    const opt = {
+      margin: 0,
+      filename: ticketFilename,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, windowWidth: 794 },
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+    await html2pdf().set(opt).from(element).save();
+    document.body.removeChild(element);
+    showToast('Job sheet drop-off receipt downloaded!');
+  };
+
+  const uploadTicketPdfToSupabase = async (item: Record<string, unknown>): Promise<string | null> => {
+    try {
+      const element = generateTicketPdfElement(item);
+      const ticketFilename = `JobSheet-${item.ticket_number || 'DRAFT'}.pdf`;
+      const opt = {
+        margin: 0,
+        filename: ticketFilename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, windowWidth: 794 },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+      };
+      const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
       document.body.removeChild(element);
-      showToast('Job sheet drop-off receipt downloaded!');
-    });
+      
+      const fileName = `pdfs/Ticket-${item.ticket_number || Date.now()}.pdf`;
+      const file = new File([pdfBlob], ticketFilename, { type: 'application/pdf' });
+      
+      const { error } = await supabase.storage
+        .from('invoices')
+        .upload(fileName, file, { cacheControl: '3600', upsert: true });
+        
+      if (error) return null;
+      
+      return supabase.storage.from('invoices').getPublicUrl(fileName).data.publicUrl;
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
   };
 
   const handleInstantBill = (ticket: Record<string, unknown>) => {
@@ -866,7 +909,7 @@ export default function AdminPanel() {
 
   const backupTicketToGoogleSheet = (ticket: Partial<ServiceTicket>) => {
     void appendBackupRow({
-      sheetName: 'Service Tickets',
+      sheetName: 'service ticket',
       headers: SERVICE_TICKET_HEADERS,
       row: serviceTicketRow(ticket),
     }).then(result => {
