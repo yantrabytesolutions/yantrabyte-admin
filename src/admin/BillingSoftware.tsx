@@ -790,8 +790,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         round_off: roundOff,
         grand_total: grandTotal,
         advance_paid: advancePaid,
-        balance_due: balanceDue,
-        terms_conditions: termsConditions
+        balance_due: balanceDue
       };
 
       let calculatedNextDue: string | null = null;
