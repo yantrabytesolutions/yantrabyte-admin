@@ -192,7 +192,7 @@ export default function ServiceRequest() {
           `https://yantrabyte.anantatechcare.com/admin`
         ];
 
-        const { appendBackupRow } = await import('../utils/googleSheetsBackup');
+        const { appendBackupRow } = await import('../utils/googleSheetBackup');
         await appendBackupRow({
           sheetName: 'Service Tickets',
           headers,
