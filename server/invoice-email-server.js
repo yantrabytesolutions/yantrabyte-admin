@@ -485,7 +485,7 @@ app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {
   }
 
   if (mailError) {
-    return res.status(502).json({
+    return res.status(422).json({
       error: `Gmail send failed: ${getDeliveryErrorMessage(mailError)}`,
       email: { ok: false },
     });

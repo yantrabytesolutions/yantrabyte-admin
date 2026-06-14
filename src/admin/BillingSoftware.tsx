@@ -864,12 +864,14 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       await fetchProducts();
       await fetchCustomers();
       
-      if (action === 'download') {
+      if (action === 'download' || action === 'email') {
         // Automated internal Telegram notification for invoices
         if (payload.doc_type !== 'Quotation') {
           sendTelegramNotification(`💰 <b>New Invoice Generated</b>\nInvoice: #${payload.invoice_no}\nCustomer: ${payload.customer_name}\nAmount: ₹${payload.grand_total}\nLink: ${pdfUrl || 'N/A'}`);
         }
-      } else if (action === 'email') {
+      }
+      
+      if (action === 'email') {
         // We already have pdfBlob, just send the email!
         if (pdfBlob) {
           setDeliveryPopup({
@@ -1037,7 +1039,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     inv.invoice_no,
     inv.date,
     inv.customer_name,
-    inv.phone || '',
+    inv.phone ? `'${inv.phone}` : '',
     inv.email || '',
     inv.address || '',
     formatItemsForExcel(inv.items || []),
