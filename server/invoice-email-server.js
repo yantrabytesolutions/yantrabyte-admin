@@ -494,7 +494,6 @@ app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {
   return res.json({
     ok: true,
     email: { ok: true, messageId: mailResult.messageId },
-    drive: driveResult,
   });
 });
 

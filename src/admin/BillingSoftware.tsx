@@ -895,7 +895,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           
           if (!response.ok) {
             const result = await response.json().catch(() => ({}));
-            throw new Error(result.error || `Invoice API failed with HTTP ${response.status}`);
+            const apiError = typeof result.error === 'string' ? result.error : result.error?.message;
+            throw new Error(apiError || `Invoice API failed with HTTP ${response.status}`);
           }
           
           setDeliveryPopup({
