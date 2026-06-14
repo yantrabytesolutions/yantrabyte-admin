@@ -62,7 +62,7 @@ const SECTION_CONFIG: Record<Section, { label: string; icon: React.ElementType; 
   gallery: { label: 'Gallery', icon: Image, table: 'gallery_images', orderField: 'sort_order', publishedField: 'is_published' },
   'client-logos': { label: 'Client Logos', icon: Award, table: 'client_logos', orderField: 'sort_order', publishedField: 'is_published' },
   contacts: { label: 'Contact Submissions', icon: Mail, table: 'contact_submissions', orderField: 'created_at' },
-  tickets: { label: 'Service Ticket', icon: Ticket, table: 'service_tickets', orderField: 'created_at' },
+  tickets: { label: 'Service Ticket', icon: Ticket, table: 'service_tickets', orderField: 'ticket_number' },
   billing: { label: 'Billing Software', icon: Receipt, table: 'invoices', orderField: 'created_at' },
   purchase: { label: 'Purchase Entry', icon: Truck, table: 'purchases', orderField: 'created_at' },
   external: { label: 'External Repairs', icon: ExternalLink, table: '', orderField: '' },
