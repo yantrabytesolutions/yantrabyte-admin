@@ -1703,8 +1703,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               {invoices.map(inv => (
                 <div 
                   key={inv.id} 
-                  onClick={() => handleViewPdf(inv.id)}
-                  className={`w-full text-left p-3 rounded-md border transition-colors text-sm flex justify-between items-center cursor-pointer ${selectedInvoiceId === inv.id ? 'bg-blue-50 border-blue-200 ring-1 ring-blue-500' : 'bg-white border-gray-100 hover:bg-gray-50 hover:border-gray-300'}`}
+                  className={`w-full text-left p-3 rounded-md border transition-colors text-sm flex justify-between items-center ${selectedInvoiceId === inv.id ? 'bg-blue-50 border-blue-200 ring-1 ring-blue-500' : 'bg-white border-gray-100 hover:bg-gray-50 hover:border-gray-300'}`}
                 >
                   <div className="flex-1">
                     <div className="flex items-center space-x-2">
@@ -1725,6 +1724,16 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                   </div>
                   <div className="flex items-center space-x-3">
                     <div className="font-bold text-gray-700">₹{inv.grand_total.toLocaleString('en-IN')}</div>
+                    
+                    <button 
+                      type="button"
+                      onClick={() => handleViewPdf(inv.id)} 
+                      className="text-gray-400 hover:text-indigo-500 transition-colors p-2 md:p-1 rounded-full hover:bg-indigo-50"
+                      title="View PDF"
+                    >
+                      <FileText className="w-4 h-4" />
+                    </button>
+
                     {inv.doc_type === 'Quotation' && (
                       <button 
                         type="button"
@@ -2048,7 +2057,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                       </h3>
                       <div className="space-y-3">
                         {historyDrawerData.invoices.map(inv => (
-                          <div key={inv.id} onClick={() => handleViewPdf(inv.id)} className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl p-4 flex justify-between items-start cursor-pointer hover:bg-white/10 transition-colors">
+                          <div key={inv.id} className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl p-4 flex justify-between items-start transition-colors hover:bg-white/10">
                             <div>
                               <div className="flex items-center gap-2">
                                 <span className="font-semibold text-white">{inv.invoice_no}</span>
@@ -2073,6 +2082,14 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                                 <div className="text-[10px] text-[#94A3B8] mt-1 font-mono">Advance: ₹{inv.advance_paid}</div>
                               )}
                               <div className="flex gap-2 mt-2">
+                                <button 
+                                  type="button"
+                                  onClick={() => handleViewPdf(inv.id)} 
+                                  className="text-[#94A3B8] hover:text-indigo-400 transition-colors p-1"
+                                  title="View PDF"
+                                >
+                                  <FileText className="w-4 h-4" />
+                                </button>
                                 {inv.doc_type === 'Invoice' && (inv.balance_due || 0) > 0 && (
                                   <button 
                                     type="button"
