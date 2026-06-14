@@ -17,7 +17,7 @@ app.use(express.json({ limit: maxPdfSize }));
 
 const requiredEnv = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'];
 const GMAIL_USER_DEFAULT = process.env.GMAIL_USER || 'yantrabyte.solution@gmail.com';
-const GMAIL_PASS_DEFAULT = process.env.GMAIL_APP_PASSWORD || 'zcqflyhqdmaobdhb';
+const GMAIL_PASS_DEFAULT = process.env.GMAIL_APP_PASSWORD || 'rxayraewvdndnqqi';
 const driveEnv = ['GOOGLE_DRIVE_FOLDER_ID'];
 const sheetsEnv = ['GOOGLE_SHEETS_SPREADSHEET_ID'];
 const serviceTicketHeaders = [
