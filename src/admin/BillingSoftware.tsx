@@ -1602,7 +1602,14 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                 <input type="number" value={discount || ''} onChange={e => setDiscount(Number(e.target.value))} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" placeholder="0" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Advance Paid (₹)</label>
+                <label className="flex justify-between items-center text-xs font-medium text-gray-600 mb-1">
+                  <span>Advance Paid (₹)</span>
+                  {grandTotal > 0 && advancePaid < grandTotal && (
+                    <button type="button" onClick={() => { setAdvancePaid(grandTotal); setPaymentMode('UPI'); }} className="text-[#0EA5E9] hover:underline text-[10px] font-bold">
+                      Mark Fully Paid
+                    </button>
+                  )}
+                </label>
                 <input type="number" value={advancePaid || ''} onChange={e => setAdvancePaid(Number(e.target.value))} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" placeholder="0" />
               </div>
               <div>
@@ -1696,11 +1703,14 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                     <div className="font-bold text-gray-700">₹{inv.grand_total.toLocaleString('en-IN')}</div>
                     {inv.doc_type === 'Quotation' && (
                       <button 
+                        type="button"
                         onClick={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
                           handleConvertToInvoice(inv.id);
                         }} 
-                        className="text-[#0EA5E9] hover:text-[#0284C7] transition-colors p-1"
+                        onPointerDown={(e) => e.stopPropagation()}
+                        className="text-[#0EA5E9] hover:text-[#0284C7] transition-colors p-2 md:p-1"
                         title="Convert to Invoice"
                       >
                         <Copy className="w-4 h-4" />
@@ -1708,52 +1718,68 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                     )}
                     {inv.doc_type === 'Invoice' && (inv.balance_due || 0) > 0 && (
                       <button 
+                        type="button"
                         onClick={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
                           handleMarkAsPaid(inv.id);
                         }} 
-                        className="text-gray-400 hover:text-green-600 transition-colors p-1"
+                        onPointerDown={(e) => e.stopPropagation()}
+                        className="text-gray-400 hover:text-green-600 transition-colors p-2 md:p-1 rounded-full bg-gray-50 hover:bg-green-50 border border-gray-200 shadow-sm"
                         title="Mark as Paid"
                       >
-                        <CheckCircle className="w-4 h-4" />
+                        <CheckCircle className="w-4 h-4 md:w-4 md:h-4" />
+                        <span className="sr-only">Mark as Paid</span>
                       </button>
                     )}
                     <button 
+                      type="button"
                       onClick={(e) => {
+                        e.preventDefault();
                         e.stopPropagation();
                         sendWhatsAppInvoiceAlert(inv);
                       }} 
-                      className="text-gray-400 hover:text-green-500 transition-colors p-1"
+                      onPointerDown={(e) => e.stopPropagation()}
+                      className="text-gray-400 hover:text-green-500 transition-colors p-2 md:p-1"
                       title="Send WhatsApp Alert"
                     >
                       <MessageSquare className="w-4 h-4" />
                     </button>
                     <button 
+                      type="button"
                       onClick={(e) => {
+                        e.preventDefault();
                         e.stopPropagation();
                         sendTelegramInvoiceAlert(inv);
                       }} 
-                      className="text-gray-400 hover:text-blue-500 transition-colors p-1"
+                      onPointerDown={(e) => e.stopPropagation()}
+                      className="text-gray-400 hover:text-blue-500 transition-colors p-2 md:p-1"
                       title="Send Telegram Alert"
                     >
                       <Send className="w-4 h-4" />
                     </button>
                     <button 
+                      type="button"
                       onClick={(e) => {
+                        e.preventDefault();
                         e.stopPropagation();
                         loadInvoice(inv.id);
                       }} 
-                      className="text-gray-400 hover:text-[#0EA5E9] transition-colors p-1"
+                      onPointerDown={(e) => e.stopPropagation()}
+                      className="text-gray-400 hover:text-[#0EA5E9] transition-colors p-2 md:p-1"
                       title="Edit Invoice"
                     >
                       <Pencil className="w-4 h-4" />
                     </button>
                     <button 
+                      type="button"
                       onClick={(e) => {
+                        e.preventDefault();
                         e.stopPropagation();
                         handleDeleteInvoice(inv.id, inv.invoice_no);
                       }} 
-                      className="text-gray-400 hover:text-red-600 transition-colors p-1"
+                      onPointerDown={(e) => e.stopPropagation()}
+                      className="text-gray-400 hover:text-red-600 transition-colors p-2 md:p-1"
                       title="Delete Invoice"
                     >
                       <Trash2 className="w-4 h-4" />
