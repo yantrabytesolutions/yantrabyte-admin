@@ -1137,7 +1137,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
   const backupInvoiceToGoogleSheet = (inv: Invoice) => {
     void appendBackupRow({
-      sheetName: inv.doc_type === 'Quotation' ? 'Quotations' : 'Bills',
+      sheetName: 'invoice',
       headers: INVOICE_HEADERS,
       row: invoiceRow(inv),
     }).then(result => {
