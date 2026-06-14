@@ -932,18 +932,28 @@ export default function AdminPanel() {
       }
 
       let successCount = 0;
+      let firstErrorMsg = '';
       for (const ticket of tickets) {
         const result = await appendBackupRow({
           sheetName: 'Service Tickets',
           headers: SERVICE_TICKET_HEADERS,
           row: serviceTicketRow(ticket as Partial<ServiceTicket>),
         });
-        if (result.ok) successCount++;
+        if (result.ok) {
+          successCount++;
+        } else if (!firstErrorMsg) {
+          firstErrorMsg = typeof result.error === 'string' ? result.error : JSON.stringify(result.error);
+        }
       }
       
-      showToast(`Successfully pushed ${successCount}/${tickets.length} tickets to Google Sheet!`, 'success');
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
+      if (successCount === tickets.length) {
+        showToast(`Successfully pushed ${successCount}/${tickets.length} tickets to Google Sheet!`, 'success');
+      } else {
+        showToast(`Pushed ${successCount}/${tickets.length}. Error: ${firstErrorMsg}`, 'error');
+      }
+    } catch (err: any) {
+      const msg = err?.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
+      console.error("Bulk sync error:", err);
       showToast(`Failed to push tickets: ${msg}`, 'error');
     }
     setIsSyncing(false);
