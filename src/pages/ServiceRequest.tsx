@@ -169,7 +169,7 @@ export default function ServiceRequest() {
         console.warn('Network error calling send-ticket-email:', e);
       }
 
-      // Trigger Google Sheets backup via Supabase Edge Function
+      // Trigger Google Sheets backup via client-side fetch (bypassing edge functions)
       try {
         const headers = [
           'Ticket No', 'Created At', 'Customer', 'Phone', 'Email',
@@ -192,14 +192,12 @@ export default function ServiceRequest() {
           `https://yantrabyte.anantatechcare.com/admin`
         ];
 
-        const { error: sheetError } = await supabase.functions.invoke('backup-to-sheets', {
-          body: {
-            sheetName: 'Service Tickets',
-            headers,
-            row
-          }
+        const { appendBackupRow } = await import('../utils/googleSheetsBackup');
+        await appendBackupRow({
+          sheetName: 'Service Tickets',
+          headers,
+          row
         });
-        if (sheetError) console.warn('Supabase backup-to-sheets failed:', sheetError);
       } catch (backupError) {
         console.warn('Network error triggering Google Sheet backup:', backupError);
       }
