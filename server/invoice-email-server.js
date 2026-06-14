@@ -15,7 +15,9 @@ const maxPdfSize = process.env.INVOICE_MAX_JSON_SIZE || '15mb';
 app.use(cors());
 app.use(express.json({ limit: maxPdfSize }));
 
-const requiredEnv = ['GMAIL_USER', 'GMAIL_APP_PASSWORD', 'VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'];
+const requiredEnv = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'];
+const GMAIL_USER_DEFAULT = process.env.GMAIL_USER || 'jameel250@gmail.com';
+const GMAIL_PASS_DEFAULT = process.env.GMAIL_APP_PASSWORD || 'adee fadk abme ympf';
 const driveEnv = ['GOOGLE_DRIVE_FOLDER_ID'];
 const sheetsEnv = ['GOOGLE_SHEETS_SPREADSHEET_ID'];
 const serviceTicketHeaders = [
@@ -325,13 +327,13 @@ app.post('/api/backups/public-service-ticket', async (req, res) => {
   }
 
   let mailResult = null;
-  if (ticket.customer_email && isValidEmail(ticket.customer_email) && process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+  if (ticket.customer_email && isValidEmail(ticket.customer_email) && GMAIL_USER_DEFAULT && GMAIL_PASS_DEFAULT) {
     try {
       const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
-          user: process.env.GMAIL_USER,
-          pass: process.env.GMAIL_APP_PASSWORD,
+          user: GMAIL_USER_DEFAULT,
+          pass: GMAIL_PASS_DEFAULT,
         },
       });
 
@@ -340,9 +342,9 @@ app.post('/api/backups/public-service-ticket', async (req, res) => {
       const cleanDeviceType = String(ticket.device_type || 'Device');
 
       mailResult = await transporter.sendMail({
-        from: `"YantraByte Solutions" <${process.env.GMAIL_USER}>`,
+        from: `"YantraByte Solutions" <${GMAIL_USER_DEFAULT}>`,
         to: ticket.customer_email,
-        replyTo: process.env.GMAIL_REPLY_TO || process.env.GMAIL_USER,
+        replyTo: process.env.GMAIL_REPLY_TO || GMAIL_USER_DEFAULT,
         subject: `Service Ticket ${cleanTicketNumber} Created - YantraByte Solutions`,
         text: [
           `Dear ${cleanCustomerName},`,
@@ -444,8 +446,8 @@ app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASSWORD,
+      user: GMAIL_USER_DEFAULT,
+      pass: GMAIL_PASS_DEFAULT,
     },
   });
 
@@ -454,9 +456,9 @@ app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {
 
   try {
     mailResult = await transporter.sendMail({
-      from: `"YantraByte Solutions" <${process.env.GMAIL_USER}>`,
+      from: `"YantraByte Solutions" <${GMAIL_USER_DEFAULT}>`,
       to,
-      replyTo: process.env.GMAIL_REPLY_TO || process.env.GMAIL_USER,
+      replyTo: process.env.GMAIL_REPLY_TO || GMAIL_USER_DEFAULT,
       subject: `${cleanDocumentType} ${cleanInvoiceNumber} - YantraByte Solutions`,
       text: [
         `Dear ${cleanCustomerName},`,
@@ -507,8 +509,8 @@ app.post('/api/invoices/reminders', requireSupabaseUser, async (req, res) => {
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASSWORD,
+      user: GMAIL_USER_DEFAULT,
+      pass: GMAIL_PASS_DEFAULT,
     },
   });
 
@@ -521,11 +523,11 @@ app.post('/api/invoices/reminders', requireSupabaseUser, async (req, res) => {
     }
 
     try {
-      await transporter.sendMail({
-        from: `"YantraByte Solutions" <${process.env.GMAIL_USER}>`,
+      const mailResult = await transporter.sendMail({
+        from: `"YantraByte Solutions" <${GMAIL_USER_DEFAULT}>`,
         to: client.customer_email,
-        replyTo: process.env.GMAIL_REPLY_TO || process.env.GMAIL_USER,
-        subject: `Payment Reminder: Outstanding Dues - YantraByte Solutions`,
+        replyTo: process.env.GMAIL_REPLY_TO || GMAIL_USER_DEFAULT,
+        subject: `Payment Reminder - YantraByte Solutions`,
         text: [
           `Dear ${client.customer_name || 'Customer'},`,
           '',
