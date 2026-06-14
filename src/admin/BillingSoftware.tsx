@@ -816,7 +816,6 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       let pdfUrl: string | null = null;
       let pdfBlob: Blob | null = null;
 
-      if (action === 'download' || action === 'email') {
         if (action === 'email') {
           setDeliveryPopup({
             status: 'sending',
@@ -841,7 +840,6 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             setPrintInvoiceNumber('');
           }
         }
-      }
 
       if (pdfUrl) {
         (payload as any).pdf_url = pdfUrl;
