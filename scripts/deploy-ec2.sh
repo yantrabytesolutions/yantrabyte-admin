@@ -106,10 +106,11 @@ sudo ln -sfn "${NEW_RELEASE_DIR}/dist" "$ACTIVE_LINK"
 if command -v pm2 >/dev/null 2>&1; then
     cd "$NEW_RELEASE_DIR"
     if pm2 describe yantrabyte-invoice-api >/dev/null 2>&1; then
-        pm2 restart yantrabyte-invoice-api --update-env
-    else
-        pm2 start npm --name yantrabyte-invoice-api -- run api
+        echo "Deleting old PM2 process to update working directory..."
+        pm2 delete yantrabyte-invoice-api
     fi
+    echo "Starting new PM2 process from $NEW_RELEASE_DIR..."
+    pm2 start npm --name yantrabyte-invoice-api -- run api
     pm2 save
 else
     echo "PM2 is not installed. Run: sudo npm install -g pm2"
