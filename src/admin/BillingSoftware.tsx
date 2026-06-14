@@ -72,10 +72,14 @@ const getPaymentStatus = (docType: string, balanceDue: number, amountPaid: numbe
 const shouldRetryLegacyInvoiceSave = (error: { message?: string; code?: string }) => {
   const message = String(error.message || '').toLowerCase();
   return error.code === 'PGRST204'
+    || error.code === '42703'
     || message.includes('customer_id')
     || message.includes('payment_mode')
     || message.includes('payment_status')
-    || message.includes('due_date');
+    || message.includes('due_date')
+    || message.includes('pdf_url')
+    || message.includes('is_recurring')
+    || message.includes('terms_conditions');
 };
 
 const formatItemsForExcel = (items: Array<{ description: string; qty: number; rate: number }> = []) =>
