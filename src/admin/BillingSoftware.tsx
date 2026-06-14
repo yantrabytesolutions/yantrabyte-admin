@@ -1004,7 +1004,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       const fileName = `invoices/YBS-${invoiceNo}-${Date.now()}.pdf`;
       const file = new File([blob], `YBS-${invoiceNo}.pdf`, { type: 'application/pdf' });
       
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from('service-attachments')
         .upload(fileName, file, { cacheControl: '3600', upsert: false });
         
@@ -1024,95 +1024,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     }
   };
 
-  const generatePdf = async (invoiceNumber: string) => {
-    const element = await preparePdfElement(invoiceNumber);
-    if (!element) return null;
-    const opt = getPdfOptions(invoiceNumber);
 
-    try {
-      const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob') as Blob;
-      const pdfUrl = await uploadPdfToSupabase(pdfBlob, invoiceNumber);
-      
-      await html2pdf().set(opt).from(element).save();
-      setPrintInvoiceNumber('');
-      showToast('PDF Generated successfully!');
-      return pdfUrl;
-    } catch (err) {
-      console.error(err);
-      setPrintInvoiceNumber('');
-      showToast('PDF generation failed', 'error');
-      return null;
-    }
-  };
-
-  const emailInvoicePdf = async (invoiceNumber: string) => {
-    const element = await preparePdfElement(invoiceNumber);
-    if (!element) return null;
-    const opt = getPdfOptions(invoiceNumber);
-
-    try {
-      setDeliveryPopup({
-        status: 'sending',
-        title: 'Sending invoice',
-        message: 'Creating PDF attachment.',
-      });
-
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
-      if (!token) {
-        throw new Error('Please login again before sending email.');
-      }
-
-      const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob') as Blob;
-      const pdfBase64 = await blobToBase64(pdfBlob);
-      const pdfUrl = await uploadPdfToSupabase(pdfBlob, invoiceNumber);
-
-      setDeliveryPopup({
-        status: 'sending',
-        title: 'Sending invoice',
-        message: `Sending email to ${email}.`,
-      });
-      const response = await fetch('/api/invoices/email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          to: email,
-          customerName,
-          invoiceNumber,
-          documentType: docType,
-          filename: `YBS-${invoiceNumber}.pdf`,
-          pdfBase64,
-        }),
-      });
-
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(result.error || `Invoice API failed with HTTP ${response.status}`);
-      }
-
-      setDeliveryPopup({
-        status: 'success',
-        title: 'Email sent',
-        message: `Invoice was emailed to ${email} successfully.`,
-      });
-      showToast(`Invoice emailed to ${email}`);
-      return pdfUrl;
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
-      setDeliveryPopup({
-        status: 'error',
-        title: 'Invoice delivery failed',
-        message: errorMsg || 'Failed to email invoice',
-      });
-      showToast('PDF email failed', 'error');
-      return null;
-    } finally {
-      setPrintInvoiceNumber('');
-    }
-  };
 
   const invoiceRow = (inv: Invoice) => [
     inv.invoice_no,
