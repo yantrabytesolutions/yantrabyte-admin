@@ -29,6 +29,7 @@ export const sendTelegramNotification = async (message: string): Promise<boolean
     const chatId = chatSetting.value.trim();
 
     // 2. Send the message via Telegram Bot API
+    const escapeHtml = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const url = `https://api.telegram.org/bot${token}/sendMessage`;
     
     const response = await fetch(url, {
@@ -38,7 +39,7 @@ export const sendTelegramNotification = async (message: string): Promise<boolean
       },
       body: JSON.stringify({
         chat_id: chatId,
-        text: message,
+        text: escapeHtml(message),
         parse_mode: 'HTML'
       })
     });

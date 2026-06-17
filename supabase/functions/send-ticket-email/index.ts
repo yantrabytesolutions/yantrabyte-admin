@@ -27,23 +27,50 @@ Deno.serve(async (req) => {
   try {
     const ticket = await req.json();
 
+    // Fetch secrets from site_settings instead of Deno.env
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+    
+    let tgToken = Deno.env.get('TELEGRAM_BOT_TOKEN');
+    let tgChatId = Deno.env.get('TELEGRAM_CHAT_ID');
+    
+    // If not in env, try database
+    if ((!tgToken || !tgChatId) && supabaseUrl && supabaseKey) {
+      try {
+        const res = await fetch(`${supabaseUrl}/rest/v1/site_settings?key=in.(telegram_bot_token,telegram_chat_id)`, {
+          headers: {
+            'apikey': supabaseKey,
+            'Authorization': `Bearer ${supabaseKey}`
+          }
+        });
+        const settings = await res.json();
+        if (Array.isArray(settings)) {
+          const tRow = settings.find(s => s.key === 'telegram_bot_token');
+          const cRow = settings.find(s => s.key === 'telegram_chat_id');
+          if (tRow?.value) tgToken = tRow.value;
+          if (cRow?.value) tgChatId = cRow.value;
+        }
+      } catch (dbErr) {
+        console.error('Failed to fetch from DB:', dbErr);
+      }
+    }
+
     const gmailUser = Deno.env.get('GMAIL_USER');
     const gmailPass = Deno.env.get('GMAIL_APP_PASSWORD');
-    const tgToken   = Deno.env.get('TELEGRAM_BOT_TOKEN');
-    const tgChatId  = Deno.env.get('TELEGRAM_CHAT_ID');
+
+    const escapeHtml = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
     // ── Always send Telegram notification ───────────────────────────────────
     if (tgToken && tgChatId) {
-      await sendTelegram(
-        tgToken, tgChatId,
-        `🛠 <b>New Service Ticket</b>\n` +
-        `Ticket: ${ticket.ticket_number || 'N/A'}\n` +
-        `Customer: ${ticket.customer_name || 'N/A'}\n` +
-        `Phone: ${ticket.customer_phone || 'N/A'}\n` +
-        `Device: ${ticket.device_type || 'N/A'}\n` +
-        `Issue: ${String(ticket.issue_description || '').slice(0, 120)}\n` +
-        `Priority: ${ticket.priority || 'medium'}`
-      );
+      const tgMessage = `🛠 <b>New Service Ticket</b>\n` +
+        `Ticket: ${escapeHtml(ticket.ticket_number || 'N/A')}\n` +
+        `Customer: ${escapeHtml(ticket.customer_name || 'N/A')}\n` +
+        `Phone: ${escapeHtml(ticket.customer_phone || 'N/A')}\n` +
+        `Device: ${escapeHtml(ticket.device_type || 'N/A')}\n` +
+        `Issue: ${escapeHtml(String(ticket.issue_description || '').slice(0, 120))}\n` +
+        `Priority: ${escapeHtml(ticket.priority || 'medium')}`;
+        
+      await sendTelegram(tgToken, tgChatId, tgMessage);
     }
 
     // ── Send email if Gmail is configured and email is valid ─────────────────
