@@ -6316,3 +6316,198 @@ The device is not ready.
    Ended : 13 June 2026 02:00:09
 
 [13-06-2026  2:00:09.87] Backup complete 
+[15-06-2026  2:00:03.43] Starting backup K: to L: 
+[15-06-2026  2:00:03.47] Backing up Nextcloud Data... 
+
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows                              
+-------------------------------------------------------------------------------
+
+  Started : 15 June 2026 02:00:03
+   Source : K:\nextcloud\Data\
+     Dest = L:\nextcloud-backup\
+
+    Files : *.*
+	    
+  Options : *.* /TEE /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /Z /MT:8 /R:3 /W:10 
+
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+
+               Total    Copied   Skipped  Mismatch    FAILED    Extras
+    Dirs :        87        87        87         0         0         0
+   Files :       135         0       135         0         0         0
+   Bytes :   70.99 m         0   70.99 m         0         0         0
+   Times :   0:00:05   0:00:00                       0:00:00   0:00:05
+   Ended : 15 June 2026 02:00:09
+
+[15-06-2026  2:00:09.45] Backing up Guru Mobile Backup... 
+
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows                              
+-------------------------------------------------------------------------------
+
+  Started : 15 June 2026 02:00:09
+   Source : K:\Guru mobile backup\
+     Dest = L:\Guru mobile backup\
+
+    Files : *.*
+	    
+  Options : *.* /TEE /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /Z /MT:8 /R:3 /W:10 
+
+------------------------------------------------------------------------------
+
+	    New File  		  348321	K:\Guru mobile backup\Screenshots\Screenshot_20260613_175701_Chrome.jpg100%  
+	    New File  		   75978	K:\Guru mobile backup\WhatsApp Images\IMG-20260612-WA0002.jpg100%  
+	    New File  		   82330	K:\Guru mobile backup\WhatsApp Images\IMG-20260612-WA0003.jpg100%  
+	    New File  		  450322	K:\Guru mobile backup\WhatsApp Images\IMG-20260612-WA0005.jpg100%  
+	    New File  		   62943	K:\Guru mobile backup\WhatsApp Images\IMG-20260612-WA0006.jpg100%  
+	    New File  		  117625	K:\Guru mobile backup\WhatsApp Images\IMG-20260612-WA0007.jpg100%  
+	    New File  		  103959	K:\Guru mobile backup\WhatsApp Images\IMG-20260612-WA0008.jpg100%  
+	    New File  		   85308	K:\Guru mobile backup\WhatsApp Images\IMG-20260612-WA0009.jpg100%  
+	    New File  		  304020	K:\Guru mobile backup\WhatsApp Images\IMG-20260612-WA0012.jpg100%  
+	    New File  		   46901	K:\Guru mobile backup\WhatsApp Images\IMG-20260612-WA0014.jpg100%  
+	    New File  		   51306	K:\Guru mobile backup\WhatsApp Images\IMG-20260612-WA0016.jpg100%  
+	    New File  		   82569	K:\Guru mobile backup\WhatsApp Images\IMG-20260612-WA0018.jpg100%  
+	    New File  		   2.9 m	K:\Guru mobile backup\WhatsApp Images\IMG-20260612-WA0022.jpeg100%  
+	    New File  		   1.6 m	K:\Guru mobile backup\WhatsApp Images\IMG-20260612-WA0024.jpeg  0%  100%  
+	    New File  		   2.2 m	K:\Guru mobile backup\WhatsApp Images\IMG-20260612-WA0026.jpeg100%  
+	    New File  		   67133	K:\Guru mobile backup\WhatsApp Images\IMG-20260613-WA0001.jpg100%  
+	    New File  		   58935	K:\Guru mobile backup\WhatsApp Images\IMG-20260613-WA0002.jpg100%  
+	    New File  		  163479	K:\Guru mobile backup\WhatsApp Images\IMG-20260613-WA0003.jpg100%  
+	    New File  		  118184	K:\Guru mobile backup\WhatsApp Images\IMG-20260613-WA0004.jpg100%  
+	    New File  		   77510	K:\Guru mobile backup\WhatsApp Images\IMG-20260613-WA0005.jpg100%  
+	    New File  		  837560	K:\Guru mobile backup\WhatsApp Images\IMG-20260613-WA0009.jpg100%  
+	    New File  		  837560	K:\Guru mobile backup\WhatsApp Images\IMG-20260613-WA0011.jpg100%  
+	    New File  		  735036	K:\Guru mobile backup\WhatsApp Images\IMG-20260613-WA0012.jpg100%  
+	    New File  		   53569	K:\Guru mobile backup\WhatsApp Images\IMG-20260613-WA0014.jpg100%  
+	    New File  		   65358	K:\Guru mobile backup\WhatsApp Images\IMG-20260613-WA0016.jpg100%  
+	    New File  		  118592	K:\Guru mobile backup\WhatsApp Images\IMG-20260613-WA0017.jpg100%  
+	    New File  		  174489	K:\Guru mobile backup\WhatsApp Images\IMG-20260613-WA0018.jpg100%  
+	    New File  		  133637	K:\Guru mobile backup\WhatsApp Images\IMG-20260613-WA0020.jpg100%  
+	    New File  		   72144	K:\Guru mobile backup\WhatsApp Images\IMG-20260614-WA0000.jpg100%  
+
+------------------------------------------------------------------------------
+
+               Total    Copied   Skipped  Mismatch    FAILED    Extras
+    Dirs :        18        18        18         0         0         0
+   Files :      4805        29      4776         0         0         0
+   Bytes :  21.968 g   11.89 m  21.956 g         0         0         0
+   Times :   0:00:07   0:00:00                       0:00:00   0:00:00
+
+
+   Speed :           1,38,95,210 Bytes/sec.
+   Speed :               795.090 MegaBytes/min.
+   Ended : 15 June 2026 02:00:10
+
+[15-06-2026  2:00:10.63] Backup complete 
+[16-06-2026  2:00:03.37] Starting backup K: to L: 
+[16-06-2026  2:00:03.40] Backing up Nextcloud Data... 
+
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows                              
+-------------------------------------------------------------------------------
+
+  Started : 16 June 2026 02:00:03
+   Source : K:\nextcloud\Data\
+     Dest = L:\nextcloud-backup\
+
+    Files : *.*
+	    
+  Options : *.* /TEE /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /Z /MT:8 /R:3 /W:10 
+
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+
+               Total    Copied   Skipped  Mismatch    FAILED    Extras
+    Dirs :        87        87        87         0         0         0
+   Files :       135         0       135         0         0         0
+   Bytes :   70.99 m         0   70.99 m         0         0         0
+   Times :   0:00:00   0:00:00                       0:00:00   0:00:00
+   Ended : 16 June 2026 02:00:03
+
+[16-06-2026  2:00:03.89] Backing up Guru Mobile Backup... 
+
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows                              
+-------------------------------------------------------------------------------
+
+  Started : 16 June 2026 02:00:03
+   Source : K:\Guru mobile backup\
+     Dest = L:\Guru mobile backup\
+
+    Files : *.*
+	    
+  Options : *.* /TEE /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /Z /MT:8 /R:3 /W:10 
+
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+
+               Total    Copied   Skipped  Mismatch    FAILED    Extras
+    Dirs :        18        18        18         0         0         0
+   Files :      4805         0      4805         0         0         0
+   Bytes :  21.968 g         0  21.968 g         0         0         0
+   Times :   0:00:05   0:00:00                       0:00:00   0:00:05
+   Ended : 16 June 2026 02:00:09
+
+[16-06-2026  2:00:09.62] Backup complete 
+[17-06-2026  2:00:03.43] Starting backup K: to L: 
+[17-06-2026  2:00:03.46] Backing up Nextcloud Data... 
+
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows                              
+-------------------------------------------------------------------------------
+
+  Started : 17 June 2026 02:00:03
+   Source : K:\nextcloud\Data\
+     Dest = L:\nextcloud-backup\
+
+    Files : *.*
+	    
+  Options : *.* /TEE /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /Z /MT:8 /R:3 /W:10 
+
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+
+               Total    Copied   Skipped  Mismatch    FAILED    Extras
+    Dirs :        87        87        87         0         0         0
+   Files :       135         0       135         0         0         0
+   Bytes :   70.99 m         0   70.99 m         0         0         0
+   Times :   0:00:00   0:00:00                       0:00:00   0:00:00
+   Ended : 17 June 2026 02:00:03
+
+[17-06-2026  2:00:04.02] Backing up Guru Mobile Backup... 
+
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows                              
+-------------------------------------------------------------------------------
+
+  Started : 17 June 2026 02:00:04
+   Source : K:\Guru mobile backup\
+     Dest = L:\Guru mobile backup\
+
+    Files : *.*
+	    
+  Options : *.* /TEE /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /Z /MT:8 /R:3 /W:10 
+
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+
+               Total    Copied   Skipped  Mismatch    FAILED    Extras
+    Dirs :        18        18        18         0         0         0
+   Files :      4805         0      4805         0         0         0
+   Bytes :  21.968 g         0  21.968 g         0         0         0
+   Times :   0:00:05   0:00:00                       0:00:00   0:00:05
+   Ended : 17 June 2026 02:00:09
+
+[17-06-2026  2:00:09.57] Backup complete 
