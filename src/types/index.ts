@@ -177,6 +177,7 @@ export interface ServiceTicket {
   assigned_to?: string;
   notes?: string;
   technician_notes?: string;
+  warranty_months?: number;
   created_at: string;
   updated_at: string;
 }
@@ -213,6 +214,7 @@ export interface Invoice {
   next_due_date?: string | null;
   due_date?: string | null;
   terms_conditions?: string;
+  warranty_months?: number;
   created_at: string;
 }
 

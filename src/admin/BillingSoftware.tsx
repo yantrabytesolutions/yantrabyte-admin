@@ -886,7 +886,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
       if (isUpdate) {
         await persistInvoice(true, payload, legacyPayload);
-        backupInvoiceToGoogleSheet(payload as Invoice);
+        backupInvoiceToGoogleSheet(payload as unknown as Invoice);
         showToast('Invoice updated successfully!');
       } else {
         const data = await persistInvoice(false, payload, legacyPayload);
@@ -897,7 +897,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         // Auto-deduct stock
         for (const item of items) {
           if (item.product_id && item.qty > 0) {
-            const prod = products.find(p => p.id === item.product_id);
+            const prod = productsList.find(p => p.id === item.product_id);
             if (prod && typeof prod.stock_count === 'number') {
               await supabase
                 .from('products')
@@ -907,7 +907,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           }
         }
         
-        backupInvoiceToGoogleSheet(payload as Invoice);
+        backupInvoiceToGoogleSheet(payload as unknown as Invoice);
         showToast('Invoice saved successfully!');
       }
 
@@ -2361,7 +2361,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                       </thead>
                       <tbody className="divide-y divide-gray-100">
                         {invoices.filter(i => (i.balance_due || 0) > 0 && i.doc_type === 'Invoice').map(inv => {
-                          const customer = customersList.find(c => c.name === inv.customer_name) || { phone: inv.customer_phone };
+                          const customer = customersList.find(c => c.name === inv.customer_name) || { phone: inv.phone };
                           const phoneNum = customer?.phone?.replace(/\D/g, '');
                           const whatsappUrl = phoneNum ? `https://wa.me/91${phoneNum}?text=${encodeURIComponent(`Dear ${inv.customer_name},\n\nThis is a gentle reminder that your payment of ₹${inv.balance_due?.toLocaleString('en-IN')} for Invoice No. ${inv.invoice_no} is currently due.\n\nPlease arrange for the payment at your earliest convenience.\n\nThank you,\nYantrabyte Solutions`)}` : '#';
                           

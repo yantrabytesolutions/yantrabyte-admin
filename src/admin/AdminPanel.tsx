@@ -35,7 +35,8 @@ import { UserRole } from '../types';
 type Section =
   | 'dashboard' | 'pages' | 'services' | 'products' | 'testimonials'
   | 'blog' | 'team' | 'careers' | 'industries' | 'faqs' | 'gallery'
-  | 'client-logos' | 'contacts' | 'settings' | 'tickets' | 'billing' | 'purchase' | 'external' | 'expenses' | 'khata' | 'inventory' | 'reports' | 'customers';
+  | 'client-logos' | 'contacts' | 'settings' | 'tickets' | 'billing' | 'purchase' | 'external' | 'expenses' | 'khata' | 'inventory' | 'reports' | 'customers' | 'amc';
+
 
 interface FormField {
   key: string;

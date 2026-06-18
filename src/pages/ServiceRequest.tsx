@@ -2,7 +2,7 @@ import { FormEvent, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { supabase } from '../lib/supabase';
-import { AlertCircle, ClipboardCheck, Loader2, MapPin, Phone, Send, Wrench, Laptop, Monitor, Printer, Video, Wifi, Fingerprint, Server, Package, UploadCloud, Film, X } from 'lucide-react';
+import { AlertCircle, ClipboardCheck, Loader2, MapPin, Phone, Send, Wrench, Laptop, Monitor, Printer, Video, Wifi, Fingerprint, Server, Package, UploadCloud, Film, X, Truck } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import SignatureCanvas from 'react-signature-canvas';
 
@@ -71,8 +71,8 @@ export default function ServiceRequest() {
   const [videoAttachment, setVideoAttachment] = useState<File | null>(null);
   const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
   const sigCanvas = useRef<SignatureCanvas>(null);
-  const [captchaA, setCaptchaA] = useState(Math.floor(Math.random() * 10) + 1);
-  const [captchaB, setCaptchaB] = useState(Math.floor(Math.random() * 10) + 1);
+  const [captchaA, _setCaptchaA] = useState(Math.floor(Math.random() * 10) + 1);
+  const [captchaB, _setCaptchaB] = useState(Math.floor(Math.random() * 10) + 1);
   const [captchaInput, setCaptchaInput] = useState('');
 
   const updateField = (field: keyof RequestForm, value: string) => {

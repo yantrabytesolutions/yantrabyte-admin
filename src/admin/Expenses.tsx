@@ -25,8 +25,9 @@ export default function Expenses() {
   const [formAmount, setFormAmount] = useState('0');
   const [formDate, setFormDate] = useState(new Date().toISOString().slice(0, 10));
   const [formDescription, setFormDescription] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const [_submitting, setSubmitting] = useState(false);
   const [attachment, setAttachment] = useState<File | null>(null);
+
 
   useEffect(() => {
     fetchExpenses();
