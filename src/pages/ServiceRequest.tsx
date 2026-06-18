@@ -229,16 +229,19 @@ export default function ServiceRequest() {
       try {
         await supabase.functions.invoke('send-ticket-email', {
           body: {
-            ticketNumber,
-            customerEmail: form.customer_email,
-            customerName: form.customer_name,
-            deviceType: form.device_type,
-            issue: form.issue_description,
+            ticket_number:    ticketNumber,
+            customer_email:   form.customer_email,
+            customer_name:    form.customer_name,
+            customer_phone:   form.customer_phone,
+            device_type:      form.device_type,
+            issue_description: form.issue_description,
+            priority:         form.priority,
           }
         });
       } catch (e) {
         console.warn('Network error calling send-ticket-email:', e);
       }
+
 
       // Trigger Google Sheets backup via client-side fetch (bypassing edge functions)
       try {
