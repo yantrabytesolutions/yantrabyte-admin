@@ -679,7 +679,7 @@ export default function AdminPanel() {
               <td style="width: 50%; text-align: right; vertical-align: bottom; padding-left: 16px;">
                 <div style="display: inline-block; text-align: left;">
                   <div style="height: 72px; text-align: center; margin-bottom: 4px;">
-                    <img src="/seal.png" style="max-width: 95px; max-height: 72px; object-fit: contain; opacity: 0.9;" crossOrigin="anonymous" />
+                    <img src="/seal.png" style="max-width: 120px; max-height: 95px; object-fit: contain; opacity: 0.9;" crossOrigin="anonymous" />
                   </div>
                   <div style="width: 220px; border-bottom: 1px solid #555555; margin-bottom: 8px;"></div>
                   <div style="font-size: 11px; font-weight: bold; color: #0B5394;">For Yantrabyte Solutions</div>

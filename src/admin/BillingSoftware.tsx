@@ -2007,7 +2007,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               <div className="text-center mt-auto flex flex-col justify-end pb-2">
                 <div className="font-bold text-[10px]" style={{ color: '#000' }}>For YantraByte Solutions</div>
                 <div className="flex justify-center my-1">
-                  <img src="/seal.png" alt="Seal" style={{ height: '40px', width: 'auto' }} crossOrigin="anonymous" />
+                  <img src="/seal.png" alt="Seal" style={{ height: '85px', width: 'auto' }} crossOrigin="anonymous" />
                 </div>
                 <div className="font-bold text-[10px]" style={{ color: '#000' }}>RAMESH A S</div>
                 <div className="text-[9px]" style={{ color: '#444444' }}>Authorized Signatory</div>
