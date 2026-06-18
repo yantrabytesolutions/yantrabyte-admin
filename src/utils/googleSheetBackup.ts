@@ -4,6 +4,8 @@ export type SheetBackupPayload = {
   sheetName: string;
   headers: Array<string | number>;
   row: Array<string | number | null | undefined>;
+  keyColumnIndex?: number;
+  keyValue?: string | number;
 };
 
 export type SheetBackupResult = {

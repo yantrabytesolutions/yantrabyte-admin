@@ -217,7 +217,9 @@ export default function ServiceRequest() {
         await appendBackupRow({
           sheetName: 'Service Tickets',
           headers,
-          row
+          row,
+          keyColumnIndex: 0,
+          keyValue: ticketPayload.ticket_number || '',
         });
       } catch (backupError) {
         console.warn('Network error triggering Google Sheet backup:', backupError);

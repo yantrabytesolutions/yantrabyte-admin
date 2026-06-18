@@ -116,7 +116,38 @@ Deno.serve(async (req) => {
       await setHeaderRow(spreadsheetId, sheetName, headers, token);
     }
 
-    const updatedRange = await appendRow(spreadsheetId, sheetName, row, token);
+    const updateOrAppendRow = async () => {
+      const { keyColumnIndex, keyValue } = body;
+      if (keyColumnIndex !== undefined && keyValue !== undefined) {
+        const colLetter = String.fromCharCode(65 + keyColumnIndex);
+        const quotedSheet = `'${sheetName.replace(/'/g, "''")}'`;
+        const colRes = await fetch(
+          `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(quotedSheet + '!' + colLetter + ':' + colLetter)}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const colData = await colRes.json();
+        const values = colData.values || [];
+        
+        const rowIndex = values.findIndex((v: any[]) => v[0] === keyValue);
+        if (rowIndex >= 0) {
+          const rowNum = rowIndex + 1;
+          const updateRes = await fetch(
+            `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(quotedSheet + '!A' + rowNum)}?valueInputOption=USER_ENTERED`,
+            {
+              method: 'PUT',
+              headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ values: [row] }),
+            }
+          );
+          const updateData = await updateRes.json();
+          if (!updateRes.ok) throw new Error(updateData.error?.message || 'Sheets update failed');
+          return updateData.updatedRange || '';
+        }
+      }
+      return await appendRow(spreadsheetId, sheetName, row, token);
+    };
+
+    const updatedRange = await updateOrAppendRow();
 
     return new Response(
       JSON.stringify({ ok: true, updatedRange }),

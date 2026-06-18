@@ -910,6 +910,8 @@ export default function AdminPanel() {
       sheetName: 'Service Tickets',
       headers: SERVICE_TICKET_HEADERS,
       row: serviceTicketRow(ticket),
+      keyColumnIndex: 0,
+      keyValue: ticket.ticket_number || '',
     }).then(result => {
       if (result.ok) {
         showToast('Google Sheet backup updated');
@@ -944,6 +946,8 @@ export default function AdminPanel() {
           sheetName: 'Service Tickets',
           headers: SERVICE_TICKET_HEADERS,
           row: serviceTicketRow(ticket as Partial<ServiceTicket>),
+          keyColumnIndex: 0,
+          keyValue: ticket.ticket_number || '',
         });
         if (result.ok) {
           successCount++;

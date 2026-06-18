@@ -1089,6 +1089,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       sheetName: inv.doc_type === 'Quotation' ? 'Quotation' : 'Invoices',
       headers: INVOICE_HEADERS,
       row: invoiceRow(inv),
+      keyColumnIndex: 0,
+      keyValue: inv.invoice_no,
     }).then(result => {
       if (result.ok) {
         showToast('Google Sheet backup updated');
