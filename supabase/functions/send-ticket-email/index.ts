@@ -81,12 +81,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (!ticket.customer_email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ticket.customer_email)) {
-      return new Response(
-        JSON.stringify({ ok: true, email: { ok: false, reason: 'No valid customer email' }, telegram: { ok: !!tgToken } }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    const hasValidCustomerEmail = ticket.customer_email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ticket.customer_email);
+    // We will still send the email to yantrabyte.solutions@gmail.com even if the customer has no valid email.
 
     const cleanName     = String(ticket.customer_name || 'Customer');
     const cleanTicketNo = String(ticket.ticket_number || '');
@@ -163,7 +159,10 @@ Deno.serve(async (req) => {
     const boundary = `----boundary_${crypto.randomUUID()}`;
     let mime = '';
     mime += `From: "YantraByte Solutions" <${gmailUser}>\r\n`;
-    mime += `To: ${ticket.customer_email}\r\n`;
+    if (hasValidCustomerEmail) {
+      mime += `To: ${ticket.customer_email}\r\n`;
+    }
+    mime += `Cc: yantrabyte.solutions@gmail.com\r\n`;
     mime += `Subject: Service Ticket ${cleanTicketNo} - YantraByte Solutions\r\n`;
     mime += `MIME-Version: 1.0\r\n`;
     mime += `Content-Type: multipart/alternative; boundary="${boundary}"\r\n\r\n`;
@@ -210,7 +209,10 @@ Deno.serve(async (req) => {
     }
 
     await cmd(`MAIL FROM:<${gmailUser}>`);
-    await cmd(`RCPT TO:<${ticket.customer_email}>`);
+    if (hasValidCustomerEmail) {
+      await cmd(`RCPT TO:<${ticket.customer_email}>`);
+    }
+    await cmd(`RCPT TO:<yantrabyte.solutions@gmail.com>`);
     await cmd('DATA');
     await writer.write(enc.encode(mime + '\r\n.\r\n'));
     await readLine();
