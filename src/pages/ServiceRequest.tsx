@@ -114,9 +114,30 @@ export default function ServiceRequest() {
         const month = String(now.getMonth() + 1).padStart(2, '0');
         const year = String(now.getFullYear()).slice(-2);
         const prefix = `YBS-TKT-${day}${month}${year}-`;
-        const randomSuffix = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
-        ticketNumber = `${prefix}${randomSuffix}`;
-        console.warn('RPC get_next_service_ticket_number failed. Falling back to random suffix.', rpcError);
+        
+        let seq = 1;
+        try {
+          const { data: latestTickets } = await supabase
+            .from('service_tickets')
+            .select('ticket_number')
+            .order('created_at', { ascending: false })
+            .limit(1);
+            
+          if (latestTickets && latestTickets.length > 0 && latestTickets[0].ticket_number) {
+            const lastTicket = latestTickets[0].ticket_number;
+            const match = lastTicket.match(/-(\d+)$/);
+            if (match) {
+              seq = parseInt(match[1], 10) + 1;
+            }
+          }
+        } catch (err) {
+          console.warn('Failed to fetch latest ticket number, starting at random.', err);
+          seq = Math.floor(Math.random() * 900) + 100;
+        }
+
+        const paddedSeq = String(seq).padStart(3, '0');
+        ticketNumber = `${prefix}${paddedSeq}`;
+        console.warn(`RPC get_next_service_ticket_number failed. Using generated sequential ticket: ${ticketNumber}`);
       }
 
       let finalIssueDesc = form.issue_description.trim();
