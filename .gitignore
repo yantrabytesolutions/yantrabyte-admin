@@ -1,27 +1,39 @@
+# Environment & secrets
+.env
 *.pem
 *.key
-*.env
-node_modules/
-.env
-
-aws.txt
-aws(1).txt
-*.pem
-*.key
-*.env
-node_modules/
-.env
-
+*.txt
 aws.txt
 aws(1).txt
 deep-span*.json
 google app password.txt
 ssh*.txt
-*.pem
-*.key
-.env
+base64.txt
+64.99.64.37.txt
+
+# Dependencies & build
+node_modules/
 dist/
+
+# Local utility & test scripts (contain hardcoded keys — never commit)
+test.js
+test_*.js
+check_settings.js
+delete_tickets.js
+setup_rpc.js
+generate_svg.js
+encode.js
+extract.js
+cleanup.js
+cleanup-sheets.js
+cleanup-tickets.js
+update_watermarks.js
+schema.sql
+sync_sheets.mjs
+
+# Other local files
 backups/
 instagram_posters/
 supabase/config.toml
-sync_sheets.mjs  
+tailscale-out.log
+tailscale-err.log
