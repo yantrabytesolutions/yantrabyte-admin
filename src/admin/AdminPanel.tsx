@@ -11,7 +11,7 @@ import {
   Users, Briefcase, Building2, HelpCircle, Image, Award, Mail, Settings,
   LogOut, Plus, Pencil, Trash2, X, Eye, EyeOff, ChevronDown, Save,
   Loader2, AlertCircle, CheckCircle, Search, RefreshCw, Menu, Ticket, Receipt, CreditCard, MessageSquare,
-  Truck, ExternalLink, FileSpreadsheet, Activity, Send, UserCircle
+  Truck, ExternalLink, FileSpreadsheet, Activity, Send, UserCircle, IndianRupee, Shield, Sun, Moon
 } from 'lucide-react';
 import { sendTelegramNotification } from '../utils/telegram';
 import BillingSoftware from './BillingSoftware';
@@ -21,6 +21,7 @@ import html2pdf from 'html2pdf.js';
 import { downloadExcelWorkbook } from '../utils/spreadsheetXml';
 import { appendBackupRow } from '../utils/googleSheetBackup';
 import Dashboard from './Dashboard';
+import AmcContracts from './AmcContracts';
 import Expenses from './Expenses';
 import AccountingKhata from './AccountingKhata';
 import InventoryMovement from './InventoryMovement';
@@ -62,14 +63,15 @@ const SECTION_CONFIG: Record<Section, { label: string; icon: React.ElementType; 
   gallery: { label: 'Gallery', icon: Image, table: 'gallery_images', orderField: 'sort_order', publishedField: 'is_published' },
   'client-logos': { label: 'Client Logos', icon: Award, table: 'client_logos', orderField: 'sort_order', publishedField: 'is_published' },
   contacts: { label: 'Contact Submissions', icon: Mail, table: 'contact_submissions', orderField: 'created_at' },
-  tickets: { label: 'Service Ticket', icon: Ticket, table: 'service_tickets', orderField: 'ticket_number' },
+  tickets: { label: 'Service Ticket', icon: Ticket, table: 'service_tickets', orderField: 'created_at' },
   billing: { label: 'Billing Software', icon: Receipt, table: 'invoices', orderField: 'created_at' },
   purchase: { label: 'Purchase Entry', icon: Truck, table: 'purchases', orderField: 'created_at' },
   external: { label: 'External Repairs', icon: ExternalLink, table: '', orderField: '' },
   inventory: { label: 'Inventory Movement', icon: Package, table: 'inventory_transactions', orderField: 'transaction_date' },
   reports: { label: 'Financial Reports', icon: Activity, table: '', orderField: '' },
-  expenses: { label: 'Expenses', icon: CreditCard, table: 'expenses', orderField: 'date' },
-  khata: { label: 'Accounting (Khata)', icon: FileSpreadsheet, table: 'accounts', orderField: 'name' },
+  expenses: { label: 'Expenses', icon: IndianRupee, table: 'expenses', orderField: 'date' },
+  khata: { label: 'Khata', icon: IndianRupee, table: 'khata', orderField: 'date' },
+  amc: { label: 'AMC Contracts', icon: Shield, table: 'amc_contracts', orderField: 'end_date' },
   settings: { label: 'Site Settings', icon: Settings, table: 'site_settings', orderField: 'key' },
   customers: { label: 'Customers', icon: Users, table: 'customers', orderField: 'created_at' },
 };
@@ -112,6 +114,7 @@ const PRODUCTS_FIELDS: FormField[] = [
   { key: 'is_featured', label: 'Featured', type: 'checkbox' },
   { key: 'is_published', label: 'Published', type: 'checkbox' },
   { key: 'sort_order', label: 'Sort Order', type: 'number' },
+  { key: 'stock_count', label: 'Stock Quantity', type: 'number', required: true, placeholder: '0' },
 ];
 
 const TESTIMONIALS_FIELDS: FormField[] = [
@@ -203,6 +206,16 @@ const TICKETS_FIELDS: FormField[] = [
   { key: 'customer_phone', label: 'Customer Phone', type: 'text', required: true },
   { key: 'customer_address', label: 'Customer Address', type: 'textarea', rows: 2 },
   { key: 'device_type', label: 'Device/Service Type', type: 'text' },
+  { key: 'device_make_model', label: 'Make / Model', type: 'text' },
+  { key: 'device_password', label: 'Device Password / PIN', type: 'text' },
+  { key: 'service_method', label: 'Service Method', type: 'select', options: [
+    { label: 'Drop-off', value: 'drop_off' },
+    { label: 'Home Pickup', value: 'home_pickup' }
+  ]},
+  { key: 'pickup_date', label: 'Pickup Date', type: 'text' },
+  { key: 'preferred_contact', label: 'Preferred Contact', type: 'text' },
+  { key: 'whatsapp_opt_in', label: 'WhatsApp Opt-in', type: 'checkbox' },
+  { key: 'pre_approved_budget', label: 'Pre-Approved Budget', type: 'text' },
   { key: 'issue_description', label: 'Issue Description', type: 'textarea', rows: 4, required: true },
   { key: 'status', label: 'Status', type: 'select', options: [
     { label: 'Open', value: 'open' },
@@ -216,6 +229,7 @@ const TICKETS_FIELDS: FormField[] = [
     { label: 'High', value: 'high' },
     { label: 'Urgent', value: 'urgent' }
   ]},
+  { key: 'warranty_months', label: 'Warranty (Months)', type: 'number' },
   { key: 'notes', label: 'Internal Notes', type: 'textarea', rows: 3 }
 ];
 
@@ -233,27 +247,33 @@ const SERVICE_TICKET_HEADERS = [
   'Phone',
   'Email',
   'Address',
+  'Make/Model',
   'Device / Service',
   'Issue',
   'Priority',
   'Status',
   'Assigned To',
+  'Service Method',
+  'Budget',
   'Notes',
   'Link',
 ];
 
-const serviceTicketRow = (ticket: Partial<ServiceTicket>) => [
+const serviceTicketRow = (ticket: Partial<ServiceTicket & { device_make_model?: string; service_method?: string; pre_approved_budget?: string; }>) => [
   ticket.ticket_number || '',
   ticket.created_at || new Date().toISOString(),
   ticket.customer_name || '',
   ticket.customer_phone || '',
   ticket.customer_email || '',
   ticket.customer_address || '',
+  ticket.device_make_model || '',
   ticket.device_type || '',
   ticket.issue_description || '',
   ticket.priority || '',
   ticket.status || '',
   ticket.assigned_to || '',
+  ticket.service_method === 'home_pickup' ? 'Home Pickup' : 'Drop-off',
+  ticket.pre_approved_budget || '',
   ticket.notes || '',
   ticket.ticket_number ? `https://yantrabyte.anantatechcare.com/admin` : '',
 ];
@@ -451,6 +471,21 @@ export default function AdminPanel() {
   const [allCustomers, setAllCustomers] = useState<any[]>([]);
 
   const [userRole, setUserRole] = useState<UserRole>('admin');
+  
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return localStorage.getItem('theme') === 'dark' || 
+      (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  });
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDarkMode]);
 
   // --- Auth ---
   useEffect(() => {
@@ -594,8 +629,14 @@ export default function AdminPanel() {
             <td style="border: 1px solid #000000; padding: 7px 8px; text-transform: uppercase; font-weight: bold; color: #0f766e; word-break: break-word;">${safeText(item.status || 'Received')}</td>
           </tr>
           <tr>
-            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Device Type</td>
-            <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${safeText(item.device_type)}</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Make / Model</td>
+            <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${safeText(item.device_make_model)}</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Password/PIN</td>
+            <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${safeText(item.device_password)}</td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Service Method</td>
+            <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${item.service_method === 'home_pickup' ? 'Home Pickup' : 'Drop-off'}</td>
             <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Priority</td>
             <td style="border: 1px solid #000000; padding: 7px 8px; text-transform: capitalize; font-weight: bold; color: ${String(item.priority) === 'high' || String(item.priority) === 'urgent' ? '#b91c1c' : '#374151'}; word-break: break-word;">${safeText(item.priority || 'Medium')}</td>
           </tr>
@@ -649,7 +690,8 @@ export default function AdminPanel() {
             DIAGNOSTICS & INTERNAL WORKSHOP NOTES
           </div>
           <div style="padding: 12px; font-size: 12px; min-height: 90px; line-height: 1.6; color: #333333; font-style: italic; word-break: break-word;">
-            ${safeMultiline(item.notes, 'Awaiting diagnostic feedback from the support team.')}
+            (For Technician Use Only - Leave Blank for Handwritten Notes)
+            <br/><br/><br/>
           </div>
         </div>
 
@@ -671,6 +713,7 @@ export default function AdminPanel() {
             <tr>
               <!-- Customer Sign -->
               <td style="width: 50%; vertical-align: bottom; padding-right: 16px;">
+                ${item.customer_signature ? `<div style="height: 72px; text-align: left; margin-bottom: 4px;"><img src="${item.customer_signature}" style="max-width: 180px; max-height: 70px; object-fit: contain;" /></div>` : ''}
                 <div style="width: 180px; border-bottom: 1px solid #555555; margin-bottom: 8px;"></div>
                 <div style="font-size: 11px; font-weight: bold; color: #333333;">Customer Drop-off Signature</div>
                 <div style="font-size: 9px; color: #777777; margin-top: 2px;">I agree to the service repair terms above.</div>
@@ -679,7 +722,7 @@ export default function AdminPanel() {
               <td style="width: 50%; text-align: right; vertical-align: bottom; padding-left: 16px;">
                 <div style="display: inline-block; text-align: left;">
                   <div style="height: 72px; text-align: center; margin-bottom: 4px;">
-                    <img src="/seal.png" style="max-width: 120px; max-height: 95px; object-fit: contain; opacity: 0.9;" crossOrigin="anonymous" />
+                    <img src="/seal.png" style="max-width: 160px; max-height: 140px; object-fit: contain; opacity: 0.9;" crossOrigin="anonymous" />
                   </div>
                   <div style="width: 220px; border-bottom: 1px solid #555555; margin-bottom: 8px;"></div>
                   <div style="font-size: 11px; font-weight: bold; color: #0B5394;">For Yantrabyte Solutions</div>
@@ -711,6 +754,66 @@ export default function AdminPanel() {
     await html2pdf().set(opt).from(element).save();
     document.body.removeChild(element);
     showToast('Job sheet drop-off receipt downloaded!');
+  };
+
+  const printDeviceLabel = (item: Record<string, unknown>) => {
+    const trackingUrl = `${window.location.origin}/track?ticket=${item.ticket_number}`;
+    const qrSvgString = renderToString(<QRCodeSVG value={trackingUrl} size={64} level="H" />);
+    
+    const win = window.open('', '_blank', 'width=400,height=300');
+    if (!win) {
+      showToast('Popup blocker prevented printing. Please allow popups.', 'error');
+      return;
+    }
+    
+    win.document.write(`
+      <html>
+        <head>
+          <title>Device Label - ${item.ticket_number}</title>
+          <style>
+            @page { size: 2in 1in; margin: 0; }
+            body { 
+              margin: 0; 
+              padding: 0.05in; 
+              width: 1.9in; 
+              height: 0.9in; 
+              font-family: sans-serif; 
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              background: white;
+              overflow: hidden;
+            }
+            .left {
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              width: 1.1in;
+            }
+            .brand { font-size: 8px; font-weight: bold; margin-bottom: 2px; }
+            .ticket { font-size: 11px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 2px; }
+            .name { font-size: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 1in; }
+            .qr { width: 0.7in; height: 0.7in; display: flex; align-items: center; justify-content: center; }
+            .qr svg { width: 100%; height: 100%; }
+          </style>
+        </head>
+        <body>
+          <div class="left">
+            <div class="brand">YantraByte Solutions</div>
+            <div class="ticket">#${item.ticket_number}</div>
+            <div class="name">${item.customer_name || 'Customer'}</div>
+          </div>
+          <div class="qr">${qrSvgString}</div>
+          <script>
+            setTimeout(() => {
+              window.print();
+              setTimeout(() => window.close(), 500);
+            }, 250);
+          </script>
+        </body>
+      </html>
+    `);
+    win.document.close();
   };
 
   const uploadTicketPdfToSupabase = async (item: Record<string, unknown>): Promise<string | null> => {
@@ -768,7 +871,7 @@ export default function AdminPanel() {
     }
 
     let text = '';
-    const trackUrl = `https://yantrabyte.anantatechcare.com/track?t=${ticketNo}`;
+    const trackUrl = `https://yantrabyte.anantatechcare.com/track-ticket?t=${ticketNo}`;
     
     if (status === 'open') {
       text = `Hi ${name}, this is Yantrabyte Solutions. We have successfully registered your repair request (Ticket: ${ticketNo}) for your ${device}. Our technician will diagnose it shortly. Track status here: ${trackUrl}`;
@@ -1123,6 +1226,11 @@ export default function AdminPanel() {
           if (pdfUrl) (record as any).link = pdfUrl;
           backupTicketToGoogleSheet({ ...(editingItem as unknown as Partial<ServiceTicket>), ...(record as Partial<ServiceTicket>) });
           sendTelegramNotification(`🔧 <b>Ticket Updated</b>\nTicket: #${record.ticket_number}\nCustomer: ${record.customer_name}\nDevice: ${record.device_type}\nStatus: ${record.status}`);
+          
+          // Smart WhatsApp Status Template Prompt
+          if (record.status !== editingItem.status && window.confirm(`Status changed to ${record.status}. Do you want to send an automatic WhatsApp update to the customer?`)) {
+            sendWhatsAppAlert(record);
+          }
         }
         showToast('Item updated successfully');
       } else {
@@ -1373,6 +1481,7 @@ export default function AdminPanel() {
     { section: 'external', label: 'External Repairs', icon: ExternalLink },
     { section: 'inventory', label: 'Inventory Movement', icon: Package },
     { section: 'reports', label: 'Financial Reports', icon: Activity },
+    { section: 'amc', label: 'AMC Contracts', icon: Shield },
     { section: 'expenses', label: 'Expenses', icon: CreditCard },
     { section: 'khata', label: 'Accounting (Khata)', icon: FileSpreadsheet },
     { section: 'settings', label: 'Site Settings', icon: Settings },
@@ -1647,6 +1756,13 @@ export default function AdminPanel() {
                                   title="Send Telegram Client Alert"
                                 >
                                   <Send className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => printDeviceLabel(item)}
+                                  className="p-1.5 rounded-lg hover:bg-white/5 text-[#64748B] hover:text-amber-400 transition-all"
+                                  title="Print Device Label"
+                                >
+                                  <Ticket className="w-4 h-4" />
                                 </button>
                                 <button
                                   onClick={() => printJobSheet(item)}
@@ -1996,6 +2112,7 @@ export default function AdminPanel() {
     if (activeSection === 'reports') return <FinancialReports />;
     if (activeSection === 'expenses') return <Expenses />;
     if (activeSection === 'khata') return <AccountingKhata />;
+    if (activeSection === 'amc') return <AmcContracts onRenewContract={(c) => console.log('Renew', c)} />;
     return renderDataTable();
   };
 
@@ -2093,6 +2210,13 @@ export default function AdminPanel() {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsDarkMode(!isDarkMode)}
+              className="p-2 rounded-lg hover:bg-white/5 text-[#94A3B8] hover:text-white transition-all"
+              title="Toggle Dark Mode"
+            >
+              {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
             <button
               onClick={handleLogout}
               className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-[#94A3B8] hover:text-red-400 hover:bg-red-500/10 transition-all"

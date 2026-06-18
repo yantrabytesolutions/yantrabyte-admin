@@ -84,7 +84,7 @@ const FALLBACK_SERVICES: Service[] = [
   { id: '5', title: 'Printer Services', slug: 'printer-services', short_description: 'Printer installation, repair, and maintenance for all brands.', full_description: '', icon: 'Printer', features: [], benefits: [], meta_title: '', meta_description: '', is_featured: false, is_published: true, sort_order: 5, created_at: '', updated_at: '' },
   { id: '8', title: 'AMC Support', slug: 'amc-support', short_description: 'Annual maintenance contracts for ongoing IT support and peace of mind.', full_description: '', icon: 'FileCheck', features: [], benefits: [], meta_title: '', meta_description: '', is_featured: false, is_published: true, sort_order: 8, created_at: '', updated_at: '' },
   { id: '9', title: 'Wi-Fi Solutions', slug: 'wifi-solutions', short_description: 'High-performance Wi-Fi coverage for offices, apartments, and hotels.', full_description: '', icon: 'Wifi', features: [], benefits: [], meta_title: '', meta_description: '', is_featured: false, is_published: true, sort_order: 9, created_at: '', updated_at: '' },
-  { id: '10', title: 'Server Setup', slug: 'server-setup', short_description: 'On-premise and cloud server configuration and management.', full_description: '', icon: 'Server', features: [], benefits: [], meta_title: '', meta_description: '', is_featured: false, is_published: true, sort_order: 10, created_at: '', updated_at: '' },
+
   { id: '11', title: 'Data Recovery', slug: 'data-recovery', short_description: 'Professional data recovery from failed hard drives and SSDs.', full_description: '', icon: 'HardDrive', features: [], benefits: [], meta_title: '', meta_description: '', is_featured: false, is_published: true, sort_order: 11, created_at: '', updated_at: '' },
   { id: '12', title: 'Cloud Solutions', slug: 'cloud-solutions', short_description: 'Google Workspace, Microsoft 365, and AWS cloud setup and migration.', full_description: '', icon: 'Cloud', features: [], benefits: [], meta_title: '', meta_description: '', is_featured: false, is_published: true, sort_order: 12, created_at: '', updated_at: '' },
   { id: '13', title: 'Access Control', slug: 'access-control', short_description: 'Smart access control with RFID, biometric, and mobile-based entry.', full_description: '', icon: 'Lock', features: [], benefits: [], meta_title: '', meta_description: '', is_featured: false, is_published: true, sort_order: 13, created_at: '', updated_at: '' },
@@ -154,7 +154,7 @@ const GOOGLE_REVIEWS = [
 
 const ALL_SERVICES_LIST = [
   'CCTV Installation', 'Laptop Repair', 'Desktop Repair', 'Networking Solutions',
-  'Printer Services', 'AMC Support', 'Wi-Fi Solutions', 'Server Setup',
+  'Printer Services', 'AMC Support', 'Wi-Fi Solutions',
   'Data Recovery', 'Cloud Solutions', 'Access Control', 'IT Consulting', 'Hardware Upgrades',
 ];
 
@@ -396,7 +396,7 @@ function HeroSection() {
                   <img
                     src="/seal.png"
                     alt="YantraByte Official Seal"
-                    className="w-24 h-24 object-contain mx-auto drop-shadow-lg"
+                    className="w-32 h-32 object-contain mx-auto drop-shadow-lg"
                   />
                   <div className="space-y-1">
                     <h3 className="text-xl font-bold text-white">Ticket Submitted!</h3>
@@ -666,24 +666,46 @@ function WhyChooseUsSection() {
           </p>
         </motion.div>
 
-        <motion.div variants={staggerContainer} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((feature, i) => {
-            const Icon = feature.icon;
-            return (
-              <motion.div key={i} variants={staggerItem} whileHover={{ y: -4 }}
-                className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 hover:border-[#0EA5E9]/30 transition-all duration-300 group">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 shrink-0 rounded-xl bg-[#0EA5E9]/10 flex items-center justify-center group-hover:bg-[#0EA5E9]/20 transition-colors duration-300">
-                    <Icon className="w-6 h-6 text-[#0EA5E9]" />
+        <motion.div variants={staggerContainer} className="grid grid-cols-1 lg:grid-cols-[1fr_0.8fr] gap-12 mt-12">
+          <div className="grid sm:grid-cols-2 gap-6">
+            {features.map((feature, i) => {
+              const Icon = feature.icon;
+              return (
+                <motion.div key={i} variants={staggerItem} whileHover={{ y: -4 }}
+                  className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 hover:border-[#0EA5E9]/30 transition-all duration-300 group">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 shrink-0 rounded-xl bg-[#0EA5E9]/10 flex items-center justify-center group-hover:bg-[#0EA5E9]/20 transition-colors duration-300">
+                      <Icon className="w-6 h-6 text-[#0EA5E9]" />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-semibold text-lg mb-2">{feature.title}</h3>
+                      <p className="text-[#94A3B8] text-sm leading-relaxed">{feature.description}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-white font-semibold text-lg mb-2">{feature.title}</h3>
-                    <p className="text-[#94A3B8] text-sm leading-relaxed">{feature.description}</p>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
+                </motion.div>
+              );
+            })}
+          </div>
+          
+          {/* Aesthetic Images */}
+          <motion.div variants={scaleIn} className="grid grid-rows-2 gap-6 h-[400px] lg:h-full mt-6 lg:mt-0">
+            <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl group">
+              <img src="/images/cctv_camera.png" alt="Advanced CCTV Systems" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0B1120] via-transparent to-transparent opacity-80" />
+              <div className="absolute bottom-6 left-6">
+                <span className="bg-[#0EA5E9] text-white text-xs font-bold px-3 py-1 rounded-full">Security</span>
+                <h4 className="text-white font-bold text-xl mt-2">Next-Gen Surveillance</h4>
+              </div>
+            </div>
+            <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl group">
+              <img src="/images/laptop_repair.png" alt="Professional Device Repair" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0B1120] via-transparent to-transparent opacity-80" />
+              <div className="absolute bottom-6 left-6">
+                <span className="bg-[#38BDF8] text-white text-xs font-bold px-3 py-1 rounded-full">Hardware</span>
+                <h4 className="text-white font-bold text-xl mt-2">Precision Repairs</h4>
+              </div>
+            </div>
+          </motion.div>
         </motion.div>
       </div>
     </Section>
@@ -851,22 +873,32 @@ function IndustriesSection() {
             {Array.from({ length: 8 }).map((_, i) => (<div key={i} className="h-40 rounded-2xl bg-white/5 animate-pulse border border-white/5" />))}
           </div>
         ) : (
-          <motion.div variants={staggerContainer} className="grid grid-cols-2 sm:grid-cols-4 gap-4 md:gap-6">
-            {displayIndustries.map((industry, i) => {
-              const IconComponent = industry.icon ? (ICON_MAP[industry.icon] || INDUSTRY_ICONS[i % INDUSTRY_ICONS.length]) : INDUSTRY_ICONS[i % INDUSTRY_ICONS.length];
-              return (
-                <motion.div key={industry.id} variants={staggerItem}
-                  whileHover={{ scale: 1.05, y: -4 }}
-                  className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 text-center hover:border-[#0EA5E9]/30 transition-all duration-300 group">
-                  <div className="w-14 h-14 mx-auto rounded-xl bg-[#0EA5E9]/10 flex items-center justify-center mb-4 group-hover:bg-[#0EA5E9]/20 transition-colors duration-300">
-                    <IconComponent className="w-7 h-7 text-[#0EA5E9]" />
-                  </div>
-                  <h3 className="text-white font-semibold text-base mb-1.5">{industry.name}</h3>
-                  <p className="text-[#64748B] text-xs leading-relaxed">{industry.description}</p>
-                </motion.div>
-              );
-            })}
-          </motion.div>
+          <div className="relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
+            {/* Background Image */}
+            <div className="absolute inset-0 z-0">
+              <img src="/images/server_room_bg.png" alt="Server Room" className="w-full h-full object-cover opacity-30" />
+              <div className="absolute inset-0 bg-[#0B1120]/80 backdrop-blur-sm" />
+            </div>
+            
+            <div className="relative z-10 p-8 md:p-12">
+              <motion.div variants={staggerContainer} className="grid grid-cols-2 sm:grid-cols-4 gap-4 md:gap-6">
+                {displayIndustries.map((industry, i) => {
+                  const IconComponent = industry.icon ? (ICON_MAP[industry.icon] || INDUSTRY_ICONS[i % INDUSTRY_ICONS.length]) : INDUSTRY_ICONS[i % INDUSTRY_ICONS.length];
+                  return (
+                    <motion.div key={industry.id} variants={staggerItem}
+                      whileHover={{ scale: 1.05, y: -4 }}
+                      className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6 text-center hover:border-[#0EA5E9]/50 transition-all duration-300 group shadow-lg shadow-black/20">
+                      <div className="w-14 h-14 mx-auto rounded-xl bg-[#0EA5E9]/20 flex items-center justify-center mb-4 group-hover:bg-[#0EA5E9]/30 transition-colors duration-300">
+                        <IconComponent className="w-7 h-7 text-[#38BDF8]" />
+                      </div>
+                      <h3 className="text-white font-semibold text-base mb-1.5">{industry.name}</h3>
+                      <p className="text-[#CBD5E1] text-xs leading-relaxed">{industry.description}</p>
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
+            </div>
+          </div>
         )}
       </div>
     </Section>
@@ -1547,6 +1579,55 @@ function EmergencyBanner() {
   );
 }
 
+// ─── 16. Repair Videos ────────────────────────────────────────────────────────
+
+function RepairVideosSection() {
+  const videos = [
+    { id: 'Mh5M3032_X4', title: 'Laptop Motherboard Chip-Level Repair', tag: 'Laptop Repair' },
+    { id: 'dQw4w9WgXcQ', title: 'Desktop Motherboard Diagnostics', tag: 'Desktop Repair' }, // Placeholder ID
+    { id: 'EwX4pA8p3x8', title: 'Professional Printer Servicing', tag: 'Printer Repair' }, // Placeholder ID
+  ];
+
+  return (
+    <Section id="videos" className="bg-[#0B1120] relative">
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div variants={fadeInUp} className="text-center mb-12">
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#0EA5E9]/10 border border-[#0EA5E9]/30 text-[#0EA5E9] text-sm font-medium mb-4">
+            Our Process
+          </span>
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            Watch Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0EA5E9] to-[#38BDF8]">Expertise in Action</span>
+          </h2>
+          <p className="text-[#94A3B8] text-lg max-w-2xl mx-auto">
+            See how our certified technicians perform precision chip-level repairs on complex hardware.
+          </p>
+        </motion.div>
+
+        <motion.div variants={staggerContainer} className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {videos.map((vid, i) => (
+            <motion.div key={i} variants={staggerItem} whileHover={{ y: -8 }} className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-black group transition-all duration-300 hover:border-[#0EA5E9]/50 hover:shadow-[#0EA5E9]/20">
+              <div className="aspect-video relative bg-white/5">
+                <iframe
+                  src={`https://www.youtube.com/embed/${vid.id}?rel=0&modestbranding=1`}
+                  title={vid.title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="w-full h-full border-0 absolute inset-0"
+                />
+              </div>
+              <div className="p-5 bg-gradient-to-b from-white/5 to-transparent backdrop-blur-md">
+                <span className="inline-block px-3 py-1 rounded-full bg-[#0EA5E9]/20 text-[#38BDF8] text-xs font-bold mb-3">{vid.tag}</span>
+                <h3 className="text-white font-semibold text-base leading-snug">{vid.title}</h3>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+    </Section>
+  );
+}
+
 // ─── Main Home Component ───────────────────────────────────────────────────
 
 export default function Home() {
@@ -1584,6 +1665,7 @@ export default function Home() {
       <TrustStatsSection />
       <ServicesSection />
       <WhyChooseUsSection />
+      <RepairVideosSection />
       <WorkShowcaseSection />
       <AboutSection />
       <IndustriesSection />

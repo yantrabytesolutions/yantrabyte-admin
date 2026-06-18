@@ -78,12 +78,6 @@ const FALLBACK_SERVICE_DETAILS: Record<string, Service & { features: string[]; b
     benefits: ['Reliable connectivity in every corner', 'Support hundreds of simultaneous users', 'Guest networks with captive portal', 'Seamless roaming without disconnection', 'Centralized cloud management', 'Scalable to any premises size'],
     meta_title: '', meta_description: '', is_featured: false, is_published: true, sort_order: 9, created_at: '', updated_at: '',
   },
-  'server-setup': {
-    id: '10', title: 'Server Setup', slug: 'server-setup', short_description: 'On-premise and cloud server configuration, migration, and management for businesses of all sizes.', full_description: 'From small business file servers to enterprise application servers, we handle the complete lifecycle of server infrastructure. Our engineers configure, deploy, and manage Windows Server, Linux, and virtualized environments, ensuring high availability, automated backups, and security hardening for your critical business applications.', icon: 'Server',
-    features: ['Windows Server Setup', 'Linux Server Configuration', 'Virtualization (VMware/Hyper-V)', 'Active Directory Setup', 'Automated Backup', 'Server Migration', 'Security Hardening', 'Performance Monitoring'],
-    benefits: ['Centralized data management and access', 'High availability for business continuity', 'Automated backups prevent data loss', 'Scalable infrastructure for growth', 'Expert security hardening', 'Smooth migration with zero downtime'],
-    meta_title: '', meta_description: '', is_featured: false, is_published: true, sort_order: 10, created_at: '', updated_at: '',
-  },
   'data-recovery': {
     id: '11', title: 'Data Recovery', slug: 'data-recovery', short_description: 'Professional data recovery from failed hard drives, SSDs, RAID arrays, and corrupted storage devices.', full_description: 'When data loss strikes, our data recovery specialists can retrieve your files from failing, damaged, or corrupted storage devices. Using advanced tools and clean-room techniques, we recover data from HDDs, SSDs, RAID arrays, USB drives, and memory cards with a high success rate. We maintain strict confidentiality and provide a no-recovery, no-fee guarantee.', icon: 'HardDrive',
     features: ['HDD Recovery', 'SSD Recovery', 'RAID Array Recovery', 'USB & Flash Recovery', 'Corrupted Partition Fix', 'Deleted File Recovery', 'Clean Room Techniques', 'No Recovery No Fee'],

@@ -123,6 +123,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurringInterval, setRecurringInterval] = useState('monthly');
   const [termsConditions, setTermsConditions] = useState('');
+  const [warrantyMonths, setWarrantyMonths] = useState<number | ''>('');
   const [items, setItems] = useState<InvoiceItem[]>([]);
   
   const [itemDesc, setItemDesc] = useState('');
@@ -154,6 +155,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   } | null>(null);
 
   const [showRecurringModal, setShowRecurringModal] = useState(false);
+  const [showRemindersModal, setShowRemindersModal] = useState(false);
 
   const openCustomerHistory = () => {
     if (!customerName.trim()) {
@@ -390,6 +392,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setIsRecurring(false);
     setRecurringInterval('monthly');
     setTermsConditions('');
+    setWarrantyMonths('');
     setItems([]);
   };
 
@@ -482,6 +485,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setIsRecurring(inv.is_recurring || false);
     setRecurringInterval(inv.recurring_interval || 'monthly');
     setTermsConditions(inv.terms_conditions || '');
+    setWarrantyMonths((inv as any).warranty_months || '');
     setItems(inv.items || []);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     showToast(`Invoice ${inv.invoice_no} loaded for editing`);
@@ -508,6 +512,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setAdvancePaid(inv.advance_paid);
     setPaymentMode(inv.payment_mode || 'Not specified');
     setDueDate(inv.due_date || '');
+    setWarrantyMonths((inv as any).warranty_months || '');
     setItems(inv.items || []);
     
     showToast(`Converted quotation ${inv.invoice_no} to a new draft Invoice! Click Save or Print to finalize.`);
@@ -550,7 +555,10 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
     if (!phone) { showToast('No phone number available', 'error'); return; }
     
-    const text = `Hi ${inv.customer_name}, your ${inv.doc_type || 'Invoice'} ${inv.invoice_no} for ₹${inv.grand_total} has been generated. Thank you for your business!`;
+    const pdfUrl = (inv as any).pdf_url;
+    let text = `Hi ${inv.customer_name}, your ${inv.doc_type || 'Invoice'} ${inv.invoice_no} for ₹${inv.grand_total} has been generated. Thank you for your business!`;
+    if (pdfUrl) text += `\n\nYou can view and download your ${inv.doc_type || 'Invoice'} here: ${pdfUrl}`;
+    
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -840,7 +848,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         is_recurring: isRecurring,
         recurring_interval: isRecurring ? recurringInterval : null,
         next_due_date: calculatedNextDue,
-        terms_conditions: termsConditions
+        terms_conditions: termsConditions,
+        warranty_months: warrantyMonths === '' ? null : warrantyMonths
       };
 
       let pdfUrl: string | null = null;
@@ -884,6 +893,20 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         if (data) {
           setSelectedInvoiceId(data.id);
         }
+        
+        // Auto-deduct stock
+        for (const item of items) {
+          if (item.product_id && item.qty > 0) {
+            const prod = products.find(p => p.id === item.product_id);
+            if (prod && typeof prod.stock_count === 'number') {
+              await supabase
+                .from('products')
+                .update({ stock_count: Math.max(0, prod.stock_count - item.qty) })
+                .eq('id', item.product_id);
+            }
+          }
+        }
+        
         backupInvoiceToGoogleSheet(payload as Invoice);
         showToast('Invoice saved successfully!');
       }
@@ -1651,6 +1674,10 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                 <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" />
               </div>
               <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Warranty (Months)</label>
+                <input type="number" min="0" step="1" value={warrantyMonths} onChange={e => setWarrantyMonths(e.target.value === '' ? '' : Number(e.target.value))} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" placeholder="e.g. 12" />
+              </div>
+              <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Payment Status</label>
                 <div className={`w-full border rounded-md px-3 py-2 text-sm font-semibold ${
                   paymentStatus === 'Paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
@@ -1698,9 +1725,17 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           </div>
 
           <div className="bg-white border p-6 rounded-lg shadow-sm">
-            <h3 className="text-md font-semibold text-gray-800 mb-4 flex items-center">
-              <FileText className="w-4 h-4 mr-2 text-gray-400" /> Saved Invoices
-            </h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-md font-semibold text-gray-800 flex items-center">
+                <FileText className="w-4 h-4 mr-2 text-gray-400" /> Saved Invoices
+              </h3>
+              <button 
+                onClick={() => setShowRemindersModal(true)}
+                className="text-xs flex items-center bg-green-50 text-green-700 hover:bg-green-100 px-2 py-1 rounded-md font-medium border border-green-200"
+              >
+                <MessageSquare className="w-3 h-3 mr-1" /> WhatsApp Reminders
+              </button>
+            </div>
             <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
               {invoices.map(inv => (
                 <div 
@@ -2009,7 +2044,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               <div className="text-center mt-auto flex flex-col justify-end pb-2">
                 <div className="font-bold text-[10px]" style={{ color: '#000' }}>For YantraByte Solutions</div>
                 <div className="flex justify-center my-1">
-                  <img src="/seal.png" alt="Seal" style={{ height: '85px', width: 'auto' }} crossOrigin="anonymous" />
+                  <img src="/seal.png" alt="Seal" style={{ height: '130px', width: 'auto' }} crossOrigin="anonymous" />
                 </div>
                 <div className="font-bold text-[10px]" style={{ color: '#000' }}>RAMESH A S</div>
                 <div className="text-[9px]" style={{ color: '#444444' }}>Authorized Signatory</div>
@@ -2271,6 +2306,92 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                             </td>
                           </tr>
                         ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reminders Modal */}
+      {showRemindersModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setShowRemindersModal(false)}></div>
+          <div className="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-6 sm:px-8 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 p-2 rounded-xl backdrop-blur-md">
+                  <MessageSquare className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white tracking-tight">WhatsApp Reminders</h2>
+                  <p className="text-green-100 text-sm mt-0.5 font-medium">Send payment reminders for overdue invoices</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowRemindersModal(false)}
+                className="text-green-200 hover:text-white hover:bg-white/10 p-2 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto">
+              <div className="space-y-4">
+                {invoices.filter(i => (i.balance_due || 0) > 0 && i.doc_type === 'Invoice').length === 0 ? (
+                  <div className="text-center py-10">
+                    <CheckCircle className="w-12 h-12 text-green-300 mx-auto mb-3" />
+                    <h3 className="text-lg font-medium text-gray-900">All caught up!</h3>
+                    <p className="text-gray-500 mt-1">There are no overdue invoices at the moment.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto border border-gray-200 rounded-xl">
+                    <table className="w-full text-left text-sm whitespace-nowrap">
+                      <thead className="bg-gray-50 border-b border-gray-200 text-gray-600">
+                        <tr>
+                          <th className="px-4 py-3 font-semibold">Invoice No</th>
+                          <th className="px-4 py-3 font-semibold">Customer</th>
+                          <th className="px-4 py-3 font-semibold">Due Date</th>
+                          <th className="px-4 py-3 font-semibold text-right">Balance Due</th>
+                          <th className="px-4 py-3 font-semibold text-center">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {invoices.filter(i => (i.balance_due || 0) > 0 && i.doc_type === 'Invoice').map(inv => {
+                          const customer = customersList.find(c => c.name === inv.customer_name) || { phone: inv.customer_phone };
+                          const phoneNum = customer?.phone?.replace(/\D/g, '');
+                          const whatsappUrl = phoneNum ? `https://wa.me/91${phoneNum}?text=${encodeURIComponent(`Dear ${inv.customer_name},\n\nThis is a gentle reminder that your payment of ₹${inv.balance_due?.toLocaleString('en-IN')} for Invoice No. ${inv.invoice_no} is currently due.\n\nPlease arrange for the payment at your earliest convenience.\n\nThank you,\nYantrabyte Solutions`)}` : '#';
+                          
+                          return (
+                            <tr key={inv.id} className="hover:bg-gray-50/50">
+                              <td className="px-4 py-3 font-medium text-gray-900">{inv.invoice_no}</td>
+                              <td className="px-4 py-3 text-gray-600">{inv.customer_name}</td>
+                              <td className="px-4 py-3">
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${new Date(inv.date) < new Date() ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
+                                  {inv.date}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-right font-bold text-red-600">₹{inv.balance_due?.toLocaleString('en-IN')}</td>
+                              <td className="px-4 py-3 text-center">
+                                {phoneNum ? (
+                                  <a
+                                    href={whatsappUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center px-3 py-1.5 bg-[#25D366] text-white text-xs font-medium rounded-md hover:bg-[#128C7E] transition-colors shadow-sm"
+                                  >
+                                    <Send className="w-3 h-3 mr-1.5" /> Send Reminder
+                                  </a>
+                                ) : (
+                                  <span className="text-xs text-gray-400 italic">No phone #</span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>

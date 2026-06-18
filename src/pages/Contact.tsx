@@ -27,7 +27,6 @@ const ALL_SERVICES = [
   'Printer Services',
   'AMC Support',
   'Wi-Fi Solutions',
-  'Server Setup',
   'Data Recovery',
   'Cloud Solutions',
   'Access Control',

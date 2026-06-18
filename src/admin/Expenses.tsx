@@ -25,6 +25,8 @@ export default function Expenses() {
   const [formAmount, setFormAmount] = useState('0');
   const [formDate, setFormDate] = useState(new Date().toISOString().slice(0, 10));
   const [formDescription, setFormDescription] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [attachment, setAttachment] = useState<File | null>(null);
 
   useEffect(() => {
     fetchExpenses();
@@ -52,6 +54,7 @@ export default function Expenses() {
     setFormAmount('0');
     setFormDate(new Date().toISOString().slice(0, 10));
     setFormDescription('');
+    setAttachment(null);
     setShowModal(true);
   };
 
@@ -61,6 +64,7 @@ export default function Expenses() {
     setFormAmount(String(exp.amount));
     setFormDate(exp.date);
     setFormDescription(exp.description || '');
+    setAttachment(null);
     setShowModal(true);
   };
 
@@ -70,15 +74,35 @@ export default function Expenses() {
       alert('Please enter an expense amount greater than 0.');
       return;
     }
-
-    const payload = {
-      category: formCategory,
-      amount: Number(formAmount),
-      date: formDate,
-      description: formDescription.trim() || null
-    };
+    setSubmitting(true);
+    let uploadedUrl = editingExpense?.receipt_url || null;
 
     try {
+      if (attachment) {
+        const fileExt = attachment.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('service-attachments')
+          .upload(filePath, attachment);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('service-attachments')
+          .getPublicUrl(filePath);
+        uploadedUrl = publicUrl;
+      }
+
+      const payload = {
+        category: formCategory,
+        amount: Number(formAmount),
+        date: formDate,
+        description: formDescription.trim() || null,
+        receipt_url: uploadedUrl
+      };
+
       if (editingExpense) {
         const { data: savedExp, error } = await supabase
           .from('expenses')
@@ -99,9 +123,12 @@ export default function Expenses() {
       }
       setShowModal(false);
       fetchExpenses();
+      setAttachment(null);
     } catch (err) {
       console.error('Error saving expense:', err);
       alert('Failed to save expense.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -236,19 +263,24 @@ export default function Expenses() {
               </thead>
               <tbody className="divide-y divide-gray-100 text-gray-700">
                 {filtered.map((exp) => (
-                  <tr key={exp.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-6 py-4">
-                      <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-bold bg-gray-100 border text-gray-800">
+                  <tr key={exp.id} className="hover:bg-slate-50 transition border-b border-slate-100">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
                         {exp.category}
                       </span>
                     </td>
-                    <td className="px-6 py-4 font-medium text-gray-900">
-                      {exp.description || <span className="text-gray-400 italic">No description provided</span>}
+                    <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate">
+                      {exp.description || '-'}
+                      {exp.receipt_url && (
+                        <a href={exp.receipt_url} target="_blank" rel="noreferrer" className="ml-2 text-blue-500 hover:underline inline-flex items-center" title="View Receipt">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
+                        </a>
+                      )}
                     </td>
-                    <td className="px-6 py-4 text-xs text-gray-500">
-                      {new Date(exp.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
+                      {new Date(exp.date).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 text-right font-bold text-red-600">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900 text-right">
                       ₹{exp.amount.toLocaleString('en-IN')}
                     </td>
                     <td className="px-6 py-4">
@@ -333,6 +365,21 @@ export default function Expenses() {
                   placeholder="Memo of expense (e.g. Office rent for May 2026)"
                   className="w-full bg-gray-50 border rounded-md px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 ></textarea>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Receipt / Invoice Image</label>
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  onChange={(e) => setAttachment(e.target.files ? e.target.files[0] : null)}
+                  className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+                {editingExpense?.receipt_url && !attachment && (
+                  <p className="text-xs text-blue-600 mt-2">
+                    <a href={editingExpense.receipt_url} target="_blank" rel="noreferrer">View Current Receipt</a>
+                  </p>
+                )}
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">

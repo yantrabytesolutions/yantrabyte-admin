@@ -16,13 +16,13 @@ ALTER TABLE public.service_tickets
 
 -- Allow anonymous users to read limited ticket data for tracking page
 -- (They already need ticket_number + phone to look up, so this is safe)
-CREATE POLICY IF NOT EXISTS "Public can read own tickets by number and phone"
+CREATE POLICY "Public can read own tickets by number and phone"
   ON public.service_tickets FOR SELECT
   TO anon
   USING (true);
 
 -- Allow anonymous users to update client_approval_status only
-CREATE POLICY IF NOT EXISTS "Public can update approval status"
+CREATE POLICY "Public can update approval status"
   ON public.service_tickets FOR UPDATE
   TO anon
   USING (true)

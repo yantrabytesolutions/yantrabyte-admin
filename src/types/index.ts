@@ -280,6 +280,7 @@ export interface Expense {
   amount: number;
   date: string;
   description: string | null;
+  receipt_url?: string | null;
 }
 
 export interface ExternalRepair {

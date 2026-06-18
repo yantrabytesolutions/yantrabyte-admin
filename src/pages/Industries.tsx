@@ -44,7 +44,7 @@ const FALLBACK_INDUSTRIES: Industry[] = [
 
 const INDUSTRY_SERVICES: Record<string, { services: string[]; detail: string }> = {
   'corporate-offices': {
-    services: ['CCTV Surveillance', 'Enterprise Networking', 'Server Setup', 'AMC Support'],
+    services: ['CCTV Surveillance', 'Enterprise Networking', 'AMC Support'],
     detail: 'End-to-end IT and security solutions for IT parks, coworking spaces, and corporate offices. We design and deploy scalable infrastructure that grows with your business.',
   },
   'retail-stores': {

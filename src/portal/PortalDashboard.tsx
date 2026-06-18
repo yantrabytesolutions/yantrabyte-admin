@@ -129,6 +129,17 @@ export default function PortalDashboard() {
 
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-8">
         
+        {/* --- BALANCES SECTION --- */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Total Outstanding Balance</h3>
+            <p className="text-sm text-gray-500 mt-1">Pending payments across all your invoices.</p>
+          </div>
+          <div className="text-3xl font-bold text-red-600">
+            ₹{invoices.filter(i => i.doc_type === 'Invoice').reduce((sum, inv) => sum + (inv.balance_due || 0), 0).toLocaleString('en-IN')}
+          </div>
+        </div>
+
         {/* --- INVOICES SECTION --- */}
         <section>
           <div className="flex items-center gap-2 mb-4">
@@ -163,6 +174,18 @@ export default function PortalDashboard() {
                           }`}>
                             {(inv.balance_due || 0) > 0 ? 'Due' : 'Paid'}
                           </p>
+                          {inv.warranty_months && inv.warranty_months > 0 && inv.date && (
+                            (() => {
+                              const expDate = new Date(inv.date);
+                              expDate.setMonth(expDate.getMonth() + inv.warranty_months);
+                              const isExpired = new Date() > expDate;
+                              return (
+                                <p className={`px-2 inline-flex items-center text-xs leading-5 font-semibold rounded-full ${isExpired ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-indigo-50 text-indigo-700 border border-indigo-200'}`}>
+                                  {isExpired ? 'Warranty Expired' : `Warranty till ${format(expDate, 'MMM yyyy')}`}
+                                </p>
+                              );
+                            })()
+                          )}
                         </div>
                       </div>
                       <div className="mt-2 sm:flex sm:justify-between">
@@ -207,8 +230,8 @@ export default function PortalDashboard() {
                         <p className="text-sm font-medium text-teal-600 truncate">
                           Ticket #{ticket.ticket_number} - {ticket.device_type}
                         </p>
-                        <div className="ml-2 flex-shrink-0 flex">
-                          <p className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        <div className="ml-2 flex-shrink-0 flex gap-2">
+                          <p className={`px-2 inline-flex items-center text-xs leading-5 font-semibold rounded-full ${
                             ticket.status === 'completed' || ticket.status === 'resolved' || ticket.status === 'closed'
                               ? 'bg-green-100 text-green-800'
                               : ticket.status === 'in-progress'
@@ -217,6 +240,18 @@ export default function PortalDashboard() {
                           }`}>
                             {ticket.status.toUpperCase()}
                           </p>
+                          {ticket.warranty_months && ticket.warranty_months > 0 && ticket.created_at && (
+                            (() => {
+                              const expDate = new Date(ticket.created_at);
+                              expDate.setMonth(expDate.getMonth() + ticket.warranty_months);
+                              const isExpired = new Date() > expDate;
+                              return (
+                                <p className={`px-2 inline-flex items-center text-xs leading-5 font-semibold rounded-full ${isExpired ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-indigo-50 text-indigo-700 border border-indigo-200'}`}>
+                                  {isExpired ? 'Warranty Expired' : `Warranty till ${format(expDate, 'MMM yyyy')}`}
+                                </p>
+                              );
+                            })()
+                          )}
                         </div>
                       </div>
                       <div className="mt-2 sm:flex sm:justify-between">

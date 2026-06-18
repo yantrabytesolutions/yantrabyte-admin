@@ -29,6 +29,7 @@ export default function Dashboard() {
   const [totalExpenses, setTotalExpenses] = useState(0);
   const [totalOutstanding, setTotalOutstanding] = useState(0);
   const [activeTickets, setActiveTickets] = useState(0);
+  const [lowStockProducts, setLowStockProducts] = useState<any[]>([]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -40,15 +41,19 @@ export default function Dashboard() {
       // 1. Fetch data for the last 6 months
       const sixMonthsAgo = startOfMonth(subMonths(new Date(), 5)).toISOString();
       
-      const [invoicesRes, purchasesRes, ticketsRes] = await Promise.all([
+      const [invoicesRes, purchasesRes, ticketsRes, productsRes] = await Promise.all([
         supabase.from('invoices').select('*').gte('created_at', sixMonthsAgo),
         supabase.from('purchases').select('*').gte('created_at', sixMonthsAgo),
-        supabase.from('service_tickets').select('*')
+        supabase.from('service_tickets').select('*'),
+        supabase.from('products').select('*')
       ]);
 
       const invoices = (invoicesRes.data || []) as Invoice[];
       const purchases = (purchasesRes.data || []) as Purchase[];
       const tickets = (ticketsRes.data || []) as ServiceTicket[];
+      const products = (productsRes.data || []);
+      
+      setLowStockProducts(products.filter(p => typeof p.stock_count === 'number' && p.stock_count < 5));
 
       // Calculate totals
       let rev = 0;
@@ -244,6 +249,25 @@ export default function Dashboard() {
            </div>
          </div>
       </div>
+      
+      {lowStockProducts.length > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-5">
+          <div className="flex items-center space-x-2 mb-3">
+            <AlertCircle className="w-5 h-5 text-red-600" />
+            <h3 className="text-lg font-semibold text-red-900">Low Stock Alerts</h3>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {lowStockProducts.map(p => (
+              <div key={p.id} className="bg-white rounded border border-red-100 p-3 flex justify-between items-center shadow-sm">
+                <span className="font-medium text-gray-800 text-sm">{p.name}</span>
+                <span className="bg-red-100 text-red-800 text-xs font-bold px-2 py-1 rounded">
+                  {p.stock_count} left
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">

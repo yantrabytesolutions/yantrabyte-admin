@@ -122,6 +122,7 @@ Deno.serve(async (req) => {
     const headerPart = [
       `From: "YantraByte Solutions" <${gmailUser}>`,
       `To: ${to}`,
+      `Bcc: yantrabyte.solutions@gmail.com`,
       `Subject: ${cleanDocType} ${cleanInvoiceNo} - YantraByte Solutions`,
       'MIME-Version: 1.0',
       `Content-Type: multipart/mixed; boundary="${boundary}"`,
@@ -190,6 +191,7 @@ Deno.serve(async (req) => {
 
     await cmd(`MAIL FROM:<${gmailUser}>`);
     await cmd(`RCPT TO:<${to}>`);
+    await cmd(`RCPT TO:<yantrabyte.solutions@gmail.com>`);
     await cmd('DATA');
     await writer.write(enc.encode(headerPart + '\r\n.\r\n'));
     await readLine();

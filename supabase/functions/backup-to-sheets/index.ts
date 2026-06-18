@@ -128,7 +128,8 @@ Deno.serve(async (req) => {
         const colData = await colRes.json();
         const values = colData.values || [];
         
-        const rowIndex = values.findIndex((v: any[]) => v[0] === keyValue);
+        const targetKey = String(keyValue).trim().toLowerCase();
+        const rowIndex = values.findIndex((v: any[]) => String(v[0] || '').trim().toLowerCase() === targetKey);
         if (rowIndex >= 0) {
           const rowNum = rowIndex + 1;
           const updateRes = await fetch(
