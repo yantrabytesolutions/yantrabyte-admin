@@ -517,8 +517,8 @@ export default function AdminPanel() {
     element.style.backgroundColor = '#ffffff';
 
     element.innerHTML = `
-      <div style="width: 794px; min-height: 1123px; padding: 28px; box-sizing: border-box; background: #ffffff;">
-      <div style="border: 2px solid #000000; padding: 18px; min-height: 1067px; box-sizing: border-box;">
+      <div style="width: 794px; min-height: 1123px; padding: 28px; box-sizing: border-box; background-color: #ffffff; background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3OTQiIGhlaWdodD0iMTEyMyI+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI4MCIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0icmdiYSgxMSw4MywxNDgsMC4wNykiIHRyYW5zZm9ybT0icm90YXRlKC0zNSwgMzk3LCA1NjEpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBsZXR0ZXItc3BhY2luZz0iOCI+WUFOVFJBQllURSBTT0xVVElPTlM8L3RleHQ+Cjwvc3ZnPg=='); background-position: center center; background-repeat: no-repeat;">
+      <div style="border: 2px solid #000000; padding: 18px; min-height: 1067px; box-sizing: border-box; position: relative; z-index: 10;">
         <!-- Header -->
         <table style="width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 16px;">
           <tr>

@@ -1841,7 +1841,15 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
       {/* --- HIDDEN PRINT TEMPLATE --- */}
       <div style={{ position: 'absolute', top: 0, left: 0, width: '794px', opacity: 0, pointerEvents: 'none', zIndex: -1000 }}>
-        <div ref={printRef} className="bg-white p-[10px] text-black" style={{ width: '794px', maxWidth: 'none', fontFamily: 'Arial, sans-serif' }}>
+        <div ref={printRef} className="bg-white p-[10px] text-black" style={{ 
+          width: '794px', 
+          minHeight: '1123px',
+          maxWidth: 'none', 
+          fontFamily: 'Arial, sans-serif',
+          backgroundImage: 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3OTQiIGhlaWdodD0iMTEyMyI+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI4MCIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0icmdiYSgxMSw4MywxNDgsMC4wNykiIHRyYW5zZm9ybT0icm90YXRlKC0zNSwgMzk3LCA1NjEpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBsZXR0ZXItc3BhY2luZz0iOCI+WUFOVFJBQllURSBTT0xVVElPTlM8L3RleHQ+Cjwvc3ZnPg==")',
+          backgroundPosition: 'center center',
+          backgroundRepeat: 'no-repeat'
+        }}>
           
           {/* Outer Border for main content */}
           <div className="flex flex-col" style={{ border: '1.5px solid #000' }}>
@@ -1887,11 +1895,6 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
             {/* Items Table */}
             <div className="relative mt-2">
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10 overflow-hidden">
-                <div className="transform -rotate-[35deg] text-[80px] font-black tracking-widest whitespace-nowrap" style={{ color: '#0B5394', opacity: 0.04 }}>
-                  YANTRABYTE SOLUTIONS
-                </div>
-              </div>
               <table className="w-full text-sm text-left relative z-0" style={{ borderCollapse: 'collapse', borderBottom: '1px solid #000' }}>
               <thead>
                 <tr className="text-center text-white" style={{ backgroundColor: '#0B5394' }}>
