@@ -608,41 +608,41 @@ export default function AdminPanel() {
             <col style="width: 32%;" />
           </colgroup>
           <tr>
-            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Ticket ID</td>
-            <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${safeText(ticketNo)}</td>
-            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Date</td>
-            <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${dateStr}</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold; color: #0369A1;">Ticket ID</td>
+            <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word; color: #DC2626;">${safeText(ticketNo)}</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold; color: #0369A1;">Date</td>
+            <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word; color: #B45309;">${dateStr}</td>
           </tr>
           <tr>
-            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Customer Name</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold; color: #0369A1;">Customer Name</td>
             <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${safeText(item.customer_name)}</td>
-            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Phone</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold; color: #0369A1;">Phone</td>
             <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${safeText(item.customer_phone)}</td>
           </tr>
           <tr>
-            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Email</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold; color: #0369A1;">Email</td>
             <td colspan="3" style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${safeText(item.customer_email)}</td>
           </tr>
           <tr>
-            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Address</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold; color: #0369A1;">Address</td>
             <td colspan="3" style="border: 1px solid #000000; padding: 7px 8px; line-height: 1.45; word-break: break-word;">${safeText(item.address || item.customer_address)}</td>
           </tr>
           <tr>
-            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Device</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold; color: #0369A1;">Device</td>
             <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${safeText(item.device || item.device_type)}</td>
-            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Status</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold; color: #0369A1;">Status</td>
             <td style="border: 1px solid #000000; padding: 7px 8px; text-transform: uppercase; font-weight: bold; color: #0f766e; word-break: break-word;">${safeText(item.status || 'Received')}</td>
           </tr>
           <tr>
-            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Make / Model</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold; color: #0369A1;">Make / Model</td>
             <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${safeText(item.device_make_model)}</td>
-            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Password/PIN</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold; color: #0369A1;">Password/PIN</td>
             <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${safeText(item.device_password)}</td>
           </tr>
           <tr>
-            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Service Method</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold; color: #0369A1;">Service Method</td>
             <td style="border: 1px solid #000000; padding: 7px 8px; word-break: break-word;">${item.service_method === 'home_pickup' ? 'Home Pickup' : 'Drop-off'}</td>
-            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold;">Priority</td>
+            <td style="border: 1px solid #000000; background: #D9EAF7; padding: 7px 8px; font-weight: bold; color: #0369A1;">Priority</td>
             <td style="border: 1px solid #000000; padding: 7px 8px; text-transform: capitalize; font-weight: bold; color: ${String(item.priority) === 'high' || String(item.priority) === 'urgent' ? '#b91c1c' : '#374151'}; word-break: break-word;">${safeText(item.priority || 'Medium')}</td>
           </tr>
         </table>

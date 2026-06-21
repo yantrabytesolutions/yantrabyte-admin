@@ -1911,7 +1911,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               <div className="text-right">
                 <h1 className="text-xl font-bold tracking-wide" style={{ color: '#0B5394' }}>YANTRABYTE SOLUTIONS</h1>
                 <p className="text-xs mt-1" style={{ color: '#333333' }}>47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br/>Chikkabettahalli, Bengaluru - 560097</p>
-                <p className="text-xs mt-1" style={{ color: '#333333' }}>Phone: 09986742525 | Email: yantrabyte.solutions@gmail.com</p>
+                <p className="text-xs mt-1" style={{ color: '#333333' }}><span style={{ fontSize: "14px" }}>📱</span> Phone: 09986742525 | <span style={{ fontSize: "14px" }}>✉️</span> Email: yantrabyte.solutions@gmail.com</p>
               </div>
             </div>
 
@@ -1922,7 +1922,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
             {/* Invoice No and Date */}
             <div className="flex justify-between" style={{ borderBottom: '1px solid #000' }}>
-              <div className="w-1/2 p-2 font-bold text-base" style={{ borderRight: '1.5px solid #000', color: '#0B5394' }}>
+              <div className="w-1/2 p-2 font-bold text-base" style={{ borderRight: '1.5px solid #000', color: '#DC2626' }}>
                 {docType === 'Quotation' ? 'Quotation No: ' : 'Invoice No: '} {printInvoiceNumber || (selectedInvoiceId ? (invoices.find(i=>i.id===selectedInvoiceId)?.invoice_no || 'DRAFT') : 'DRAFT')}
               </div>
               <div className="w-1/2 p-2 text-right font-bold text-base" style={{ color: '#333333' }}>
@@ -1932,7 +1932,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
             {/* Bill To */}
             <div style={{ borderBottom: '1px solid #000' }}>
-              <div className="p-1 px-2 font-bold text-sm" style={{ backgroundColor: '#D9EAF7', color: '#000000', borderBottom: '1px solid #000' }}>
+              <div className="p-1 px-2 font-bold text-sm" style={{ backgroundColor: '#D9EAF7', color: '#7E22CE', borderBottom: '1px solid #000' }}>
                 Bill To:
               </div>
               <div className="p-2 text-sm leading-tight" style={{ color: '#000000' }}>
@@ -1981,7 +1981,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             {/* Totals Box */}
             <div className="flex text-sm">
               <div className="w-3/5 p-3 flex flex-col justify-start" style={{ borderRight: '1px solid #000' }}>
-                <div className="font-bold inline-block px-2 py-0.5 mb-2" style={{ backgroundColor: '#D9EAF7', color: '#000000', alignSelf: 'flex-start' }}>Amount in Words:</div>
+                <div className="font-bold inline-block px-2 py-0.5 mb-2" style={{ backgroundColor: '#D9EAF7', color: '#B45309', alignSelf: 'flex-start' }}>Amount in Words:</div>
                 <div className="italic text-gray-800">{numberToWords(grandTotal)}</div>
               </div>
               <div className="w-2/5 flex flex-col">
@@ -2001,7 +2001,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                     <span style={{ color: '#000000' }}>{roundOff.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
                   </div>
                 )}
-                <div className="flex justify-between p-1.5 px-3 font-bold" style={{ backgroundColor: '#FFF2CC', borderBottom: '1px solid #000', color: '#000000' }}>
+                <div className="flex justify-between p-1.5 px-3 font-bold" style={{ backgroundColor: '#FFF2CC', borderBottom: '1px solid #000', color: '#15803D' }}>
                   <span>Grand Total</span>
                   <span className="text-base">{grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
                 </div>
@@ -2009,7 +2009,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                   <span style={{ color: '#333333' }}>Advance Paid</span>
                   <span style={{ color: '#000000' }}>{advancePaid.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
                 </div>
-                <div className="flex justify-between p-1.5 px-3 font-bold" style={{ backgroundColor: '#FFF2CC', color: '#000000' }}>
+                <div className="flex justify-between p-1.5 px-3 font-bold" style={{ backgroundColor: '#FFF2CC', color: '#B91C1C' }}>
                   <span>Balance Due</span>
                   <span className="text-base">{balanceDue.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
                 </div>
