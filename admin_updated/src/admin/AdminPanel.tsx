@@ -534,7 +534,7 @@ export default function AdminPanel() {
                 <div style="display: inline-block; text-align: left; position: relative;">
                   <!-- Stamp/Seal overlay -->
                   <div style="position: absolute; bottom: 10px; right: 20px; pointer-events: none; opacity: 0.85;">
-                    <img src="/seal.png" style="width: 60px; height: 60px; border-radius: 9999px; object-fit: contain;" crossOrigin="anonymous" />
+                    <img src="/seal.png" style="width: 90px; height: 90px; border-radius: 9999px; object-fit: contain;" crossOrigin="anonymous" />
                   </div>
                   <div style="width: 220px; border-bottom: 1px solid #555555; margin-bottom: 8px;"></div>
                   <div style="font-size: 11px; font-weight: bold; color: #0B5394;">For Yantrabyte Solutions</div>

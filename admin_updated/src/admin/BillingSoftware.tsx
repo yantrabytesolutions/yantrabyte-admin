@@ -443,7 +443,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       margin: 0,
       filename: `YBS-${invoiceNumber}.pdf`,
       image: { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, windowWidth: 950 },
+      html2canvas: { scale: 2, useCORS: true, windowWidth: 794, scrollY: 0, x: 0, y: 0 },
       jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
     });
 
@@ -771,7 +771,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
       {/* --- HIDDEN PRINT TEMPLATE --- */}
       <div style={{ display: 'none' }}>
-        <div ref={printRef} className="bg-white p-[10px] w-full text-black" style={{ fontFamily: 'Arial, sans-serif', width: '794px', height: '1080px', position: 'relative', overflow: 'hidden' }}>
+        <div ref={printRef} className="bg-white p-[24px] w-full text-black flex flex-col" style={{ fontFamily: 'Arial, sans-serif', width: '794px', height: '1115px', position: 'relative', overflow: 'hidden', boxSizing: 'border-box' }}>
           {/* Watermark Overlay */}
           <div style={{
             position: 'absolute',
@@ -873,7 +873,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           </div>
 
           {/* Footer Terms */}
-          <div className="flex border-x border-b mt-2" style={{ borderColor: '#000000' }}>
+          <div className="flex border-x border-b mt-auto" style={{ borderColor: '#000000' }}>
             <div className="w-3/5 p-2 border-r" style={{ borderColor: '#000000' }}>
               <div className="font-bold inline-block w-full p-1 mb-1 text-center text-sm" style={{ backgroundColor: '#0B5394', color: '#ffffff' }}>Terms & Conditions</div>
               <div className="space-y-0.5 ml-2 text-[13px]" style={{ color: '#444444' }}>
@@ -916,8 +916,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               </div>
               <div className="text-center mt-3 pt-1 flex flex-col items-center justify-center relative">
                 <p className="font-bold mb-1" style={{ color: '#000000', fontSize: '12px' }}>For YantraByte Solutions</p>
-                <div className="h-16 w-32 flex items-center justify-center relative my-0.5">
-                  <img src="/seal.png" alt="Seal" style={{ maxHeight: '75%', maxWidth: '75%', objectFit: 'contain' }} crossOrigin="anonymous" />
+                <div className="h-20 w-40 flex items-center justify-center relative my-0.5">
+                  <img src="/seal.png" alt="Seal" style={{ maxHeight: '95%', maxWidth: '95%', objectFit: 'contain' }} crossOrigin="anonymous" />
                 </div>
                 <p className="font-bold mt-1" style={{ color: '#000000', fontSize: '12px' }}>RAMESH A S</p>
                 <p style={{ color: '#444444', fontSize: '10px' }}>Authorized Signatory</p>

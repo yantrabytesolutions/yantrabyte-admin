@@ -1878,9 +1878,9 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
       {/* --- HIDDEN PRINT TEMPLATE --- */}
       <div style={{ position: 'absolute', top: 0, left: 0, width: '794px', opacity: 0, pointerEvents: 'none', zIndex: -1000 }}>
-        <div ref={printRef} className="bg-white p-[10px] text-black" style={{ 
+        <div ref={printRef} className="bg-white p-[24px] text-black flex flex-col" style={{ 
           width: '794px', 
-          height: '1080px',
+          height: '1115px',
           boxSizing: 'border-box',
           overflow: 'hidden',
           maxWidth: 'none', 
@@ -2019,7 +2019,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           </div>
 
           {/* Footer Two Boxes */}
-          <div className="flex mt-3 space-x-3">
+          <div className="flex mt-auto space-x-3">
             
             {/* Terms Box */}
             <div className="w-3/5 flex flex-col" style={{ border: '1px solid #000' }}>
@@ -2056,7 +2056,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               <div className="text-center mt-auto flex flex-col justify-end pb-2">
                 <div className="font-bold text-[12px]" style={{ color: '#000' }}>For YantraByte Solutions</div>
                 <div className="flex justify-center my-1" style={{ overflow: 'hidden' }}>
-                  <img src="/seal.png" alt="Seal" style={{ height: '50px', maxWidth: '75px', width: 'auto', objectFit: 'contain' }} crossOrigin="anonymous" />
+                  <img src="/seal.png" alt="Seal" style={{ height: '75px', maxWidth: '100px', width: 'auto', objectFit: 'contain' }} crossOrigin="anonymous" />
                 </div>
                 <div className="font-bold text-[10px]" style={{ color: '#000' }}>RAMESH A S</div>
                 <div className="text-[9px]" style={{ color: '#444444' }}>Authorized Signatory</div>
