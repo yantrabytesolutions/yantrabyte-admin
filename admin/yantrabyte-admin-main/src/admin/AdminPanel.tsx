@@ -432,6 +432,12 @@ export default function AdminPanel() {
 
     element.innerHTML = `
       <div style="border: 2px solid #000000; padding: 20px; min-height: 1020px; position: relative;">
+        <!-- Watermark -->
+        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 0; opacity: 0.15;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 794 1123" width="100%" height="100%">
+            <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="35" font-weight="900" fill="#0B5394" transform="rotate(-40, 397, 561)" text-anchor="middle" dominant-baseline="middle" letter-spacing="10">YANTRABYTE SOLUTIONS</text>
+          </svg>
+        </div>
         <!-- Header -->
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
           <tr>

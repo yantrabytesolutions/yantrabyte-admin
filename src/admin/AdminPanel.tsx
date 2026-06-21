@@ -553,9 +553,14 @@ export default function AdminPanel() {
     element.style.backgroundColor = '#ffffff';
 
     element.innerHTML = `
-      <div style="width: 794px; height: 1115px; padding: 28px; box-sizing: border-box; overflow: hidden; background-color: #ffffff; position: relative;">
-        <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 50; background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3OTQgMTEyMyI+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI1NSIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0icmdiYSgxMSw4MywxNDgsMC4xNSkiIHRyYW5zZm9ybT0icm90YXRlKC00MCwgMzk3LCA1NjEpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBsZXR0ZXItc3BhY2luZz0iMTAiPllBTlRSQUJZVEUgU09MVVRJT05TPC90ZXh0Pjwvc3ZnPg=='); background-position: center center; background-repeat: no-repeat; background-size: 100% 100%;"></div>
-      <div style="border: 2px solid #000000; padding: 18px; min-height: 1059px; box-sizing: border-box; position: relative; z-index: 10;">
+      <div style="width: 794px; height: 1080px; padding: 28px; box-sizing: border-box; overflow: hidden; background-color: #ffffff; position: relative;">
+        <!-- Watermark -->
+        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 50; opacity: 0.15;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 794 1123" width="100%" height="100%">
+            <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="35" font-weight="900" fill="#0B5394" transform="rotate(-40, 397, 561)" text-anchor="middle" dominant-baseline="middle" letter-spacing="10">YANTRABYTE SOLUTIONS</text>
+          </svg>
+        </div>
+        <div style="border: 2px solid #000000; padding: 18px; min-height: 1020px; box-sizing: border-box; position: relative; z-index: 10;">
         <!-- Header -->
         <table style="width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 16px;">
           <tr>
