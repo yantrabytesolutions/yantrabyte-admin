@@ -773,10 +773,17 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       <div style={{ display: 'none' }}>
         <div ref={printRef} className="bg-white p-[10px] w-full text-black" style={{ fontFamily: 'Arial, sans-serif', width: '794px', height: '1080px', position: 'relative', overflow: 'hidden' }}>
           
-          {/* Watermark */}
-          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 50, opacity: 0.15 }}>
-            <img src="/watermark.png" style={{ width: '50%', objectFit: 'contain' }} crossOrigin="anonymous" />
-          </div>
+          {/* Watermark Overlay */}
+          <div style={{
+            position: 'absolute',
+            top: 0, left: 0, right: 0, bottom: 0,
+            backgroundImage: 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3OTQgMTEyMyI+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzNSIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0icmdiYSgxMSw4MywxNDgsMC4xNSkiIHRyYW5zZm9ybT0icm90YXRlKC00MCwgMzk3LCA1NjEpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBsZXR0ZXItc3BhY2luZz0iMTAiPllBTlRSQUJZVEUgU09MVVRJT05TPC90ZXh0Pjwvc3ZnPg==")',
+            backgroundPosition: 'center center',
+            backgroundRepeat: 'no-repeat',
+            backgroundSize: '100% 100%',
+            pointerEvents: 'none',
+            zIndex: 50
+          }}></div>
           
           {/* Header */}
           <div className="flex items-center justify-between border p-3 mb-2" style={{ borderColor: '#000000' }}>
