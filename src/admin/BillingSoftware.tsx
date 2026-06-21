@@ -1895,7 +1895,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             pointerEvents: 'none',
             zIndex: 50,
             overflow: 'hidden',
-            opacity: 0.4
+            opacity: 0.25
           }}>
             <img src="/hardware_watermark.png" alt="Watermark" style={{ width: '100%', height: '100%', objectFit: 'cover' }} crossOrigin="anonymous" />
           </div>
