@@ -51,7 +51,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ invoice }
         pointerEvents: 'none',
         zIndex: 50,
         overflow: 'hidden',
-        opacity: 0.15
+        opacity: 0.4
       }}>
         <img src="/hardware_watermark.png" alt="Watermark" style={{ width: '100%', height: '100%', objectFit: 'cover' }} crossOrigin="anonymous" />
       </div>
