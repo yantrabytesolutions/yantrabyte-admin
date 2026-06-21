@@ -1894,15 +1894,10 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             pointerEvents: 'none',
             zIndex: 50,
-            overflow: 'hidden'
+            overflow: 'hidden',
+            opacity: 0.15
           }}>
-            <div style={{
-              fontFamily: 'Arial, sans-serif', fontSize: '48px', fontWeight: 900,
-              color: 'rgba(11, 83, 148, 0.15)', transform: 'rotate(-40deg)',
-              letterSpacing: '12px', whiteSpace: 'nowrap', userSelect: 'none'
-            }}>
-              YANTRABYTE SOLUTIONS
-            </div>
+            <img src="/hardware_watermark.png" alt="Watermark" style={{ width: '100%', height: '100%', objectFit: 'cover' }} crossOrigin="anonymous" />
           </div>
 
           {/* Outer Border for main content */}
