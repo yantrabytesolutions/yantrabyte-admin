@@ -41,7 +41,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ invoice }
   const items: InvoiceItem[] = Array.isArray(invoice.items) ? invoice.items : [];
   
   return (
-    <div ref={ref} className="bg-white text-black" style={{ width: '794px', height: '1115px', overflow: 'hidden', maxWidth: 'none', fontFamily: 'Arial, sans-serif', padding: '15px', position: 'relative', boxSizing: 'border-box' }}>
+    <div ref={ref} className="bg-white text-black" style={{ width: '794px', height: '1115px', overflow: 'hidden', maxWidth: 'none', fontFamily: 'Arial, sans-serif', padding: '25px', position: 'relative', boxSizing: 'border-box' }}>
       
       {/* Watermark */}
       <div style={{
@@ -57,7 +57,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ invoice }
       </div>
 
       {/* Outer Border for main content */}
-      <div className="flex flex-col relative z-10" style={{ border: '1.5px solid #000', minHeight: '1085px' }}>
+      <div className="flex flex-col relative z-10" style={{ border: '1.5px solid #000', minHeight: '1065px' }}>
         
         {/* Header */}
         <div className="flex items-center justify-between p-3 pb-1" style={{ borderBottom: '1px solid #000' }}>
