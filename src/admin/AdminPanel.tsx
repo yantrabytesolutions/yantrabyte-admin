@@ -555,8 +555,10 @@ export default function AdminPanel() {
     element.innerHTML = `
       <div style="width: 794px; height: 1080px; padding: 28px; box-sizing: border-box; overflow: hidden; background-color: #ffffff; position: relative;">
         <!-- Watermark -->
-        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 50;">
-          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3OTQgMTEyMyI+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzNSIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0icmdiYSgxMSw4MywxNDgsMC4xNSkiIHRyYW5zZm9ybT0icm90YXRlKC00MCwgMzk3LCA1NjEpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBsZXR0ZXItc3BhY2luZz0iMTAiPllBTlRSQUJZVEUgU09MVVRJT05TPC90ZXh0Pjwvc3ZnPg==" style="width: 100%; height: 100%; object-fit: contain;" alt="Watermark" />
+        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 50; overflow: hidden;">
+          <div style="font-family: Arial, sans-serif; font-size: 48px; font-weight: 900; color: rgba(11, 83, 148, 0.15); transform: rotate(-40deg); letter-spacing: 12px; white-space: nowrap; user-select: none;">
+            YANTRABYTE SOLUTIONS
+          </div>
         </div>
         <div style="border: 2px solid #000000; padding: 18px; min-height: 1020px; box-sizing: border-box; position: relative; z-index: 10;">
         <!-- Header -->

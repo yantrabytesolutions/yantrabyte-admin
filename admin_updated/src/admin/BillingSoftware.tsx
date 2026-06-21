@@ -778,9 +778,16 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             top: 0, left: 0, width: '100%', height: '100%',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             pointerEvents: 'none',
-            zIndex: 50
+            zIndex: 50,
+            overflow: 'hidden'
           }}>
-            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3OTQgMTEyMyI+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzNSIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0icmdiYSgxMSw4MywxNDgsMC4xNSkiIHRyYW5zZm9ybT0icm90YXRlKC00MCwgMzk3LCA1NjEpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBsZXR0ZXItc3BhY2luZz0iMTAiPllBTlRSQUJZVEUgU09MVVRJT05TPC90ZXh0Pjwvc3ZnPg==" style={{ width: '100%', height: '100%', objectFit: 'contain' }} alt="Watermark" />
+            <div style={{
+              fontFamily: 'Arial, sans-serif', fontSize: '48px', fontWeight: 900,
+              color: 'rgba(11, 83, 148, 0.15)', transform: 'rotate(-40deg)',
+              letterSpacing: '12px', whiteSpace: 'nowrap', userSelect: 'none'
+            }}>
+              YANTRABYTE SOLUTIONS
+            </div>
           </div>
           
           {/* Header */}
