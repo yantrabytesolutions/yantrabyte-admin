@@ -41,15 +41,27 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ invoice }
   const items: InvoiceItem[] = Array.isArray(invoice.items) ? invoice.items : [];
   
   return (
-    <div ref={ref} className="bg-white text-black" style={{ width: '794px', maxWidth: 'none', fontFamily: 'Arial, sans-serif', padding: '15px' }}>
+    <div ref={ref} className="bg-white text-black" style={{ width: '794px', height: '1115px', overflow: 'hidden', maxWidth: 'none', fontFamily: 'Arial, sans-serif', padding: '15px', position: 'relative', boxSizing: 'border-box' }}>
       
+      {/* Watermark Overlay */}
+      <div style={{
+        position: 'absolute',
+        top: 0, left: 0, right: 0, bottom: 0,
+        backgroundImage: 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3OTQgMTEyMyI+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI1NSIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0icmdiYSgxMSw4MywxNDgsMC4xNSkiIHRyYW5zZm9ybT0icm90YXRlKC00MCwgMzk3LCA1NjEpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBsZXR0ZXItc3BhY2luZz0iMTAiPllBTlRSQUJZVEUgU09MVVRJT05TPC90ZXh0Pjwvc3ZnPg==")',
+        backgroundPosition: 'center center',
+        backgroundRepeat: 'no-repeat',
+        backgroundSize: '100% 100%',
+        pointerEvents: 'none',
+        zIndex: 50
+      }}></div>
+
       {/* Outer Border for main content */}
-      <div className="flex flex-col" style={{ border: '1.5px solid #000' }}>
+      <div className="flex flex-col relative z-10" style={{ border: '1.5px solid #000', minHeight: '1085px' }}>
         
         {/* Header */}
         <div className="flex items-center justify-between p-3 pb-1" style={{ borderBottom: '1px solid #000' }}>
           <div className="flex items-center justify-start ml-1">
-            <img src="/logo6.png" alt="YantraByte Solutions" style={{ height: '90px', width: 'auto' }} crossOrigin="anonymous" />
+            <img src="/logo6.png" alt="YantraByte Solutions" style={{ height: '110px', width: 'auto' }} crossOrigin="anonymous" />
           </div>
           <div className="text-right">
             <h1 className="text-xl font-bold tracking-wide" style={{ color: '#0B5394' }}>YANTRABYTE SOLUTIONS</h1>
@@ -213,8 +225,8 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ invoice }
           
           <div className="text-center mt-auto flex flex-col justify-end pb-2">
             <div className="font-bold text-[10px]" style={{ color: '#000' }}>For YantraByte Solutions</div>
-            <div className="flex justify-center my-1">
-              <img src="/seal.png" alt="Seal" style={{ height: '130px', width: 'auto' }} crossOrigin="anonymous" />
+            <div className="flex justify-center my-1" style={{ overflow: 'hidden' }}>
+              <img src="/seal.png" alt="Seal" style={{ height: '50px', maxWidth: '75px', width: 'auto', objectFit: 'contain' }} crossOrigin="anonymous" />
             </div>
             <div className="font-bold text-[10px]" style={{ color: '#000' }}>RAMESH A S</div>
             <div className="text-[9px]" style={{ color: '#444444' }}>Authorized Signatory</div>

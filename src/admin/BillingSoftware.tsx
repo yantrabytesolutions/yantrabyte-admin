@@ -1880,21 +1880,37 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       <div style={{ position: 'absolute', top: 0, left: 0, width: '794px', opacity: 0, pointerEvents: 'none', zIndex: -1000 }}>
         <div ref={printRef} className="bg-white p-[10px] text-black" style={{ 
           width: '794px', 
-          minHeight: '1123px',
+          height: '1080px',
+          boxSizing: 'border-box',
+          overflow: 'hidden',
           maxWidth: 'none', 
           fontFamily: 'Arial, sans-serif',
-          backgroundImage: 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3OTQiIGhlaWdodD0iMTEyMyI+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI4MCIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0icmdiYSgxMSw4MywxNDgsMC4wNykiIHRyYW5zZm9ybT0icm90YXRlKC0zNSwgMzk3LCA1NjEpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBsZXR0ZXItc3BhY2luZz0iOCI+WUFOVFJBQllURSBTT0xVVElPTlM8L3RleHQ+Cjwvc3ZnPg==")',
-          backgroundPosition: 'center center',
-          backgroundRepeat: 'no-repeat'
+          position: 'relative'
         }}>
-          
+          {/* Watermark Overlay */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            pointerEvents: 'none',
+            zIndex: 50,
+            opacity: 0.15
+          }}>
+            <img src="/watermark.png" style={{ width: '50%', objectFit: 'contain' }} crossOrigin="anonymous" />
+          </div>
+
           {/* Outer Border for main content */}
-          <div className="flex flex-col" style={{ border: '1.5px solid #000' }}>
+          <div className="flex flex-col relative z-10" style={{ border: '1.5px solid #000' }}>
             
             {/* Header */}
             <div className="flex items-center justify-between p-3 pb-1" style={{ borderBottom: '1px solid #000' }}>
               <div className="flex items-center justify-start ml-1">
-                <img src="/logo6.png" alt="YantraByte Solutions" style={{ height: '90px', width: 'auto' }} crossOrigin="anonymous" />
+                <img src="/logo6.png" alt="YantraByte Solutions" style={{ height: '110px', width: 'auto' }} crossOrigin="anonymous" />
               </div>
               <div className="text-right">
                 <h1 className="text-xl font-bold tracking-wide" style={{ color: '#0B5394' }}>YANTRABYTE SOLUTIONS</h1>
@@ -1944,7 +1960,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               </thead>
               <tbody>
                 {items.map((it: any, idx: number) => (
-                  <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? '#ffffff' : '#F8FAFC' }}>
+                  <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? 'transparent' : 'rgba(248, 250, 252, 0.6)' }}>
                     <td className="p-2 text-center" style={{ borderRight: '1px solid #000', color: '#000' }}>{idx + 1}</td>
                     <td className="p-2 font-medium" style={{ borderRight: '1px solid #000', color: '#000' }}>{it.description || it.item || it.name || it.item_name || ''}</td>
                     <td className="p-2 text-center" style={{ borderRight: '1px solid #000', color: '#000' }}>{it.qty || 1}</td>
@@ -1954,7 +1970,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                 ))}
                 {/* Padding rows to fill table space like the screenshot */}
                 {[...Array(Math.max(0, 6 - items.length))].map((_, idx) => (
-                  <tr key={`empty-${idx}`}>
+                  <tr key={`empty-${idx}`} style={{ backgroundColor: 'transparent' }}>
                     <td className="p-2 text-transparent" style={{ borderRight: '1px solid #000' }}>.</td>
                     <td className="p-2 text-transparent" style={{ borderRight: '1px solid #000' }}>.</td>
                     <td className="p-2 text-transparent" style={{ borderRight: '1px solid #000' }}>.</td>
@@ -2043,8 +2059,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               
               <div className="text-center mt-auto flex flex-col justify-end pb-2">
                 <div className="font-bold text-[10px]" style={{ color: '#000' }}>For YantraByte Solutions</div>
-                <div className="flex justify-center my-1">
-                  <img src="/seal.png" alt="Seal" style={{ height: '130px', width: 'auto' }} crossOrigin="anonymous" />
+                <div className="flex justify-center my-1" style={{ overflow: 'hidden' }}>
+                  <img src="/seal.png" alt="Seal" style={{ height: '50px', maxWidth: '75px', width: 'auto', objectFit: 'contain' }} crossOrigin="anonymous" />
                 </div>
                 <div className="font-bold text-[10px]" style={{ color: '#000' }}>RAMESH A S</div>
                 <div className="text-[9px]" style={{ color: '#444444' }}>Authorized Signatory</div>

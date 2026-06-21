@@ -771,7 +771,12 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
       {/* --- HIDDEN PRINT TEMPLATE --- */}
       <div style={{ display: 'none' }}>
-        <div ref={printRef} className="bg-white p-[10px] w-full text-black" style={{ fontFamily: 'Arial, sans-serif' }}>
+        <div ref={printRef} className="bg-white p-[10px] w-full text-black" style={{ fontFamily: 'Arial, sans-serif', width: '794px', height: '1080px', position: 'relative', overflow: 'hidden' }}>
+          
+          {/* Watermark */}
+          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 50, opacity: 0.15 }}>
+            <img src="/watermark.png" style={{ width: '50%', objectFit: 'contain' }} crossOrigin="anonymous" />
+          </div>
           
           {/* Header */}
           <div className="flex items-center justify-between border p-3 mb-2" style={{ borderColor: '#000000' }}>
@@ -801,7 +806,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           </div>
 
           <div className="border-x border-b" style={{ borderColor: '#000000' }}>
-            <div className="p-1 px-2 font-bold text-sm border-b" style={{ backgroundColor: '#D9EAF7', borderColor: '#000000', color: '#000000' }}>Bill To:</div>
+            <div className="p-1 px-2 font-bold text-sm border-b" style={{ backgroundColor: 'transparent', borderColor: '#000000', color: '#000000' }}>Bill To:</div>
             <div className="p-2 text-sm leading-tight" style={{ color: '#000000' }}>
               <div className="font-bold text-base mb-1">{customerName || '—'}</div>
               <div>Phone: {phone || '—'} &nbsp;&nbsp;&nbsp; Email: {email || '—'}</div>
@@ -822,7 +827,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             </thead>
             <tbody>
               {items.map((it, idx) => (
-                <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? '#ffffff' : '#F8FAFC' }}>
+                <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? 'transparent' : 'rgba(248, 250, 252, 0.6)' }}>
                   <td className="border p-1.5 text-center" style={{ borderColor: '#000000', color: '#000000' }}>{idx + 1}</td>
                   <td className="border p-1.5 font-medium" style={{ borderColor: '#000000', color: '#000000' }}>{it.description}</td>
                   <td className="border p-1.5 text-center" style={{ borderColor: '#000000', color: '#000000' }}>{it.qty}</td>
@@ -832,7 +837,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               ))}
               {/* Padding rows */}
               {[...Array(Math.max(0, 6 - items.length))].map((_, idx) => (
-                <tr key={`empty-${idx}`}>
+                <tr key={`empty-${idx}`} style={{ backgroundColor: 'transparent' }}>
                   <td className="border-x p-1.5 text-transparent" style={{ borderColor: '#000000' }}>.</td>
                   <td className="border-x p-1.5 text-transparent" style={{ borderColor: '#000000' }}>.</td>
                   <td className="border-x p-1.5 text-transparent" style={{ borderColor: '#000000' }}>.</td>
@@ -889,7 +894,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             <div className="w-2/5 p-2 flex flex-col justify-between">
               <div>
                 <div className="font-bold inline-block w-full p-1 mb-1 text-center" style={{ backgroundColor: '#0B5394', color: '#ffffff' }}>Bank & Payment Details</div>
-                <div className="flex items-center justify-between ml-2 mt-1">
+                <div className="flex items-center justify-between ml-2 mt-1" style={{ backgroundColor: 'transparent' }}>
                   <div className="leading-snug" style={{ color: '#000000', fontSize: '11px' }}>
                     <p><span className="font-bold">Bank:</span> North East Small Finance Bank</p>
                     <p><span className="font-bold">A/C Name:</span> YantraByte Solutions</p>
@@ -905,7 +910,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               <div className="text-center mt-3 pt-1 flex flex-col items-center justify-center relative">
                 <p className="font-bold mb-1" style={{ color: '#000000', fontSize: '11px' }}>For YantraByte Solutions</p>
                 <div className="h-16 w-32 flex items-center justify-center relative my-0.5">
-                  <img src="/seal.png" alt="Seal" style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} crossOrigin="anonymous" />
+                  <img src="/seal.png" alt="Seal" style={{ maxHeight: '75%', maxWidth: '75%', objectFit: 'contain' }} crossOrigin="anonymous" />
                 </div>
                 <p className="font-bold mt-1" style={{ color: '#000000', fontSize: '11px' }}>RAMESH A S</p>
                 <p style={{ color: '#444444', fontSize: '10px' }}>Authorized Signatory</p>

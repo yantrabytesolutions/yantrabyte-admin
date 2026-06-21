@@ -6565,3 +6565,165 @@ The device is not ready.
    Ended : 18 June 2026 02:00:09
 
 [18-06-2026  2:00:09.72] Backup complete 
+[19-06-2026  2:00:03.38] Starting backup K: to L: 
+[19-06-2026  2:00:03.42] Backing up Nextcloud Data... 
+
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows                              
+-------------------------------------------------------------------------------
+
+  Started : 19 June 2026 02:00:03
+   Source : K:\nextcloud\Data\
+     Dest = L:\nextcloud-backup\
+
+    Files : *.*
+	    
+  Options : *.* /TEE /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /Z /MT:8 /R:3 /W:10 
+
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+
+               Total    Copied   Skipped  Mismatch    FAILED    Extras
+    Dirs :        87        87        87         0         0         0
+   Files :       135         0       135         0         0         0
+   Bytes :   70.99 m         0   70.99 m         0         0         0
+   Times :   0:00:05   0:00:00                       0:00:00   0:00:05
+   Ended : 19 June 2026 02:00:09
+
+[19-06-2026  2:00:09.10] Backing up Guru Mobile Backup... 
+
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows                              
+-------------------------------------------------------------------------------
+
+  Started : 19 June 2026 02:00:09
+   Source : K:\Guru mobile backup\
+     Dest = L:\Guru mobile backup\
+
+    Files : *.*
+	    
+  Options : *.* /TEE /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /Z /MT:8 /R:3 /W:10 
+
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+
+               Total    Copied   Skipped  Mismatch    FAILED    Extras
+    Dirs :        18        18        18         0         0         0
+   Files :      4805         0      4805         0         0         0
+   Bytes :  21.968 g         0  21.968 g         0         0         0
+   Times :   0:00:00   0:00:00                       0:00:00   0:00:00
+   Ended : 19 June 2026 02:00:09
+
+[19-06-2026  2:00:09.36] Backup complete 
+[20-06-2026  2:00:03.42] Starting backup K: to L: 
+[20-06-2026  2:00:03.45] Backing up Nextcloud Data... 
+
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows                              
+-------------------------------------------------------------------------------
+
+  Started : 20 June 2026 02:00:03
+   Source : K:\nextcloud\Data\
+     Dest = L:\nextcloud-backup\
+
+    Files : *.*
+	    
+  Options : *.* /TEE /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /Z /MT:8 /R:3 /W:10 
+
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+
+               Total    Copied   Skipped  Mismatch    FAILED    Extras
+    Dirs :        87        87        87         0         0         0
+   Files :       135         0       135         0         0         0
+   Bytes :   70.99 m         0   70.99 m         0         0         0
+   Times :   0:00:05   0:00:00                       0:00:00   0:00:05
+   Ended : 20 June 2026 02:00:09
+
+[20-06-2026  2:00:09.34] Backing up Guru Mobile Backup... 
+
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows                              
+-------------------------------------------------------------------------------
+
+  Started : 20 June 2026 02:00:09
+   Source : K:\Guru mobile backup\
+     Dest = L:\Guru mobile backup\
+
+    Files : *.*
+	    
+  Options : *.* /TEE /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /Z /MT:8 /R:3 /W:10 
+
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+
+               Total    Copied   Skipped  Mismatch    FAILED    Extras
+    Dirs :        18        18        18         0         0         0
+   Files :      4805         0      4805         0         0         0
+   Bytes :  21.968 g         0  21.968 g         0         0         0
+   Times :   0:00:00   0:00:00                       0:00:00   0:00:00
+   Ended : 20 June 2026 02:00:09
+
+[20-06-2026  2:00:09.64] Backup complete 
+[21-06-2026  2:00:03.38] Starting backup K: to L: 
+[21-06-2026  2:00:03.40] Backing up Nextcloud Data... 
+
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows                              
+-------------------------------------------------------------------------------
+
+  Started : 21 June 2026 02:00:03
+   Source : K:\nextcloud\Data\
+     Dest = L:\nextcloud-backup\
+
+    Files : *.*
+	    
+  Options : *.* /TEE /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /Z /MT:8 /R:3 /W:10 
+
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+
+               Total    Copied   Skipped  Mismatch    FAILED    Extras
+    Dirs :        87        87        87         0         0         0
+   Files :       135         0       135         0         0         0
+   Bytes :   70.99 m         0   70.99 m         0         0         0
+   Times :   0:00:05   0:00:00                       0:00:00   0:00:05
+   Ended : 21 June 2026 02:00:09
+
+[21-06-2026  2:00:09.30] Backing up Guru Mobile Backup... 
+
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows                              
+-------------------------------------------------------------------------------
+
+  Started : 21 June 2026 02:00:09
+   Source : K:\Guru mobile backup\
+     Dest = L:\Guru mobile backup\
+
+    Files : *.*
+	    
+  Options : *.* /TEE /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /Z /MT:8 /R:3 /W:10 
+
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+
+               Total    Copied   Skipped  Mismatch    FAILED    Extras
+    Dirs :        18        18        18         0         0         0
+   Files :      4805         0      4805         0         0         0
+   Bytes :  21.968 g         0  21.968 g         0         0         0
+   Times :   0:00:00   0:00:00                       0:00:00   0:00:00
+   Ended : 21 June 2026 02:00:09
+
+[21-06-2026  2:00:09.61] Backup complete 

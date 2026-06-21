@@ -65,7 +65,7 @@ export default function Header() {
         <div className="flex h-16 items-center justify-between lg:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-1 group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <img src="/logo6.png" alt="Yantrabyte Solutions" className="h-10 w-auto sm:h-12" />
+            <img src="/logo6.png" alt="Yantrabyte Solutions" className="h-12 w-auto sm:h-14" />
           </Link>
 
           {/* Desktop Navigation */}
@@ -145,7 +145,7 @@ export default function Header() {
               className="fixed top-0 right-0 bottom-0 z-50 w-[85%] max-w-sm overflow-y-auto bg-[#0B1120] shadow-2xl lg:hidden"
             >
               <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
-                <img src="/logo6.png" alt="Yantrabyte Solutions" className="h-10 w-auto" />
+                <img src="/logo6.png" alt="Yantrabyte Solutions" className="h-12 w-auto" />
                 <button
                   onClick={() => setMobileOpen(false)}
                   className="rounded-lg p-2 text-gray-300 transition-colors hover:bg-white/10 hover:text-white"

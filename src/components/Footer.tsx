@@ -95,7 +95,7 @@ export default function Footer() {
           {/* Company Info */}
           <motion.div variants={itemVariants} className="sm:col-span-2 lg:col-span-1">
             <Link to="/" className="inline-block">
-              <img src="/logo6.png" alt="Yantrabyte Solutions" className="h-14 w-auto mb-2" />
+              <img src="/logo6.png" alt="Yantrabyte Solutions" className="h-16 w-auto mb-2" />
             </Link>
             <p className="mt-4 text-sm leading-relaxed text-gray-400">
               Smart Technology. Secure Future.

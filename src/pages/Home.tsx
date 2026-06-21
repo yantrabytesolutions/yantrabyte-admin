@@ -330,7 +330,7 @@ function HeroSection() {
   };
 
   return (
-    <section id="hero" className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-[#0B1120] via-[#111827] to-[#0B1120]">
+    <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#0B1120] via-[#111827] to-[#0B1120]">
       <div className="absolute inset-0 opacity-[0.04]" style={{
         backgroundImage: `linear-gradient(rgba(14,165,233,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(14,165,233,0.5) 1px, transparent 1px)`,
         backgroundSize: '60px 60px',
@@ -349,11 +349,11 @@ function HeroSection() {
       </div>
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#0EA5E9]/5 rounded-full blur-[120px]" />
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-16 md:py-24">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-8">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-20 md:py-28">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          <div className="space-y-8 text-center lg:text-left">
             <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#0EA5E9]/10 border border-[#0EA5E9]/30 text-[#0EA5E9] text-sm font-medium">
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#0EA5E9]/10 border border-[#0EA5E9]/30 text-[#0EA5E9] text-sm font-medium mx-auto lg:mx-0">
               <span className="w-2 h-2 rounded-full bg-[#0EA5E9] animate-pulse" />
               Bangalore's Trusted IT & Security Partner
             </motion.div>
@@ -365,12 +365,12 @@ function HeroSection() {
             </motion.h1>
 
             <motion.p initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.6 }}
-              className="text-lg text-[#94A3B8] max-w-xl leading-relaxed">
+              className="text-lg text-[#94A3B8] max-w-xl mx-auto lg:mx-0 leading-relaxed">
               Professional CCTV Installation, Computer Repair, Networking & Smart Security Solutions for Homes & Businesses.
             </motion.p>
 
             <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.8 }}
-              className="flex flex-wrap gap-4">
+              className="flex flex-wrap justify-center lg:justify-start gap-3 sm:gap-4">
               <a href="/service-request" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg bg-gradient-to-r from-[#0D9488] to-[#0EA5E9] hover:from-[#0F766E] hover:to-[#0284C7] text-white font-bold tracking-wider uppercase transition-all duration-300 shadow-lg shadow-[#0EA5E9]/25 hover:shadow-[#0EA5E9]/40">
                 Service Request
               </a>
@@ -565,7 +565,7 @@ function TrustStatsSection() {
   ];
 
   return (
-    <Section className="relative -mt-16 z-20">
+    <Section className="relative -mt-8 md:-mt-12 z-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div variants={staggerContainer} className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {stats.map((stat, i) => (
@@ -666,7 +666,7 @@ function WhyChooseUsSection() {
           </p>
         </motion.div>
 
-        <motion.div variants={staggerContainer} className="grid grid-cols-1 lg:grid-cols-[1fr_0.8fr] gap-12 mt-12">
+        <motion.div variants={staggerContainer} className="grid grid-cols-1 lg:grid-cols-2 gap-12 mt-12 items-start">
           <div className="grid sm:grid-cols-2 gap-6">
             {features.map((feature, i) => {
               const Icon = feature.icon;
@@ -688,7 +688,7 @@ function WhyChooseUsSection() {
           </div>
           
           {/* Aesthetic Images */}
-          <motion.div variants={scaleIn} className="grid grid-rows-2 gap-6 h-[400px] lg:h-full mt-6 lg:mt-0">
+          <motion.div variants={scaleIn} className="grid grid-rows-2 gap-6 min-h-[300px] sm:min-h-[400px] lg:min-h-0 lg:h-full mt-6 lg:mt-0">
             <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl group">
               <img src="/images/cctv_camera.png" alt="Advanced CCTV Systems" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0B1120] via-transparent to-transparent opacity-80" />
@@ -943,7 +943,7 @@ function TestimonialsSection() {
 
   return (
     <Section id="testimonials">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div variants={fadeInUp} className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             What Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0EA5E9] to-[#38BDF8]">Clients Say</span>
@@ -951,7 +951,7 @@ function TestimonialsSection() {
           <p className="text-[#94A3B8] text-lg">Trusted by hundreds of businesses across Bangalore</p>
         </motion.div>
 
-        <motion.div variants={scaleIn} className="relative">
+        <motion.div variants={scaleIn} className="relative max-w-4xl mx-auto">
           <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 md:p-10 min-h-[280px] flex flex-col justify-between shadow-lg shadow-[#0EA5E9]/5">
             <AnimatePresence mode="wait">
               <motion.div key={current} initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.4 }}>
@@ -1171,7 +1171,7 @@ function FAQSection() {
 
   return (
     <Section id="faq">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div variants={fadeInUp} className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             Frequently Asked <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0EA5E9] to-[#38BDF8]">Questions</span>
@@ -1195,7 +1195,7 @@ function FAQSection() {
             {Array.from({ length: 4 }).map((_, i) => (<div key={i} className="h-16 rounded-xl bg-white/5 animate-pulse border border-white/5" />))}
           </div>
         ) : (
-          <motion.div variants={staggerContainer} className="space-y-3">
+          <motion.div variants={staggerContainer} className="max-w-3xl mx-auto space-y-3">
             {filteredFaqs.map((faq, i) => (
               <motion.div key={faq.id} variants={staggerItem}>
                 <FAQItem faq={faq} isOpen={openIndex === i} onToggle={() => setOpenIndex(openIndex === i ? null : i)} />
@@ -1272,7 +1272,7 @@ function ContactSection() {
           })}
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
           {/* Form */}
           <motion.div variants={fadeInUp}>
             {submitted ? (
@@ -1286,7 +1286,7 @@ function ContactSection() {
                 </p>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 md:p-10 space-y-6">
+              <form onSubmit={handleSubmit} className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 md:p-10 space-y-6 h-full">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-white text-sm font-medium mb-2">Full Name *</label>
@@ -1334,7 +1334,7 @@ function ContactSection() {
           </motion.div>
 
           {/* Map + Quick Actions */}
-          <motion.div variants={scaleIn} className="flex flex-col gap-6">
+          <motion.div variants={scaleIn} className="flex flex-col gap-6 h-full">
             <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl overflow-hidden flex-1 min-h-[300px] relative">
               <div className="absolute inset-0 bg-gradient-to-br from-[#0F172A] to-[#1E293B] flex items-center justify-center">
                 <div className="text-center">
@@ -1556,7 +1556,7 @@ function EmergencyBanner() {
   return (
     <Section className="!py-0">
       <motion.div variants={fadeInUp} className="bg-gradient-to-r from-red-600 via-orange-600 to-red-600 py-10 md:py-14">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center animate-pulse">
               <AlertTriangle className="w-7 h-7 text-white" />
@@ -1566,7 +1566,7 @@ function EmergencyBanner() {
               <p className="text-white/80 text-sm mt-1">Critical issue? We respond within 2 hours across Bangalore</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-center gap-4">
             <a href="tel:+919986742525" className="text-white font-mono text-lg md:text-xl font-bold hover:underline">+91 99867 42525</a>
             <a href="tel:+919986742525"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-white text-red-600 font-bold hover:bg-white/90 transition-all duration-300 shadow-lg">

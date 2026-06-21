@@ -422,16 +422,10 @@ export default function AdminPanel() {
   const printJobSheet = (item: Record<string, unknown>) => {
     const ticketNo = String(item.ticket_number || 'DRAFT');
     const element = document.createElement('div');
-    element.style.padding = '20px';
-    element.style.width = '790px';
-    element.style.fontFamily = 'Arial, sans-serif';
-    element.style.color = '#333333';
-    element.style.backgroundColor = '#ffffff';
-
-    const dateStr = item.created_at ? new Date(String(item.created_at)).toLocaleDateString('en-GB') : new Date().toLocaleDateString('en-GB');
-
     element.innerHTML = `
-      <div style="border: 2px solid #000000; padding: 20px; min-height: 1020px; position: relative;">
+      <div style="width: 794px; height: 1115px; padding: 28px; box-sizing: border-box; overflow: hidden; background-color: #ffffff; position: relative;">
+        <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 50; background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3OTQgMTEyMyI+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI1NSIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0icmdiYSgxMSw4MywxNDgsMC4xNSkiIHRyYW5zZm9ybT0icm90YXRlKC00MCwgMzk3LCA1NjEpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBsZXR0ZXItc3BhY2luZz0iMTAiPllBTlRSQUJZVEUgU09MVVRJT05TPC90ZXh0Pjwvc3ZnPg=='); background-position: center center; background-repeat: no-repeat; background-size: 100% 100%;"></div>
+      <div style="border: 2px solid #000000; padding: 18px; min-height: 1059px; box-sizing: border-box; position: relative; z-index: 10;">
         <!-- Header -->
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
           <tr>
@@ -450,7 +444,7 @@ export default function AdminPanel() {
                 Ticket No: <span style="color: #c2410c; font-size: 15px;">${ticketNo}</span>
               </div>
               <div style="font-size: 11px; color: #555555; margin-top: 4px;">
-                Date: ${dateStr}
+                Date: ${item.created_at ? new Date(String(item.created_at)).toLocaleDateString('en-GB') : new Date().toLocaleDateString('en-GB')}
               </div>
             </td>
           </tr>
@@ -537,7 +531,7 @@ export default function AdminPanel() {
                 <div style="display: inline-block; text-align: left; position: relative;">
                   <!-- Stamp/Seal overlay -->
                   <div style="position: absolute; bottom: 10px; right: 20px; pointer-events: none; opacity: 0.85;">
-                    <img src="/seal.png" style="width: 115px; height: 115px; border-radius: 9999px; object-fit: contain;" crossOrigin="anonymous" />
+                    <img src="/seal.png" style="width: 60px; height: 60px; border-radius: 9999px; object-fit: contain;" crossOrigin="anonymous" />
                   </div>
                   <div style="width: 220px; border-bottom: 1px solid #555555; margin-bottom: 8px;"></div>
                   <div style="font-size: 11px; font-weight: bold; color: #0B5394;">For Yantrabyte Solutions</div>
