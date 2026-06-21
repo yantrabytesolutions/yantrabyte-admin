@@ -179,12 +179,12 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ invoice }
       </div>
 
       {/* Footer Two Boxes */}
-      <div className="flex mt-3 space-x-3 text-xs">
+      <div className="flex mt-3 space-x-3">
         
         {/* Terms Box */}
         <div className="w-3/5 flex flex-col" style={{ border: '1px solid #000' }}>
-          <div className="font-bold text-center p-1 text-white" style={{ backgroundColor: '#0B5394' }}>Terms & Conditions</div>
-          <div className="p-3 space-y-1" style={{ color: '#444444' }}>
+          <div className="font-bold text-center p-1 text-white text-sm" style={{ backgroundColor: '#0B5394' }}>Terms & Conditions</div>
+          <div className="p-3 space-y-1 text-[13px]" style={{ color: '#444444' }}>
             {invoice.doc_type === 'Quotation' ? (
               <>
                 <p>1. Estimate valid for 7 days.</p>
@@ -206,10 +206,10 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ invoice }
 
         {/* Bank & Payment Details Box */}
         <div className="w-2/5 flex flex-col" style={{ border: '1px solid #000' }}>
-          <div className="font-bold text-center p-1 text-white" style={{ backgroundColor: '#0B5394' }}>Bank & Payment Details</div>
+          <div className="font-bold text-center p-1 text-white text-sm" style={{ backgroundColor: '#0B5394' }}>Bank & Payment Details</div>
           
           <div className="p-2 flex justify-between">
-            <div className="text-[9px] leading-relaxed" style={{ color: '#000' }}>
+            <div className="text-[12px] leading-relaxed" style={{ color: '#000' }}>
               <span className="font-bold">Bank:</span> North East Small Finance Bank<br/>
               <span className="font-bold">A/C Name:</span> YantraByte Solutions<br/>
               <span className="font-bold">A/C No:</span> 033311501023226<br/>
@@ -225,7 +225,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ invoice }
           </div>
           
           <div className="text-center mt-auto flex flex-col justify-end pb-2">
-            <div className="font-bold text-[10px]" style={{ color: '#000' }}>For YantraByte Solutions</div>
+            <div className="font-bold text-[12px]" style={{ color: '#000' }}>For YantraByte Solutions</div>
             <div className="flex justify-center my-1" style={{ overflow: 'hidden' }}>
               <img src="/seal.png" alt="Seal" style={{ height: '50px', maxWidth: '75px', width: 'auto', objectFit: 'contain' }} crossOrigin="anonymous" />
             </div>

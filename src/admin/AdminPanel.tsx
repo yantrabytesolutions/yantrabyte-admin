@@ -702,8 +702,8 @@ export default function AdminPanel() {
 
         <!-- Repair / Drop-off Terms -->
         <div style="border: 1px solid #000000; padding: 12px; margin-bottom: 42px; background-color: #f8fafc;">
-          <div style="font-size: 11px; font-weight: bold; margin-bottom: 6px; color: #111111;">TERMS & CONDITIONS:</div>
-          <ol style="margin: 0; padding-left: 15px; font-size: 9px; color: #555555; line-height: 1.5;">
+          <div style="font-size: 13px; font-weight: bold; margin-bottom: 6px; color: #111111;">TERMS & CONDITIONS:</div>
+          <ol style="margin: 0; padding-left: 15px; font-size: 12px; color: #555555; line-height: 1.5;">
             <li>Diagnostic charges are applicable for all devices checked in for repair, even if estimate is rejected.</li>
             <li>Backup all data before drop-off. Yantrabyte Solutions is not liable for data loss or corruption during repair.</li>
             <li>Devices not collected within 30 days of repair completion warning may be subject to storage fees or disposal.</li>
@@ -720,8 +720,8 @@ export default function AdminPanel() {
               <td style="width: 50%; vertical-align: bottom; padding-right: 16px;">
                 ${item.customer_signature ? `<div style="height: 72px; text-align: left; margin-bottom: 4px;"><img src="${item.customer_signature}" style="max-width: 180px; max-height: 70px; object-fit: contain;" /></div>` : ''}
                 <div style="width: 180px; border-bottom: 1px solid #555555; margin-bottom: 8px;"></div>
-                <div style="font-size: 11px; font-weight: bold; color: #333333;">Customer Drop-off Signature</div>
-                <div style="font-size: 9px; color: #777777; margin-top: 2px;">I agree to the service repair terms above.</div>
+                <div style="font-size: 13px; font-weight: bold; color: #333333;">Customer Drop-off Signature</div>
+                <div style="font-size: 12px; color: #777777; margin-top: 2px;">I agree to the service repair terms above.</div>
               </td>
               <!-- Yantrabyte Sign -->
               <td style="width: 50%; text-align: right; vertical-align: bottom; padding-left: 16px;">

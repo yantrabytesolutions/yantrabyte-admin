@@ -873,10 +873,10 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           </div>
 
           {/* Footer Terms */}
-          <div className="flex border-x border-b text-xs mt-2" style={{ borderColor: '#000000' }}>
+          <div className="flex border-x border-b mt-2" style={{ borderColor: '#000000' }}>
             <div className="w-3/5 p-2 border-r" style={{ borderColor: '#000000' }}>
-              <div className="font-bold inline-block w-full p-1 mb-1 text-center" style={{ backgroundColor: '#0B5394', color: '#ffffff' }}>Terms & Conditions</div>
-              <div className="space-y-0.5 ml-2" style={{ color: '#444444' }}>
+              <div className="font-bold inline-block w-full p-1 mb-1 text-center text-sm" style={{ backgroundColor: '#0B5394', color: '#ffffff' }}>Terms & Conditions</div>
+              <div className="space-y-0.5 ml-2 text-[13px]" style={{ color: '#444444' }}>
                 {docType === 'Quotation' ? (
                   <>
                     <p>1. Quotation is valid for 7 days from the date of issue.</p>
@@ -900,9 +900,9 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             </div>
             <div className="w-2/5 p-2 flex flex-col justify-between">
               <div>
-                <div className="font-bold inline-block w-full p-1 mb-1 text-center" style={{ backgroundColor: '#0B5394', color: '#ffffff' }}>Bank & Payment Details</div>
+                <div className="font-bold inline-block w-full p-1 mb-1 text-center text-sm" style={{ backgroundColor: '#0B5394', color: '#ffffff' }}>Bank & Payment Details</div>
                 <div className="flex items-center justify-between ml-2 mt-1" style={{ backgroundColor: 'transparent' }}>
-                  <div className="leading-snug" style={{ color: '#000000', fontSize: '11px' }}>
+                  <div className="leading-snug" style={{ color: '#000000', fontSize: '12px' }}>
                     <p><span className="font-bold">Bank:</span> North East Small Finance Bank</p>
                     <p><span className="font-bold">A/C Name:</span> YantraByte Solutions</p>
                     <p><span className="font-bold">A/C No:</span> 033311501023226</p>
@@ -915,11 +915,11 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                 </div>
               </div>
               <div className="text-center mt-3 pt-1 flex flex-col items-center justify-center relative">
-                <p className="font-bold mb-1" style={{ color: '#000000', fontSize: '11px' }}>For YantraByte Solutions</p>
+                <p className="font-bold mb-1" style={{ color: '#000000', fontSize: '12px' }}>For YantraByte Solutions</p>
                 <div className="h-16 w-32 flex items-center justify-center relative my-0.5">
                   <img src="/seal.png" alt="Seal" style={{ maxHeight: '75%', maxWidth: '75%', objectFit: 'contain' }} crossOrigin="anonymous" />
                 </div>
-                <p className="font-bold mt-1" style={{ color: '#000000', fontSize: '11px' }}>RAMESH A S</p>
+                <p className="font-bold mt-1" style={{ color: '#000000', fontSize: '12px' }}>RAMESH A S</p>
                 <p style={{ color: '#444444', fontSize: '10px' }}>Authorized Signatory</p>
               </div>
             </div>
