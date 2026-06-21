@@ -439,15 +439,15 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     // We make it temporarily visible for printing
     element.style.display = 'block';
 
-    const opt = {
-      margin: 0,
+    const getPdfOptions = (invoiceNumber: string) => ({
+      margin: 0.2,
       filename: `YBS-${invoiceNumber}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
+      image: { type: 'jpeg' as const, quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, windowWidth: 950 },
       jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-    };
+    });
 
-    html2pdf().set(opt).from(element).save().then(() => {
+    html2pdf().set(getPdfOptions(invoiceNumber)).from(element).save().then(() => {
       element.style.display = 'none';
       showToast('PDF Generated successfully!');
     });

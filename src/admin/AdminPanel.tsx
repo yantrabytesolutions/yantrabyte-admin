@@ -750,7 +750,7 @@ export default function AdminPanel() {
     const element = generateTicketPdfElement(item);
     const ticketFilename = `JobSheet-${item.ticket_number || 'DRAFT'}.pdf`;
     const opt = {
-      margin: 0,
+      margin: 0.2,
       filename: ticketFilename,
       image: { type: 'jpeg' as const, quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, windowWidth: 794 },

@@ -985,7 +985,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   };
 
   const getPdfOptions = (invoiceNumber: string) => ({
-      margin: 0,
+      margin: 0.2,
       filename: `YBS-${invoiceNumber}.pdf`,
       image: { type: 'jpeg' as const, quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, windowWidth: 794, scrollY: 0, x: 0, y: 0 },
