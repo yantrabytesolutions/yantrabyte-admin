@@ -328,6 +328,21 @@ function HeroSection() {
       const { error: insertError } = await supabase.from('service_tickets').insert([ticketPayload]);
       if (insertError) throw insertError;
 
+      // Trigger Google Sheets backup via client-side fetch (bypassing edge functions)
+      try {
+        const { appendBackupRow } = await import('../utils/googleSheetBackup');
+        const backupPayload = {
+          ...ticketPayload,
+          created_at: new Date().toISOString()
+        };
+        const backupResult = await appendBackupRow(backupPayload, 'Service Tickets');
+        if (!backupResult.success) {
+          console.warn('Google Sheet backup failed, but ticket was created in DB');
+        }
+      } catch (backupError) {
+        console.warn('Network error triggering Google Sheet backup:', backupError);
+      }
+
       supabase.functions.invoke('send-ticket-email', { body: ticketPayload }).catch((err) => {
         console.warn('Edge function error:', err);
       });
