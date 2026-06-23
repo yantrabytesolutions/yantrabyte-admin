@@ -276,30 +276,42 @@ function HeroSection() {
 
     setSubmitting(true);
     try {
-      const now = new Date();
-      const currentYear = now.getFullYear();
-      const currentMonth = now.getMonth();
-      const startYear = currentMonth < 3 ? currentYear - 1 : currentYear;
-      const datePrefix = `${startYear}-${startYear + 1}`;
-      const prefixString = `YBS-${datePrefix}-`;
+      const { data: ticketNumberFromRpc, error: rpcError } = await supabase
+        .rpc('get_next_service_ticket_number');
 
-      const { data: existing } = await supabase
-        .from('service_tickets')
-        .select('ticket_number')
-        .ilike('ticket_number', `${prefixString}%`);
+      let ticketNumber = ticketNumberFromRpc;
+
+      // Fallback if RPC fails or doesn't exist yet
+      if (rpcError || !ticketNumber) {
+        const now = new Date();
+        const day = String(now.getDate()).padStart(2, '0');
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const year = String(now.getFullYear()).slice(-2);
+        const prefix = `YBS-TKT-${day}${month}${year}-`;
         
-      let maxSeq = 0;
-      if (existing) {
-        for (const t of existing) {
-          const match = String(t.ticket_number || '').match(/-(\d+)$/);
-          if (match) {
-            const seqNum = parseInt(match[1], 10);
-            if (!isNaN(seqNum) && seqNum > maxSeq) maxSeq = seqNum;
+        let seq = 1;
+        try {
+          const { data: latestTickets } = await supabase
+            .from('service_tickets')
+            .select('ticket_number')
+            .order('created_at', { ascending: false })
+            .limit(1);
+            
+          if (latestTickets && latestTickets.length > 0 && latestTickets[0].ticket_number) {
+            const lastTicket = latestTickets[0].ticket_number;
+            const match = lastTicket.match(/-(\d+)$/);
+            if (match) {
+              seq = parseInt(match[1], 10) + 1;
+            }
           }
+        } catch (err) {
+          console.warn('Could not fetch latest ticket, using random suffix', err);
+          const randomSuffix = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+          seq = parseInt(randomSuffix, 10);
         }
+        
+        ticketNumber = `${prefix}${String(seq).padStart(3, '0')}`;
       }
-      const seq = (maxSeq + 1).toString().padStart(3, '0');
-      const ticketNumber = `${prefixString}${seq}`;
 
       const ticketPayload = {
         ticket_number: ticketNumber,
