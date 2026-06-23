@@ -330,15 +330,38 @@ function HeroSection() {
 
       // Trigger Google Sheets backup via client-side fetch (bypassing edge functions)
       try {
+        const headers = [
+          'Ticket No', 'Created At', 'Customer', 'Phone', 'Email',
+          'Address', 'Make/Model', 'Device / Service', 'Issue', 'Priority', 'Status',
+          'Assigned To', 'Service Method', 'Budget', 'Notes', 'Link'
+        ];
+        const row = [
+          ticketPayload.ticket_number || '',
+          new Date().toISOString(),
+          ticketPayload.customer_name || '',
+          ticketPayload.customer_phone || '',
+          ticketPayload.customer_email || '',
+          ticketPayload.customer_address || '',
+          '',
+          ticketPayload.device_type || '',
+          ticketPayload.issue_description || '',
+          ticketPayload.priority || '',
+          ticketPayload.status || 'open',
+          '', 
+          'Drop-off',
+          '', 
+          '', 
+          `https://yantrabyte.anantatechcare.com/admin`
+        ];
+
         const { appendBackupRow } = await import('../utils/googleSheetBackup');
-        const backupPayload = {
-          ...ticketPayload,
-          created_at: new Date().toISOString()
-        };
-        const backupResult = await appendBackupRow(backupPayload, 'Service Tickets');
-        if (!backupResult.success) {
-          console.warn('Google Sheet backup failed, but ticket was created in DB');
-        }
+        await appendBackupRow({
+          sheetName: 'Service Tickets',
+          headers,
+          row,
+          keyColumnIndex: 0,
+          keyValue: ticketPayload.ticket_number || '',
+        });
       } catch (backupError) {
         console.warn('Network error triggering Google Sheet backup:', backupError);
       }
