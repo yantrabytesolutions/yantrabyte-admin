@@ -447,6 +447,16 @@ export default function ServiceRequest() {
                       placeholder="Email address"
                     />
                   </label>
+                  <label className="block">
+                    <span className="text-sm font-semibold text-slate-700">Customer Address</span>
+                    <textarea
+                      rows={1}
+                      value={form.customer_address}
+                      onChange={e => updateField('customer_address', e.target.value)}
+                      className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 resize-none"
+                      placeholder="e.g. 47A 1st Cross, Bengaluru"
+                    />
+                  </label>
                 </div>
 
                 <div className="block">
@@ -527,16 +537,6 @@ export default function ServiceRequest() {
 
                 {form.service_method === 'home_pickup' && (
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <label className="block">
-                      <span className="text-sm font-semibold text-slate-700">Pickup Address *</span>
-                      <textarea
-                        value={form.customer_address}
-                        onChange={e => updateField('customer_address', e.target.value)}
-                        rows={2}
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
-                        placeholder="Full pickup address"
-                      />
-                    </label>
                     <label className="block">
                       <span className="text-sm font-semibold text-slate-700">Preferred Date & Time</span>
                       <input

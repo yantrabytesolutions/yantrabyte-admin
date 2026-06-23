@@ -1089,6 +1089,13 @@ CREATE POLICY "Admins have full access to service_tickets"
   USING (true)
   WITH CHECK (true);
 
+-- Create policy to allow public users to submit service tickets
+CREATE POLICY "Public can create service tickets" 
+  ON public.service_tickets 
+  FOR INSERT 
+  TO anon, authenticated 
+  WITH CHECK (true);
+
 
 -- FILE: 20260516120000_add_invoices_table.sql
 -- Create invoices table for the built-in Billing Software
