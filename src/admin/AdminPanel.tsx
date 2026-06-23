@@ -248,16 +248,16 @@ const SERVICE_TICKET_HEADERS = [
   'Phone',
   'Email',
   'Address',
-  'Make/Model',
   'Device / Service',
   'Issue',
   'Priority',
   'Status',
   'Assigned To',
-  'Service Method',
-  'Budget',
   'Notes',
   'Link',
+  'Make/Model',
+  'Service Method',
+  'Budget'
 ];
 
 const serviceTicketRow = (ticket: Partial<ServiceTicket & { device_make_model?: string; service_method?: string; pre_approved_budget?: string; }>) => [
@@ -267,16 +267,16 @@ const serviceTicketRow = (ticket: Partial<ServiceTicket & { device_make_model?: 
   ticket.customer_phone || '',
   ticket.customer_email || '',
   ticket.customer_address || '',
-  ticket.device_make_model || '',
   ticket.device_type || '',
   ticket.issue_description || '',
   ticket.priority || '',
   ticket.status || '',
   ticket.assigned_to || '',
-  ticket.service_method === 'home_pickup' ? 'Home Pickup' : 'Drop-off',
-  ticket.pre_approved_budget || '',
   ticket.notes || '',
   ticket.ticket_number ? `https://yantrabyte.anantatechcare.com/admin` : '',
+  ticket.device_make_model || '',
+  ticket.service_method === 'home_pickup' ? 'Home Pickup' : 'Drop-off',
+  ticket.pre_approved_budget || '',
 ];
 
 const SECTION_FIELDS: Record<string, FormField[]> = {

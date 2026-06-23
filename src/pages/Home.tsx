@@ -332,8 +332,8 @@ function HeroSection() {
       try {
         const headers = [
           'Ticket No', 'Created At', 'Customer', 'Phone', 'Email',
-          'Address', 'Make/Model', 'Device / Service', 'Issue', 'Priority', 'Status',
-          'Assigned To', 'Service Method', 'Budget', 'Notes', 'Link'
+          'Address', 'Device / Service', 'Issue', 'Priority', 'Status',
+          'Assigned To', 'Notes', 'Link', 'Make/Model', 'Service Method', 'Budget'
         ];
         const row = [
           ticketPayload.ticket_number || '',
@@ -342,16 +342,16 @@ function HeroSection() {
           ticketPayload.customer_phone || '',
           ticketPayload.customer_email || '',
           ticketPayload.customer_address || '',
-          '',
           ticketPayload.device_type || '',
           ticketPayload.issue_description || '',
           ticketPayload.priority || '',
           ticketPayload.status || 'open',
           '', 
-          'Drop-off',
           '', 
-          '', 
-          `https://yantrabyte.anantatechcare.com/admin`
+          `https://yantrabyte.anantatechcare.com/admin`,
+          '', // Make/Model
+          'Drop-off', // Service Method
+          '' // Budget
         ];
 
         const { appendBackupRow } = await import('../utils/googleSheetBackup');

@@ -247,8 +247,8 @@ export default function ServiceRequest() {
       try {
         const headers = [
           'Ticket No', 'Created At', 'Customer', 'Phone', 'Email',
-          'Address', 'Make/Model', 'Device / Service', 'Issue', 'Priority', 'Status',
-          'Assigned To', 'Service Method', 'Budget', 'Notes', 'Link'
+          'Address', 'Device / Service', 'Issue', 'Priority', 'Status',
+          'Assigned To', 'Notes', 'Link', 'Make/Model', 'Service Method', 'Budget'
         ];
         const row = [
           ticketPayload.ticket_number || '',
@@ -257,16 +257,16 @@ export default function ServiceRequest() {
           ticketPayload.customer_phone || '',
           ticketPayload.customer_email || '',
           ticketPayload.customer_address || '',
-          ticketPayload.device_make_model || '',
           ticketPayload.device_type || '',
           ticketPayload.issue_description || '',
           ticketPayload.priority || '',
           ticketPayload.status || 'open',
           '', 
-          ticketPayload.service_method === 'home_pickup' ? 'Home Pickup' : 'Drop-off',
-          ticketPayload.pre_approved_budget || '',
           '', 
-          `https://yantrabyte.anantatechcare.com/admin`
+          `https://yantrabyte.anantatechcare.com/admin`,
+          ticketPayload.device_make_model || '',
+          ticketPayload.service_method === 'home_pickup' ? 'Home Pickup' : 'Drop-off',
+          ticketPayload.pre_approved_budget || ''
         ];
 
         const { appendBackupRow } = await import('../utils/googleSheetBackup');
