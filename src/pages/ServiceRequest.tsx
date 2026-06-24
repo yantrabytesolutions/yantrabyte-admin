@@ -74,6 +74,7 @@ export default function ServiceRequest() {
   const [captchaA, _setCaptchaA] = useState(Math.floor(Math.random() * 10) + 1);
   const [captchaB, _setCaptchaB] = useState(Math.floor(Math.random() * 10) + 1);
   const [captchaInput, setCaptchaInput] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const updateField = (field: keyof RequestForm, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -114,6 +115,11 @@ export default function ServiceRequest() {
     e.preventDefault();
     
     // Validation
+    if (!termsAccepted) {
+      setError('You must accept the Terms & Conditions to proceed.');
+      return;
+    }
+
     if (parseInt(captchaInput, 10) !== captchaA + captchaB) {
       setError('Incorrect math answer. Please try again.');
       return;
@@ -249,13 +255,17 @@ export default function ServiceRequest() {
       try {
         await supabase.functions.invoke('send-ticket-email', {
           body: {
-            ticket_number:    ticketNumber,
-            customer_email:   form.customer_email,
-            customer_name:    form.customer_name,
-            customer_phone:   form.customer_phone,
-            device_type:      form.device_type,
+            ticket_number:     ticketNumber,
+            customer_email:    form.customer_email,
+            customer_name:     form.customer_name,
+            customer_phone:    form.customer_phone,
+            customer_address:  form.customer_address,
+            device_type:       form.device_type,
+            device_make_model: form.device_make_model,
             issue_description: form.issue_description,
-            priority:         form.priority,
+            priority:          form.priority,
+            service_method:    form.service_method,
+            terms_accepted:    true,
           }
         });
       } catch (e) {
@@ -304,6 +314,7 @@ export default function ServiceRequest() {
       setCreatedTicket(ticketNumber);
       setForm(initialForm);
       setAttachment(null);
+      setTermsAccepted(false);
       removeVideo();
       if (sigCanvas.current) { sigCanvas.current.clear(); }
     } catch (err: any) {
@@ -734,14 +745,38 @@ export default function ServiceRequest() {
                   Create Service Ticket
                 </button>
 
-                {/* Policy Notice */}
-                <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
-                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
-                  <p>
-                    <span className="font-semibold">Important Notice: </span>
-                    Customer must collect working or non-working materials within <span className="font-semibold">2 months</span> from the date given for service.
-                    After that, YantraByte Solutions will not be responsible for the items.
-                  </p>
+                {/* Terms & Conditions Checkbox */}
+                <div className={`rounded-xl border-2 p-4 transition-all ${
+                  termsAccepted
+                    ? 'border-green-400 bg-green-50'
+                    : 'border-amber-300 bg-amber-50'
+                }`}>
+                  <div className="flex items-start gap-3">
+                    <input
+                      id="terms-checkbox"
+                      type="checkbox"
+                      checked={termsAccepted}
+                      onChange={e => setTermsAccepted(e.target.checked)}
+                      className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer rounded border-slate-300 text-green-600 focus:ring-green-500"
+                    />
+                    <label htmlFor="terms-checkbox" className="cursor-pointer text-xs leading-relaxed text-slate-700">
+                      <span className="font-bold text-amber-700">⚠ Important Notice — I Agree: </span>
+                      Customer must collect working or non-working materials within{' '}
+                      <span className="font-bold">2 months</span> from the date given for service.
+                      After that, <span className="font-bold">YantraByte Solutions will not be responsible for the items.</span>
+                      {' '}By checking this box, I acknowledge and accept these terms.
+                    </label>
+                  </div>
+                  {!termsAccepted && (
+                    <p className="mt-2 text-xs font-semibold text-amber-700 pl-8">
+                      ✗ You must accept this notice before submitting.
+                    </p>
+                  )}
+                  {termsAccepted && (
+                    <p className="mt-2 text-xs font-semibold text-green-700 pl-8">
+                      ✓ Terms accepted
+                    </p>
+                  )}
                 </div>
               </form>
             )}
