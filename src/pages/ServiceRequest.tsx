@@ -181,6 +181,7 @@ export default function ServiceRequest() {
 
       // Fallback if RPC fails or doesn't exist yet
       if (rpcError || !ticketNumber) {
+        console.warn('RPC get_next_service_ticket_number failed or returned empty:', rpcError);
         const now = new Date();
         const day = String(now.getDate()).padStart(2, '0');
         const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -189,11 +190,15 @@ export default function ServiceRequest() {
         
         let seq = 1;
         try {
-          const { data: latestTickets } = await supabase
+          const { data: latestTickets, error: selectError } = await supabase
             .from('service_tickets')
             .select('ticket_number')
             .order('created_at', { ascending: false })
             .limit(1);
+            
+          if (selectError) {
+            console.warn('Fallback select error:', selectError);
+          }
             
           if (latestTickets && latestTickets.length > 0 && latestTickets[0].ticket_number) {
             const lastTicket = latestTickets[0].ticket_number;
@@ -201,6 +206,9 @@ export default function ServiceRequest() {
             if (match) {
               seq = parseInt(match[1], 10) + 1;
             }
+          } else {
+             // If we can't find previous tickets, use a random sequence to avoid unique constraint violations
+             seq = Math.floor(Math.random() * 900) + 100;
           }
         } catch (err) {
           console.warn('Failed to fetch latest ticket number, starting at random.', err);
@@ -214,6 +222,7 @@ export default function ServiceRequest() {
       const ticketPayload = {
         ticket_number: ticketNumber,
         ...form,
+        pickup_date: form.pickup_date || null,
         attachment_url: uploadedUrl,
         video_url: uploadedVideoUrl,
         customer_signature: signatureBase64,
@@ -224,7 +233,10 @@ export default function ServiceRequest() {
         .from('service_tickets')
         .insert([ticketPayload]);
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('Insert Error:', insertError);
+        throw insertError;
+      }
 
       try {
         await supabase.functions.invoke('send-ticket-email', {
@@ -286,8 +298,9 @@ export default function ServiceRequest() {
       setAttachment(null);
       removeVideo();
       if (sigCanvas.current) { sigCanvas.current.clear(); }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unable to create service ticket.';
+    } catch (err: any) {
+      console.error('Submit Ticket Error:', err);
+      const message = err?.message || 'Unable to create service ticket.';
       setError(message);
     } finally {
       setSubmitting(false);
