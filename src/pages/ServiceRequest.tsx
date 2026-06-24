@@ -183,16 +183,24 @@ export default function ServiceRequest() {
       if (rpcError || !ticketNumber) {
         console.warn('RPC get_next_service_ticket_number failed or returned empty:', rpcError);
         const now = new Date();
-        const day = String(now.getDate()).padStart(2, '0');
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const year = String(now.getFullYear()).slice(-2);
-        const prefix = `YBS-TKT-${day}${month}${year}-`;
+        const month = now.getMonth() + 1;
+        const fullYear = now.getFullYear();
+        
+        let startYear = fullYear;
+        let endYear = fullYear + 1;
+        if (month < 4) {
+          startYear = fullYear - 1;
+          endYear = fullYear;
+        }
+        
+        const prefix = `YBS-${startYear}-${endYear}-`;
         
         let seq = 1;
         try {
           const { data: latestTickets, error: selectError } = await supabase
             .from('service_tickets')
             .select('ticket_number')
+            .like('ticket_number', `${prefix}%`)
             .order('created_at', { ascending: false })
             .limit(1);
             
