@@ -32,48 +32,16 @@ function base64url(data: string | Uint8Array): string {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
-// ── Service Account JWT → Drive access token ──────────────────────────────────
-async function getServiceAccountToken(serviceAccountJson: string, scope: string): Promise<string> {
-  const sa  = JSON.parse(serviceAccountJson);
-  const now = Math.floor(Date.now() / 1000);
-
-  const header  = base64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
-  const payload = base64url(JSON.stringify({
-    iss: sa.client_email,
-    sub: sa.client_email,
-    scope,
-    aud: 'https://oauth2.googleapis.com/token',
-    iat: now,
-    exp: now + 3600,
-  }));
-
-  const sigInput = `${header}.${payload}`;
-
-  // Strip PEM headers and decode
-  const pemBody   = sa.private_key.replace(/-----[^-]+-----/g, '').replace(/\s/g, '');
-  const keyBytes  = Uint8Array.from(atob(pemBody), c => c.charCodeAt(0));
-
-  const cryptoKey = await crypto.subtle.importKey(
-    'pkcs8', keyBytes,
-    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-    false, ['sign']
-  );
-
-  const sigBytes = await crypto.subtle.sign(
-    'RSASSA-PKCS1-v1_5', cryptoKey,
-    new TextEncoder().encode(sigInput)
-  );
-
-  const jwt = `${sigInput}.${base64url(new Uint8Array(sigBytes))}`;
-
+// ── User OAuth Refresh Token → Drive access token ─────────────────────────────
+async function getUserOAuthToken(clientId: string, clientSecret: string, refreshToken: string): Promise<string> {
   const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: `grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`,
+    body: `client_id=${clientId}&client_secret=${clientSecret}&refresh_token=${refreshToken}&grant_type=refresh_token`,
   });
 
   const tokenData = await tokenRes.json();
-  if (!tokenData.access_token) throw new Error('SA token error: ' + JSON.stringify(tokenData));
+  if (!tokenData.access_token) throw new Error('OAuth token error: ' + JSON.stringify(tokenData));
   return tokenData.access_token;
 }
 
@@ -375,17 +343,16 @@ Deno.serve(async (req) => {
     } catch (pdfErr) {
       console.error('PDF generation failed:', pdfErr);
     }
-
-    // ── Upload PDF to Google Drive (service account) ──────────────────────────
-    const saJson      = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_JSON') || '';
+    // ── Upload PDF to Google Drive (OAuth) ────────────────────────────────────
+    const clientId      = Deno.env.get('GOOGLE_CLIENT_ID') || '';
+    const clientSecret  = Deno.env.get('GOOGLE_CLIENT_SECRET') || '';
+    const refreshToken  = Deno.env.get('GOOGLE_REFRESH_TOKEN') || '';
     const driveFolderId = Deno.env.get('GOOGLE_DRIVE_FOLDER_ID') || '';
+    
     let driveViewLink: string | null = null;
-    if (pdfBytes && saJson && driveFolderId) {
+    if (pdfBytes && clientId && clientSecret && refreshToken && driveFolderId) {
       try {
-        const driveToken = await getServiceAccountToken(
-          saJson,
-          'https://www.googleapis.com/auth/drive.file'
-        );
+        const driveToken = await getUserOAuthToken(clientId, clientSecret, refreshToken);
         driveViewLink = await uploadPdfToDrive(driveToken, driveFolderId, pdfFilename, pdfBytes);
         console.log('Drive link:', driveViewLink);
       } catch (driveErr) {
