@@ -1,8 +1,8 @@
 // supabase/functions/send-ticket-email/index.ts
 // Sends customer confirmation email + Telegram notification + PDF attachment when a ticket is created.
-// Also uploads PDF to Google Drive if GOOGLE_DRIVE_FOLDER_ID is set.
+// Also uploads PDF to Supabase Storage for a permanent download link.
 // Secrets: GMAIL_USER, GMAIL_APP_PASSWORD, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
-//          GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN, GOOGLE_DRIVE_FOLDER_ID
+//          SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 
 import { PDFDocument, rgb, StandardFonts, degrees } from 'https://esm.sh/pdf-lib@1.17.1';
 
@@ -24,56 +24,35 @@ async function sendTelegram(token: string, chatId: string, message: string): Pro
   }
 }
 
-// ── Google OAuth2 access token (reuses same credentials as backup-to-sheets) ──
-async function getGoogleAccessToken(clientId: string, clientSecret: string, refreshToken: string): Promise<string> {
-  const res = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: clientId,
-      client_secret: clientSecret,
-      refresh_token: refreshToken,
-      grant_type: 'refresh_token',
-    }),
-  });
-  const data = await res.json();
-  if (!data.access_token) throw new Error('Google token error: ' + JSON.stringify(data));
-  return data.access_token;
-}
-
-// ── Upload PDF bytes to a Google Drive folder ─────────────────────────────────
-async function uploadPdfToDrive(
-  accessToken: string,
-  folderId: string,
+// ── Upload PDF to Supabase Storage and return public URL ─────────────────────
+async function uploadPdfToStorage(
+  supabaseUrl: string,
+  supabaseKey: string,
   filename: string,
   pdfBytes: Uint8Array,
 ): Promise<string | null> {
-  const boundary = '-------YBSPdfBoundary314159';
-  const metadata = JSON.stringify({ name: filename, mimeType: 'application/pdf', parents: [folderId] });
+  const path = `ticket-pdfs/${filename}`;
+  const uploadUrl = `${supabaseUrl}/storage/v1/object/service-attachments/${path}`;
 
-  const enc = new TextEncoder();
-  const metaPart   = enc.encode(`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n`);
-  const fileHeader = enc.encode(`--${boundary}\r\nContent-Type: application/pdf\r\n\r\n`);
-  const closeDelim = enc.encode(`\r\n--${boundary}--`);
-
-  const body = new Uint8Array(metaPart.length + fileHeader.length + pdfBytes.length + closeDelim.length);
-  let offset = 0;
-  body.set(metaPart,   offset); offset += metaPart.length;
-  body.set(fileHeader, offset); offset += fileHeader.length;
-  body.set(pdfBytes,   offset); offset += pdfBytes.length;
-  body.set(closeDelim, offset);
-
-  const res  = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+  const res = await fetch(uploadUrl, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': `multipart/related; boundary="${boundary}"`,
+      'Authorization': `Bearer ${supabaseKey}`,
+      'apikey': supabaseKey,
+      'Content-Type': 'application/pdf',
+      'x-upsert': 'true',
     },
-    body,
+    body: pdfBytes,
   });
-  const data = await res.json();
-  if (!res.ok) { console.error('Drive upload failed:', data); return null; }
-  return data.id || null;
+
+  if (!res.ok) {
+    const err = await res.text();
+    console.error('Storage upload failed:', err);
+    return null;
+  }
+
+  // Return public URL
+  return `${supabaseUrl}/storage/v1/object/public/service-attachments/${path}`;
 }
 
 // ── PDF Generator ─────────────────────────────────────────────────────────────
@@ -309,12 +288,6 @@ Deno.serve(async (req) => {
     const gmailUser = Deno.env.get('GMAIL_USER');
     const gmailPass = Deno.env.get('GMAIL_APP_PASSWORD');
 
-    // Google Drive (optional — only runs if secrets are set)
-    const gClientId     = Deno.env.get('GOOGLE_CLIENT_ID');
-    const gClientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET');
-    const gRefreshToken = Deno.env.get('GOOGLE_REFRESH_TOKEN');
-    const gDriveFolderId= Deno.env.get('GOOGLE_DRIVE_FOLDER_ID');
-
     const escapeHtml = (text: string) =>
       text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -334,7 +307,7 @@ Deno.serve(async (req) => {
     // ── Generate PDF ───────────────────────────────────────────────────────
     let pdfBytes: Uint8Array | null = null;
     let pdfBase64 = '';
-    const pdfFilename = `ServiceTicket-${String(ticket.ticket_number || 'XXXXXX').replace(/\s/g, '_')}.pdf`;
+    const pdfFilename = `ServiceTicket-${String(ticket.ticket_number || 'XXXXXX').replace(/[\s/]/g, '_')}.pdf`;
     try {
       pdfBytes  = await generateTicketPdf(ticket);
       pdfBase64 = uint8ToBase64(pdfBytes);
@@ -342,21 +315,20 @@ Deno.serve(async (req) => {
       console.error('PDF generation failed:', pdfErr);
     }
 
-    // ── Upload to Google Drive ─────────────────────────────────────────────
-    let driveFileId: string | null = null;
-    if (pdfBytes && gClientId && gClientSecret && gRefreshToken && gDriveFolderId) {
+    // ── Upload PDF to Supabase Storage ─────────────────────────────────────
+    let pdfPublicUrl: string | null = null;
+    if (pdfBytes && supabaseUrl && supabaseKey) {
       try {
-        const gToken = await getGoogleAccessToken(gClientId, gClientSecret, gRefreshToken);
-        driveFileId  = await uploadPdfToDrive(gToken, gDriveFolderId, pdfFilename, pdfBytes);
-        console.log('Uploaded to Drive:', driveFileId);
-      } catch (driveErr) {
-        console.error('Drive upload error:', driveErr);
+        pdfPublicUrl = await uploadPdfToStorage(supabaseUrl, supabaseKey, pdfFilename, pdfBytes);
+        console.log('PDF stored at:', pdfPublicUrl);
+      } catch (storErr) {
+        console.error('Storage upload error:', storErr);
       }
     }
 
     if (!gmailUser || !gmailPass) {
       return new Response(
-        JSON.stringify({ ok: true, email: { ok: false, reason: 'Gmail not configured' }, telegram: { ok: !!tgToken }, drive: { ok: !!driveFileId, id: driveFileId } }),
+        JSON.stringify({ ok: true, email: { ok: false, reason: 'Gmail not configured' }, telegram: { ok: !!tgToken }, storage: { ok: !!pdfPublicUrl, url: pdfPublicUrl } }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -368,8 +340,8 @@ Deno.serve(async (req) => {
     const cleanIssue    = String(ticket.issue_description || '');
 
     // ── HTML email body ────────────────────────────────────────────────────
-    const driveLink = driveFileId
-      ? `<p style="text-align:center;margin:12px 0"><a href="https://drive.google.com/file/d/${driveFileId}/view" style="background:#0B5394;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;font-size:13px;font-weight:600">📂 View PDF in Google Drive</a></p>`
+    const storageLink = pdfPublicUrl
+      ? `<p style="text-align:center;margin:12px 0"><a href="${pdfPublicUrl}" style="background:#0B5394;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;font-size:13px;font-weight:600">📥 Download PDF Ticket</a></p>`
       : '';
 
     const htmlBody = `
@@ -380,7 +352,7 @@ Deno.serve(async (req) => {
   </div>
   <div style="padding:28px 32px">
     <p style="color:#0f172a;font-size:15px">Dear <strong>${escapeHtml(cleanName)}</strong>,</p>
-    <p style="color:#334155">Your service ticket has been successfully created. The official PDF is attached to this email${driveFileId ? ' and saved to Google Drive' : ''}.</p>
+    <p style="color:#334155">Your service ticket has been successfully created. The official PDF is attached to this email${pdfPublicUrl ? ' and available for download via the button below' : ''}.</p>
     <div style="text-align:center;margin:20px 0">
       <img src="https://yantrabyte.anantatechcare.com/seal.png" alt="YantraByte Official Seal" width="100" height="100" style="display:inline-block;border-radius:50%;object-fit:contain" />
     </div>
@@ -394,7 +366,7 @@ Deno.serve(async (req) => {
       <tr><td style="padding:6px 0;color:#64748b">Priority</td><td style="color:#0f172a;text-transform:capitalize">${escapeHtml(ticket.priority || 'Medium')}</td></tr>
       <tr><td style="padding:6px 0;color:#64748b">Service Method</td><td style="color:#0f172a">${ticket.service_method === 'home_pickup' ? 'Home Pickup' : 'Drop-off at Workshop'}</td></tr>
     </table>
-    ${driveLink}
+    ${storageLink}
     <div style="background:#fffbeb;border:1px solid #fcd34d;border-left:4px solid #f59e0b;border-radius:6px;padding:14px 16px;margin:20px 0">
       <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:#92400e">⚠ Important Notice — Terms &amp; Conditions</p>
       <p style="margin:0;font-size:13px;color:#78350f;line-height:1.6">
@@ -419,7 +391,7 @@ Deno.serve(async (req) => {
       `Issue: "${cleanIssue}"`,
       '',
       'An official PDF of your service ticket is attached to this email.',
-      driveFileId ? `Also saved to Google Drive: https://drive.google.com/file/d/${driveFileId}/view` : '',
+      pdfPublicUrl ? `Download PDF: ${pdfPublicUrl}` : '',
       '',
       'Our technician will contact you shortly.',
       '',
@@ -510,7 +482,7 @@ Deno.serve(async (req) => {
     await conn.close();
 
     return new Response(
-      JSON.stringify({ ok: true, email: { ok: true, pdf: !!pdfBase64 }, telegram: { ok: !!tgToken }, drive: { ok: !!driveFileId, id: driveFileId } }),
+      JSON.stringify({ ok: true, email: { ok: true, pdf: !!pdfBase64 }, telegram: { ok: !!tgToken }, storage: { ok: !!pdfPublicUrl, url: pdfPublicUrl } }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (err) {
