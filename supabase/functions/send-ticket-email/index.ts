@@ -109,23 +109,24 @@ async function generateTicketPdf(ticket: Record<string, string>): Promise<Uint8A
     page.drawText('YANTRABYTE SOLUTIONS', {
       x: 30, y,
       size: 38, font: fontBold,
-      color: navy, opacity: 0.05,
+      color: navy, opacity: 0.08,
       rotate: degrees(35),
     });
   }
 
-  // ── WATERMARK: hardware_watermark.png ────────────────────────────────────
+  // ── WATERMARK: seal.png ───────────────────────────────────────────────
   try {
-    const wmRes = await fetch('https://yantrabyte.anantatechcare.com/hardware_watermark.png');
+    const wmRes = await fetch('https://yantrabyte.anantatechcare.com/seal.png');
     if (wmRes.ok) {
       const wmBytes = await wmRes.arrayBuffer();
       const wmImg   = await pdfDoc.embedPng(new Uint8Array(wmBytes));
-      const wmDims  = wmImg.scale(0.50);
+      // Scale seal image to fit nicely as a central watermark
+      const wmDims  = wmImg.scale(2.5);
       page.drawImage(wmImg, {
         x: (width - wmDims.width) / 2,
-        y: (height - wmDims.height) / 2,
+        y: (height - wmDims.height) / 2 + 50,
         width: wmDims.width, height: wmDims.height,
-        opacity: 0.05,
+        opacity: 0.12,
       });
     }
   } catch { /* optional */ }
