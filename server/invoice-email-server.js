@@ -10,10 +10,11 @@ dotenv.config();
 
 const app = express();
 const port = Number(process.env.INVOICE_API_PORT || process.env.PORT || 4000);
-const maxPdfSize = process.env.INVOICE_MAX_JSON_SIZE || '15mb';
+const maxPdfSize = process.env.INVOICE_MAX_JSON_SIZE || '50mb';
 
 app.use(cors());
-app.use(express.json({ limit: maxPdfSize }));
+app.use(express.json({ limit: maxPdfSize, extended: true }));
+app.use(express.urlencoded({ limit: maxPdfSize, extended: true }));
 
 const requiredEnv = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'];
 const GMAIL_USER_DEFAULT = process.env.GMAIL_USER || 'yantrabyte.solutions@gmail.com';
@@ -418,6 +419,29 @@ app.post('/api/backups/public-service-ticket', async (req, res) => {
     sheet: sheetResult,
     email: mailResult ? { ok: true, messageId: mailResult.messageId } : { ok: false, skipped: true }
   });
+});
+
+app.post('/api/backups/ticket-drive', requireSupabaseUser, async (req, res) => {
+  const { customerName, ticketNumber, filename, pdfBase64 } = req.body || {};
+  if (!pdfBase64) return res.status(400).json({ error: 'PDF attachment is missing' });
+  if (!ticketNumber) return res.status(400).json({ error: 'ticketNumber is missing' });
+
+  const pdfBuffer = Buffer.from(pdfBase64, 'base64');
+  const safeFilename = sanitizeFilename(filename || `JobSheet-${ticketNumber}.pdf`);
+
+  try {
+    const driveResult = await uploadPdfToDrive({
+      pdfBuffer,
+      filename: safeFilename,
+      customerName: customerName || 'Customer',
+      invoiceNumber: ticketNumber,
+      documentType: 'Service Ticket',
+    });
+    return res.json({ ok: true, drive: driveResult });
+  } catch (err) {
+    console.error('Service ticket Google Drive upload failed:', getDeliveryErrorMessage(err));
+    return res.status(502).json({ ok: false, error: getDeliveryErrorMessage(err) });
+  }
 });
 
 app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {

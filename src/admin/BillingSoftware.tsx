@@ -306,7 +306,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     const { data, error } = await supabase
       .from('service_tickets')
       .select('*')
-      .order('ticket_number', { ascending: false });
+      .order('created_at', { ascending: false });
     if (!error && data) {
       setServiceTicketsList(data);
     }
@@ -1944,14 +1944,14 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
             {/* Items Table */}
             <div className="relative mt-2">
-              <table className="w-full text-sm text-left relative z-0" style={{ borderCollapse: 'collapse', borderBottom: '1px solid #000' }}>
+              <table className="w-full text-sm text-left relative z-0" style={{ borderCollapse: 'collapse', borderBottom: '1px solid #000', borderTop: '1px solid #000' }}>
               <thead>
-                <tr className="text-center text-white" style={{ backgroundColor: '#0B5394' }}>
-                  <th className="p-2 w-12" style={{ border: '1px solid #000' }}>Sl<br/>No.</th>
-                  <th className="p-2 text-left" style={{ border: '1px solid #000' }}>Description</th>
-                  <th className="p-2 w-16" style={{ border: '1px solid #000' }}>Qty</th>
-                  <th className="p-2 w-24 text-center" style={{ border: '1px solid #000' }}>Rate</th>
-                  <th className="p-2 w-28 text-right" style={{ border: '1px solid #000', borderRight: 'none' }}>Amount</th>
+                <tr className="text-white" style={{ backgroundColor: '#0B5394' }}>
+                  <th className="p-2 w-12 text-center" style={{ borderBottom: '1px solid #000', borderRight: '1px solid #000' }}>Sl<br/>No.</th>
+                  <th className="p-2 text-left" style={{ borderBottom: '1px solid #000', borderRight: '1px solid #000' }}>Description</th>
+                  <th className="p-2 w-16 text-center" style={{ borderBottom: '1px solid #000', borderRight: '1px solid #000' }}>Qty</th>
+                  <th className="p-2 w-24 text-right" style={{ borderBottom: '1px solid #000', borderRight: '1px solid #000' }}>Rate</th>
+                  <th className="p-2 w-28 text-right" style={{ borderBottom: '1px solid #000' }}>Amount</th>
                 </tr>
               </thead>
               <tbody>

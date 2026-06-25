@@ -842,6 +842,30 @@ export default function AdminPanel() {
         .from('invoices')
         .upload(fileName, file, { cacheControl: '3600', upsert: true });
         
+      // Upload to Google Drive
+      try {
+        const base64data = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
+          reader.readAsDataURL(pdfBlob);
+        });
+        const token = (await supabase.auth.getSession()).data.session?.access_token;
+        if (token) {
+          await fetch('/api/backups/ticket-drive', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({
+              customerName: item.customer_name,
+              ticketNumber: item.ticket_number,
+              filename: ticketFilename,
+              pdfBase64: base64data
+            })
+          });
+        }
+      } catch (err) {
+        console.warn('Failed to upload PDF to Google Drive:', err);
+      }
+      
       if (error) return null;
       
       return supabase.storage.from('invoices').getPublicUrl(fileName).data.publicUrl;

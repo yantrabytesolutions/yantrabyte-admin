@@ -284,30 +284,35 @@ function HeroSection() {
       // Fallback if RPC fails or doesn't exist yet
       if (rpcError || !ticketNumber) {
         const now = new Date();
-        const day = String(now.getDate()).padStart(2, '0');
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const year = String(now.getFullYear()).slice(-2);
-        const prefix = `YBS-TKT-${day}${month}${year}-`;
+        const currentMonth = now.getMonth() + 1; // 1-12
+        const currentYear = now.getFullYear();
+        // Indian fiscal year: April to March
+        const fiscalStartYear = currentMonth >= 4 ? currentYear : currentYear - 1;
+        const fiscalEndYear = fiscalStartYear + 1;
+        const prefix = `YBS-${fiscalStartYear}-${fiscalEndYear}-`;
         
         let seq = 1;
         try {
-          const { data: latestTickets } = await supabase
+          const { data: matchingTickets } = await supabase
             .from('service_tickets')
             .select('ticket_number')
+            .like('ticket_number', `${prefix}%`)
             .order('created_at', { ascending: false })
-            .limit(1);
+            .limit(50);
             
-          if (latestTickets && latestTickets.length > 0 && latestTickets[0].ticket_number) {
-            const lastTicket = latestTickets[0].ticket_number;
-            const match = lastTicket.match(/-(\d+)$/);
-            if (match) {
-              seq = parseInt(match[1], 10) + 1;
+          if (matchingTickets && matchingTickets.length > 0) {
+            let maxSuffix = 0;
+            for (const t of matchingTickets) {
+              const match = t.ticket_number.match(/-(\d+)$/);
+              if (match) {
+                maxSuffix = Math.max(maxSuffix, parseInt(match[1], 10));
+              }
             }
+            seq = maxSuffix + 1;
           }
         } catch (err) {
-          console.warn('Could not fetch latest ticket, using random suffix', err);
-          const randomSuffix = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
-          seq = parseInt(randomSuffix, 10);
+          console.warn('Could not fetch latest ticket.', err);
+          seq = 1;
         }
         
         ticketNumber = `${prefix}${String(seq).padStart(3, '0')}`;
@@ -369,6 +374,26 @@ function HeroSection() {
       supabase.functions.invoke('send-ticket-email', { body: ticketPayload }).catch((err) => {
         console.warn('Edge function error:', err);
       });
+
+      // Trigger Google Sheets backup via Node server API
+      try {
+        await fetch('/api/backups/public-service-ticket', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ticket_number: ticketPayload.ticket_number,
+            customer_name: ticketPayload.customer_name,
+            customer_phone: ticketPayload.customer_phone,
+            device_type: ticketPayload.device_type,
+            issue_description: ticketPayload.issue_description,
+            customer_address: ticketPayload.customer_address,
+            priority: ticketPayload.priority,
+            status: ticketPayload.status,
+          })
+        });
+      } catch (backupError) {
+        console.warn('Network error triggering Google Sheet backup:', backupError);
+      }
 
       setSuccessTicket(ticketNumber);
       setForm({ customer_name: '', customer_phone: '', customer_email: '', customer_address: '', device_type: '', issue_description: '' });
