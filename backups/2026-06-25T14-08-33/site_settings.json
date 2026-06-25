@@ -1,0 +1,107 @@
+[
+  {
+    "id": "1b7ccadf-6d1b-4fed-b9a7-826c890e9d08",
+    "key": "telegram_chat_id",
+    "value": "8881083212",
+    "created_at": "2026-06-14T07:41:10.804624+00:00",
+    "updated_at": "2026-06-14T07:41:10.804624+00:00"
+  },
+  {
+    "id": "b09e3b8e-7a72-4ea7-8c01-ee982ed04d38",
+    "key": "billing_documents_fresh_started_at",
+    "value": "2026-05-27 10:37:41.598462+00",
+    "created_at": "2026-05-27T10:37:41.598462+00:00",
+    "updated_at": "2026-05-27T10:37:41.598462+00:00"
+  },
+  {
+    "id": "ee609b5b-3cb1-48df-ad89-a7a66613fd0e",
+    "key": "billing_customer_master_fresh_started_at",
+    "value": "2026-05-22T19:00:00+05:30",
+    "created_at": "2026-05-27T10:37:41.598462+00:00",
+    "updated_at": "2026-05-27T11:33:49.541026+00:00"
+  },
+  {
+    "id": "ed3dbb68-f158-4044-98a5-360a252d16c7",
+    "key": "email",
+    "value": "info@yantrabyte.com",
+    "created_at": "2026-05-16T08:56:33.051143+00:00",
+    "updated_at": "2026-05-16T08:56:33.051143+00:00"
+  },
+  {
+    "id": "2a7690a2-fbeb-4dab-b5ff-6c910ff8d25e",
+    "key": "whatsapp",
+    "value": "919876543210",
+    "created_at": "2026-05-16T08:56:33.051143+00:00",
+    "updated_at": "2026-05-16T08:56:33.051143+00:00"
+  },
+  {
+    "id": "e81782e2-ebb2-4466-b55c-f6b1f58eee9d",
+    "key": "address",
+    "value": "Bangalore, Karnataka, India",
+    "created_at": "2026-05-16T08:56:33.051143+00:00",
+    "updated_at": "2026-05-16T08:56:33.051143+00:00"
+  },
+  {
+    "id": "eefb5da5-e00d-411e-a229-aa4da324ee74",
+    "key": "google_maps_embed",
+    "value": "",
+    "created_at": "2026-05-16T08:56:33.051143+00:00",
+    "updated_at": "2026-05-16T08:56:33.051143+00:00"
+  },
+  {
+    "id": "ca570c0e-f4a7-439b-beb1-9fa17e35f99a",
+    "key": "company_name",
+    "value": "Yantrabyte Solutions",
+    "created_at": "2026-05-16T08:56:33.051143+00:00",
+    "updated_at": "2026-05-16T08:56:33.051143+00:00"
+  },
+  {
+    "id": "ad7aab38-d1b5-4dea-9b8f-55588444b368",
+    "key": "instagram",
+    "value": "",
+    "created_at": "2026-05-16T08:56:33.051143+00:00",
+    "updated_at": "2026-05-16T08:56:33.051143+00:00"
+  },
+  {
+    "id": "26dc778c-f755-4006-aec4-78eeef197423",
+    "key": "linkedin",
+    "value": "",
+    "created_at": "2026-05-16T08:56:33.051143+00:00",
+    "updated_at": "2026-05-16T08:56:33.051143+00:00"
+  },
+  {
+    "id": "3f43ff4b-29b7-4eac-a9d9-a7c8f486bd88",
+    "key": "twitter",
+    "value": "",
+    "created_at": "2026-05-16T08:56:33.051143+00:00",
+    "updated_at": "2026-05-16T08:56:33.051143+00:00"
+  },
+  {
+    "id": "aaefc8c5-b5c1-440d-b170-bef23b5ae6a1",
+    "key": "youtube",
+    "value": "",
+    "created_at": "2026-05-16T08:56:33.051143+00:00",
+    "updated_at": "2026-05-16T08:56:33.051143+00:00"
+  },
+  {
+    "id": "235a982c-471f-420e-9da6-064af58e97db",
+    "key": "facebook",
+    "value": "",
+    "created_at": "2026-05-16T08:56:33.051143+00:00",
+    "updated_at": "2026-05-16T08:56:33.051143+00:00"
+  },
+  {
+    "id": "7e042849-1905-4c63-83dd-10e94576b53a",
+    "key": "tagline",
+    "value": "Smart Technology. Secure Future.",
+    "created_at": "2026-05-16T08:56:33.051143+00:00",
+    "updated_at": "2026-05-16T08:56:33.051143+00:00"
+  },
+  {
+    "id": "00bd28ff-716e-45bb-aaa1-294332a3e498",
+    "key": "phone",
+    "value": "+91-9876543210",
+    "created_at": "2026-05-16T08:56:33.051143+00:00",
+    "updated_at": "2026-05-16T08:56:33.051143+00:00"
+  }
+]
