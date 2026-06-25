@@ -75,6 +75,7 @@ export default function ServiceRequest() {
   const [captchaB, _setCaptchaB] = useState(Math.floor(Math.random() * 10) + 1);
   const [captchaInput, setCaptchaInput] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [otherDeviceType, setOtherDeviceType] = useState('');
 
   const updateField = (field: keyof RequestForm, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -229,19 +230,24 @@ export default function ServiceRequest() {
           seq = Math.floor(Math.random() * 900) + 100;
         }
 
-        const paddedSeq = String(seq).padStart(3, '0');
-        ticketNumber = `${prefix}${paddedSeq}`;
-      }
+      const paddedSeq = String(seq).padStart(3, '0');
+      ticketNumber = `${prefix}${paddedSeq}`;
+    }
 
-      const ticketPayload = {
-        ticket_number: ticketNumber,
-        ...form,
-        pickup_date: form.pickup_date || null,
-        attachment_url: uploadedUrl,
-        video_url: uploadedVideoUrl,
-        customer_signature: signatureBase64,
-        status: 'open'
-      };
+    const finalDeviceType = form.device_type === 'Other' && otherDeviceType.trim() 
+      ? otherDeviceType.trim() 
+      : form.device_type;
+
+    const ticketPayload = {
+      ticket_number: ticketNumber,
+      ...form,
+      device_type: finalDeviceType,
+      pickup_date: form.pickup_date || null,
+      attachment_url: uploadedUrl,
+      video_url: uploadedVideoUrl,
+      customer_signature: signatureBase64,
+      status: 'open'
+    };
 
       const { error: insertError } = await supabase
         .from('service_tickets')
@@ -260,7 +266,7 @@ export default function ServiceRequest() {
             customer_name:     form.customer_name,
             customer_phone:    form.customer_phone,
             customer_address:  form.customer_address,
-            device_type:       form.device_type,
+            device_type:       finalDeviceType,
             device_make_model: form.device_make_model,
             issue_description: form.issue_description,
             priority:          form.priority,
@@ -313,6 +319,7 @@ export default function ServiceRequest() {
 
       setCreatedTicket(ticketNumber);
       setForm(initialForm);
+      setOtherDeviceType('');
       setAttachment(null);
       setTermsAccepted(false);
       removeVideo();
@@ -515,6 +522,18 @@ export default function ServiceRequest() {
                     })}
                   </div>
                 </div>
+
+                {form.device_type === 'Other' && (
+                  <label className="block mt-4 mb-2">
+                    <span className="text-sm font-semibold text-slate-700">Please specify what you are giving for service</span>
+                    <input
+                      value={otherDeviceType}
+                      onChange={e => setOtherDeviceType(e.target.value)}
+                      className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                      placeholder="e.g. Projector, Scanner, etc."
+                    />
+                  </label>
+                )}
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="block">
