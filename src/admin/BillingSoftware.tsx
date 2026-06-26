@@ -8,6 +8,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { PRESET_ITEMS } from './presetItems';
 import { downloadExcelWorkbook } from '../utils/spreadsheetXml';
 import { appendBackupRow } from '../utils/googleSheetBackup';
+import { uploadInvoiceToDrive } from '../utils/googleDriveBackup';
 import { ERPUtils } from '../utils/erp';
 import CustomerLedgerModal from './components/CustomerLedgerModal';
 
@@ -64,6 +65,7 @@ const isPersistedCustomerId = (id: string) => !!id && !id.startsWith('legacy-');
 const normalizePhone = (value: string) => value.trim().replace(/\s+/g, ' ');
 
 const getPaymentStatus = (docType: string, balanceDue: number, amountPaid: number) => {
+  if (docType === 'Cancelled') return 'Cancelled';
   if (docType === 'Quotation') return 'Estimate';
   if (balanceDue <= 0) return 'Paid';
   if (amountPaid > 0) return 'Partial';
@@ -895,6 +897,12 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           try {
             pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob') as Blob;
             pdfUrl = await uploadPdfToSupabase(pdfBlob, payload.invoice_no);
+            
+            uploadInvoiceToDrive(pdfBlob, payload.invoice_no, payload.date).then(res => {
+              if (res.ok) console.log('Backed up to Drive:', res.fileId);
+              else console.error('Drive Backup Failed:', res.error);
+            });
+
             if (action === 'download') {
               await html2pdf().set(opt).from(element).save();
               showToast('PDF Generated successfully!');
@@ -1413,7 +1421,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                     )}
                   </div>
                 )}
-                <div className="flex bg-gray-100 p-1 rounded-lg">
+                <div className="flex bg-gray-100 p-1 rounded-lg flex-wrap gap-1">
                   <button 
                     className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${docType === 'Invoice' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600'}`}
                     onClick={() => setDocType('Invoice')}
@@ -1422,6 +1430,16 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                     className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${docType === 'Quotation' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600'}`}
                     onClick={() => setDocType('Quotation')}
                   >Quotation</button>
+                  {!!selectedInvoiceId && (
+                    <button 
+                      className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${docType === 'Cancelled' ? 'bg-red-500 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-200 hover:text-red-700'}`}
+                      onClick={() => {
+                        if (window.confirm('Are you sure you want to CANCEL this invoice? This will mark it as void.')) {
+                          setDocType('Cancelled');
+                        }
+                      }}
+                    >Cancel Invoice</button>
+                  )}
                 </div>
               </div>
             </div>
@@ -1789,7 +1807,9 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                   <div className="flex-1">
                     <div className="flex items-center space-x-2">
                       <span className="font-semibold text-gray-800">{inv.invoice_no}</span>
-                      {inv.doc_type === 'Quotation' ? (
+                      {inv.doc_type === 'Cancelled' ? (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-red-50 text-red-700 font-medium">Cancelled</span>
+                      ) : inv.doc_type === 'Quotation' ? (
                         <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-700 font-medium">Quote</span>
                       ) : (inv.balance_due || 0) <= 0 ? (
                         <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-green-50 text-green-700 font-medium">Paid</span>
@@ -1945,6 +1965,23 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           }}>
             <img src="/hardware_watermark.png" alt="Watermark" style={{ width: '100%', height: '100%', objectFit: 'cover' }} crossOrigin="anonymous" />
           </div>
+          
+          {docType === 'Cancelled' && (
+            <div style={{
+              position: 'absolute',
+              top: '50%', left: '50%',
+              transform: 'translate(-50%, -50%) rotate(-45deg)',
+              color: 'rgba(220, 38, 38, 0.4)',
+              fontSize: '90px',
+              fontWeight: 'bold',
+              textTransform: 'uppercase',
+              pointerEvents: 'none',
+              zIndex: 60,
+              whiteSpace: 'nowrap'
+            }}>
+              CANCELLED
+            </div>
+          )}
 
           {/* Outer Border for main content */}
           <div className="flex flex-col relative z-10" style={{ border: '1.5px solid #000' }}>
@@ -1962,14 +1999,14 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             </div>
 
             {/* INVOICE Title */}
-            <div className="font-bold text-center py-1.5 text-base tracking-widest uppercase text-white" style={{ backgroundColor: '#0B5394', borderBottom: '1px solid #000' }}>
-              {docType === 'Quotation' ? 'QUOTATION' : 'INVOICE'}
+            <div className="font-bold text-center py-1.5 text-base tracking-widest uppercase text-white" style={{ backgroundColor: docType === 'Cancelled' ? '#DC2626' : '#0B5394', borderBottom: '1px solid #000' }}>
+              {docType === 'Cancelled' ? 'CANCELLED INVOICE' : (docType === 'Quotation' ? 'QUOTATION' : 'INVOICE')}
             </div>
 
             {/* Invoice No and Date */}
             <div className="flex justify-between" style={{ borderBottom: '1px solid #000' }}>
               <div className="w-1/2 p-2 font-bold text-base" style={{ borderRight: '1.5px solid #000', color: '#DC2626' }}>
-                {docType === 'Quotation' ? 'Quotation No: ' : 'Invoice No: '} {printInvoiceNumber || (selectedInvoiceId ? (invoices.find(i=>i.id===selectedInvoiceId)?.invoice_no || 'DRAFT') : 'DRAFT')}
+                {docType === 'Quotation' ? 'Quotation No: ' : (docType === 'Cancelled' ? 'Cancelled No: ' : 'Invoice No: ')} {printInvoiceNumber || (selectedInvoiceId ? (invoices.find(i=>i.id===selectedInvoiceId)?.invoice_no || 'DRAFT') : 'DRAFT')}
               </div>
               <div className="w-1/2 p-2 text-right font-bold text-base" style={{ color: '#333333' }}>
                 Date: {invoiceDate.split('-').reverse().join('/')}
@@ -2174,7 +2211,9 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                               <div className="flex items-center gap-2">
                                 <span className="font-semibold text-white">{inv.invoice_no}</span>
                                 <span className="text-[10px] text-[#94A3B8]">• {inv.date}</span>
-                                {inv.doc_type === 'Quotation' ? (
+                                {inv.doc_type === 'Cancelled' ? (
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 font-semibold font-mono">Cancelled</span>
+                                ) : inv.doc_type === 'Quotation' ? (
                                   <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">Quote</span>
                                 ) : (inv.balance_due || 0) <= 0 ? (
                                   <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold font-mono">Paid</span>
