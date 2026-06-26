@@ -62,7 +62,7 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
       console.warn('Could not fetch customer_payments, table might not exist yet.');
     }
 
-    setInvoices(invData || []);
+    setInvoices((invData || []).filter(i => i.doc_type === 'Invoice'));
     setPayments(payData || []);
     setLoading(false);
   };
