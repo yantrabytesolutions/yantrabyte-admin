@@ -366,7 +366,14 @@ export default function Dashboard() {
                     ₹{client.balance_due.toLocaleString('en-IN')}
                   </div>
                 </div>
-                <div className="flex justify-end mt-2">
+                <div className="flex justify-end mt-2 gap-2">
+                  <button
+                    onClick={() => setLedgerCustomerName(client.customer_name)}
+                    className="p-1.5 rounded bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors flex items-center text-xs font-semibold gap-1"
+                    title="View Customer Ledger"
+                  >
+                    <FileText className="w-3.5 h-3.5" /> Ledger
+                  </button>
                   <button
                     onClick={() => sendDuesReminder(client)}
                     className="p-1.5 rounded bg-green-50 text-green-600 hover:bg-green-100 transition-colors"

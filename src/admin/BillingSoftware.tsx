@@ -1444,13 +1444,25 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                 <div className="flex justify-between items-center mb-1">
                   <label className="block text-sm font-medium text-gray-700">Customer Name</label>
                   {customerName.trim() && (
-                    <button
-                      type="button"
-                      onClick={openCustomerHistory}
-                      className="text-xs font-semibold text-[#0EA5E9] hover:text-[#0284C7] transition-all flex items-center gap-1"
-                    >
-                      <FileText className="w-3.5 h-3.5" /> View History
-                    </button>
+                    <div className="flex space-x-3">
+                      <button
+                        type="button"
+                        onClick={openCustomerHistory}
+                        className="text-xs font-semibold text-[#0EA5E9] hover:text-[#0284C7] transition-all flex items-center gap-1"
+                      >
+                        <FileText className="w-3.5 h-3.5" /> View History
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLedgerCustomerName(customerName);
+                          setLedgerCustomerId(selectedCustomerId || null);
+                        }}
+                        className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-all flex items-center gap-1"
+                      >
+                        <FileText className="w-3.5 h-3.5" /> View Ledger
+                      </button>
+                    </div>
                   )}
                 </div>
                 <input 
