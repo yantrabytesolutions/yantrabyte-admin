@@ -489,7 +489,17 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setRecurringInterval(inv.recurring_interval || 'monthly');
     setTermsConditions(inv.terms_conditions || '');
     setWarrantyMonths((inv as any).warranty_months || '');
-    setItems(inv.items || []);
+    
+    let parsedItems = inv.items;
+    if (typeof parsedItems === 'string') {
+      try {
+        parsedItems = JSON.parse(parsedItems);
+      } catch (e) {
+        parsedItems = [];
+      }
+    }
+    setItems(Array.isArray(parsedItems) ? parsedItems : []);
+    
     window.scrollTo({ top: 0, behavior: 'smooth' });
     showToast(`Invoice ${inv.invoice_no} loaded for editing`);
   };
@@ -1474,9 +1484,9 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                     setCustomerName(val);
                     const customer = customersList.find(c => c.name === val);
                     if (customer) {
-                      setPhone(customer.phone || phone);
-                      setEmail(customer.email || email);
-                      setAddress(customer.address || address);
+                      setPhone(customer.phone || '');
+                      setEmail(customer.email || '');
+                      setAddress(customer.address || '');
                       setSelectedCustomerId(customer.id);
                     }
                   }} 
@@ -1502,9 +1512,9 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                     setPhone(val);
                     const customer = customersList.find(c => c.phone === val || c.name === val);
                     if (customer) {
-                      setCustomerName(customer.name || customerName);
-                      setEmail(customer.email || email);
-                      setAddress(customer.address || address);
+                      setCustomerName(customer.name || '');
+                      setEmail(customer.email || '');
+                      setAddress(customer.address || '');
                       setSelectedCustomerId(customer.id);
                     }
                   }} 
