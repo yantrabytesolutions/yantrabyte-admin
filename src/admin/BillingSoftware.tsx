@@ -111,6 +111,7 @@ const INVOICE_HEADERS = [
 
 export default function BillingSoftware({ initialAutofillTicket, onClearAutofill }: BillingSoftwareProps) {
   const [docType, setDocType] = useState('Invoice');
+  const [invoiceDate, setInvoiceDate] = useState<string>(new Date().toISOString().slice(0, 10));
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [phone, setPhone] = useState('');
@@ -278,6 +279,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   useEffect(() => {
     if (initialAutofillTicket) {
       setSelectedCustomerId('');
+      setInvoiceDate(new Date().toISOString().slice(0, 10));
       setCustomerName(initialAutofillTicket.customer_name || '');
       setPhone(initialAutofillTicket.customer_phone || '');
       setEmail(initialAutofillTicket.customer_email || '');
@@ -475,6 +477,16 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     if (!inv) return;
     setSelectedInvoiceId(inv.id);
     setDocType(inv.doc_type);
+    if (inv.date) {
+      const parts = inv.date.split('/');
+      if (parts.length === 3) {
+        setInvoiceDate(`${parts[2]}-${parts[1]}-${parts[0]}`);
+      } else {
+        setInvoiceDate(inv.date);
+      }
+    } else {
+      setInvoiceDate(new Date().toISOString().slice(0, 10));
+    }
     setSelectedCustomerId(inv.customer_id || '');
     setCustomerName(inv.customer_name);
     setPhone(inv.phone || '');
@@ -513,6 +525,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     
     // Force Document Type to 'Invoice'
     setDocType('Invoice');
+    setInvoiceDate(new Date().toISOString().slice(0, 10));
     
     // Keep all customer and items details intact!
     setSelectedCustomerId(inv.customer_id || '');
@@ -823,7 +836,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     try {
       const isUpdate = !!selectedInvoiceId;
       const invoiceNo = isUpdate ? invoices.find(i => i.id === selectedInvoiceId)?.invoice_no || generateInvoiceNo() : generateInvoiceNo();
-      const date = new Date().toLocaleDateString('en-GB'); // dd/mm/yyyy
+      const [y, m, d] = invoiceDate.split('-');
+      const date = d && m && y ? `${d}/${m}/${y}` : new Date().toLocaleDateString('en-GB'); // dd/mm/yyyy
       const customerId = await saveCustomerFromForm();
 
       const legacyPayload = {
@@ -1414,6 +1428,10 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
             <div className="grid grid-cols-2 gap-4 pt-2">
               <div className="col-span-2 flex space-x-4">
+                <div className="flex-[0.5]">
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Date</label>
+                  <input type="date" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} className="w-full text-xs border rounded-md px-2 py-[5px] text-gray-700 bg-gray-50 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer" />
+                </div>
                 <div className="flex-1">
                   <label className="block text-xs font-medium text-gray-500 mb-1">Customer Master</label>
                   <select value={selectedCustomerId} onChange={handleSelectCustomer} className="w-full text-xs border rounded-md px-2 py-1.5 text-gray-700 bg-gray-50 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
@@ -1954,7 +1972,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                 {docType === 'Quotation' ? 'Quotation No: ' : 'Invoice No: '} {printInvoiceNumber || (selectedInvoiceId ? (invoices.find(i=>i.id===selectedInvoiceId)?.invoice_no || 'DRAFT') : 'DRAFT')}
               </div>
               <div className="w-1/2 p-2 text-right font-bold text-base" style={{ color: '#333333' }}>
-                Date: {new Date().toLocaleDateString('en-GB')}
+                Date: {invoiceDate.split('-').reverse().join('/')}
               </div>
             </div>
 
