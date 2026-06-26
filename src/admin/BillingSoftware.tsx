@@ -2399,7 +2399,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                               </td>
                               <td 
                                 className="px-4 py-3 text-right font-bold text-red-600 cursor-pointer hover:bg-red-50"
-                                onClick={() => { setShowOutstandingModal(false); setLedgerCustomerName(inv.customer_name); setLedgerCustomerId(inv.customer_id || null); }}
+                                onClick={() => { setShowRemindersModal(false); setLedgerCustomerName(inv.customer_name); setLedgerCustomerId(inv.customer_id || null); }}
                               >
                                 ₹{inv.balance_due?.toLocaleString('en-IN')}
                               </td>
