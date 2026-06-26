@@ -2,7 +2,7 @@ import { FormEvent, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { supabase } from '../lib/supabase';
-import { AlertCircle, ClipboardCheck, Loader2, MapPin, Phone, Send, Wrench, Laptop, Monitor, Printer, Video, Wifi, Fingerprint, Server, Package, UploadCloud, Film, X } from 'lucide-react';
+import { AlertCircle, ClipboardCheck, Loader2, MapPin, Phone, Send, Wrench, Laptop, Monitor, Printer, Video, Wifi, Fingerprint, Server, Package, UploadCloud, Film, X, ChevronRight, ChevronLeft, CheckCircle2 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import SignatureCanvas from 'react-signature-canvas';
 
@@ -18,6 +18,8 @@ const DEVICE_CATEGORIES = [
   { id: 'Server', label: 'Server', icon: Server },
   { id: 'Other', label: 'Other', icon: Package },
 ];
+
+const QUICK_BRANDS = ['Dell', 'HP', 'Lenovo', 'Apple', 'Acer', 'Asus'];
 
 const PRIORITY_OPTIONS = [
   { label: 'Normal', value: 'medium' },
@@ -72,6 +74,83 @@ export default function ServiceRequest() {
   const [captchaInput, setCaptchaInput] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [otherDeviceType, setOtherDeviceType] = useState('');
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [dragActivePhoto, setDragActivePhoto] = useState(false);
+  const [dragActiveVideo, setDragActiveVideo] = useState(false);
+
+  const nextStep = () => {
+    setError('');
+    if (step === 1) {
+      if (!form.customer_name || !form.customer_phone || !form.customer_address) {
+        setError('Please fill in all required contact fields (Name, Phone, Address) before proceeding.');
+        return;
+      }
+      const phoneRegex = /^[0-9]{10}$/;
+      if (!phoneRegex.test(form.customer_phone.replace(/\D/g, ''))) {
+        setError('Please enter a valid 10-digit phone number.');
+        return;
+      }
+    }
+    if (step === 2) {
+      if (!form.device_type) {
+        setError('Please select a device type.');
+        return;
+      }
+      if (form.device_type === 'Other' && !otherDeviceType.trim()) {
+        setError('Please specify the "Other" device type.');
+        return;
+      }
+      if (!form.issue_description.trim()) {
+        setError('Please describe the issue.');
+        return;
+      }
+    }
+    setStep(prev => (prev < 3 ? prev + 1 : prev) as 1 | 2 | 3);
+  };
+
+  const prevStep = () => {
+    setError('');
+    setStep(prev => (prev > 1 ? prev - 1 : prev) as 1 | 2 | 3);
+  };
+
+  const handleDragPhoto = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') setDragActivePhoto(true);
+    else if (e.type === 'dragleave') setDragActivePhoto(false);
+  };
+
+  const handleDropPhoto = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActivePhoto(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      setAttachment(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleDragVideo = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') setDragActiveVideo(true);
+    else if (e.type === 'dragleave') setDragActiveVideo(false);
+  };
+
+  const handleDropVideo = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActiveVideo(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      if (file.size > 50 * 1024 * 1024) {
+        setError('Video file must be under 50 MB.');
+        return;
+      }
+      setVideoAttachment(file);
+      if (videoPreviewUrl) URL.revokeObjectURL(videoPreviewUrl);
+      setVideoPreviewUrl(URL.createObjectURL(file));
+    }
+  };
 
   const updateField = (field: keyof RequestForm, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -121,6 +200,11 @@ export default function ServiceRequest() {
       setError('Incorrect math answer. Please try again.');
       return;
     }
+
+    if (!sigCanvas.current || sigCanvas.current.isEmpty()) {
+      setError('Please sign the document before submitting.');
+      return;
+    }
     
     const phoneRegex = /^[0-9]{10}$/;
     if (!phoneRegex.test(form.customer_phone.replace(/\D/g, ''))) {
@@ -136,7 +220,7 @@ export default function ServiceRequest() {
       let signatureBase64 = null;
 
       if (sigCanvas.current && !sigCanvas.current.isEmpty()) {
-        signatureBase64 = sigCanvas.current.getTrimmedCanvas().toDataURL('image/png');
+        signatureBase64 = sigCanvas.current.getCanvas().toDataURL('image/png');
       }
 
       if (attachment) {
@@ -317,6 +401,7 @@ export default function ServiceRequest() {
       setTermsAccepted(false);
       removeVideo();
       if (sigCanvas.current) { sigCanvas.current.clear(); }
+      setStep(1);
     } catch (err: any) {
       console.error('Submit Ticket Error:', err);
       const message = err?.message || 'Unable to create service ticket.';
@@ -436,317 +521,439 @@ export default function ServiceRequest() {
                 </div>
               </div>
 
-            ) : (
-              <form onSubmit={submitTicket} className="space-y-5">
-                <div>
-                  <h2 className="text-xl font-bold text-slate-900">Customer Details</h2>
-                  <p className="mt-1 text-sm text-slate-500">Fields marked with * are required.</p>
+            ) : (              <form onSubmit={submitTicket} className="space-y-5">
+                {/* Progress Bar */}
+                <div className="mb-8">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex flex-col items-center">
+                      <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${step >= 1 ? 'bg-[#0EA5E9] text-white shadow-md' : 'bg-slate-200 text-slate-500'}`}>1</div>
+                      <span className={`text-xs font-medium mt-1 ${step >= 1 ? 'text-[#0EA5E9]' : 'text-slate-500'}`}>Contact</span>
+                    </div>
+                    <div className={`h-1 flex-1 mx-2 rounded-full transition-colors ${step >= 2 ? 'bg-[#0EA5E9]' : 'bg-slate-200'}`}></div>
+                    <div className="flex flex-col items-center">
+                      <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold transition-colors ${step >= 2 ? 'bg-[#0EA5E9] text-white shadow-md' : 'bg-slate-200 text-slate-500'}`}>2</div>
+                      <span className={`text-xs font-medium mt-1 transition-colors ${step >= 2 ? 'text-[#0EA5E9]' : 'text-slate-500'}`}>Device</span>
+                    </div>
+                    <div className={`h-1 flex-1 mx-2 rounded-full transition-colors ${step >= 3 ? 'bg-[#0EA5E9]' : 'bg-slate-200'}`}></div>
+                    <div className="flex flex-col items-center">
+                      <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold transition-colors ${step >= 3 ? 'bg-[#0EA5E9] text-white shadow-md' : 'bg-slate-200 text-slate-500'}`}>3</div>
+                      <span className={`text-xs font-medium mt-1 transition-colors ${step >= 3 ? 'text-[#0EA5E9]' : 'text-slate-500'}`}>Submit</span>
+                    </div>
+                  </div>
                 </div>
 
                 {error && (
-                  <div className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                  <div className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700 animate-in fade-in slide-in-from-top-2">
                     <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                     <span>{error}</span>
                   </div>
                 )}
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="block">
-                    <span className="text-sm font-semibold text-slate-700">Name *</span>
-                    <input
-                      value={form.customer_name}
-                      onChange={e => updateField('customer_name', e.target.value)}
-                      className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
-                      placeholder="Customer name"
-                    />
-                  </label>
-                  <label className="block">
-                    <span className="text-sm font-semibold text-slate-700">Phone *</span>
-                    <input
-                      value={form.customer_phone}
-                      onChange={e => updateField('customer_phone', e.target.value)}
-                      className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
-                      placeholder="Phone number"
-                    />
-                  </label>
-                  <label className="block">
-                    <span className="text-sm font-semibold text-slate-700">Email</span>
-                    <input
-                      type="email"
-                      value={form.customer_email}
-                      onChange={e => updateField('customer_email', e.target.value)}
-                      className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
-                      placeholder="Email address"
-                    />
-                  </label>
-                  <label className="block">
-                    <span className="text-sm font-semibold text-slate-700">Customer Address</span>
-                    <textarea
-                      rows={1}
-                      value={form.customer_address}
-                      onChange={e => updateField('customer_address', e.target.value)}
-                      className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 resize-none"
-                      placeholder="e.g. 47A 1st Cross, Bengaluru"
-                    />
-                  </label>
-                </div>
+                {/* STEP 1: Contact Information */}
+                {step === 1 && (
+                  <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
+                    <div>
+                      <h2 className="text-xl font-bold text-slate-900">Contact Information</h2>
+                      <p className="mt-1 text-sm text-slate-500">How can we reach you?</p>
+                    </div>
 
-                <div className="block">
-                  <span className="text-sm font-semibold text-slate-700">Device / Service *</span>
-                  <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                    {DEVICE_CATEGORIES.map(category => {
-                      const isSelected = form.device_type === category.id;
-                      const Icon = category.icon;
-                      return (
-                        <button
-                          key={category.id}
-                          type="button"
-                          onClick={() => updateField('device_type', category.id)}
-                          className={`flex flex-col items-center justify-center gap-2 rounded-xl border p-3 text-center transition-all ${
-                            isSelected 
-                              ? 'border-[#0EA5E9] bg-[#0EA5E9]/10 text-[#0EA5E9] shadow-sm ring-1 ring-[#0EA5E9]' 
-                              : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
-                          }`}
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <label className="block">
+                        <span className="text-sm font-semibold text-slate-700">Name *</span>
+                        <input
+                          value={form.customer_name}
+                          onChange={e => updateField('customer_name', e.target.value)}
+                          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          placeholder="Customer name"
+                        />
+                      </label>
+                      <label className="block">
+                        <span className="text-sm font-semibold text-slate-700">Phone *</span>
+                        <input
+                          value={form.customer_phone}
+                          onChange={e => updateField('customer_phone', e.target.value)}
+                          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          placeholder="10-digit number"
+                        />
+                      </label>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <label className="block">
+                        <span className="text-sm font-semibold text-slate-700">Email (Optional)</span>
+                        <input
+                          type="email"
+                          value={form.customer_email}
+                          onChange={e => updateField('customer_email', e.target.value)}
+                          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          placeholder="Email address"
+                        />
+                      </label>
+                      <label className="block">
+                        <span className="text-sm font-semibold text-slate-700">Preferred Contact Method</span>
+                        <select
+                          value={form.preferred_contact}
+                          onChange={e => updateField('preferred_contact', e.target.value)}
+                          className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                         >
-                          <Icon className={`h-6 w-6 ${isSelected ? 'text-[#0EA5E9]' : 'text-slate-400'}`} />
-                          <span className="text-xs font-medium leading-tight">{category.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                          <option value="whatsapp">WhatsApp</option>
+                          <option value="phone">Phone Call</option>
+                          <option value="email">Email</option>
+                        </select>
+                      </label>
+                    </div>
 
-                {form.device_type === 'Other' && (
-                  <label className="block mt-4 mb-2">
-                    <span className="text-sm font-semibold text-slate-700">Please specify what you are giving for service</span>
-                    <input
-                      value={otherDeviceType}
-                      onChange={e => setOtherDeviceType(e.target.value)}
-                      className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
-                      placeholder="e.g. Projector, Scanner, etc."
-                    />
-                  </label>
-                )}
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="block">
-                    <span className="text-sm font-semibold text-slate-700">Make / Model</span>
-                    <input
-                      value={form.device_make_model}
-                      onChange={e => updateField('device_make_model', e.target.value)}
-                      className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
-                      placeholder="e.g., Dell XPS 15, HP LaserJet"
-                    />
-                  </label>
-                  <label className="block">
-                    <span className="text-sm font-semibold text-slate-700">Device Password / PIN</span>
-                    <input
-                      value={form.device_password}
-                      onChange={e => updateField('device_password', e.target.value)}
-                      className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
-                      placeholder="Optional but recommended"
-                    />
-                  </label>
-                </div>
-
-
-                <label className="block">
-                  <span className="text-sm font-semibold text-slate-700">Issue Details *</span>
-                  <textarea
-                    value={form.issue_description}
-                    onChange={e => updateField('issue_description', e.target.value)}
-                    rows={5}
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
-                    placeholder="Example: laptop not booting, printer paper jam, CCTV camera offline..."
-                  />
-                </label>
-
-                {/* Photo Upload */}
-                <div className="block">
-                  <span className="text-sm font-semibold text-slate-700">Upload Photo (Optional)</span>
-                  <p className="text-xs text-slate-500 mb-2 mt-1">Upload a picture of the broken device or error screen.</p>
-                  <label className="mt-1 flex w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 py-6 transition hover:bg-slate-100">
-                    <UploadCloud className="h-8 w-8 text-slate-400 mb-2" />
-                    <span className="text-sm font-medium text-slate-600">
-                      {attachment ? attachment.name : 'Click to upload image'}
-                    </span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
-
-                {/* Video Upload */}
-                <div className="block">
-                  <span className="text-sm font-semibold text-slate-700">Upload Video (Optional)</span>
-                  <p className="text-xs text-slate-500 mb-2 mt-1">Record a short video showing the issue — MP4 only, max 50 MB.</p>
-
-                  {!videoAttachment ? (
-                    <label className="mt-1 flex w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#0EA5E9]/40 bg-[#0EA5E9]/5 py-6 transition hover:bg-[#0EA5E9]/10">
-                      <Film className="h-8 w-8 text-[#0EA5E9]/60 mb-2" />
-                      <span className="text-sm font-medium text-slate-600">Click to upload video</span>
-                      <span className="text-xs text-slate-400 mt-1">MP4 only — up to 50 MB</span>
-                      <input
-                        type="file"
-                        accept="video/mp4"
-                        onChange={handleVideoChange}
-                        className="hidden"
+                    <label className="block">
+                      <span className="text-sm font-semibold text-slate-700">Customer Address *</span>
+                      <textarea
+                        rows={2}
+                        value={form.customer_address}
+                        onChange={e => updateField('customer_address', e.target.value)}
+                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 resize-none"
+                        placeholder="Full address for pickup or record"
                       />
                     </label>
-                  ) : (
-                    <div className="mt-1 rounded-xl border border-[#0EA5E9]/30 bg-[#0EA5E9]/5 overflow-hidden">
-                      {/* Video Preview */}
-                      <video
-                        src={videoPreviewUrl!}
-                        controls
-                        className="w-full max-h-48 object-contain bg-black"
+                    
+                    <label className="flex items-start gap-3 mt-4 rounded-lg border border-slate-200 p-3 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={form.whatsapp_opt_in}
+                        onChange={e => setForm({ ...form, whatsapp_opt_in: e.target.checked })}
+                        className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-[#0EA5E9] focus:ring-[#0EA5E9]"
                       />
-                      <div className="flex items-center justify-between px-3 py-2">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <Film className="h-4 w-4 text-[#0EA5E9] shrink-0" />
-                          <span className="text-xs text-slate-600 truncate">{videoAttachment.name}</span>
-                          <span className="text-xs text-slate-400 shrink-0">({(videoAttachment.size / (1024 * 1024)).toFixed(1)} MB)</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={removeVideo}
-                          className="ml-2 shrink-0 flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs text-red-600 hover:bg-red-100 transition"
-                        >
-                          <X className="h-3 w-3" /> Remove
-                        </button>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-semibold text-slate-700">WhatsApp Updates</span>
+                        <span className="text-xs text-slate-500">Opt-in to automatic WhatsApp status updates for this ticket.</span>
                       </div>
-                    </div>
-                  )}
-                </div>
+                    </label>
 
-                <label className="block">
-                  <span className="text-sm font-semibold text-slate-700">Priority</span>
-                  <select
-                    value={form.priority}
-                    onChange={e => updateField('priority', e.target.value)}
-                    className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
-                  >
-                    {PRIORITY_OPTIONS.map(option => (
-                      <option key={option.value} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
-                </label>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="block">
-                    <span className="text-sm font-semibold text-slate-700">Preferred Contact Method</span>
-                    <select
-                      value={form.preferred_contact}
-                      onChange={e => updateField('preferred_contact', e.target.value)}
-                      className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                    <button
+                      type="button"
+                      onClick={nextStep}
+                      className="mt-6 flex w-full items-center justify-center gap-2 rounded-md bg-[#0EA5E9] px-5 py-3 text-sm font-semibold text-white shadow-md shadow-[#0EA5E9]/20 transition hover:bg-[#0284C7]"
                     >
-                      <option value="whatsapp">WhatsApp</option>
-                      <option value="phone">Phone Call</option>
-                      <option value="email">Email</option>
-                    </select>
-                  </label>
-                  <label className="block">
-                    <span className="text-sm font-semibold text-slate-700">Pre-Approve Minor Repairs</span>
-                    <select
-                      value={form.pre_approved_budget}
-                      onChange={e => updateField('pre_approved_budget', e.target.value)}
-                      className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
-                    >
-                      <option value="No Pre-Approval">No Pre-Approval (Call me first)</option>
-                      <option value="Up to ₹500">Up to ₹500 (Save time)</option>
-                      <option value="Up to ₹1000">Up to ₹1000 (Save time)</option>
-                      <option value="Up to ₹2000">Up to ₹2000 (Save time)</option>
-                    </select>
-                  </label>
-                </div>
-
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={form.whatsapp_opt_in}
-                    onChange={e => setForm({ ...form, whatsapp_opt_in: e.target.checked })}
-                    className="h-4 w-4 rounded border-slate-300 text-[#0EA5E9] focus:ring-[#0EA5E9]"
-                  />
-                  <span className="text-sm text-slate-700">Opt-in to automatic WhatsApp updates for this ticket</span>
-                </label>
-
-                <div className="block bg-slate-50 p-4 rounded-xl border border-slate-200">
-                  <span className="text-sm font-semibold text-slate-700">Anti-Spam Verification *</span>
-                  <p className="text-xs text-slate-500 mb-2">Please solve this simple math problem.</p>
-                  <div className="flex items-center gap-3">
-                    <span className="text-lg font-bold text-slate-800">{captchaA} + {captchaB} = </span>
-                    <input
-                      type="number"
-                      value={captchaInput}
-                      onChange={e => setCaptchaInput(e.target.value)}
-                      className="w-24 rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
-                      placeholder="?"
-                    />
-                  </div>
-                </div>
-
-                <div className="block">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-sm font-semibold text-slate-700">Digital Signature *</span>
-                    <button type="button" onClick={clearSignature} className="text-xs text-[#0EA5E9] hover:underline">
-                      Clear
+                      Next Step <ChevronRight className="h-4 w-4" />
                     </button>
                   </div>
-                  <p className="text-xs text-slate-500 mb-2">Please sign below to agree to the repair terms and conditions.</p>
-                  <div className="border-2 border-dashed border-slate-300 bg-white rounded-xl overflow-hidden touch-none">
-                    <SignatureCanvas 
-                      ref={sigCanvas}
-                      canvasProps={{ className: 'w-full h-32' }}
-                      penColor="#0f172a"
-                    />
-                  </div>
-                </div>
+                )}
 
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="flex w-full items-center justify-center gap-2 rounded-md bg-[#0EA5E9] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-[#0EA5E9]/20 transition hover:bg-[#0284C7] disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                  Create Service Ticket
-                </button>
+                {/* STEP 2: Device Details */}
+                {step === 2 && (
+                  <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
+                    <div>
+                      <h2 className="text-xl font-bold text-slate-900">Device & Issue</h2>
+                      <p className="mt-1 text-sm text-slate-500">What needs to be fixed?</p>
+                    </div>
 
-                {/* Terms & Conditions Checkbox */}
-                <div className={`rounded-xl border-2 p-4 transition-all ${
-                  termsAccepted
-                    ? 'border-green-400 bg-green-50'
-                    : 'border-amber-300 bg-amber-50'
-                }`}>
-                  <div className="flex items-start gap-3">
-                    <input
-                      id="terms-checkbox"
-                      type="checkbox"
-                      checked={termsAccepted}
-                      onChange={e => setTermsAccepted(e.target.checked)}
-                      className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer rounded border-slate-300 text-green-600 focus:ring-green-500"
-                    />
-                    <label htmlFor="terms-checkbox" className="cursor-pointer text-xs leading-relaxed text-slate-700">
-                      <span className="font-bold text-amber-700">⚠ Important Notice — I Agree: </span>
-                      Customer must collect working or non-working materials within{' '}
-                      <span className="font-bold">2 months</span> from the date given for service.
-                      After that, <span className="font-bold">YantraByte Solutions will not be responsible for the items.</span>
-                      {' '}By checking this box, I acknowledge and accept these terms.
+                    <div className="block">
+                      <span className="text-sm font-semibold text-slate-700">Device / Service *</span>
+                      <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                        {DEVICE_CATEGORIES.map(category => {
+                          const isSelected = form.device_type === category.id;
+                          const Icon = category.icon;
+                          return (
+                            <button
+                              key={category.id}
+                              type="button"
+                              onClick={() => updateField('device_type', category.id)}
+                              className={`flex flex-col items-center justify-center gap-2 rounded-xl border p-3 text-center transition-all ${
+                                isSelected 
+                                  ? 'border-[#0EA5E9] bg-[#0EA5E9]/10 text-[#0EA5E9] shadow-sm ring-1 ring-[#0EA5E9]' 
+                                  : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                              }`}
+                            >
+                              <Icon className={`h-6 w-6 ${isSelected ? 'text-[#0EA5E9]' : 'text-slate-400'}`} />
+                              <span className="text-xs font-medium leading-tight">{category.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {form.device_type === 'Other' && (
+                      <label className="block mt-4 mb-2 animate-in fade-in slide-in-from-top-2">
+                        <span className="text-sm font-semibold text-slate-700">Please specify what you are giving for service *</span>
+                        <input
+                          value={otherDeviceType}
+                          onChange={e => setOtherDeviceType(e.target.value)}
+                          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          placeholder="e.g. Projector, Scanner, etc."
+                        />
+                      </label>
+                    )}
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <label className="block">
+                        <span className="text-sm font-semibold text-slate-700">Make / Model</span>
+                        {(form.device_type.includes('Laptop') || form.device_type === 'Desktop') && (
+                          <div className="mt-1.5 flex flex-wrap gap-2 mb-2 animate-in fade-in">
+                            {QUICK_BRANDS.map(brand => (
+                              <button
+                                key={brand}
+                                type="button"
+                                onClick={() => updateField('device_make_model', brand)}
+                                className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 transition hover:border-[#0EA5E9] hover:bg-[#0EA5E9]/5 hover:text-[#0EA5E9]"
+                              >
+                                {brand}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        <input
+                          value={form.device_make_model}
+                          onChange={e => updateField('device_make_model', e.target.value)}
+                          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          placeholder="e.g., Dell XPS 15, HP LaserJet"
+                        />
+                      </label>
+                      <label className="block">
+                        <span className="text-sm font-semibold text-slate-700">Device Password / PIN</span>
+                        <input
+                          value={form.device_password}
+                          onChange={e => updateField('device_password', e.target.value)}
+                          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          placeholder="Optional but recommended for testing"
+                        />
+                      </label>
+                    </div>
+
+                    <label className="block">
+                      <span className="text-sm font-semibold text-slate-700">Issue Details *</span>
+                      <textarea
+                        value={form.issue_description}
+                        onChange={e => updateField('issue_description', e.target.value)}
+                        rows={4}
+                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                        placeholder="Describe the problem in detail..."
+                      />
                     </label>
+
+                    {/* Drag and Drop Media Grid */}
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {/* Photo Upload */}
+                      <div className="block">
+                        <span className="text-sm font-semibold text-slate-700">Photo (Optional)</span>
+                        <label 
+                          onDragEnter={handleDragPhoto}
+                          onDragOver={handleDragPhoto}
+                          onDragLeave={handleDragPhoto}
+                          onDrop={handleDropPhoto}
+                          className={`mt-1 flex w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed py-5 transition-colors ${dragActivePhoto ? 'border-[#0EA5E9] bg-[#0EA5E9]/10' : 'border-slate-300 bg-slate-50 hover:bg-slate-100'}`}
+                        >
+                          {attachment ? (
+                            <div className="flex flex-col items-center text-center px-2">
+                              <CheckCircle2 className="h-6 w-6 text-green-500 mb-1" />
+                              <span className="text-xs font-semibold text-slate-700 truncate w-full px-2">{attachment.name}</span>
+                              <span className="text-[10px] text-slate-400 mt-1">Click to replace</span>
+                            </div>
+                          ) : (
+                            <>
+                              <UploadCloud className={`h-6 w-6 mb-2 ${dragActivePhoto ? 'text-[#0EA5E9]' : 'text-slate-400'}`} />
+                              <span className="text-sm font-medium text-slate-600">Drag or click photo</span>
+                            </>
+                          )}
+                          <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                        </label>
+                      </div>
+
+                      {/* Video Upload */}
+                      <div className="block">
+                        <span className="text-sm font-semibold text-slate-700">Video (Optional)</span>
+                        {!videoAttachment ? (
+                          <label 
+                            onDragEnter={handleDragVideo}
+                            onDragOver={handleDragVideo}
+                            onDragLeave={handleDragVideo}
+                            onDrop={handleDropVideo}
+                            className={`mt-1 flex w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed py-5 transition-colors ${dragActiveVideo ? 'border-[#0EA5E9] bg-[#0EA5E9]/10' : 'border-slate-300 bg-slate-50 hover:bg-slate-100'}`}
+                          >
+                            <Film className={`h-6 w-6 mb-2 ${dragActiveVideo ? 'text-[#0EA5E9]' : 'text-slate-400'}`} />
+                            <span className="text-sm font-medium text-slate-600">Drag or click video</span>
+                            <span className="text-[10px] text-slate-400 mt-0.5">Max 50MB</span>
+                            <input type="file" accept="video/mp4" onChange={handleVideoChange} className="hidden" />
+                          </label>
+                        ) : (
+                          <div className="mt-1 rounded-xl border border-[#0EA5E9]/30 bg-[#0EA5E9]/5 overflow-hidden h-[104px] relative group">
+                            <video src={videoPreviewUrl!} className="w-full h-full object-cover opacity-80" />
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button
+                                type="button"
+                                onClick={removeVideo}
+                                className="flex items-center gap-1 rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white shadow-lg hover:bg-red-700 transition"
+                              >
+                                <X className="h-3 w-3" /> Remove Video
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2 pt-2">
+                      <label className="block">
+                        <span className="text-sm font-semibold text-slate-700">Priority Level</span>
+                        <select
+                          value={form.priority}
+                          onChange={e => updateField('priority', e.target.value)}
+                          className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                        >
+                          {PRIORITY_OPTIONS.map(option => (
+                            <option key={option.value} value={option.value}>{option.label}</option>
+                          ))}
+                        </select>
+                        {/* Dynamic Priority Banners */}
+                        <div className="mt-2">
+                          {form.priority === 'urgent' && (
+                            <div className="flex items-center gap-1.5 rounded bg-red-50 px-2 py-1.5 text-xs text-red-700 border border-red-100 animate-in fade-in">
+                              <AlertCircle className="h-3.5 w-3.5 shrink-0" /> Bumped to front of queue. Express fee may apply.
+                            </div>
+                          )}
+                          {form.priority === 'high' && (
+                            <div className="flex items-center gap-1.5 rounded bg-amber-50 px-2 py-1.5 text-xs text-amber-700 border border-amber-100 animate-in fade-in">
+                              <Loader2 className="h-3.5 w-3.5 shrink-0" /> Target completion: 24-48 hours.
+                            </div>
+                          )}
+                          {form.priority === 'medium' && (
+                            <div className="flex items-center gap-1.5 rounded bg-green-50 px-2 py-1.5 text-xs text-green-700 border border-green-100 animate-in fade-in">
+                              <CheckCircle2 className="h-3.5 w-3.5 shrink-0" /> Target completion: 2-3 business days.
+                            </div>
+                          )}
+                        </div>
+                      </label>
+                      <label className="block">
+                        <span className="text-sm font-semibold text-slate-700">Pre-Approve Minor Repairs</span>
+                        <select
+                          value={form.pre_approved_budget}
+                          onChange={e => updateField('pre_approved_budget', e.target.value)}
+                          className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                        >
+                          <option value="No Pre-Approval">No Pre-Approval (Call me first)</option>
+                          <option value="Up to ₹500">Up to ₹500 (Save time)</option>
+                          <option value="Up to ₹1000">Up to ₹1000 (Save time)</option>
+                          <option value="Up to ₹2000">Up to ₹2000 (Save time)</option>
+                        </select>
+                      </label>
+                    </div>
+
+                    <div className="mt-6 flex gap-3">
+                      <button
+                        type="button"
+                        onClick={prevStep}
+                        className="flex items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+                      >
+                        <ChevronLeft className="h-4 w-4" /> Back
+                      </button>
+                      <button
+                        type="button"
+                        onClick={nextStep}
+                        className="flex flex-1 items-center justify-center gap-2 rounded-md bg-[#0EA5E9] px-5 py-3 text-sm font-semibold text-white shadow-md shadow-[#0EA5E9]/20 transition hover:bg-[#0284C7]"
+                      >
+                        Next Step <ChevronRight className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
-                  {!termsAccepted && (
-                    <p className="mt-2 text-xs font-semibold text-amber-700 pl-8">
-                      ✗ You must accept this notice before submitting.
-                    </p>
-                  )}
-                  {termsAccepted && (
-                    <p className="mt-2 text-xs font-semibold text-green-700 pl-8">
-                      ✓ Terms accepted
-                    </p>
-                  )}
-                </div>
+                )}
+
+                {/* STEP 3: Terms & Signature */}
+                {step === 3 && (
+                  <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
+                    <div>
+                      <h2 className="text-xl font-bold text-slate-900">Verification & Submit</h2>
+                      <p className="mt-1 text-sm text-slate-500">Please review terms and sign below.</p>
+                    </div>
+
+                    {/* Terms & Conditions Checkbox */}
+                    <div className={`rounded-xl border-2 p-4 transition-all ${
+                      termsAccepted
+                        ? 'border-green-400 bg-green-50'
+                        : 'border-amber-300 bg-amber-50'
+                    }`}>
+                      <div className="flex items-start gap-3">
+                        <input
+                          id="terms-checkbox"
+                          type="checkbox"
+                          checked={termsAccepted}
+                          onChange={e => setTermsAccepted(e.target.checked)}
+                          className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer rounded border-slate-300 text-green-600 focus:ring-green-500"
+                        />
+                        <label htmlFor="terms-checkbox" className="cursor-pointer text-xs leading-relaxed text-slate-700">
+                          <span className="font-bold text-amber-700">⚠ Important Notice — I Agree: </span>
+                          Customer must collect working or non-working materials within{' '}
+                          <span className="font-bold">2 months</span> from the date given for service.
+                          After that, <span className="font-bold">YantraByte Solutions will not be responsible for the items.</span>
+                          {' '}By checking this box, I acknowledge and accept these terms.
+                        </label>
+                      </div>
+                      {!termsAccepted && (
+                        <p className="mt-2 text-xs font-semibold text-amber-700 pl-8">
+                          ✗ You must accept this notice before submitting.
+                        </p>
+                      )}
+                      {termsAccepted && (
+                        <p className="mt-2 text-xs font-semibold text-green-700 pl-8">
+                          ✓ Terms accepted
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="block bg-slate-50 p-4 rounded-xl border border-slate-200">
+                      <span className="text-sm font-semibold text-slate-700">Anti-Spam Verification *</span>
+                      <p className="text-xs text-slate-500 mb-2">Please solve this simple math problem.</p>
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg font-bold text-slate-800">{captchaA} + {captchaB} = </span>
+                        <input
+                          type="number"
+                          value={captchaInput}
+                          onChange={e => setCaptchaInput(e.target.value)}
+                          className="w-24 rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          placeholder="?"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="block">
+                      <div className="flex justify-between items-end mb-2">
+                        <div>
+                          <span className="text-sm font-semibold text-slate-700">Digital Signature *</span>
+                          <p className="text-xs text-slate-500 mt-0.5">Please sign below to agree to the terms.</p>
+                        </div>
+                      </div>
+                      <div className="relative border-2 border-dashed border-[#0EA5E9]/50 bg-[#0EA5E9]/5 rounded-xl overflow-hidden touch-none group transition-colors hover:border-[#0EA5E9]">
+                        <button 
+                          type="button" 
+                          onClick={clearSignature} 
+                          className="absolute top-2 right-2 z-10 flex items-center gap-1 rounded bg-white/80 backdrop-blur border border-slate-200 px-2 py-1 text-xs font-medium text-slate-600 shadow-sm transition hover:bg-red-50 hover:text-red-600"
+                        >
+                          <X className="h-3 w-3" /> Clear
+                        </button>
+                        <SignatureCanvas 
+                          ref={sigCanvas}
+                          canvasProps={{ className: 'w-full h-36 cursor-crosshair' }}
+                          penColor="#0f172a"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-6 flex gap-3">
+                      <button
+                        type="button"
+                        onClick={prevStep}
+                        className="flex items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+                      >
+                        <ChevronLeft className="h-4 w-4" /> Back
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={submitting}
+                        className="flex flex-1 items-center justify-center gap-2 rounded-md bg-[#0EA5E9] px-5 py-3 text-sm font-semibold text-white shadow-md shadow-[#0EA5E9]/20 transition hover:bg-[#0284C7] disabled:cursor-not-allowed disabled:opacity-60 relative overflow-hidden group"
+                      >
+                        <div className="absolute inset-0 bg-white/20 translate-y-full transition-transform group-hover:translate-y-0"></div>
+                        {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                        <span className="relative">Create Service Ticket</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </form>
             )}
           </div>

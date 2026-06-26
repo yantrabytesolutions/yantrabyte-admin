@@ -106,7 +106,7 @@ async function generateTicketPdf(ticket: Record<string, string>): Promise<Uint8A
 
   // ── WATERMARK: hardware_watermark.png ───────────────────────────────────────────────
   try {
-    const wmRes = await fetch('https://yantrabyte.anantatechcare.com/hardware_watermark.png');
+    const wmRes = await fetch('https://raw.githubusercontent.com/yantrabytesolutions/yantrabyte-admin/main/public/hardware_watermark.png');
     if (wmRes.ok) {
       const wmBytes = await wmRes.arrayBuffer();
       const uint8 = new Uint8Array(wmBytes);
@@ -132,7 +132,7 @@ async function generateTicketPdf(ticket: Record<string, string>): Promise<Uint8A
         y: (height - newHeight) / 2,
         width: newWidth, 
         height: newHeight,
-        opacity: 0.45,
+        opacity: 0.15,
       });
     }
   } catch (e) { 
@@ -181,16 +181,15 @@ async function generateTicketPdf(ticket: Record<string, string>): Promise<Uint8A
   });
 
   // ── DETAILS TABLE ─────────────────────────────────────────────────────────
-  const rows: [string, string][] = [
-    ['Customer Name',    ticket.customer_name    || '—'],
-    ['Phone',            ticket.customer_phone   || '—'],
-    ['Email',            ticket.customer_email   || '—'],
-    ['Address',          ticket.customer_address || '—'],
-    ['Device / Service', ticket.device_type      || '—'],
-    ['Make / Model',     ticket.device_make_model|| '—'],
-    ['Issue Reported',   ticket.issue_description|| '—'],
-    ['Priority',         (ticket.priority || 'medium').charAt(0).toUpperCase() + (ticket.priority || 'medium').slice(1)],
-    ['Service Method',   ticket.service_method === 'home_pickup' ? 'Home Pickup' : 'Drop-off at Workshop'],
+  const rows = [
+    ['Customer Name', String(ticket.customer_name || '—')],
+    ['Phone', String(ticket.customer_phone || ticket.mobile_no || '—')],
+    ['Email', String(ticket.customer_email || '—')],
+    ['Address', String(ticket.customer_address || '—')],
+    ['Device / Service', String(ticket.device_type || '—')],
+    ['Make / Model', String(ticket.device_make_model || '—')],
+    ['Issue Reported', String(ticket.issue_description || '—')],
+    ['Priority', String(ticket.priority || 'Medium')],
   ];
 
   let rowY = height - 180;
@@ -208,7 +207,7 @@ async function generateTicketPdf(ticket: Record<string, string>): Promise<Uint8A
 
   rows.forEach(([label, value], idx) => {
     const bgColor = idx % 2 === 0 ? light : white;
-    page.drawRectangle({ x: 20, y: rowY - 2, width: width - 40, height: 22, color: bgColor });
+    page.drawRectangle({ x: 20, y: rowY - 2, width: width - 40, height: 22, color: bgColor, opacity: 0.1 });
     page.drawText(label, { x: colLabel, y: rowY + 5, size: 9, font: fontBold, color: slate });
     const maxChars  = 55;
     const displayVal = value.length > maxChars ? value.slice(0, maxChars) + '…' : value;
@@ -220,7 +219,7 @@ async function generateTicketPdf(ticket: Record<string, string>): Promise<Uint8A
 
   // ── TERMS & CONDITIONS BOX ────────────────────────────────────────────────
   const tcBoxH = 78;
-  page.drawRectangle({ x: 20, y: rowY - tcBoxH, width: width - 40, height: tcBoxH, color: rgb(1, 0.98, 0.93) });
+  page.drawRectangle({ x: 20, y: rowY - tcBoxH, width: width - 40, height: tcBoxH, color: rgb(1, 0.98, 0.93), opacity: 0.1 });
   page.drawRectangle({ x: 20, y: rowY - tcBoxH, width: width - 40, height: tcBoxH, borderColor: amber, borderWidth: 1.5, color: rgb(0,0,0,0) as ReturnType<typeof rgb>, opacity: 0, borderOpacity: 1 });
   page.drawRectangle({ x: 20, y: rowY - tcBoxH, width: 5,          height: tcBoxH, color: amber });
 
@@ -240,31 +239,37 @@ async function generateTicketPdf(ticket: Record<string, string>): Promise<Uint8A
   rowY -= tcBoxH + 18;
 
   // ── SIGNATURE SECTION ─────────────────────────────────────────────────────
-  const sigBoxY = rowY - 68;
-  page.drawRectangle({ x: 20, y: sigBoxY, width: width - 40, height: 68, color: light });
+  const sigBoxH = 120;
+  const sigBoxY = rowY - sigBoxH;
+  page.drawRectangle({ x: 20, y: sigBoxY, width: width - 40, height: sigBoxH, color: light, opacity: 0.1 });
 
   // Left: customer digital acceptance
-  page.drawText('Customer Accepted Terms:', { x: 30, y: sigBoxY + 50, size: 8, font: fontBold, color: slate });
-  page.drawText('Agreed digitally via online service request form', { x: 30, y: sigBoxY + 36, size: 8, font: fontNormal, color: rgb(0.1, 0.55, 0.2) });
-  page.drawText(`Date: ${dateStr}`, { x: 30, y: sigBoxY + 22, size: 8, font: fontNormal, color: slate });
+  page.drawText('Customer Accepted Terms:', { x: 30, y: sigBoxY + 100, size: 8, font: fontBold, color: slate });
+  page.drawText('Agreed digitally via online service request form', { x: 30, y: sigBoxY + 86, size: 8, font: fontNormal, color: rgb(0.1, 0.55, 0.2) });
+  page.drawText(`Date: ${dateStr}`, { x: 30, y: sigBoxY + 72, size: 8, font: fontNormal, color: slate });
 
-  // Right: authorised signature
+  // Right: authorised signatory
   const sigX = width / 2 + 20;
-  page.drawText('Authorised Signatory:', { x: sigX, y: sigBoxY + 50, size: 8, font: fontBold, color: slate });
-  page.drawText('YantraByte Solutions', { x: sigX, y: sigBoxY + 30, size: 14, font: fontOblique, color: navy, opacity: 0.85 });
-  page.drawLine({ start: { x: sigX, y: sigBoxY + 20 }, end: { x: sigX + 180, y: sigBoxY + 20 }, thickness: 1, color: navy, opacity: 0.4 });
-  page.drawText('For YantraByte Solutions', { x: sigX, y: sigBoxY + 8, size: 7.5, font: fontNormal, color: slate });
+  page.drawText('Authorised Signatory:', { x: sigX, y: sigBoxY + 100, size: 8, font: fontBold, color: slate });
+  page.drawLine({ start: { x: sigX, y: sigBoxY + 22 }, end: { x: sigX + 180, y: sigBoxY + 22 }, thickness: 1, color: navy, opacity: 0.4 });
+  page.drawText('For YantraByte Solutions', { x: sigX, y: sigBoxY + 10, size: 7.5, font: fontNormal, color: slate });
 
   // ── SEAL (Authorised Signatory) ───────────────────────────────────────────
   try {
-    const sealRes = await fetch('https://yantrabyte.anantatechcare.com/seal.png');
+    const sealRes = await fetch('https://raw.githubusercontent.com/yantrabytesolutions/yantrabyte-admin/main/public/seal.png');
     if (sealRes.ok) {
       const sealBytes = await sealRes.arrayBuffer();
-      const sealImg   = await pdfDoc.embedPng(new Uint8Array(sealBytes));
+      let sealImg;
+      try {
+        sealImg = await pdfDoc.embedPng(new Uint8Array(sealBytes));
+      } catch (e) {
+        sealImg = await pdfDoc.embedJpg(new Uint8Array(sealBytes));
+      }
       const sealSize  = 72;
       page.drawImage(sealImg, {
-        x: sigX + 100, y: sigBoxY - 5,
-        width: sealSize, height: sealSize, opacity: 0.85,
+        x: sigX + 30, y: sigBoxY + 26,
+        width: sealSize, height: sealSize,
+        opacity: 0.85,
       });
     }
   } catch { /* optional */ }
@@ -377,7 +382,7 @@ Deno.serve(async (req) => {
 
     if (!gmailUser || !gmailPass) {
       return new Response(
-        JSON.stringify({ ok: true, email: { ok: false, reason: 'Gmail not configured' }, telegram: { ok: !!tgToken }, drive: { ok: !!driveViewLink, link: driveViewLink } }),
+        JSON.stringify({ ok: true, email: { ok: false, reason: 'Gmail not configured', pdfBase64 }, telegram: { ok: !!tgToken }, drive: { ok: !!driveViewLink, link: driveViewLink } }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -402,9 +407,6 @@ Deno.serve(async (req) => {
   <div style="padding:28px 32px">
     <p style="color:#0f172a;font-size:15px">Dear <strong>${escapeHtml(cleanName)}</strong>,</p>
     <p style="color:#334155">Your service ticket has been successfully created. The official PDF is attached to this email${driveViewLink ? ' and saved to your Google Drive' : ''}.</p>
-    <div style="text-align:center;margin:20px 0">
-      <img src="https://yantrabyte.anantatechcare.com/seal.png" alt="YantraByte Official Seal" width="100" height="100" style="display:inline-block;border-radius:50%;object-fit:contain" />
-    </div>
     <div style="background:#f8fafc;border-radius:6px;padding:16px;margin:16px 0;border-left:4px solid #0B5394;text-align:center">
       <p style="margin:0 0 6px;color:#64748b;font-size:13px">Ticket Number</p>
       <p style="margin:0;font-size:22px;font-weight:700;color:#0B5394;letter-spacing:2px">${escapeHtml(cleanTicketNo)}</p>
@@ -413,7 +415,6 @@ Deno.serve(async (req) => {
       <tr><td style="padding:6px 0;color:#64748b;width:40%">Device</td><td style="color:#0f172a;font-weight:600">${escapeHtml(cleanDevice)}</td></tr>
       <tr><td style="padding:6px 0;color:#64748b">Issue Reported</td><td style="color:#0f172a">${escapeHtml(cleanIssue)}</td></tr>
       <tr><td style="padding:6px 0;color:#64748b">Priority</td><td style="color:#0f172a;text-transform:capitalize">${escapeHtml(ticket.priority || 'Medium')}</td></tr>
-      <tr><td style="padding:6px 0;color:#64748b">Service Method</td><td style="color:#0f172a">${ticket.service_method === 'home_pickup' ? 'Home Pickup' : 'Drop-off at Workshop'}</td></tr>
     </table>
     ${driveLink}
     <div style="background:#fffbeb;border:1px solid #fcd34d;border-left:4px solid #f59e0b;border-radius:6px;padding:14px 16px;margin:20px 0">
@@ -531,8 +532,10 @@ Deno.serve(async (req) => {
     await cmd('QUIT');
     await conn.close();
 
+    const emailOk = true;
+
     return new Response(
-      JSON.stringify({ ok: true, email: { ok: true, pdf: !!pdfBase64, pdfError: pdfErrorStr }, telegram: { ok: !!tgToken }, storage: { ok: !!driveViewLink, url: driveViewLink } }),
+      JSON.stringify({ ok: true, email: { ok: emailOk, pdf: !!pdfBytes, pdfError: pdfErrorStr, pdfBase64 }, telegram: { ok: !!tgToken }, storage: { ok: !!driveViewLink, url: driveViewLink } }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (err) {
