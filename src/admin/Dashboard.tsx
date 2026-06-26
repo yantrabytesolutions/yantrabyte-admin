@@ -6,7 +6,7 @@ import {
 } from 'recharts';
 import { format, subMonths, startOfMonth, parseISO } from 'date-fns';
 import { Invoice, Purchase, ServiceTicket } from '../types';
-import { AlertCircle, IndianRupee, TrendingDown, Clock, CheckCircle, Receipt, MessageSquare, Mail, Loader2 } from 'lucide-react';
+import { AlertCircle, IndianRupee, TrendingDown, Clock, CheckCircle, Receipt, MessageSquare, Mail, Loader2, FileText } from 'lucide-react';
 import CustomerLedgerModal from './components/CustomerLedgerModal';
 
 interface OutstandingClient {
