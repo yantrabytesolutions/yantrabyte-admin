@@ -109,7 +109,15 @@ async function generateTicketPdf(ticket: Record<string, string>): Promise<Uint8A
     const wmRes = await fetch('https://yantrabyte.anantatechcare.com/hardware_watermark.png');
     if (wmRes.ok) {
       const wmBytes = await wmRes.arrayBuffer();
-      const wmImg   = await pdfDoc.embedPng(new Uint8Array(wmBytes));
+      const uint8 = new Uint8Array(wmBytes);
+      
+      let wmImg;
+      try {
+        wmImg = await pdfDoc.embedPng(uint8);
+      } catch (e) {
+        // Fallback to JPG in case the image is a JPEG renamed to .png
+        wmImg = await pdfDoc.embedJpg(uint8);
+      }
       
       // Calculate scale to cover the entire page (like object-fit: cover)
       const scaleX = width / wmImg.width;
@@ -124,10 +132,12 @@ async function generateTicketPdf(ticket: Record<string, string>): Promise<Uint8A
         y: (height - newHeight) / 2,
         width: newWidth, 
         height: newHeight,
-        opacity: 0.15,
+        opacity: 0.45,
       });
     }
-  } catch { /* optional */ }
+  } catch (e) { 
+    console.error('Watermark error:', e); 
+  }
 
   // ── HEADER BAR ─────────────────────────────────────────────────────────────
   page.drawRectangle({ x: 0, y: height - 90, width, height: 90, color: navy });
@@ -145,19 +155,7 @@ async function generateTicketPdf(ticket: Record<string, string>): Promise<Uint8A
     size: 8, font: fontNormal, color: rgb(0.75, 0.85, 1),
   });
 
-  // ── SEAL (top-right of header) ────────────────────────────────────────────
-  try {
-    const sealRes = await fetch('https://yantrabyte.anantatechcare.com/seal.png');
-    if (sealRes.ok) {
-      const sealBytes = await sealRes.arrayBuffer();
-      const sealImg   = await pdfDoc.embedPng(new Uint8Array(sealBytes));
-      const sealSize  = 72;
-      page.drawImage(sealImg, {
-        x: width - sealSize - 18, y: height - sealSize - 9,
-        width: sealSize, height: sealSize, opacity: 0.95,
-      });
-    }
-  } catch { /* optional */ }
+
 
   // ── TITLE + DATE ──────────────────────────────────────────────────────────
   const now     = new Date();
@@ -175,7 +173,7 @@ async function generateTicketPdf(ticket: Record<string, string>): Promise<Uint8A
 
   // ── TICKET NUMBER BADGE ───────────────────────────────────────────────────
   page.drawRectangle({ x: 23, y: height - 162, width: width - 46, height: 26, color: navy });
-  const tn      = ticket.ticket_number || 'N/A';
+  const tn      = ticket.ticket_no || 'N/A';
   const tnWidth = fontBold.widthOfTextAtSize(tn, 14);
   page.drawText(tn, {
     x: (width - tnWidth) / 2, y: height - 152,
@@ -257,6 +255,20 @@ async function generateTicketPdf(ticket: Record<string, string>): Promise<Uint8A
   page.drawLine({ start: { x: sigX, y: sigBoxY + 20 }, end: { x: sigX + 180, y: sigBoxY + 20 }, thickness: 1, color: navy, opacity: 0.4 });
   page.drawText('For YantraByte Solutions', { x: sigX, y: sigBoxY + 8, size: 7.5, font: fontNormal, color: slate });
 
+  // ── SEAL (Authorised Signatory) ───────────────────────────────────────────
+  try {
+    const sealRes = await fetch('https://yantrabyte.anantatechcare.com/seal.png');
+    if (sealRes.ok) {
+      const sealBytes = await sealRes.arrayBuffer();
+      const sealImg   = await pdfDoc.embedPng(new Uint8Array(sealBytes));
+      const sealSize  = 72;
+      page.drawImage(sealImg, {
+        x: sigX + 100, y: sigBoxY - 5,
+        width: sealSize, height: sealSize, opacity: 0.85,
+      });
+    }
+  } catch { /* optional */ }
+
   // ── FOOTER ────────────────────────────────────────────────────────────────
   page.drawRectangle({ x: 0, y: 0, width, height: 36, color: navy });
   page.drawText('47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post, Bengaluru – 560097', {
@@ -287,7 +299,9 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const ticket = await req.json();
+    const payload = await req.json();
+    // Unwrap the record if it comes from a Supabase webhook
+    const ticket = payload.record || payload;
 
     // Fetch Supabase env
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
@@ -323,7 +337,7 @@ Deno.serve(async (req) => {
     if (tgToken && tgChatId) {
       const tgMessage =
         `🛠 <b>New Service Ticket</b>\n` +
-        `Ticket: ${escapeHtml(ticket.ticket_number || 'N/A')}\n` +
+        `Ticket: ${escapeHtml(ticket.ticket_no || 'N/A')}\n` +
         `Customer: ${escapeHtml(ticket.customer_name || 'N/A')}\n` +
         `Phone: ${escapeHtml(ticket.customer_phone || 'N/A')}\n` +
         `Device: ${escapeHtml(ticket.device_type || 'N/A')}\n` +
@@ -336,7 +350,7 @@ Deno.serve(async (req) => {
     let pdfBytes: Uint8Array | null = null;
     let pdfBase64 = '';
     let pdfErrorStr = '';
-    const pdfFilename = `ServiceTicket-${String(ticket.ticket_number || 'XXXXXX').replace(/[\s/]/g, '_')}.pdf`;
+    const pdfFilename = `ServiceTicket-${String(ticket.ticket_no || 'XXXXXX').replace(/[\s/]/g, '_')}.pdf`;
     try {
       pdfBytes  = await generateTicketPdf(ticket);
       pdfBase64 = uint8ToBase64(pdfBytes);
@@ -370,7 +384,7 @@ Deno.serve(async (req) => {
 
     const hasValidCustomerEmail = ticket.customer_email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ticket.customer_email);
     const cleanName     = String(ticket.customer_name || 'Customer');
-    const cleanTicketNo = String(ticket.ticket_number || '');
+    const cleanTicketNo = String(ticket.ticket_no || '');
     const cleanDevice   = String(ticket.device_type   || 'Device');
     const cleanIssue    = String(ticket.issue_description || '');
 

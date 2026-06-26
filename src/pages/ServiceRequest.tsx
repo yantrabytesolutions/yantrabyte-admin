@@ -53,7 +53,6 @@ const initialForm: RequestForm = {
   priority: 'medium',
   device_make_model: '',
   device_password: '',
-  service_method: 'drop_off',
   pickup_date: '',
   preferred_contact: 'whatsapp',
   whatsapp_opt_in: true,
@@ -270,7 +269,6 @@ export default function ServiceRequest() {
             device_make_model: form.device_make_model,
             issue_description: form.issue_description,
             priority:          form.priority,
-            service_method:    form.service_method,
             terms_accepted:    true,
           }
         });
@@ -301,8 +299,7 @@ export default function ServiceRequest() {
           '', 
           `https://yantrabyte.anantatechcare.com/admin`,
           ticketPayload.device_make_model || '',
-          ticketPayload.service_method === 'home_pickup' ? 'Home Pickup' : 'Drop-off',
-          ticketPayload.pre_approved_budget || ''
+          ticketPayload.budget ? `₹${ticketPayload.budget}` : 'N/A'
         ];
 
         const { appendBackupRow } = await import('../utils/googleSheetBackup');
@@ -556,49 +553,6 @@ export default function ServiceRequest() {
                   </label>
                 </div>
 
-                <div className="block">
-                  <span className="text-sm font-semibold text-slate-700">Service Method *</span>
-                  <div className="mt-2 grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => updateField('service_method', 'drop_off')}
-                      className={`flex flex-col items-center justify-center gap-2 rounded-xl border p-3 text-center transition-all ${
-                        form.service_method === 'drop_off' 
-                          ? 'border-[#0EA5E9] bg-[#0EA5E9]/10 text-[#0EA5E9] shadow-sm ring-1 ring-[#0EA5E9]' 
-                          : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
-                      }`}
-                    >
-                      <MapPin className={`h-5 w-5 ${form.service_method === 'drop_off' ? 'text-[#0EA5E9]' : 'text-slate-400'}`} />
-                      <span className="text-xs font-medium">I will drop it off at the workshop</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => updateField('service_method', 'home_pickup')}
-                      className={`flex flex-col items-center justify-center gap-2 rounded-xl border p-3 text-center transition-all ${
-                        form.service_method === 'home_pickup' 
-                          ? 'border-[#0EA5E9] bg-[#0EA5E9]/10 text-[#0EA5E9] shadow-sm ring-1 ring-[#0EA5E9]' 
-                          : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
-                      }`}
-                    >
-                      <Truck className={`h-5 w-5 ${form.service_method === 'home_pickup' ? 'text-[#0EA5E9]' : 'text-slate-400'}`} />
-                      <span className="text-xs font-medium">Request Home Pickup</span>
-                    </button>
-                  </div>
-                </div>
-
-                {form.service_method === 'home_pickup' && (
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <label className="block">
-                      <span className="text-sm font-semibold text-slate-700">Preferred Date & Time</span>
-                      <input
-                        type="datetime-local"
-                        value={form.pickup_date}
-                        onChange={e => updateField('pickup_date', e.target.value)}
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
-                      />
-                    </label>
-                  </div>
-                )}
 
                 <label className="block">
                   <span className="text-sm font-semibold text-slate-700">Issue Details *</span>
