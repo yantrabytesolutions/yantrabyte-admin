@@ -3,6 +3,23 @@ import { X, Plus, Clock, CheckCircle, FileText, IndianRupee } from 'lucide-react
 import { supabase } from '../../lib/supabase';
 import { Invoice } from '../../types';
 
+const parseDateToTimestamp = (dateStr: string): number => {
+  if (!dateStr) return 0;
+  if (dateStr.includes('/')) {
+    const [d, m, y] = dateStr.split('/');
+    return new Date(`${y}-${m}-${d}`).getTime();
+  }
+  return new Date(dateStr).getTime();
+};
+
+const formatDateForUI = (dateStr: string): string => {
+  if (!dateStr) return '';
+  if (dateStr.includes('/')) return dateStr;
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString('en-IN');
+};
+
 interface CustomerLedgerModalProps {
   customerName: string;
   customerId: string | null;
@@ -71,7 +88,7 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
 
       // 2. Distribute payment across unpaid invoices (FIFO)
       let remainingAmount = Number(payAmount);
-      const unpaidInvoices = [...invoices].filter(i => (i.balance_due || 0) > 0).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      const unpaidInvoices = [...invoices].filter(i => (i.balance_due || 0) > 0).sort((a, b) => parseDateToTimestamp(a.date) - parseDateToTimestamp(b.date));
 
       for (const inv of unpaidInvoices) {
         if (remainingAmount <= 0) break;
@@ -111,7 +128,7 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
   invoices.forEach(inv => {
     ledgerLines.push({
       id: `inv-${inv.id}`,
-      date: new Date(inv.date).getTime(),
+      date: parseDateToTimestamp(inv.date),
       dateStr: inv.date,
       type: 'invoice',
       ref: inv.invoice_no,
@@ -122,7 +139,7 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
     if (inv.advance_paid && inv.advance_paid > 0 && payments.length === 0) {
       ledgerLines.push({
         id: `inv-adv-${inv.id}`,
-        date: new Date(inv.date).getTime() + 1000, // slightly after invoice
+        date: parseDateToTimestamp(inv.date) + 1000, // slightly after invoice
         dateStr: inv.date,
         type: 'initial_advance',
         ref: `Advance for ${inv.invoice_no}`,
@@ -135,7 +152,7 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
   payments.forEach(p => {
     ledgerLines.push({
       id: `pay-${p.id}`,
-      date: new Date(p.payment_date).getTime(),
+      date: parseDateToTimestamp(p.payment_date),
       dateStr: p.payment_date,
       type: 'payment',
       ref: p.reference_note ? `Payment (${p.payment_mode}) - ${p.reference_note}` : `Payment (${p.payment_mode})`,
@@ -232,7 +249,7 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
                       runningBalance += (line.debit - line.credit);
                       return (
                         <tr key={line.id} className="hover:bg-slate-50 transition-colors">
-                          <td className="px-5 py-3 whitespace-nowrap text-slate-700 font-medium">{new Date(line.dateStr).toLocaleDateString('en-IN')}</td>
+                          <td className="px-5 py-3 whitespace-nowrap text-slate-700 font-medium">{formatDateForUI(line.dateStr)}</td>
                           <td className="px-5 py-3 text-slate-700">
                             {line.type === 'invoice' ? (
                               <div className="font-semibold text-blue-700">Invoice #{line.ref}</div>
