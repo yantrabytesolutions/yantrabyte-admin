@@ -419,14 +419,17 @@ export default function ServiceRequest() {
         canonicalUrl="https://yantrabyte.anantatechcare.com/service-request"
       />
 
-      <section className="bg-[#0B1120] px-4 py-10 sm:px-6 lg:px-8">
+      <section className="bg-gradient-brand relative overflow-hidden px-4 py-10 sm:px-6 lg:px-8">
+      {/* Background Orbs */}
+      <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-[#0EA5E9]/20 blur-[100px] pointer-events-none"></div>
+      <div className="absolute top-40 -right-40 h-96 w-96 rounded-full bg-[#38BDF8]/10 blur-[100px] pointer-events-none"></div>
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.4fr]">
           <div className="pt-4 text-white">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#0EA5E9]/30 bg-[#0EA5E9]/10 px-3 py-1 text-sm font-semibold text-[#7DD3FC]">
               <ClipboardCheck className="h-4 w-4" />
               Service Ticket
             </div>
-            <h1 className="max-w-xl text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">
+            <h1 className="max-w-xl text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl text-gradient">
               Create Your Repair or IT Support Ticket
             </h1>
             <p className="mt-4 max-w-xl text-sm leading-7 text-[#CBD5E1] sm:text-base">
@@ -466,7 +469,7 @@ export default function ServiceRequest() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-white/10 bg-white p-5 shadow-2xl sm:p-6">
+          <div className="rounded-2xl glass-strong p-5 shadow-2xl sm:p-6 glow-blue-sm border-t border-l border-white/20">
             {createdTicket ? (
               <div className="flex min-h-[520px] flex-col items-center justify-center text-center">
                 {/* Official Seal */}
@@ -475,15 +478,15 @@ export default function ServiceRequest() {
                   alt="YantraByte Official Seal"
                   className="w-32 h-32 object-contain mx-auto drop-shadow-lg"
                 />
-                <h2 className="text-2xl font-bold text-slate-900">Ticket Created!</h2>
-                <p className="mt-2 text-sm text-slate-600">Please keep this ticket number for follow-up.</p>
-                <div className="mt-4 w-full rounded-md border border-slate-200 bg-slate-50 px-5 py-3 font-mono text-lg font-bold text-slate-900">
+                <h2 className="text-2xl font-bold text-white">Ticket Created!</h2>
+                <p className="mt-2 text-sm text-slate-400">Please keep this ticket number for follow-up.</p>
+                <div className="mt-4 w-full rounded-md border border-white/10 bg-white/5 px-5 py-3 font-mono text-lg font-bold text-white">
                   {createdTicket}
                 </div>
                 
                 <div className="mt-6 flex flex-col items-center">
-                  <p className="text-xs text-slate-500 mb-2 font-medium uppercase tracking-wider">Scan to Track</p>
-                  <div className="p-2 bg-white rounded-lg border border-slate-200 shadow-sm">
+                  <p className="text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider">Scan to Track</p>
+                  <div className="p-2 bg-white rounded-lg border border-white/10 shadow-sm">
                     <QRCodeSVG 
                       value={`https://yantrabyte.anantatechcare.com/track-ticket?t=${createdTicket}`} 
                       size={120} 
@@ -514,7 +517,7 @@ export default function ServiceRequest() {
                   <button
                     type="button"
                     onClick={() => setCreatedTicket('')}
-                    className="flex items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                    className="flex items-center justify-center gap-2 rounded-md border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-semibold text-slate-300 transition hover:bg-white/5"
                   >
                     Create Another
                   </button>
@@ -526,18 +529,18 @@ export default function ServiceRequest() {
                 <div className="mb-8">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex flex-col items-center">
-                      <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${step >= 1 ? 'bg-[#0EA5E9] text-white shadow-md' : 'bg-slate-200 text-slate-500'}`}>1</div>
-                      <span className={`text-xs font-medium mt-1 ${step >= 1 ? 'text-[#0EA5E9]' : 'text-slate-500'}`}>Contact</span>
+                      <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${step >= 1 ? 'bg-[#0EA5E9] text-white shadow-md' : 'bg-white/10 text-slate-400'}`}>1</div>
+                      <span className={`text-xs font-medium mt-1 ${step >= 1 ? 'text-[#0EA5E9]' : 'text-slate-400'}`}>Contact</span>
                     </div>
-                    <div className={`h-1 flex-1 mx-2 rounded-full transition-colors ${step >= 2 ? 'bg-[#0EA5E9]' : 'bg-slate-200'}`}></div>
+                    <div className={`h-1 flex-1 mx-2 rounded-full transition-colors ${step >= 2 ? 'bg-[#0EA5E9]' : 'bg-white/10'}`}></div>
                     <div className="flex flex-col items-center">
-                      <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold transition-colors ${step >= 2 ? 'bg-[#0EA5E9] text-white shadow-md' : 'bg-slate-200 text-slate-500'}`}>2</div>
-                      <span className={`text-xs font-medium mt-1 transition-colors ${step >= 2 ? 'text-[#0EA5E9]' : 'text-slate-500'}`}>Device</span>
+                      <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold transition-colors ${step >= 2 ? 'bg-[#0EA5E9] text-white shadow-md' : 'bg-white/10 text-slate-400'}`}>2</div>
+                      <span className={`text-xs font-medium mt-1 transition-colors ${step >= 2 ? 'text-[#0EA5E9]' : 'text-slate-400'}`}>Device</span>
                     </div>
-                    <div className={`h-1 flex-1 mx-2 rounded-full transition-colors ${step >= 3 ? 'bg-[#0EA5E9]' : 'bg-slate-200'}`}></div>
+                    <div className={`h-1 flex-1 mx-2 rounded-full transition-colors ${step >= 3 ? 'bg-[#0EA5E9]' : 'bg-white/10'}`}></div>
                     <div className="flex flex-col items-center">
-                      <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold transition-colors ${step >= 3 ? 'bg-[#0EA5E9] text-white shadow-md' : 'bg-slate-200 text-slate-500'}`}>3</div>
-                      <span className={`text-xs font-medium mt-1 transition-colors ${step >= 3 ? 'text-[#0EA5E9]' : 'text-slate-500'}`}>Submit</span>
+                      <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold transition-colors ${step >= 3 ? 'bg-[#0EA5E9] text-white shadow-md' : 'bg-white/10 text-slate-400'}`}>3</div>
+                      <span className={`text-xs font-medium mt-1 transition-colors ${step >= 3 ? 'text-[#0EA5E9]' : 'text-slate-400'}`}>Submit</span>
                     </div>
                   </div>
                 </div>
@@ -553,26 +556,26 @@ export default function ServiceRequest() {
                 {step === 1 && (
                   <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
                     <div>
-                      <h2 className="text-xl font-bold text-slate-900">Contact Information</h2>
-                      <p className="mt-1 text-sm text-slate-500">How can we reach you?</p>
+                      <h2 className="text-xl font-bold text-white">Contact Information</h2>
+                      <p className="mt-1 text-sm text-slate-400">How can we reach you?</p>
                     </div>
 
                     <div className="grid gap-4 sm:grid-cols-2">
                       <label className="block">
-                        <span className="text-sm font-semibold text-slate-700">Name *</span>
+                        <span className="text-sm font-semibold text-slate-300">Name *</span>
                         <input
                           value={form.customer_name}
                           onChange={e => updateField('customer_name', e.target.value)}
-                          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                           placeholder="Customer name"
                         />
                       </label>
                       <label className="block">
-                        <span className="text-sm font-semibold text-slate-700">Phone *</span>
+                        <span className="text-sm font-semibold text-slate-300">Phone *</span>
                         <input
                           value={form.customer_phone}
                           onChange={e => updateField('customer_phone', e.target.value)}
-                          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                           placeholder="10-digit number"
                         />
                       </label>
@@ -580,21 +583,21 @@ export default function ServiceRequest() {
 
                     <div className="grid gap-4 sm:grid-cols-2">
                       <label className="block">
-                        <span className="text-sm font-semibold text-slate-700">Email (Optional)</span>
+                        <span className="text-sm font-semibold text-slate-300">Email (Optional)</span>
                         <input
                           type="email"
                           value={form.customer_email}
                           onChange={e => updateField('customer_email', e.target.value)}
-                          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                           placeholder="Email address"
                         />
                       </label>
                       <label className="block">
-                        <span className="text-sm font-semibold text-slate-700">Preferred Contact Method</span>
+                        <span className="text-sm font-semibold text-slate-300">Preferred Contact Method</span>
                         <select
                           value={form.preferred_contact}
                           onChange={e => updateField('preferred_contact', e.target.value)}
-                          className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          className="mt-1 w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                         >
                           <option value="whatsapp">WhatsApp</option>
                           <option value="phone">Phone Call</option>
@@ -604,26 +607,26 @@ export default function ServiceRequest() {
                     </div>
 
                     <label className="block">
-                      <span className="text-sm font-semibold text-slate-700">Customer Address *</span>
+                      <span className="text-sm font-semibold text-slate-300">Customer Address *</span>
                       <textarea
                         rows={2}
                         value={form.customer_address}
                         onChange={e => updateField('customer_address', e.target.value)}
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 resize-none"
+                        className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 resize-none"
                         placeholder="Full address for pickup or record"
                       />
                     </label>
                     
-                    <label className="flex items-start gap-3 mt-4 rounded-lg border border-slate-200 p-3 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors">
+                    <label className="flex items-start gap-3 mt-4 rounded-lg border border-white/10 p-3 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
                       <input
                         type="checkbox"
                         checked={form.whatsapp_opt_in}
                         onChange={e => setForm({ ...form, whatsapp_opt_in: e.target.checked })}
-                        className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-[#0EA5E9] focus:ring-[#0EA5E9]"
+                        className="mt-0.5 h-4 w-4 shrink-0 rounded border-white/10 text-[#0EA5E9] focus:ring-[#0EA5E9]"
                       />
                       <div className="flex flex-col">
-                        <span className="text-sm font-semibold text-slate-700">WhatsApp Updates</span>
-                        <span className="text-xs text-slate-500">Opt-in to automatic WhatsApp status updates for this ticket.</span>
+                        <span className="text-sm font-semibold text-slate-300">WhatsApp Updates</span>
+                        <span className="text-xs text-slate-400">Opt-in to automatic WhatsApp status updates for this ticket.</span>
                       </div>
                     </label>
 
@@ -641,12 +644,12 @@ export default function ServiceRequest() {
                 {step === 2 && (
                   <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
                     <div>
-                      <h2 className="text-xl font-bold text-slate-900">Device & Issue</h2>
-                      <p className="mt-1 text-sm text-slate-500">What needs to be fixed?</p>
+                      <h2 className="text-xl font-bold text-white">Device & Issue</h2>
+                      <p className="mt-1 text-sm text-slate-400">What needs to be fixed?</p>
                     </div>
 
                     <div className="block">
-                      <span className="text-sm font-semibold text-slate-700">Device / Service *</span>
+                      <span className="text-sm font-semibold text-slate-300">Device / Service *</span>
                       <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                         {DEVICE_CATEGORIES.map(category => {
                           const isSelected = form.device_type === category.id;
@@ -659,7 +662,7 @@ export default function ServiceRequest() {
                               className={`flex flex-col items-center justify-center gap-2 rounded-xl border p-3 text-center transition-all ${
                                 isSelected 
                                   ? 'border-[#0EA5E9] bg-[#0EA5E9]/10 text-[#0EA5E9] shadow-sm ring-1 ring-[#0EA5E9]' 
-                                  : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                                  : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/10 hover:bg-white/5'
                               }`}
                             >
                               <Icon className={`h-6 w-6 ${isSelected ? 'text-[#0EA5E9]' : 'text-slate-400'}`} />
@@ -672,11 +675,11 @@ export default function ServiceRequest() {
 
                     {form.device_type === 'Other' && (
                       <label className="block mt-4 mb-2 animate-in fade-in slide-in-from-top-2">
-                        <span className="text-sm font-semibold text-slate-700">Please specify what you are giving for service *</span>
+                        <span className="text-sm font-semibold text-slate-300">Please specify what you are giving for service *</span>
                         <input
                           value={otherDeviceType}
                           onChange={e => setOtherDeviceType(e.target.value)}
-                          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                           placeholder="e.g. Projector, Scanner, etc."
                         />
                       </label>
@@ -684,7 +687,7 @@ export default function ServiceRequest() {
 
                     <div className="grid gap-4 sm:grid-cols-2">
                       <label className="block">
-                        <span className="text-sm font-semibold text-slate-700">Make / Model</span>
+                        <span className="text-sm font-semibold text-slate-300">Make / Model</span>
                         {(form.device_type.includes('Laptop') || form.device_type === 'Desktop') && (
                           <div className="mt-1.5 flex flex-wrap gap-2 mb-2 animate-in fade-in">
                             {QUICK_BRANDS.map(brand => (
@@ -692,7 +695,7 @@ export default function ServiceRequest() {
                                 key={brand}
                                 type="button"
                                 onClick={() => updateField('device_make_model', brand)}
-                                className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 transition hover:border-[#0EA5E9] hover:bg-[#0EA5E9]/5 hover:text-[#0EA5E9]"
+                                className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-slate-400 transition hover:border-[#0EA5E9] hover:bg-[#0EA5E9]/5 hover:text-[#0EA5E9]"
                               >
                                 {brand}
                               </button>
@@ -702,28 +705,28 @@ export default function ServiceRequest() {
                         <input
                           value={form.device_make_model}
                           onChange={e => updateField('device_make_model', e.target.value)}
-                          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                           placeholder="e.g., Dell XPS 15, HP LaserJet"
                         />
                       </label>
                       <label className="block">
-                        <span className="text-sm font-semibold text-slate-700">Device Password / PIN</span>
+                        <span className="text-sm font-semibold text-slate-300">Device Password / PIN</span>
                         <input
                           value={form.device_password}
                           onChange={e => updateField('device_password', e.target.value)}
-                          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                           placeholder="Optional but recommended for testing"
                         />
                       </label>
                     </div>
 
                     <label className="block">
-                      <span className="text-sm font-semibold text-slate-700">Issue Details *</span>
+                      <span className="text-sm font-semibold text-slate-300">Issue Details *</span>
                       <textarea
                         value={form.issue_description}
                         onChange={e => updateField('issue_description', e.target.value)}
                         rows={4}
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                        className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                         placeholder="Describe the problem in detail..."
                       />
                     </label>
@@ -732,24 +735,24 @@ export default function ServiceRequest() {
                     <div className="grid gap-4 sm:grid-cols-2">
                       {/* Photo Upload */}
                       <div className="block">
-                        <span className="text-sm font-semibold text-slate-700">Photo (Optional)</span>
+                        <span className="text-sm font-semibold text-slate-300">Photo (Optional)</span>
                         <label 
                           onDragEnter={handleDragPhoto}
                           onDragOver={handleDragPhoto}
                           onDragLeave={handleDragPhoto}
                           onDrop={handleDropPhoto}
-                          className={`mt-1 flex w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed py-5 transition-colors ${dragActivePhoto ? 'border-[#0EA5E9] bg-[#0EA5E9]/10' : 'border-slate-300 bg-slate-50 hover:bg-slate-100'}`}
+                          className={`mt-1 flex w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed py-5 transition-colors ${dragActivePhoto ? 'border-[#0EA5E9] bg-[#0EA5E9]/10' : 'border-white/10 bg-white/5 hover:bg-white/10'}`}
                         >
                           {attachment ? (
                             <div className="flex flex-col items-center text-center px-2">
                               <CheckCircle2 className="h-6 w-6 text-green-500 mb-1" />
-                              <span className="text-xs font-semibold text-slate-700 truncate w-full px-2">{attachment.name}</span>
+                              <span className="text-xs font-semibold text-slate-300 truncate w-full px-2">{attachment.name}</span>
                               <span className="text-[10px] text-slate-400 mt-1">Click to replace</span>
                             </div>
                           ) : (
                             <>
                               <UploadCloud className={`h-6 w-6 mb-2 ${dragActivePhoto ? 'text-[#0EA5E9]' : 'text-slate-400'}`} />
-                              <span className="text-sm font-medium text-slate-600">Drag or click photo</span>
+                              <span className="text-sm font-medium text-slate-400">Drag or click photo</span>
                             </>
                           )}
                           <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
@@ -758,17 +761,17 @@ export default function ServiceRequest() {
 
                       {/* Video Upload */}
                       <div className="block">
-                        <span className="text-sm font-semibold text-slate-700">Video (Optional)</span>
+                        <span className="text-sm font-semibold text-slate-300">Video (Optional)</span>
                         {!videoAttachment ? (
                           <label 
                             onDragEnter={handleDragVideo}
                             onDragOver={handleDragVideo}
                             onDragLeave={handleDragVideo}
                             onDrop={handleDropVideo}
-                            className={`mt-1 flex w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed py-5 transition-colors ${dragActiveVideo ? 'border-[#0EA5E9] bg-[#0EA5E9]/10' : 'border-slate-300 bg-slate-50 hover:bg-slate-100'}`}
+                            className={`mt-1 flex w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed py-5 transition-colors ${dragActiveVideo ? 'border-[#0EA5E9] bg-[#0EA5E9]/10' : 'border-white/10 bg-white/5 hover:bg-white/10'}`}
                           >
                             <Film className={`h-6 w-6 mb-2 ${dragActiveVideo ? 'text-[#0EA5E9]' : 'text-slate-400'}`} />
-                            <span className="text-sm font-medium text-slate-600">Drag or click video</span>
+                            <span className="text-sm font-medium text-slate-400">Drag or click video</span>
                             <span className="text-[10px] text-slate-400 mt-0.5">Max 50MB</span>
                             <input type="file" accept="video/mp4" onChange={handleVideoChange} className="hidden" />
                           </label>
@@ -791,11 +794,11 @@ export default function ServiceRequest() {
 
                     <div className="grid gap-4 sm:grid-cols-2 pt-2">
                       <label className="block">
-                        <span className="text-sm font-semibold text-slate-700">Priority Level</span>
+                        <span className="text-sm font-semibold text-slate-300">Priority Level</span>
                         <select
                           value={form.priority}
                           onChange={e => updateField('priority', e.target.value)}
-                          className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          className="mt-1 w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                         >
                           {PRIORITY_OPTIONS.map(option => (
                             <option key={option.value} value={option.value}>{option.label}</option>
@@ -821,11 +824,11 @@ export default function ServiceRequest() {
                         </div>
                       </label>
                       <label className="block">
-                        <span className="text-sm font-semibold text-slate-700">Pre-Approve Minor Repairs</span>
+                        <span className="text-sm font-semibold text-slate-300">Pre-Approve Minor Repairs</span>
                         <select
                           value={form.pre_approved_budget}
                           onChange={e => updateField('pre_approved_budget', e.target.value)}
-                          className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          className="mt-1 w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                         >
                           <option value="No Pre-Approval">No Pre-Approval (Call me first)</option>
                           <option value="Up to ₹500">Up to ₹500 (Save time)</option>
@@ -839,7 +842,7 @@ export default function ServiceRequest() {
                       <button
                         type="button"
                         onClick={prevStep}
-                        className="flex items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+                        className="flex items-center justify-center gap-2 rounded-md border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-slate-300 shadow-sm transition hover:bg-white/5"
                       >
                         <ChevronLeft className="h-4 w-4" /> Back
                       </button>
@@ -858,8 +861,8 @@ export default function ServiceRequest() {
                 {step === 3 && (
                   <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
                     <div>
-                      <h2 className="text-xl font-bold text-slate-900">Verification & Submit</h2>
-                      <p className="mt-1 text-sm text-slate-500">Please review terms and sign below.</p>
+                      <h2 className="text-xl font-bold text-white">Verification & Submit</h2>
+                      <p className="mt-1 text-sm text-slate-400">Please review terms and sign below.</p>
                     </div>
 
                     {/* Terms & Conditions Checkbox */}
@@ -874,9 +877,9 @@ export default function ServiceRequest() {
                           type="checkbox"
                           checked={termsAccepted}
                           onChange={e => setTermsAccepted(e.target.checked)}
-                          className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer rounded border-slate-300 text-green-600 focus:ring-green-500"
+                          className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer rounded border-white/10 text-green-600 focus:ring-green-500"
                         />
-                        <label htmlFor="terms-checkbox" className="cursor-pointer text-xs leading-relaxed text-slate-700">
+                        <label htmlFor="terms-checkbox" className="cursor-pointer text-xs leading-relaxed text-slate-300">
                           <span className="font-bold text-amber-700">⚠ Important Notice — I Agree: </span>
                           Customer must collect working or non-working materials within{' '}
                           <span className="font-bold">2 months</span> from the date given for service.
@@ -896,16 +899,16 @@ export default function ServiceRequest() {
                       )}
                     </div>
 
-                    <div className="block bg-slate-50 p-4 rounded-xl border border-slate-200">
-                      <span className="text-sm font-semibold text-slate-700">Anti-Spam Verification *</span>
-                      <p className="text-xs text-slate-500 mb-2">Please solve this simple math problem.</p>
+                    <div className="block bg-white/5 p-4 rounded-xl border border-white/10">
+                      <span className="text-sm font-semibold text-slate-300">Anti-Spam Verification *</span>
+                      <p className="text-xs text-slate-400 mb-2">Please solve this simple math problem.</p>
                       <div className="flex items-center gap-3">
-                        <span className="text-lg font-bold text-slate-800">{captchaA} + {captchaB} = </span>
+                        <span className="text-lg font-bold text-slate-200">{captchaA} + {captchaB} = </span>
                         <input
                           type="number"
                           value={captchaInput}
                           onChange={e => setCaptchaInput(e.target.value)}
-                          className="w-24 rounded-md border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          className="w-24 rounded-md border border-white/10 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                           placeholder="?"
                         />
                       </div>
@@ -914,22 +917,22 @@ export default function ServiceRequest() {
                     <div className="block">
                       <div className="flex justify-between items-end mb-2">
                         <div>
-                          <span className="text-sm font-semibold text-slate-700">Digital Signature *</span>
-                          <p className="text-xs text-slate-500 mt-0.5">Please sign below to agree to the terms.</p>
+                          <span className="text-sm font-semibold text-slate-300">Digital Signature *</span>
+                          <p className="text-xs text-slate-400 mt-0.5">Please sign below to agree to the terms.</p>
                         </div>
                       </div>
                       <div className="relative border-2 border-dashed border-[#0EA5E9]/50 bg-[#0EA5E9]/5 rounded-xl overflow-hidden touch-none group transition-colors hover:border-[#0EA5E9]">
                         <button 
                           type="button" 
                           onClick={clearSignature} 
-                          className="absolute top-2 right-2 z-10 flex items-center gap-1 rounded bg-white/80 backdrop-blur border border-slate-200 px-2 py-1 text-xs font-medium text-slate-600 shadow-sm transition hover:bg-red-50 hover:text-red-600"
+                          className="absolute top-2 right-2 z-10 flex items-center gap-1 rounded bg-white/5/80 backdrop-blur border border-white/10 px-2 py-1 text-xs font-medium text-slate-400 shadow-sm transition hover:bg-red-50 hover:text-red-600"
                         >
                           <X className="h-3 w-3" /> Clear
                         </button>
                         <SignatureCanvas 
                           ref={sigCanvas}
                           canvasProps={{ className: 'w-full h-36 cursor-crosshair' }}
-                          penColor="#0f172a"
+                          penColor="#ffffff"
                         />
                       </div>
                     </div>
@@ -938,7 +941,7 @@ export default function ServiceRequest() {
                       <button
                         type="button"
                         onClick={prevStep}
-                        className="flex items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+                        className="flex items-center justify-center gap-2 rounded-md border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-slate-300 shadow-sm transition hover:bg-white/5"
                       >
                         <ChevronLeft className="h-4 w-4" /> Back
                       </button>
@@ -947,7 +950,7 @@ export default function ServiceRequest() {
                         disabled={submitting}
                         className="flex flex-1 items-center justify-center gap-2 rounded-md bg-[#0EA5E9] px-5 py-3 text-sm font-semibold text-white shadow-md shadow-[#0EA5E9]/20 transition hover:bg-[#0284C7] disabled:cursor-not-allowed disabled:opacity-60 relative overflow-hidden group"
                       >
-                        <div className="absolute inset-0 bg-white/20 translate-y-full transition-transform group-hover:translate-y-0"></div>
+                        <div className="absolute inset-0 bg-white/5/20 translate-y-full transition-transform group-hover:translate-y-0"></div>
                         {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
                         <span className="relative">Create Service Ticket</span>
                       </button>
