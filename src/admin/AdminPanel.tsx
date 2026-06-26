@@ -2186,7 +2186,7 @@ export default function AdminPanel() {
             return (
               <button
                 key={item.section}
-                onClick={() => { setActiveSection(item.section); setSearchQuery(''); setShowForm(false); }}
+                onClick={() => { setActiveSection(item.section); setSearchQuery(''); setShowForm(false); setSidebarOpen(false); }}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   isActive
                     ? 'bg-[#0EA5E9]/10 text-[#0EA5E9] border border-[#0EA5E9]/20'

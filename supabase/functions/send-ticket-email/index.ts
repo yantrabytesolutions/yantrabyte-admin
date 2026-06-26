@@ -114,19 +114,19 @@ async function generateTicketPdf(ticket: Record<string, string>): Promise<Uint8A
     });
   }
 
-  // ── WATERMARK: seal.png ───────────────────────────────────────────────
+  // ── WATERMARK: hardware_watermark.png ───────────────────────────────────────────────
   try {
-    const wmRes = await fetch('https://yantrabyte.anantatechcare.com/seal.png');
+    const wmRes = await fetch('https://yantrabyte.anantatechcare.com/hardware_watermark.png');
     if (wmRes.ok) {
       const wmBytes = await wmRes.arrayBuffer();
       const wmImg   = await pdfDoc.embedPng(new Uint8Array(wmBytes));
-      // Scale seal image to fit nicely as a central watermark
-      const wmDims  = wmImg.scale(2.5);
+      // Scale image to fit nicely as a central watermark
+      const wmDims  = wmImg.scale(1.5);
       page.drawImage(wmImg, {
         x: (width - wmDims.width) / 2,
         y: (height - wmDims.height) / 2 + 50,
         width: wmDims.width, height: wmDims.height,
-        opacity: 0.12,
+        opacity: 0.15,
       });
     }
   } catch { /* optional */ }
@@ -337,12 +337,14 @@ Deno.serve(async (req) => {
     // ── Generate PDF ───────────────────────────────────────────────────────
     let pdfBytes: Uint8Array | null = null;
     let pdfBase64 = '';
+    let pdfErrorStr = '';
     const pdfFilename = `ServiceTicket-${String(ticket.ticket_number || 'XXXXXX').replace(/[\s/]/g, '_')}.pdf`;
     try {
       pdfBytes  = await generateTicketPdf(ticket);
       pdfBase64 = uint8ToBase64(pdfBytes);
     } catch (pdfErr) {
       console.error('PDF generation failed:', pdfErr);
+      pdfErrorStr = pdfErr instanceof Error ? pdfErr.message : String(pdfErr);
     }
     // ── Upload PDF to Google Drive (OAuth) ────────────────────────────────────
     const clientId      = Deno.env.get('GOOGLE_CLIENT_ID') || '';
@@ -508,7 +510,8 @@ Deno.serve(async (req) => {
     }
 
     await cmd(`MAIL FROM:<${gmailUser}>`);
-    if (hasValidCustomerEmail) await cmd(`RCPT TO:<${ticket.customer_email}>`);
+    // Temporarily disabled sending to customer until user confirms
+    // if (hasValidCustomerEmail) await cmd(`RCPT TO:<${ticket.customer_email}>`);
     await cmd(`RCPT TO:<yantrabyte.solutions@gmail.com>`);
     await cmd('DATA');
     await writer.write(enc.encode(mime + '\r\n.\r\n'));
@@ -517,7 +520,7 @@ Deno.serve(async (req) => {
     await conn.close();
 
     return new Response(
-      JSON.stringify({ ok: true, email: { ok: true, pdf: !!pdfBase64 }, telegram: { ok: !!tgToken }, storage: { ok: !!pdfPublicUrl, url: pdfPublicUrl } }),
+      JSON.stringify({ ok: true, email: { ok: true, pdf: !!pdfBase64, pdfError: pdfErrorStr }, telegram: { ok: !!tgToken }, storage: { ok: !!driveViewLink, url: driveViewLink } }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (err) {

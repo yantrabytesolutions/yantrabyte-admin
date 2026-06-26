@@ -6835,3 +6835,293 @@ The device is not ready.
    Ended : 23 June 2026 02:00:10
 
 [23-06-2026  2:00:10.02] Backup complete 
+[26-06-2026  2:00:02.91] Starting backup K: to L: 
+[26-06-2026  2:00:02.95] Backing up Nextcloud Data... 
+
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows                              
+-------------------------------------------------------------------------------
+
+  Started : 26 June 2026 02:00:03
+   Source : K:\nextcloud\Data\
+     Dest = L:\nextcloud-backup\
+
+    Files : *.*
+	    
+  Options : *.* /TEE /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /Z /MT:8 /R:3 /W:10 
+
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+
+               Total    Copied   Skipped  Mismatch    FAILED    Extras
+    Dirs :        87        87        87         0         0         0
+   Files :       135         0       135         0         0         0
+   Bytes :   70.99 m         0   70.99 m         0         0         0
+   Times :   0:00:00   0:00:00                       0:00:00   0:00:00
+   Ended : 26 June 2026 02:00:03
+
+[26-06-2026  2:00:03.15] Backing up Guru Mobile Backup... 
+
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows                              
+-------------------------------------------------------------------------------
+
+  Started : 26 June 2026 02:00:03
+   Source : K:\Guru mobile backup\
+     Dest = L:\Guru mobile backup\
+
+    Files : *.*
+	    
+  Options : *.* /TEE /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /Z /MT:8 /R:3 /W:10 
+
+------------------------------------------------------------------------------
+
+	    New File  		   55927	K:\Guru mobile backup\WhatsApp Images\IMG-20260507-WA0000.jpg100%  
+	    New File  		  197761	K:\Guru mobile backup\WhatsApp Images\IMG-20260615-WA0003.jpg100%  
+	    New File  		  150287	K:\Guru mobile backup\WhatsApp Images\IMG-20260615-WA0005.jpg100%  
+	    New File  		  244818	K:\Guru mobile backup\WhatsApp Images\IMG-20260615-WA0006.jpg100%  
+	    New File  		   31901	K:\Guru mobile backup\WhatsApp Images\IMG-20260615-WA0007.jpg100%  
+	    New File  		   58745	K:\Guru mobile backup\WhatsApp Images\IMG-20260615-WA0008.jpg100%  
+	    New File  		  106215	K:\Guru mobile backup\WhatsApp Images\IMG-20260615-WA0009.jpg100%  
+	    New File  		  143137	K:\Guru mobile backup\WhatsApp Images\IMG-20260615-WA0010.jpg100%  
+	    New File  		  117223	K:\Guru mobile backup\WhatsApp Images\IMG-20260615-WA0011.jpg100%  
+	    New File  		   64663	K:\Guru mobile backup\WhatsApp Images\IMG-20260616-WA0001.jpg100%  
+	    New File  		   63313	K:\Guru mobile backup\WhatsApp Images\IMG-20260616-WA0004.jpg100%  
+	    New File  		   65835	K:\Guru mobile backup\WhatsApp Images\IMG-20260616-WA0005.jpg100%  
+	    New File  		  183861	K:\Guru mobile backup\WhatsApp Images\IMG-20260616-WA0006.jpg100%  
+	    New File  		   2.9 m	K:\Guru mobile backup\WhatsApp Images\IMG-20260616-WA0007.jpeg100%  
+	    New File  		   78752	K:\Guru mobile backup\WhatsApp Images\IMG-20260616-WA0009.jpg100%  
+	    New File  		   81717	K:\Guru mobile backup\WhatsApp Images\IMG-20260616-WA0011.jpg100%  
+	    New File  		  107947	K:\Guru mobile backup\WhatsApp Images\IMG-20260616-WA0012.jpg100%  
+	    New File  		   88119	K:\Guru mobile backup\WhatsApp Images\IMG-20260616-WA0013.jpg100%  
+	    New File  		   98507	K:\Guru mobile backup\WhatsApp Images\IMG-20260616-WA0014.jpg100%  
+	    New File  		   93334	K:\Guru mobile backup\WhatsApp Images\IMG-20260616-WA0015.jpg100%  
+	    New File  		  111717	K:\Guru mobile backup\WhatsApp Images\IMG-20260616-WA0016.jpg100%  
+	    New File  		  113430	K:\Guru mobile backup\WhatsApp Images\IMG-20260616-WA0017.jpg100%  
+	    New File  		   69269	K:\Guru mobile backup\WhatsApp Images\IMG-20260616-WA0018.jpg100%  
+	    New File  		  109916	K:\Guru mobile backup\WhatsApp Images\IMG-20260616-WA0019.jpg100%  
+	    New File  		   81453	K:\Guru mobile backup\WhatsApp Images\IMG-20260617-WA0001.jpg100%  
+	    New File  		  416962	K:\Guru mobile backup\WhatsApp Images\IMG-20260617-WA0002.jpg100%  
+	    New File  		   67308	K:\Guru mobile backup\WhatsApp Images\IMG-20260617-WA0003.jpg100%  
+	    New File  		   59609	K:\Guru mobile backup\WhatsApp Images\IMG-20260617-WA0004.jpg100%  
+	    New File  		  171405	K:\Guru mobile backup\WhatsApp Images\IMG-20260617-WA0005.jpg100%  
+	    New File  		  194169	K:\Guru mobile backup\WhatsApp Images\IMG-20260617-WA0007.jpg100%  
+	    New File  		   87648	K:\Guru mobile backup\WhatsApp Images\IMG-20260617-WA0008.jpg100%  
+	    New File  		   74030	K:\Guru mobile backup\WhatsApp Images\IMG-20260617-WA0009.jpg100%  
+	    New File  		  213963	K:\Guru mobile backup\WhatsApp Images\IMG-20260617-WA0010.jpg100%  
+	    New File  		  252733	K:\Guru mobile backup\WhatsApp Images\IMG-20260617-WA0011.jpg100%  
+	    New File  		   85177	K:\Guru mobile backup\WhatsApp Images\IMG-20260617-WA0012.jpg100%  
+	    New File  		   74292	K:\Guru mobile backup\WhatsApp Images\IMG-20260617-WA0014.jpg100%  
+	    New File  		  103448	K:\Guru mobile backup\WhatsApp Images\IMG-20260617-WA0015.jpg100%  
+	    New File  		   71402	K:\Guru mobile backup\WhatsApp Images\IMG-20260617-WA0016.jpg100%  
+	    New File  		   62152	K:\Guru mobile backup\WhatsApp Images\IMG-20260617-WA0017.jpg100%  
+	    New File  		  110145	K:\Guru mobile backup\WhatsApp Images\IMG-20260617-WA0018.jpg100%  
+	    New File  		  154931	K:\Guru mobile backup\WhatsApp Images\IMG-20260617-WA0019.jpg100%  
+	    New File  		   11090	K:\Guru mobile backup\WhatsApp Images\IMG-20260617-WA0020.jpg100%  
+	    New File  		  112975	K:\Guru mobile backup\WhatsApp Images\IMG-20260617-WA0022.jpg100%  
+	    New File  		   27725	K:\Guru mobile backup\WhatsApp Images\IMG-20260618-WA0001.jpg100%  
+	    New File  		   45488	K:\Guru mobile backup\WhatsApp Images\IMG-20260618-WA0002.jpg100%  
+	    New File  		  155703	K:\Guru mobile backup\WhatsApp Images\IMG-20260618-WA0004.jpg100%  
+	    New File  		  102773	K:\Guru mobile backup\WhatsApp Images\IMG-20260618-WA0005.jpg100%  
+	    New File  		  342815	K:\Guru mobile backup\WhatsApp Images\IMG-20260618-WA0009.jpg100%  
+	    New File  		   52934	K:\Guru mobile backup\WhatsApp Images\IMG-20260618-WA0010.jpg100%  
+	    New File  		  230982	K:\Guru mobile backup\WhatsApp Images\IMG-20260618-WA0012.jpg100%  
+	    New File  		   2.8 m	K:\Guru mobile backup\WhatsApp Images\IMG-20260618-WA0013.jpeg  0%  100%  
+	    New File  		  951173	K:\Guru mobile backup\WhatsApp Images\IMG-20260618-WA0015.jpeg100%  
+	    New File  		   2.9 m	K:\Guru mobile backup\WhatsApp Images\IMG-20260618-WA0017.jpeg100%  
+	    New File  		   1.2 m	K:\Guru mobile backup\WhatsApp Images\IMG-20260619-WA0004.jpeg100%  
+	    New File  		   2.0 m	K:\Guru mobile backup\WhatsApp Images\IMG-20260619-WA0005.jpeg100%  
+	    New File  		   1.5 m	K:\Guru mobile backup\WhatsApp Images\IMG-20260619-WA0008.jpeg100%  
+	    New File  		  102349	K:\Guru mobile backup\WhatsApp Images\IMG-20260620-WA0002.jpg100%  
+	    New File  		   35926	K:\Guru mobile backup\WhatsApp Images\IMG-20260620-WA0003.jpg100%  
+	    New File  		  115394	K:\Guru mobile backup\WhatsApp Images\IMG-20260620-WA0007.jpg100%  
+	    New File  		  136222	K:\Guru mobile backup\WhatsApp Images\IMG-20260620-WA0010.jpg100%  
+	    New File  		  134982	K:\Guru mobile backup\WhatsApp Images\IMG-20260620-WA0011.jpg100%  
+	    New File  		  229442	K:\Guru mobile backup\WhatsApp Images\IMG-20260620-WA0012.jpg100%  
+	    New File  		  138616	K:\Guru mobile backup\WhatsApp Images\IMG-20260620-WA0013.jpg100%  
+	    New File  		  155445	K:\Guru mobile backup\WhatsApp Images\IMG-20260620-WA0014.jpg100%  
+	    New File  		  158317	K:\Guru mobile backup\WhatsApp Images\IMG-20260620-WA0015.jpg100%  
+	    New File  		  425036	K:\Guru mobile backup\WhatsApp Images\IMG-20260620-WA0016.jpg100%  
+	    New File  		  197144	K:\Guru mobile backup\WhatsApp Images\IMG-20260620-WA0017.jpg100%  
+	    New File  		   65650	K:\Guru mobile backup\WhatsApp Images\IMG-20260621-WA0000.jpg100%  
+	    New File  		   86777	K:\Guru mobile backup\WhatsApp Images\IMG-20260622-WA0002.jpg100%  
+	    New File  		   66426	K:\Guru mobile backup\WhatsApp Images\IMG-20260622-WA0003.jpg100%  
+	    New File  		   92839	K:\Guru mobile backup\WhatsApp Images\IMG-20260622-WA0004.jpg100%  
+	    New File  		   98960	K:\Guru mobile backup\WhatsApp Images\IMG-20260622-WA0005.jpg100%  
+	    New File  		  114252	K:\Guru mobile backup\WhatsApp Images\IMG-20260622-WA0006.jpg100%  
+	    New File  		   61257	K:\Guru mobile backup\WhatsApp Images\IMG-20260622-WA0007.jpg100%  
+	    New File  		  105385	K:\Guru mobile backup\WhatsApp Images\IMG-20260622-WA0009.jpg100%  
+	    New File  		  174350	K:\Guru mobile backup\WhatsApp Images\IMG-20260622-WA0010.jpg100%  
+	    New File  		  144661	K:\Guru mobile backup\WhatsApp Images\IMG-20260622-WA0011.jpg100%  
+	    New File  		  114036	K:\Guru mobile backup\WhatsApp Images\IMG-20260622-WA0012.jpg100%  
+	    New File  		  117369	K:\Guru mobile backup\WhatsApp Images\IMG-20260622-WA0013.jpg100%  
+	    New File  		  147136	K:\Guru mobile backup\WhatsApp Images\IMG-20260622-WA0014.jpg100%  
+	    New File  		   79956	K:\Guru mobile backup\WhatsApp Images\IMG-20260622-WA0016.jpg100%  
+	    New File  		   66184	K:\Guru mobile backup\WhatsApp Images\IMG-20260622-WA0017.jpg100%  
+	    New File  		  141977	K:\Guru mobile backup\WhatsApp Images\IMG-20260622-WA0018.jpg100%  
+	    New File  		  131412	K:\Guru mobile backup\WhatsApp Images\IMG-20260622-WA0019.jpg100%  
+	    New File  		  122146	K:\Guru mobile backup\WhatsApp Images\IMG-20260622-WA0020.jpg100%  
+	    New File  		  129399	K:\Guru mobile backup\WhatsApp Images\IMG-20260622-WA0021.jpg100%  
+	    New File  		  234980	K:\Guru mobile backup\WhatsApp Images\IMG-20260622-WA0022.jpg100%  
+	    New File  		   3.0 m	K:\Guru mobile backup\WhatsApp Images\IMG-20260622-WA0024.jpeg100%  
+	    New File  		   61304	K:\Guru mobile backup\WhatsApp Images\IMG-20260622-WA0026.jpg100%  
+	    New File  		   44347	K:\Guru mobile backup\WhatsApp Images\IMG-20260622-WA0027.jpg100%  
+	    New File  		   63315	K:\Guru mobile backup\WhatsApp Images\IMG-20260623-WA0002.jpg100%  
+	    New File  		  130552	K:\Guru mobile backup\WhatsApp Images\IMG-20260623-WA0003.jpg100%  
+	    New File  		  228283	K:\Guru mobile backup\WhatsApp Images\IMG-20260623-WA0004.jpg100%  
+	    New File  		   57322	K:\Guru mobile backup\WhatsApp Images\IMG-20260623-WA0008.jpg100%  
+	    New File  		   83146	K:\Guru mobile backup\WhatsApp Images\IMG-20260623-WA0009.jpg100%  
+	    New File  		  166141	K:\Guru mobile backup\WhatsApp Images\IMG-20260623-WA0011.jpg100%  
+	    New File  		  106341	K:\Guru mobile backup\WhatsApp Images\IMG-20260623-WA0012.jpg100%  
+	    New File  		   35844	K:\Guru mobile backup\WhatsApp Images\IMG-20260623-WA0013.jpg100%  
+	    New File  		   69918	K:\Guru mobile backup\WhatsApp Images\IMG-20260623-WA0014.jpg100%  
+	    New File  		  110691	K:\Guru mobile backup\WhatsApp Images\IMG-20260623-WA0015.jpg100%  
+	    New File  		  137002	K:\Guru mobile backup\WhatsApp Images\IMG-20260623-WA0016.jpg100%  
+	    New File  		  144917	K:\Guru mobile backup\WhatsApp Images\IMG-20260623-WA0017.jpg100%  
+	    New File  		  179616	K:\Guru mobile backup\WhatsApp Images\IMG-20260623-WA0018.jpg100%  
+	    New File  		   1.4 m	K:\Guru mobile backup\WhatsApp Images\IMG-20260623-WA0019.jpeg100%  
+	    New File  		  234322	K:\Guru mobile backup\WhatsApp Images\IMG-20260623-WA0021.jpg100%  
+	    New File  		   44547	K:\Guru mobile backup\WhatsApp Images\IMG-20260623-WA0024.jpg100%  
+	    New File  		   37446	K:\Guru mobile backup\WhatsApp Images\IMG-20260623-WA0025.jpg100%  
+	    New File  		   32525	K:\Guru mobile backup\WhatsApp Images\IMG-20260623-WA0026.jpg100%  
+	    New File  		   90440	K:\Guru mobile backup\WhatsApp Images\IMG-20260623-WA0027.jpg100%  
+	    New File  		   48035	K:\Guru mobile backup\WhatsApp Images\IMG-20260623-WA0028.jpg100%  
+	    New File  		   48008	K:\Guru mobile backup\WhatsApp Images\IMG-20260623-WA0029.jpg100%  
+	    New File  		   49477	K:\Guru mobile backup\WhatsApp Images\IMG-20260623-WA0030.jpg100%  
+	    New File  		   45587	K:\Guru mobile backup\WhatsApp Images\IMG-20260623-WA0031.jpg100%  
+	    New File  		  145751	K:\Guru mobile backup\WhatsApp Images\IMG-20260623-WA0032.jpg100%  
+	    New File  		   81918	K:\Guru mobile backup\WhatsApp Images\IMG-20260623-WA0033.jpg100%  
+	    New File  		  136637	K:\Guru mobile backup\WhatsApp Images\IMG-20260623-WA0034.jpg100%  
+	    New File  		  191982	K:\Guru mobile backup\WhatsApp Images\IMG-20260624-WA0012.jpg100%  
+	    New File  		  328938	K:\Guru mobile backup\WhatsApp Images\IMG-20260624-WA0015.jpg100%  
+	    New File  		  109835	K:\Guru mobile backup\WhatsApp Images\IMG-20260624-WA0016.jpg100%  
+	    New File  		   93335	K:\Guru mobile backup\WhatsApp Images\IMG-20260624-WA0017.jpg100%  
+	    New File  		  195182	K:\Guru mobile backup\WhatsApp Images\IMG-20260624-WA0019.jpg100%  
+	    New File  		  131229	K:\Guru mobile backup\WhatsApp Images\IMG-20260624-WA0020.jpg100%  
+	    New File  		   40577	K:\Guru mobile backup\WhatsApp Images\IMG-20260624-WA0021.jpg100%  
+	    New File  		  275376	K:\Guru mobile backup\WhatsApp Images\IMG-20260624-WA0022.jpg100%  
+	    New File  		  579491	K:\Guru mobile backup\WhatsApp Images\IMG-20260624-WA0025.jpg100%  
+	    New File  		   52931	K:\Guru mobile backup\WhatsApp Images\IMG-20260624-WA0027.jpg100%  
+	    New File  		   82938	K:\Guru mobile backup\WhatsApp Images\IMG-20260624-WA0028.jpg100%  
+	    New File  		  869512	K:\Guru mobile backup\WhatsApp Images\IMG-20260624-WA0030.jpg100%  
+	    New File  		   71416	K:\Guru mobile backup\WhatsApp Images\IMG-20260624-WA0034.jpg100%  
+	    New File  		  169981	K:\Guru mobile backup\WhatsApp Images\IMG-20260624-WA0035.jpg100%  
+	    New File  		  124353	K:\Guru mobile backup\WhatsApp Images\IMG-20260624-WA0038.jpg100%  
+	    New File  		   1.6 m	K:\Guru mobile backup\WhatsApp Images\IMG-20260624-WA0041.jpg100%  
+	    New File  		   45609	K:\Guru mobile backup\WhatsApp Images\IMG-20260624-WA0043.jpg100%  
+	    New File  		  335034	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0000.jpg100%  
+	    New File  		   96690	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0002.jpg100%  
+	    New File  		   63279	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0008.jpg100%  
+	    New File  		   67831	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0009.jpg100%  
+	    New File  		  125372	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0014.jpg100%  
+	    New File  		   64605	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0016.jpg100%  
+	    New File  		   61381	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0017.jpg100%  
+	    New File  		  185426	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0019.jpg100%  
+	    New File  		  180138	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0020.jpg100%  
+	    New File  		  160815	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0021.jpg100%  
+	    New File  		   35391	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0023.jpg100%  
+	    New File  		  167873	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0024.jpg100%  
+	    New File  		  148587	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0026.jpg100%  
+	    New File  		  169227	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0027.jpg100%  
+	    New File  		  146448	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0028.jpg100%  
+	    New File  		  727796	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0033.jpg100%  
+	    New File  		  253911	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0035.jpg100%  
+	    New File  		  574455	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0037.jpg100%  
+	    New File  		  854985	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0039.jpg100%  
+	    New File  		 1048082	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0043.jpg100%  
+	    New File  		 1048078	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0044.jpg100%  
+	    New File  		 1048079	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0045.jpg100%  
+	    New File  		  133040	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0046.jpg100%  
+	    New File  		  113413	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0047.jpg100%  
+	    New File  		  150529	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0048.jpg100%  
+	    New File  		  129468	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0049.jpg100%  
+	    New File  		  801481	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0052.jpg100%  
+	    New File  		  877468	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0054.jpg100%  
+	    New File  		  101601	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0055.jpg100%  
+	    New File  		  145494	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0056.jpg100%  
+	    New File  		  119820	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0057.jpg100%  
+	    New File  		  156303	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0058.jpg100%  
+	    New File  		  171451	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0059.jpg100%  
+	    New File  		  164994	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0060.jpg100%  
+	    New File  		  161780	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0061.jpg100%  
+	    New File  		   49797	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0062.jpg100%  
+	    New File  		   44231	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0063.jpg100%  
+	    New File  		   50440	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0064.jpg100%  
+	    New File  		  164715	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0065.jpg100%  
+	    New File  		  136743	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0066.jpg100%  
+	    New File  		  181967	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0067.jpg100%  
+	    New File  		  194209	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0068.jpg100%  
+	    New File  		  220491	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0069.jpg100%  
+	    New File  		  174312	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0070.jpg100%  
+	    New File  		  131791	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0071.jpg100%  
+	    New File  		  177128	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0072.jpg100%  
+	    New File  		  103065	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0073.jpg100%  
+	    New File  		  110640	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0074.jpg100%  
+	    New File  		  161527	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0075.jpg100%  
+	    New File  		  151787	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0076.jpg100%  
+	    New File  		 1048089	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0078.jpg100%  
+	    New File  		 1048093	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0080.jpg100%  
+	    New File  		   94488	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0081.jpg100%  
+	    New File  		   89402	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0082.jpg100%  
+	    New File  		  137394	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0083.jpg100%  
+	    New File  		  128232	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0084.jpg100%  
+	    New File  		  131576	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0085.jpg100%  
+	    New File  		  149830	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0086.jpg100%  
+	    New File  		  137103	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0087.jpg100%  
+	    New File  		  125419	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0088.jpg100%  
+	    New File  		  169726	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0089.jpg100%  
+	    New File  		  150779	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0090.jpg100%  
+	    New File  		  145701	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0091.jpg100%  
+	    New File  		  165393	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0092.jpg100%  
+	    New File  		  139196	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0093.jpg100%  
+	    New File  		  131750	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0094.jpg100%  
+	    New File  		  127907	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0095.jpg100%  
+	    New File  		  124513	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0096.jpg100%  
+	    New File  		  134813	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0097.jpg100%  
+	    New File  		  130113	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0098.jpg100%  
+	    New File  		   2.6 m	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0099.jpeg100%  
+	    New File  		 1048058	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0105.jpg100%  
+	    New File  		 1048056	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0106.jpg100%  
+	    New File  		 1048049	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0107.jpg100%  
+	    New File  		  123173	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0108.jpg100%  
+	    New File  		  113464	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0109.jpg100%  
+	    New File  		  101550	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0110.jpg100%  
+	    New File  		 1048170	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0113.jpg100%  
+	    New File  		 1048168	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0115.jpg100%  
+	    New File  		   87647	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0116.jpg100%  
+	    New File  		  101951	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0117.jpg100%  
+	    New File  		   99820	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0118.jpg100%  
+	    New File  		  218871	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0119.jpg100%  
+	    New File  		  144951	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0120.jpg100%  
+	    New File  		  107429	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0121.jpg100%  
+	    New File  		  117321	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0122.jpg100%  
+	    New File  		  160146	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0123.jpg100%  
+	    New File  		   78331	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0124.jpg100%  
+	    New File  		   61034	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0125.jpg100%  
+	    New File  		  123894	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0126.jpg100%  
+	    New File  		  124706	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0127.jpg100%  
+	    New File  		  102541	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0128.jpg100%  
+	    New File  		   94648	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0129.jpg100%  
+	    New File  		  104829	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0130.jpg100%  
+	    New File  		  135570	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0131.jpg100%  
+	    New File  		  104016	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0132.jpg100%  
+	    New File  		  122315	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0133.jpg100%  
+	    New File  		  127856	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0134.jpg100%  
+	    New File  		  164012	K:\Guru mobile backup\WhatsApp Images\IMG-20260625-WA0135.jpg100%  
+
+------------------------------------------------------------------------------
+
+               Total    Copied   Skipped  Mismatch    FAILED    Extras
+    Dirs :        35        35        18         0         0         0
+   Files :      5037       232      4805         0         0         0
+   Bytes :  22.029 g   62.68 m  21.968 g         0         0         0
+   Times :   0:01:16   0:00:11                       0:00:00   0:00:02
+
+
+   Speed :           57,46,064 Bytes/sec.
+   Speed :             328.792 MegaBytes/min.
+   Ended : 26 June 2026 02:00:17
+
+[26-06-2026  2:00:17.32] Backup complete 

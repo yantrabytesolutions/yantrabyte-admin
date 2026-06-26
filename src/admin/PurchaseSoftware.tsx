@@ -419,7 +419,7 @@ export default function PurchaseSoftware() {
             </div>
 
             {/* Items Table */}
-            <div className="mt-4 border rounded-md overflow-hidden">
+            <div className="mt-4 border rounded-md overflow-x-auto">
               <table className="w-full text-sm text-left">
                 <thead className="bg-gray-50 border-b text-gray-600">
                   <tr>
