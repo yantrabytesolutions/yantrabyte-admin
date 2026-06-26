@@ -101,8 +101,8 @@ export default function AmcContracts({ onRenewContract }: AmcContractsProps) {
       client_email: formClientEmail.trim() || null,
       client_phone: formClientPhone.trim(),
       contract_value: Number(formContractValue) || 0,
-      start_date: formStartDate,
-      end_date: formEndDate,
+      start_date: formStartDate || null,
+      end_date: formEndDate || null,
       status: formStatus,
       notes: formNotes.trim() || null,
       updated_at: new Date().toISOString()

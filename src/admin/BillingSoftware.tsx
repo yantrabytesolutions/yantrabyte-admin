@@ -9,6 +9,7 @@ import { PRESET_ITEMS } from './presetItems';
 import { downloadExcelWorkbook } from '../utils/spreadsheetXml';
 import { appendBackupRow } from '../utils/googleSheetBackup';
 import { ERPUtils } from '../utils/erp';
+import CustomerLedgerModal from './components/CustomerLedgerModal';
 
 // --- Utility Functions ---
 function numberToWords(num: number): string {
@@ -141,6 +142,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [ledgerCustomerName, setLedgerCustomerName] = useState<string | null>(null);
+  const [ledgerCustomerId, setLedgerCustomerId] = useState<string | null>(null);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [isExportingExcel, setIsExportingExcel] = useState(false);
   const [printInvoiceNumber, setPrintInvoiceNumber] = useState('');
@@ -1753,7 +1756,10 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                       ) : (inv.payment_status || getPaymentStatus(inv.doc_type, inv.balance_due || 0, inv.advance_paid || 0)) === 'Partial' ? (
                         <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 font-medium">Partial</span>
                       ) : (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 font-medium">
+                        <span 
+                          onClick={(e) => { e.stopPropagation(); setLedgerCustomerName(inv.customer_name); setLedgerCustomerId(inv.customer_id || null); }}
+                          className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 font-medium hover:bg-amber-100 cursor-pointer"
+                        >
                           ₹{(inv.balance_due || 0).toLocaleString('en-IN')} Due
                         </span>
                       )}
@@ -2133,7 +2139,12 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                                 ) : (inv.balance_due || 0) <= 0 ? (
                                   <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold font-mono">Paid</span>
                                 ) : (
-                                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 font-semibold font-mono">₹{inv.balance_due} Due</span>
+                                  <span 
+                                    onClick={(e) => { e.stopPropagation(); setLedgerCustomerName(inv.customer_name); setLedgerCustomerId(inv.customer_id || null); }}
+                                    className="text-[9px] px-1.5 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 font-semibold font-mono hover:bg-rose-500/20 cursor-pointer"
+                                  >
+                                    ₹{inv.balance_due} Due
+                                  </span>
                                 )}
                               </div>
                               <div className="text-xs text-[#94A3B8] mt-2 space-y-1">
@@ -2386,7 +2397,12 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                                   {inv.date}
                                 </span>
                               </td>
-                              <td className="px-4 py-3 text-right font-bold text-red-600">₹{inv.balance_due?.toLocaleString('en-IN')}</td>
+                              <td 
+                                className="px-4 py-3 text-right font-bold text-red-600 cursor-pointer hover:bg-red-50"
+                                onClick={() => { setShowOutstandingModal(false); setLedgerCustomerName(inv.customer_name); setLedgerCustomerId(inv.customer_id || null); }}
+                              >
+                                ₹{inv.balance_due?.toLocaleString('en-IN')}
+                              </td>
                               <td className="px-4 py-3 text-center">
                                 {phoneNum ? (
                                   <a
@@ -2412,6 +2428,15 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             </div>
           </div>
         </div>
+      )}
+
+      {ledgerCustomerName && (
+        <CustomerLedgerModal
+          customerName={ledgerCustomerName}
+          customerId={ledgerCustomerId}
+          onClose={() => { setLedgerCustomerName(null); setLedgerCustomerId(null); }}
+          onPaymentAdded={() => fetchInvoices()}
+        />
       )}
     </div>
   );

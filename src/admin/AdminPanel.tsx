@@ -441,6 +441,8 @@ function formToRecord(form: Record<string, unknown>, fields: FormField[]): Recor
     }
     else if (f.type === 'number') val = Number(val) || 0;
     else if (f.type === 'checkbox') val = !!val;
+    else if (val === '') val = null;
+    
     record[f.key] = val;
   }
   return record;

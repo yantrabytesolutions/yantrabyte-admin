@@ -128,7 +128,7 @@ export default function ExternalRepairs() {
       material_name: formMaterialName.trim(),
       serial_number: formSerialNumber.trim() || null,
       sent_to: formSentTo.trim(),
-      sent_date: formSentDate,
+      sent_date: formSentDate || null,
       expected_return_date: formExpectedReturn || null,
       status: formStatus,
       received_date: formStatus === 'received' ? (formReceivedDate || new Date().toISOString().slice(0, 10)) : null,

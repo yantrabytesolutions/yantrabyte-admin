@@ -7,6 +7,7 @@ import {
 import { format, subMonths, startOfMonth, parseISO } from 'date-fns';
 import { Invoice, Purchase, ServiceTicket } from '../types';
 import { AlertCircle, IndianRupee, TrendingDown, Clock, CheckCircle, Receipt, MessageSquare, Mail, Loader2 } from 'lucide-react';
+import CustomerLedgerModal from './components/CustomerLedgerModal';
 
 interface OutstandingClient {
   customer_name: string;
@@ -24,6 +25,7 @@ export default function Dashboard() {
   const [ticketStatusData, setTicketStatusData] = useState<any[]>([]);
   const [outstandingClients, setOutstandingClients] = useState<OutstandingClient[]>([]);
   const [sendingEmails, setSendingEmails] = useState(false);
+  const [ledgerCustomerName, setLedgerCustomerName] = useState<string | null>(null);
   
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalExpenses, setTotalExpenses] = useState(0);
@@ -357,7 +359,12 @@ export default function Dashboard() {
                     <div className="text-[10px] text-gray-500 mt-0.5">Invoices: {client.invoices.join(', ')}</div>
                     {client.customer_email && <div className="text-[10px] text-gray-400">{client.customer_email}</div>}
                   </div>
-                  <div className="font-bold text-rose-500 font-mono text-sm">₹{client.balance_due.toLocaleString('en-IN')}</div>
+                  <div 
+                    className="font-bold text-rose-500 font-mono text-sm cursor-pointer hover:bg-rose-50 px-2 py-1 rounded"
+                    onClick={() => setLedgerCustomerName(client.customer_name)}
+                  >
+                    ₹{client.balance_due.toLocaleString('en-IN')}
+                  </div>
                 </div>
                 <div className="flex justify-end mt-2">
                   <button
@@ -379,6 +386,15 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {ledgerCustomerName && (
+        <CustomerLedgerModal
+          customerName={ledgerCustomerName}
+          customerId={null}
+          onClose={() => setLedgerCustomerName(null)}
+          onPaymentAdded={() => fetchDashboardData()}
+        />
+      )}
     </div>
   );
 }

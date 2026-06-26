@@ -99,7 +99,7 @@ export default function Expenses() {
       const payload = {
         category: formCategory,
         amount: Number(formAmount),
-        date: formDate,
+        date: formDate || null,
         description: formDescription.trim() || null,
         receipt_url: uploadedUrl
       };
