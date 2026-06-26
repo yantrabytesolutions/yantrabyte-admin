@@ -243,8 +243,8 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
                               </div>
                             )}
                           </td>
-                          <td className="px-5 py-3 text-right font-medium text-slate-900">{line.debit > 0 ? \`₹\${line.debit.toLocaleString('en-IN')}\` : '-'}</td>
-                          <td className="px-5 py-3 text-right font-medium text-emerald-600">{line.credit > 0 ? \`₹\${line.credit.toLocaleString('en-IN')}\` : '-'}</td>
+                          <td className="px-5 py-3 text-right font-medium text-slate-900">{line.debit > 0 ? `₹${line.debit.toLocaleString('en-IN')}` : '-'}</td>
+                          <td className="px-5 py-3 text-right font-medium text-emerald-600">{line.credit > 0 ? `₹${line.credit.toLocaleString('en-IN')}` : '-'}</td>
                           <td className="px-5 py-3 text-right font-bold text-rose-600">
                             ₹{runningBalance.toLocaleString('en-IN')}
                           </td>
