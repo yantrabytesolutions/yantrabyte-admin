@@ -104,28 +104,26 @@ async function generateTicketPdf(ticket: Record<string, string>): Promise<Uint8A
   const white  = rgb(1, 1, 1);
   const black  = rgb(0, 0, 0);
 
-  // ── WATERMARK: diagonal text ──────────────────────────────────────────────
-  for (let y = 80; y < height; y += 155) {
-    page.drawText('YANTRABYTE SOLUTIONS', {
-      x: 30, y,
-      size: 38, font: fontBold,
-      color: navy, opacity: 0.08,
-      rotate: degrees(35),
-    });
-  }
-
   // ── WATERMARK: hardware_watermark.png ───────────────────────────────────────────────
   try {
     const wmRes = await fetch('https://yantrabyte.anantatechcare.com/hardware_watermark.png');
     if (wmRes.ok) {
       const wmBytes = await wmRes.arrayBuffer();
       const wmImg   = await pdfDoc.embedPng(new Uint8Array(wmBytes));
-      // Scale image to fit nicely as a central watermark
-      const wmDims  = wmImg.scale(1.5);
+      
+      // Calculate scale to cover the entire page (like object-fit: cover)
+      const scaleX = width / wmImg.width;
+      const scaleY = height / wmImg.height;
+      const scale  = Math.max(scaleX, scaleY); // max for cover, min for contain
+      
+      const newWidth  = wmImg.width * scale;
+      const newHeight = wmImg.height * scale;
+      
       page.drawImage(wmImg, {
-        x: (width - wmDims.width) / 2,
-        y: (height - wmDims.height) / 2 + 50,
-        width: wmDims.width, height: wmDims.height,
+        x: (width - newWidth) / 2,
+        y: (height - newHeight) / 2,
+        width: newWidth, 
+        height: newHeight,
         opacity: 0.15,
       });
     }
@@ -511,7 +509,7 @@ Deno.serve(async (req) => {
 
     await cmd(`MAIL FROM:<${gmailUser}>`);
     // Temporarily disabled sending to customer until user confirms
-    // if (hasValidCustomerEmail) await cmd(`RCPT TO:<${ticket.customer_email}>`);
+    if (hasValidCustomerEmail) await cmd(`RCPT TO:<${ticket.customer_email}>`);
     await cmd(`RCPT TO:<yantrabyte.solutions@gmail.com>`);
     await cmd('DATA');
     await writer.write(enc.encode(mime + '\r\n.\r\n'));
