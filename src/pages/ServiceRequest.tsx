@@ -2,7 +2,7 @@ import { FormEvent, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { supabase } from '../lib/supabase';
-import { AlertCircle, ClipboardCheck, Loader2, MapPin, Phone, Send, Wrench, Laptop, Monitor, Printer, Video, Wifi, Fingerprint, Server, Package, UploadCloud, Film, X, Truck } from 'lucide-react';
+import { AlertCircle, ClipboardCheck, Loader2, MapPin, Phone, Send, Wrench, Laptop, Monitor, Printer, Video, Wifi, Fingerprint, Server, Package, UploadCloud, Film, X } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import SignatureCanvas from 'react-signature-canvas';
 
@@ -36,8 +36,6 @@ type RequestForm = {
   priority: 'low' | 'medium' | 'high' | 'urgent';
   device_make_model: string;
   device_password: string;
-  service_method: 'drop_off' | 'home_pickup';
-  pickup_date: string;
   preferred_contact: 'whatsapp' | 'phone' | 'email';
   whatsapp_opt_in: boolean;
   pre_approved_budget: string;
@@ -53,7 +51,6 @@ const initialForm: RequestForm = {
   priority: 'medium',
   device_make_model: '',
   device_password: '',
-  pickup_date: '',
   preferred_contact: 'whatsapp',
   whatsapp_opt_in: true,
   pre_approved_budget: 'No Pre-Approval',
@@ -241,7 +238,6 @@ export default function ServiceRequest() {
       ticket_number: ticketNumber,
       ...form,
       device_type: finalDeviceType,
-      pickup_date: form.pickup_date || null,
       attachment_url: uploadedUrl,
       video_url: uploadedVideoUrl,
       customer_signature: signatureBase64,
@@ -299,7 +295,7 @@ export default function ServiceRequest() {
           '', 
           `https://yantrabyte.anantatechcare.com/admin`,
           ticketPayload.device_make_model || '',
-          ticketPayload.budget ? `₹${ticketPayload.budget}` : 'N/A'
+          ticketPayload.pre_approved_budget ? `₹${ticketPayload.pre_approved_budget}` : 'N/A'
         ];
 
         const { appendBackupRow } = await import('../utils/googleSheetBackup');
