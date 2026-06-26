@@ -110,7 +110,7 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
   
   invoices.forEach(inv => {
     ledgerLines.push({
-      id: \`inv-\${inv.id}\`,
+      id: `inv-${inv.id}`,
       date: new Date(inv.date).getTime(),
       dateStr: inv.date,
       type: 'invoice',
@@ -121,11 +121,11 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
     // If they made an initial advance payment on the invoice itself (before we had a payments table)
     if (inv.advance_paid && inv.advance_paid > 0 && payments.length === 0) {
       ledgerLines.push({
-        id: \`inv-adv-\${inv.id}\`,
+        id: `inv-adv-${inv.id}`,
         date: new Date(inv.date).getTime() + 1000, // slightly after invoice
         dateStr: inv.date,
         type: 'initial_advance',
-        ref: \`Advance for \${inv.invoice_no}\`,
+        ref: `Advance for ${inv.invoice_no}`,
         debit: 0,
         credit: inv.advance_paid
       });
@@ -134,11 +134,11 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
 
   payments.forEach(p => {
     ledgerLines.push({
-      id: \`pay-\${p.id}\`,
+      id: `pay-${p.id}`,
       date: new Date(p.payment_date).getTime(),
       dateStr: p.payment_date,
       type: 'payment',
-      ref: p.reference_note ? \`Payment (\${p.payment_mode}) - \${p.reference_note}\` : \`Payment (\${p.payment_mode})\`,
+      ref: p.reference_note ? `Payment (${p.payment_mode}) - ${p.reference_note}` : `Payment (${p.payment_mode})`,
       debit: 0,
       credit: p.amount
     });
