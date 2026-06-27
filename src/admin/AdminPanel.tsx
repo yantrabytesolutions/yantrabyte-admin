@@ -471,7 +471,7 @@ export default function AdminPanel() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [autofillTicket, setAutofillTicket] = useState<ServiceTicket | null>(null);
-  const [billingInitialTab, setBillingInitialTab] = useState<'editor' | 'history'>('editor');
+  const [billingInitialTab, setBillingInitialTab] = useState<'editor' | 'history' | 'quotations' | 'pending'>('editor');
   const [allCustomers, setAllCustomers] = useState<any[]>([]);
 
   const [userRole, setUserRole] = useState<UserRole>('admin');

@@ -138,7 +138,6 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>('');
-  // state removed
   
   const [customersList, setCustomersList] = useState<Customer[]>([]);
   const [serviceTicketsList, setServiceTicketsList] = useState<ServiceTicket[]>([]);
@@ -153,7 +152,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const [printInvoiceNumber, setPrintInvoiceNumber] = useState('');
   const [deliveryPopup, setDeliveryPopup] = useState<DeliveryPopup>(null);
 
-  const [activeTab, setActiveTab] = useState<'editor' | 'history'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'editor' | 'history' | 'quotations' | 'pending'>(initialTab);
   const [historySearchTerm, setHistorySearchTerm] = useState('');
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
   const [historyDrawerData, setHistoryDrawerData] = useState<{
@@ -1397,18 +1396,30 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       )}
 
       {/* Tabs */}
-      <div className="flex space-x-1 border-b border-gray-200 mb-6">
+      <div className="flex space-x-1 border-b border-gray-200 mb-6 overflow-x-auto">
         <button
           onClick={() => setActiveTab('editor')}
-          className={`py-3 px-6 text-sm font-medium border-b-2 transition-colors flex items-center ${activeTab === 'editor' ? 'border-blue-600 text-blue-600 bg-blue-50/50 rounded-t-lg' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+          className={`py-3 px-6 text-sm font-medium border-b-2 transition-colors flex items-center whitespace-nowrap ${activeTab === 'editor' ? 'border-blue-600 text-blue-600 bg-blue-50/50 rounded-t-lg' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
         >
           <Pencil className="w-4 h-4 mr-2" /> Document Editor
         </button>
         <button
           onClick={() => setActiveTab('history')}
-          className={`py-3 px-6 text-sm font-medium border-b-2 transition-colors flex items-center ${activeTab === 'history' ? 'border-blue-600 text-blue-600 bg-blue-50/50 rounded-t-lg' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+          className={`py-3 px-6 text-sm font-medium border-b-2 transition-colors flex items-center whitespace-nowrap ${activeTab === 'history' ? 'border-blue-600 text-blue-600 bg-blue-50/50 rounded-t-lg' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
         >
-          <List className="w-4 h-4 mr-2" /> Saved Documents
+          <List className="w-4 h-4 mr-2" /> All Saved Documents
+        </button>
+        <button
+          onClick={() => setActiveTab('quotations')}
+          className={`py-3 px-6 text-sm font-medium border-b-2 transition-colors flex items-center whitespace-nowrap ${activeTab === 'quotations' ? 'border-purple-600 text-purple-600 bg-purple-50/50 rounded-t-lg' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+        >
+          <FileText className="w-4 h-4 mr-2" /> Quotations
+        </button>
+        <button
+          onClick={() => setActiveTab('pending')}
+          className={`py-3 px-6 text-sm font-medium border-b-2 transition-colors flex items-center whitespace-nowrap ${activeTab === 'pending' ? 'border-amber-600 text-amber-600 bg-amber-50/50 rounded-t-lg' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+        >
+          <Clock className="w-4 h-4 mr-2" /> Pending Payments
         </button>
       </div>
 
@@ -1847,11 +1858,15 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {invoices.filter(inv => 
-                  inv.invoice_no.toLowerCase().includes(historySearchTerm.toLowerCase()) || 
-                  inv.customer_name.toLowerCase().includes(historySearchTerm.toLowerCase()) ||
-                  inv.date.includes(historySearchTerm)
-                ).map(inv => (
+                {invoices.filter(inv => {
+                  if (activeTab === 'quotations' && inv.doc_type !== 'Quotation') return false;
+                  if (activeTab === 'pending' && (inv.doc_type !== 'Invoice' || (inv.balance_due || 0) <= 0)) return false;
+                  return (
+                    inv.invoice_no.toLowerCase().includes(historySearchTerm.toLowerCase()) || 
+                    inv.customer_name.toLowerCase().includes(historySearchTerm.toLowerCase()) ||
+                    inv.date.includes(historySearchTerm)
+                  );
+                }).map(inv => (
                   <tr 
                     key={inv.id} 
                     onClick={() => { loadInvoice(inv.id); setActiveTab('editor'); }}
