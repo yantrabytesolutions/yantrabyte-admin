@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Invoice, InvoiceItem, ServiceTicket, Product, Customer, Purchase } from '../types';
-import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt, Mail, FileSpreadsheet, Pencil, MessageSquare, Send, List, Search } from 'lucide-react';
+import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt, Mail, FileSpreadsheet, Pencil, MessageSquare, Send, List, Search, Clock } from 'lucide-react';
 import { sendTelegramNotification } from '../utils/telegram';
 import html2pdf from 'html2pdf.js';
 import { QRCodeSVG } from 'qrcode.react';
@@ -47,7 +47,7 @@ function numberToWords(num: number): string {
 interface BillingSoftwareProps {
   initialAutofillTicket?: ServiceTicket | null;
   onClearAutofill?: () => void;
-  initialTab?: 'editor' | 'history';
+  initialTab?: 'editor' | 'history' | 'quotations' | 'pending';
 }
 
 type DeliveryPopup = {
