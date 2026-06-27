@@ -1852,7 +1852,11 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                   inv.customer_name.toLowerCase().includes(historySearchTerm.toLowerCase()) ||
                   inv.date.includes(historySearchTerm)
                 ).map(inv => (
-                  <tr key={inv.id} className={`hover:bg-gray-50 transition-colors ${selectedInvoiceId === inv.id ? 'bg-blue-50/30' : ''}`}>
+                  <tr 
+                    key={inv.id} 
+                    onClick={() => { loadInvoice(inv.id); setActiveTab('editor'); }}
+                    className={`hover:bg-gray-50 transition-colors cursor-pointer ${selectedInvoiceId === inv.id ? 'bg-blue-50/30' : ''}`}
+                  >
                     <td className="px-4 py-4">
                       <div className="font-semibold text-gray-900">{inv.invoice_no}</div>
                       <div className="text-xs text-gray-500 mt-1">{inv.doc_type}</div>
@@ -1880,29 +1884,29 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                     </td>
                     <td className="px-4 py-4 text-right">
                       <div className="flex justify-end items-center space-x-2">
-                        <button onClick={() => { loadInvoice(inv.id); setActiveTab('editor'); }} className="p-1.5 text-gray-500 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors" title="Edit / Load">
+                        <button onClick={(e) => { e.stopPropagation(); loadInvoice(inv.id); setActiveTab('editor'); }} className="p-1.5 text-gray-500 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors" title="Edit / Load">
                           <Pencil className="w-4 h-4" />
                         </button>
-                        <button onClick={() => handleViewPdf(inv.id)} className="p-1.5 text-gray-500 hover:bg-indigo-50 hover:text-indigo-600 rounded-md transition-colors" title="View PDF">
+                        <button onClick={(e) => { e.stopPropagation(); handleViewPdf(inv.id); }} className="p-1.5 text-gray-500 hover:bg-indigo-50 hover:text-indigo-600 rounded-md transition-colors" title="View PDF">
                           <FileText className="w-4 h-4" />
                         </button>
                         {inv.doc_type === 'Quotation' && (
-                          <button onClick={() => { handleConvertToInvoice(inv.id); setActiveTab('editor'); }} className="p-1.5 text-gray-500 hover:bg-emerald-50 hover:text-emerald-600 rounded-md transition-colors" title="Convert to Invoice">
+                          <button onClick={(e) => { e.stopPropagation(); handleConvertToInvoice(inv.id); setActiveTab('editor'); }} className="p-1.5 text-gray-500 hover:bg-emerald-50 hover:text-emerald-600 rounded-md transition-colors" title="Convert to Invoice">
                             <Copy className="w-4 h-4" />
                           </button>
                         )}
                         {inv.doc_type === 'Invoice' && (inv.balance_due || 0) > 0 && (
-                          <button onClick={() => handleMarkAsPaid(inv.id)} className="p-1.5 text-gray-500 hover:bg-green-50 hover:text-green-600 rounded-md transition-colors" title="Mark as Paid">
+                          <button onClick={(e) => { e.stopPropagation(); handleMarkAsPaid(inv.id); }} className="p-1.5 text-gray-500 hover:bg-green-50 hover:text-green-600 rounded-md transition-colors" title="Mark as Paid">
                             <CheckCircle className="w-4 h-4" />
                           </button>
                         )}
-                        <button onClick={() => sendWhatsAppInvoiceAlert(inv)} className="p-1.5 text-gray-500 hover:bg-green-50 hover:text-green-600 rounded-md transition-colors" title="WhatsApp Alert">
+                        <button onClick={(e) => { e.stopPropagation(); sendWhatsAppInvoiceAlert(inv); }} className="p-1.5 text-gray-500 hover:bg-green-50 hover:text-green-600 rounded-md transition-colors" title="WhatsApp Alert">
                           <MessageSquare className="w-4 h-4" />
                         </button>
-                        <button onClick={() => sendTelegramInvoiceAlert(inv)} className="p-1.5 text-gray-500 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors" title="Telegram Alert">
+                        <button onClick={(e) => { e.stopPropagation(); sendTelegramInvoiceAlert(inv); }} className="p-1.5 text-gray-500 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors" title="Telegram Alert">
                           <Send className="w-4 h-4" />
                         </button>
-                        <button onClick={() => handleDeleteInvoice(inv.id, inv.invoice_no)} className="p-1.5 text-gray-500 hover:bg-red-50 hover:text-red-600 rounded-md transition-colors" title="Delete Document">
+                        <button onClick={(e) => { e.stopPropagation(); handleDeleteInvoice(inv.id, inv.invoice_no); }} className="p-1.5 text-gray-500 hover:bg-red-50 hover:text-red-600 rounded-md transition-colors" title="Delete Document">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
