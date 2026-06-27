@@ -17,19 +17,31 @@ interface OutstandingClient {
   invoices: string[];
 }
 
+interface OutstandingSupplier {
+  supplier_name: string;
+  balance_due: number;
+  purchases: string[];
+}
+
 const COLORS = ['#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
-export default function Dashboard() {
+interface DashboardProps {
+  onNavigate?: (section: string, params?: any) => void;
+}
+
+export default function Dashboard({ onNavigate }: DashboardProps) {
   const [loading, setLoading] = useState(true);
   const [revenueData, setRevenueData] = useState<any[]>([]);
   const [ticketStatusData, setTicketStatusData] = useState<any[]>([]);
   const [outstandingClients, setOutstandingClients] = useState<OutstandingClient[]>([]);
+  const [outstandingSuppliers, setOutstandingSuppliers] = useState<OutstandingSupplier[]>([]);
   const [sendingEmails, setSendingEmails] = useState(false);
   const [ledgerCustomerName, setLedgerCustomerName] = useState<string | null>(null);
   
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalExpenses, setTotalExpenses] = useState(0);
   const [totalOutstanding, setTotalOutstanding] = useState(0);
+  const [totalInvoices, setTotalInvoices] = useState(0);
   const [activeTickets, setActiveTickets] = useState(0);
   const [lowStockProducts, setLowStockProducts] = useState<any[]>([]);
 
@@ -60,14 +72,17 @@ export default function Dashboard() {
       // Calculate totals
       let rev = 0;
       let out = 0;
+      let invCount = 0;
       invoices.forEach(inv => {
         if (inv.doc_type === 'Invoice') {
           rev += Number(inv.grand_total) || 0;
           out += Number(inv.balance_due) || 0;
+          invCount++;
         }
       });
       setTotalRevenue(rev);
       setTotalOutstanding(out);
+      setTotalInvoices(invCount);
 
       let exp = 0;
       purchases.forEach(pur => {
@@ -105,6 +120,31 @@ export default function Dashboard() {
         }, [])
         .sort((a, b) => b.balance_due - a.balance_due);
       setOutstandingClients(clients);
+
+      // Get list of outstanding suppliers (Sundry Creditors)
+      const suppliers = purchases
+        .filter(pur => (pur.balance_due || 0) > 0)
+        .reduce((acc: OutstandingSupplier[], pur) => {
+          const name = String(pur.supplier_name || 'Vendor');
+          const due = pur.balance_due || 0;
+          
+          const existing = acc.find(s => s.supplier_name?.toLowerCase() === name.toLowerCase());
+          if (existing) {
+            existing.balance_due += due;
+            if (!existing.purchases.includes(pur.purchase_no)) {
+              existing.purchases.push(pur.purchase_no);
+            }
+          } else {
+            acc.push({
+              supplier_name: name,
+              balance_due: due,
+              purchases: [pur.purchase_no]
+            });
+          }
+          return acc;
+        }, [])
+        .sort((a, b) => b.balance_due - a.balance_due);
+      setOutstandingSuppliers(suppliers);
 
       // Aggregate revenue and expenses by month
       const monthlyData: Record<string, { month: string; revenue: number; expenses: number; tickets: number }> = {};
@@ -221,7 +261,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4">
            <div className="p-3 bg-emerald-100 text-emerald-600 rounded-lg"><IndianRupee className="w-6 h-6" /></div>
            <div>
@@ -250,6 +290,16 @@ export default function Dashboard() {
              <h3 className="text-2xl font-bold text-gray-900">{activeTickets}</h3>
            </div>
          </div>
+         <div 
+           className="bg-white p-5 rounded-xl shadow-sm border border-blue-200 flex items-center space-x-4 cursor-pointer hover:bg-blue-50 transition-colors"
+           onClick={() => onNavigate && onNavigate('billing', { tab: 'history' })}
+         >
+           <div className="p-3 bg-blue-100 text-blue-600 rounded-lg"><Receipt className="w-6 h-6" /></div>
+           <div>
+             <p className="text-xs font-semibold text-gray-500 uppercase">Generated Invoices</p>
+             <h3 className="text-2xl font-bold text-gray-900">{totalInvoices}</h3>
+           </div>
+         </div>
       </div>
       
       {lowStockProducts.length > 0 && (
@@ -271,8 +321,8 @@ export default function Dashboard() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="space-y-6">
+        <div className="w-full space-y-6">
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
             <h3 className="text-lg font-bold text-gray-800 mb-4">Revenue vs Expenses (Last 6 Months)</h3>
             <div className="h-80">
@@ -334,11 +384,12 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[800px]">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[600px]">
           <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-4">
             <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
               <Receipt className="w-5 h-5 text-rose-500" />
-              Outstanding Dues ({outstandingClients.length})
+              Sundry Debtors ({outstandingClients.length})
             </h3>
             <button
               onClick={sendEmailReminders}
@@ -392,6 +443,42 @@ export default function Dashboard() {
             )}
           </div>
         </div>
+
+        {/* SUNDRY CREDITORS (PAYABLES) */}
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[600px]">
+          <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-4">
+            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+              <Receipt className="w-5 h-5 text-amber-500" />
+              Sundry Creditors ({outstandingSuppliers.length})
+            </h3>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto space-y-3 pr-2">
+            {outstandingSuppliers.map((supplier, i) => (
+              <div key={i} className="flex flex-col p-3 rounded-lg bg-gray-50 border border-gray-100">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <div className="font-semibold text-gray-900 text-sm">{supplier.supplier_name}</div>
+                    <div className="text-[10px] text-gray-500 mt-0.5">Purchases: {supplier.purchases.join(', ')}</div>
+                  </div>
+                  <div 
+                    className="font-bold text-amber-600 font-mono text-sm cursor-pointer hover:bg-amber-50 px-2 py-1 rounded"
+                  >
+                    ₹{supplier.balance_due.toLocaleString('en-IN')}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {outstandingSuppliers.length === 0 && (
+              <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                <CheckCircle className="w-10 h-10 text-emerald-100 mb-2" />
+                <p className="text-sm">No outstanding payables! All clear.</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+      </div>
       </div>
 
       {ledgerCustomerName && (

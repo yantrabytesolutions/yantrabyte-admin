@@ -471,6 +471,7 @@ export default function AdminPanel() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [autofillTicket, setAutofillTicket] = useState<ServiceTicket | null>(null);
+  const [billingInitialTab, setBillingInitialTab] = useState<'editor' | 'history'>('editor');
   const [allCustomers, setAllCustomers] = useState<any[]>([]);
 
   const [userRole, setUserRole] = useState<UserRole>('admin');
@@ -1614,7 +1615,12 @@ export default function AdminPanel() {
 
   // --- Render Dashboard ---
   const renderDashboard = () => {
-    return <Dashboard />;
+    return <Dashboard onNavigate={(section, params) => {
+      setActiveSection(section as Section);
+      if (section === 'billing' && params?.tab) {
+        setBillingInitialTab(params.tab);
+      }
+    }} />;
   };
 
   // --- Render Data Table ---
@@ -2136,7 +2142,7 @@ export default function AdminPanel() {
   const renderContent = () => {
     if (activeSection === 'dashboard') return renderDashboard();
     if (activeSection === 'settings') return renderSettings();
-    if (activeSection === 'billing') return <BillingSoftware initialAutofillTicket={autofillTicket} onClearAutofill={() => setAutofillTicket(null)} />;
+    if (activeSection === 'billing') return <BillingSoftware initialAutofillTicket={autofillTicket} onClearAutofill={() => setAutofillTicket(null)} initialTab={billingInitialTab} />;
     if (activeSection === 'purchase') return <PurchaseSoftware />;
     if (activeSection === 'external') return <ExternalRepairs />;
     if (activeSection === 'inventory') return <InventoryMovement />;

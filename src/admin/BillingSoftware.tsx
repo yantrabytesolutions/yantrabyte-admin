@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Invoice, InvoiceItem, ServiceTicket, Product, Customer, Purchase } from '../types';
-import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt, Mail, FileSpreadsheet, Pencil, MessageSquare, Send } from 'lucide-react';
+import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt, Mail, FileSpreadsheet, Pencil, MessageSquare, Send, List, Search } from 'lucide-react';
 import { sendTelegramNotification } from '../utils/telegram';
 import html2pdf from 'html2pdf.js';
 import { QRCodeSVG } from 'qrcode.react';
@@ -47,6 +47,7 @@ function numberToWords(num: number): string {
 interface BillingSoftwareProps {
   initialAutofillTicket?: ServiceTicket | null;
   onClearAutofill?: () => void;
+  initialTab?: 'editor' | 'history';
 }
 
 type DeliveryPopup = {
@@ -111,7 +112,7 @@ const INVOICE_HEADERS = [
   'Invoice Link',
 ];
 
-export default function BillingSoftware({ initialAutofillTicket, onClearAutofill }: BillingSoftwareProps) {
+export default function BillingSoftware({ initialAutofillTicket, onClearAutofill, initialTab = 'editor' }: BillingSoftwareProps) {
   const [docType, setDocType] = useState('Invoice');
   const [invoiceDate, setInvoiceDate] = useState<string>(new Date().toISOString().slice(0, 10));
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
@@ -152,6 +153,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const [printInvoiceNumber, setPrintInvoiceNumber] = useState('');
   const [deliveryPopup, setDeliveryPopup] = useState<DeliveryPopup>(null);
 
+  const [activeTab, setActiveTab] = useState<'editor' | 'history'>(initialTab);
+  const [historySearchTerm, setHistorySearchTerm] = useState('');
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
   const [historyDrawerData, setHistoryDrawerData] = useState<{
     invoices: Invoice[];
@@ -195,6 +198,10 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   };
   
   const printRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (initialTab) setActiveTab(initialTab);
+  }, [initialTab]);
 
   useEffect(() => {
     const loadBillingData = async () => {
@@ -1389,6 +1396,23 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         </div>
       )}
 
+      {/* Tabs */}
+      <div className="flex space-x-1 border-b border-gray-200 mb-6">
+        <button
+          onClick={() => setActiveTab('editor')}
+          className={`py-3 px-6 text-sm font-medium border-b-2 transition-colors flex items-center ${activeTab === 'editor' ? 'border-blue-600 text-blue-600 bg-blue-50/50 rounded-t-lg' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+        >
+          <Pencil className="w-4 h-4 mr-2" /> Document Editor
+        </button>
+        <button
+          onClick={() => setActiveTab('history')}
+          className={`py-3 px-6 text-sm font-medium border-b-2 transition-colors flex items-center ${activeTab === 'history' ? 'border-blue-600 text-blue-600 bg-blue-50/50 rounded-t-lg' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+        >
+          <List className="w-4 h-4 mr-2" /> Saved Documents
+        </button>
+      </div>
+
+      {activeTab === 'editor' ? (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Left Form Panel */}
@@ -1784,163 +1808,117 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               </button>
             </div>
           </div>
-
-          <div className="bg-white border p-6 rounded-lg shadow-sm">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-md font-semibold text-gray-800 flex items-center">
-                <FileText className="w-4 h-4 mr-2 text-gray-400" /> Saved Invoices
-              </h3>
+        </div>
+      </div>
+      ) : (
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <h3 className="text-xl font-bold text-gray-800">Saved Documents</h3>
+            <div className="flex gap-3">
               <button 
                 onClick={() => setShowRemindersModal(true)}
-                className="text-xs flex items-center bg-green-50 text-green-700 hover:bg-green-100 px-2 py-1 rounded-md font-medium border border-green-200"
+                className="text-sm flex items-center bg-green-50 text-green-700 hover:bg-green-100 px-4 py-2 rounded-lg font-medium border border-green-200 transition-colors"
               >
-                <MessageSquare className="w-3 h-3 mr-1" /> WhatsApp Reminders
+                <MessageSquare className="w-4 h-4 mr-2" /> WhatsApp Reminders
               </button>
+              <div className="relative max-w-md w-full md:w-80">
+                <input 
+                  type="text" 
+                  placeholder="Search invoice, customer..." 
+                  value={historySearchTerm}
+                  onChange={(e) => setHistorySearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                />
+                <Search className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
+              </div>
             </div>
-            <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
-              {invoices.map(inv => (
-                <div 
-                  key={inv.id} 
-                  onClick={() => loadInvoice(inv.id)}
-                  className={`w-full text-left p-3 rounded-md border transition-colors text-sm flex justify-between items-center cursor-pointer ${selectedInvoiceId === inv.id ? 'bg-blue-50 border-blue-200 ring-1 ring-blue-500' : 'bg-white border-gray-100 hover:bg-gray-50 hover:border-gray-300'}`}
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-semibold text-gray-800">{inv.invoice_no}</span>
+          </div>
+          
+          <div className="overflow-x-auto rounded-lg border border-gray-200">
+            <table className="w-full text-left text-sm whitespace-nowrap">
+              <thead className="bg-gray-50 border-b border-gray-200 text-gray-600 font-medium">
+                <tr>
+                  <th className="px-4 py-3">Document</th>
+                  <th className="px-4 py-3">Customer</th>
+                  <th className="px-4 py-3">Date</th>
+                  <th className="px-4 py-3">Amount</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {invoices.filter(inv => 
+                  inv.invoice_no.toLowerCase().includes(historySearchTerm.toLowerCase()) || 
+                  inv.customer_name.toLowerCase().includes(historySearchTerm.toLowerCase()) ||
+                  inv.date.includes(historySearchTerm)
+                ).map(inv => (
+                  <tr key={inv.id} className={`hover:bg-gray-50 transition-colors ${selectedInvoiceId === inv.id ? 'bg-blue-50/30' : ''}`}>
+                    <td className="px-4 py-4">
+                      <div className="font-semibold text-gray-900">{inv.invoice_no}</div>
+                      <div className="text-xs text-gray-500 mt-1">{inv.doc_type}</div>
+                    </td>
+                    <td className="px-4 py-4 font-medium text-gray-800">{inv.customer_name}</td>
+                    <td className="px-4 py-4 text-gray-600">{inv.date}</td>
+                    <td className="px-4 py-4 font-bold text-gray-900">₹{inv.grand_total.toLocaleString('en-IN')}</td>
+                    <td className="px-4 py-4">
                       {inv.doc_type === 'Cancelled' ? (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-red-50 text-red-700 font-medium">Cancelled</span>
+                        <span className="text-xs px-2 py-1 rounded-full bg-red-50 text-red-700 font-medium border border-red-100">Cancelled</span>
                       ) : inv.doc_type === 'Quotation' ? (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-700 font-medium">Quote</span>
+                        <span className="text-xs px-2 py-1 rounded-full bg-purple-50 text-purple-700 font-medium border border-purple-100">Quotation</span>
                       ) : (inv.balance_due || 0) <= 0 ? (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-green-50 text-green-700 font-medium">Paid</span>
+                        <span className="text-xs px-2 py-1 rounded-full bg-green-50 text-green-700 font-medium border border-green-100">Paid</span>
                       ) : (inv.payment_status || getPaymentStatus(inv.doc_type, inv.balance_due || 0, inv.advance_paid || 0)) === 'Partial' ? (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 font-medium">Partial</span>
+                        <span className="text-xs px-2 py-1 rounded-full bg-amber-50 text-amber-700 font-medium border border-amber-100">Partial</span>
                       ) : (
                         <span 
                           onClick={(e) => { e.stopPropagation(); setLedgerCustomerName(inv.customer_name); setLedgerCustomerId(inv.customer_id || null); }}
-                          className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 font-medium hover:bg-amber-100 cursor-pointer"
+                          className="text-xs px-2 py-1 rounded-full bg-amber-50 text-amber-700 font-medium border border-amber-100 hover:bg-amber-100 cursor-pointer transition-colors"
                         >
                           ₹{(inv.balance_due || 0).toLocaleString('en-IN')} Due
                         </span>
                       )}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-0.5">{inv.customer_name} • {inv.date}</div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="font-bold text-gray-700">₹{inv.grand_total.toLocaleString('en-IN')}</div>
-                    
-                    <button 
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleViewPdf(inv.id);
-                      }} 
-                      onPointerDown={(e) => e.stopPropagation()}
-                      onTouchStart={(e) => e.stopPropagation()}
-                      className="text-gray-400 hover:text-indigo-500 transition-colors p-2 md:p-1 rounded-full hover:bg-indigo-50"
-                      title="View PDF"
-                    >
-                      <FileText className="w-4 h-4" />
-                    </button>
-
-                    {inv.doc_type === 'Quotation' && (
-                      <button 
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleConvertToInvoice(inv.id);
-                        }} 
-                        onPointerDown={(e) => e.stopPropagation()}
-                        onTouchStart={(e) => e.stopPropagation()}
-                        className="text-[#0EA5E9] hover:text-[#0284C7] transition-colors p-2 md:p-1"
-                        title="Convert to Invoice"
-                      >
-                        <Copy className="w-4 h-4" />
-                      </button>
-                    )}
-                    {inv.doc_type === 'Invoice' && (inv.balance_due || 0) > 0 && (
-                      <button 
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleMarkAsPaid(inv.id);
-                        }} 
-                        onPointerDown={(e) => e.stopPropagation()}
-                        onTouchStart={(e) => e.stopPropagation()}
-                        className="text-gray-400 hover:text-green-600 transition-colors p-2 md:p-1 rounded-full bg-gray-50 hover:bg-green-50 border border-gray-200 shadow-sm"
-                        title="Mark as Paid"
-                      >
-                        <CheckCircle className="w-4 h-4 md:w-4 md:h-4" />
-                        <span className="sr-only">Mark as Paid</span>
-                      </button>
-                    )}
-                    <button 
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        sendWhatsAppInvoiceAlert(inv);
-                      }} 
-                      onPointerDown={(e) => e.stopPropagation()}
-                      onTouchStart={(e) => e.stopPropagation()}
-                      className="text-gray-400 hover:text-green-500 transition-colors p-2 md:p-1"
-                      title="Send WhatsApp Alert"
-                    >
-                      <MessageSquare className="w-4 h-4" />
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        sendTelegramInvoiceAlert(inv);
-                      }} 
-                      onPointerDown={(e) => e.stopPropagation()}
-                      onTouchStart={(e) => e.stopPropagation()}
-                      className="text-gray-400 hover:text-blue-500 transition-colors p-2 md:p-1"
-                      title="Send Telegram Alert"
-                    >
-                      <Send className="w-4 h-4" />
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        loadInvoice(inv.id);
-                      }} 
-                      onPointerDown={(e) => e.stopPropagation()}
-                      onTouchStart={(e) => e.stopPropagation()}
-                      className="text-gray-400 hover:text-[#0EA5E9] transition-colors p-2 md:p-1"
-                      title="Edit Invoice"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleDeleteInvoice(inv.id, inv.invoice_no);
-                      }} 
-                      onPointerDown={(e) => e.stopPropagation()}
-                      onTouchStart={(e) => e.stopPropagation()}
-                      className="text-gray-400 hover:text-red-600 transition-colors p-2 md:p-1"
-                      title="Delete Invoice"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-              {invoices.length === 0 && <div className="text-sm text-gray-400 text-center py-4">No saved invoices</div>}
-            </div>
+                    </td>
+                    <td className="px-4 py-4 text-right">
+                      <div className="flex justify-end items-center space-x-2">
+                        <button onClick={() => { loadInvoice(inv.id); setActiveTab('editor'); }} className="p-1.5 text-gray-500 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors" title="Edit / Load">
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => handleViewPdf(inv.id)} className="p-1.5 text-gray-500 hover:bg-indigo-50 hover:text-indigo-600 rounded-md transition-colors" title="View PDF">
+                          <FileText className="w-4 h-4" />
+                        </button>
+                        {inv.doc_type === 'Quotation' && (
+                          <button onClick={() => { handleConvertToInvoice(inv.id); setActiveTab('editor'); }} className="p-1.5 text-gray-500 hover:bg-emerald-50 hover:text-emerald-600 rounded-md transition-colors" title="Convert to Invoice">
+                            <Copy className="w-4 h-4" />
+                          </button>
+                        )}
+                        {inv.doc_type === 'Invoice' && (inv.balance_due || 0) > 0 && (
+                          <button onClick={() => handleMarkAsPaid(inv.id)} className="p-1.5 text-gray-500 hover:bg-green-50 hover:text-green-600 rounded-md transition-colors" title="Mark as Paid">
+                            <CheckCircle className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button onClick={() => sendWhatsAppInvoiceAlert(inv)} className="p-1.5 text-gray-500 hover:bg-green-50 hover:text-green-600 rounded-md transition-colors" title="WhatsApp Alert">
+                          <MessageSquare className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => sendTelegramInvoiceAlert(inv)} className="p-1.5 text-gray-500 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors" title="Telegram Alert">
+                          <Send className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => handleDeleteInvoice(inv.id, inv.invoice_no)} className="p-1.5 text-gray-500 hover:bg-red-50 hover:text-red-600 rounded-md transition-colors" title="Delete Document">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {invoices.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500">No documents found.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
-      </div>
+      )}
 
       {/* --- HIDDEN PRINT TEMPLATE --- */}
       <div style={{ position: 'absolute', top: 0, left: 0, width: '794px', opacity: 0, pointerEvents: 'none', zIndex: -1000 }}>
