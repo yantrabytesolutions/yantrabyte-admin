@@ -213,12 +213,12 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
                             setPayAmount(val);
                           }
                         }} 
-                        className="w-full border-slate-300 rounded-md focus:border-blue-500 focus:ring-blue-500" 
+                        className="w-full border-slate-300 rounded-md text-slate-900 focus:border-blue-500 focus:ring-blue-500" 
                       />
                     </div>
                     <div className="w-32">
                       <label className="block text-xs text-slate-500 mb-1">Mode</label>
-                      <select value={payMode} onChange={e => setPayMode(e.target.value)} className="w-full border-slate-300 rounded-md focus:border-blue-500 focus:ring-blue-500">
+                      <select value={payMode} onChange={e => setPayMode(e.target.value)} className="w-full border-slate-300 rounded-md text-slate-900 focus:border-blue-500 focus:ring-blue-500">
                         <option>UPI</option>
                         <option>Cash</option>
                         <option>Bank Transfer</option>
@@ -226,7 +226,7 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
                     </div>
                     <div className="flex-2 min-w-[200px]">
                       <label className="block text-xs text-slate-500 mb-1">Reference / Note</label>
-                      <input type="text" value={payRef} onChange={e => setPayRef(e.target.value)} placeholder="e.g. Cleared Inv-001" className="w-full border-slate-300 rounded-md focus:border-blue-500 focus:ring-blue-500" />
+                      <input type="text" value={payRef} onChange={e => setPayRef(e.target.value)} placeholder="e.g. Cleared Inv-001" className="w-full border-slate-300 rounded-md text-slate-900 focus:border-blue-500 focus:ring-blue-500" />
                     </div>
                     <div className="flex gap-2">
                       <button type="button" onClick={() => setShowPaymentForm(false)} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-md border border-slate-200 transition-colors">Cancel</button>
