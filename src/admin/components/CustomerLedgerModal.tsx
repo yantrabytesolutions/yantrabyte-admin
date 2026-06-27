@@ -202,7 +202,19 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
                   <form onSubmit={handleRecordPayment} className="flex flex-wrap gap-4 items-end">
                     <div className="flex-1 min-w-[150px]">
                       <label className="block text-xs text-slate-500 mb-1">Amount (₹)</label>
-                      <input type="number" required min="1" step="0.01" value={payAmount} onChange={e => setPayAmount(e.target.value)} className="w-full border-slate-300 rounded-md focus:border-blue-500 focus:ring-blue-500" />
+                      <input 
+                        type="text" 
+                        inputMode="decimal"
+                        required 
+                        value={payAmount} 
+                        onChange={e => {
+                          const val = e.target.value;
+                          if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                            setPayAmount(val);
+                          }
+                        }} 
+                        className="w-full border-slate-300 rounded-md focus:border-blue-500 focus:ring-blue-500" 
+                      />
                     </div>
                     <div className="w-32">
                       <label className="block text-xs text-slate-500 mb-1">Mode</label>
