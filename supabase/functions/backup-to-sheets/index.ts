@@ -79,6 +79,57 @@ async function appendRow(spreadsheetId: string, sheetName: string, row: unknown[
   return data.updates?.updatedRange || '';
 }
 
+async function uploadToDrive(fileName: string, base64Data: string, folderId: string, token: string): Promise<string> {
+  // Step 1: Create file metadata
+  const metaRes = await fetch('https://www.googleapis.com/drive/v3/files', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      name: fileName,
+      parents: [folderId],
+      mimeType: 'application/pdf'
+    })
+  });
+  
+  const meta = await metaRes.json();
+  if (!meta.id) {
+    throw new Error('Failed to create Drive file: ' + JSON.stringify(meta));
+  }
+  
+  // Step 2: Upload content
+  const binaryString = atob(base64Data);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  
+  const uploadRes = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${meta.id}?uploadType=media`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/pdf'
+    },
+    body: bytes
+  });
+  
+  if (!uploadRes.ok) {
+    const errorBody = await uploadRes.text();
+    throw new Error('Failed to upload file content: ' + errorBody);
+  }
+
+  // Step 3: Get webViewLink
+  const linkRes = await fetch(`https://www.googleapis.com/drive/v3/files/${meta.id}?fields=webViewLink`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  const linkData = await linkRes.json();
+  return linkData.webViewLink || `https://drive.google.com/file/d/${meta.id}/view`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -98,7 +149,7 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { sheetName, headers, row } = body;
+    const { sheetName, headers, row, pdfBase64, invoiceNo } = body;
 
     if (!sheetName || !Array.isArray(headers) || !Array.isArray(row)) {
       return new Response(
@@ -109,6 +160,23 @@ Deno.serve(async (req) => {
 
     const token = await getAccessToken(clientId, clientSecret, refreshToken);
     await ensureSheet(spreadsheetId, sheetName, token);
+
+    const finalRow = [...row];
+
+    if (pdfBase64 && invoiceNo) {
+      const folderId = Deno.env.get('GOOGLE_DRIVE_FOLDER_ID');
+      if (!folderId) {
+        console.warn('GOOGLE_DRIVE_FOLDER_ID not set. Skipping PDF upload.');
+      } else {
+        const fileUrl = await uploadToDrive(`${invoiceNo}.pdf`, pdfBase64, folderId, token);
+        // Append PDF link to the row
+        // Check if headers contains "PDF Link", if not, we can just append it
+        if (!headers.includes('PDF Link')) {
+          headers.push('PDF Link');
+        }
+        finalRow.push(fileUrl);
+      }
+    }
 
     // Set headers if sheet is empty
     const existingHeaders = await getHeaderRow(spreadsheetId, sheetName, token);
@@ -137,7 +205,7 @@ Deno.serve(async (req) => {
             {
               method: 'PUT',
               headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ values: [row] }),
+              body: JSON.stringify({ values: [finalRow] }),
             }
           );
           const updateData = await updateRes.json();
@@ -145,7 +213,7 @@ Deno.serve(async (req) => {
           return updateData.updatedRange || '';
         }
       }
-      return await appendRow(spreadsheetId, sheetName, row, token);
+      return await appendRow(spreadsheetId, sheetName, finalRow, token);
     };
 
     const updatedRange = await updateOrAppendRow();

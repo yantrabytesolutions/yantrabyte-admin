@@ -1148,21 +1148,37 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     (inv as any).pdf_url || '',
   ];
 
-  const backupInvoiceToGoogleSheet = (inv: Invoice) => {
+  const backupInvoiceToGoogleSheet = async (inv: Invoice) => {
+    let pdfBase64 = '';
+    try {
+      const element = document.getElementById('invoice-preview');
+      if (element) {
+        const opt = getPdfOptions(inv.invoice_no);
+        const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob') as Blob;
+        pdfBase64 = await blobToBase64(pdfBlob);
+      }
+    } catch (e) {
+      console.error('Failed to generate PDF for backup', e);
+    }
+
     void appendBackupRow({
-      sheetName: inv.doc_type === 'Quotation' ? 'Quotation' : 'Invoices',
+      sheetName: inv.doc_type === 'Quotation' ? 'Quotations' : 'Invoices',
       headers: INVOICE_HEADERS,
       row: invoiceRow(inv),
+      pdfBase64,
+      invoiceNo: inv.invoice_no,
       keyColumnIndex: 0,
       keyValue: inv.invoice_no,
     }).then(result => {
       if (result.ok) {
         showToast('Google Sheet backup updated');
       } else if (!result.skipped) {
-        console.warn('Google Sheet invoice backup failed:', result.error);
+        showToast('Sheet backup FAILED: ' + (result.error || 'Unknown error'), 'error');
+      } else {
+        showToast('Sheet backup skipped: ' + (result.error || 'No session'), 'error');
       }
     }).catch(error => {
-      console.warn('Google Sheet invoice backup failed:', error);
+      showToast('Sheet backup ERROR: ' + (error?.message || String(error)), 'error');
     });
   };
 
