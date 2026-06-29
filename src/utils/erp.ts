@@ -101,7 +101,6 @@ export const ERPUtils = {
         });
       }
     }
-    }
     if (invTransactions.length > 0) {
       await supabase.from('inventory_transactions').insert(invTransactions);
       
