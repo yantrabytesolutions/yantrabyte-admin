@@ -248,6 +248,7 @@ export interface PurchaseItem {
 export interface Purchase {
   id: string;
   purchase_no: string;
+  doc_type?: 'Bill' | 'PO';
   supplier_id: string | null;
   supplier_name: string;
   date: string;

@@ -1998,6 +1998,19 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                         <button onClick={(e) => { e.stopPropagation(); handleViewPdf(inv.id); }} className="p-1.5 text-gray-500 hover:bg-indigo-50 hover:text-indigo-600 rounded-md transition-colors" title="View PDF">
                           <FileText className="w-4 h-4" />
                         </button>
+                        {(inv.warranty_months || 0) > 0 && (
+                          <button onClick={async (e) => { 
+                            e.stopPropagation(); 
+                            try {
+                              const { generateWarrantyCertificate } = await import('../components/WarrantyCertificate');
+                              await generateWarrantyCertificate(inv, null);
+                            } catch (err: any) {
+                              showToast(err.message, 'error');
+                            }
+                          }} className="p-1.5 text-gray-500 hover:bg-amber-50 hover:text-amber-600 rounded-md transition-colors" title="Download Warranty Certificate">
+                            <CheckCircle className="w-4 h-4" />
+                          </button>
+                        )}
                         {inv.doc_type === 'Quotation' && (
                           <button onClick={(e) => { e.stopPropagation(); handleConvertToInvoice(inv.id); setActiveTab('editor'); }} className="p-1.5 text-gray-500 hover:bg-emerald-50 hover:text-emerald-600 rounded-md transition-colors" title="Convert to Invoice">
                             <Copy className="w-4 h-4" />

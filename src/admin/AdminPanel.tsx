@@ -11,7 +11,7 @@ import {
   Users, Briefcase, Building2, HelpCircle, Image, Award, Mail, Settings,
   LogOut, Plus, Pencil, Trash2, X, Eye, EyeOff, ChevronDown, Save,
   Loader2, AlertCircle, CheckCircle, Search, RefreshCw, Menu, Ticket, Receipt, CreditCard, MessageSquare,
-  Truck, ExternalLink, FileSpreadsheet, Activity, Send, UserCircle, IndianRupee, Shield, Sun, Moon
+  Truck, ExternalLink, FileSpreadsheet, Activity, Send, UserCircle, IndianRupee, Shield, Sun, Moon, Calendar
 } from 'lucide-react';
 import { sendTelegramNotification } from '../utils/telegram';
 import BillingSoftware from './BillingSoftware';
@@ -22,6 +22,7 @@ import { downloadExcelWorkbook } from '../utils/spreadsheetXml';
 import { appendBackupRow } from '../utils/googleSheetBackup';
 import Dashboard from './Dashboard';
 import AmcContracts from './AmcContracts';
+import CalendarView from './CalendarView';
 import Expenses from './Expenses';
 import AccountingKhata from './AccountingKhata';
 import InventoryMovement from './InventoryMovement';
@@ -35,7 +36,7 @@ import { UserRole } from '../types';
 type Section =
   | 'dashboard' | 'pages' | 'services' | 'products' | 'testimonials'
   | 'blog' | 'team' | 'careers' | 'industries' | 'faqs' | 'gallery'
-  | 'client-logos' | 'contacts' | 'settings' | 'tickets' | 'billing' | 'purchase' | 'external' | 'expenses' | 'khata' | 'inventory' | 'reports' | 'customers' | 'amc';
+  | 'client-logos' | 'contacts' | 'settings' | 'tickets' | 'billing' | 'purchase' | 'external' | 'expenses' | 'khata' | 'inventory' | 'reports' | 'customers' | 'amc' | 'calendar';
 
 
 interface FormField {
@@ -52,6 +53,7 @@ interface FormField {
 
 const SECTION_CONFIG: Record<Section, { label: string; icon: React.ElementType; table: string; orderField: string; publishedField?: string }> = {
   dashboard: { label: 'Dashboard', icon: LayoutDashboard, table: '', orderField: '' },
+  calendar: { label: 'Calendar', icon: Calendar, table: '', orderField: '' },
   pages: { label: 'Pages', icon: FileText, table: 'pages', orderField: 'page_order', publishedField: 'is_published' },
   services: { label: 'Services', icon: Wrench, table: 'services', orderField: 'sort_order', publishedField: 'is_published' },
   products: { label: 'Products', icon: Package, table: 'products', orderField: 'sort_order', publishedField: 'is_published' },
@@ -885,7 +887,7 @@ export default function AdminPanel() {
     showToast('Switched to billing with pre-filled ticket details!');
   };
 
-  const sendWhatsAppAlert = (item: Record<string, unknown>) => {
+  const sendWhatsAppAlert = async (item: Record<string, unknown>) => {
     const name = String(item.customer_name || 'Customer');
     let phone = String(item.customer_phone || '');
     const ticketNo = String(item.ticket_number || 'DRAFT');
@@ -914,6 +916,15 @@ export default function AdminPanel() {
       text = `Hi ${name}, great news! Your ${device} (Ticket: ${ticketNo}) has been fully repaired and tested. It is ready for pickup at our workshop. Thank you for choosing Yantrabyte Solutions!`;
     } else if (status === 'closed') {
       text = `Hi ${name}, this is Yantrabyte Solutions. Your repair ticket ${ticketNo} for ${device} has been marked as delivered and closed. Please reach out if you have any questions!`;
+      
+      try {
+        const { data } = await supabase.from('site_settings').select('value').eq('key', 'google_review_link').single();
+        if (data && data.value) {
+          text += `\n\nIf you loved our service, please leave us a 5-star review here: ${data.value}`;
+        }
+      } catch (e) {
+        // ignore
+      }
     } else {
       text = `Hi ${name}, this is Yantrabyte Solutions. Update regarding your repair ticket ${ticketNo} (${device}). Status: ${status.toUpperCase()}. Track status here: ${trackUrl}`;
     }
@@ -2174,6 +2185,7 @@ export default function AdminPanel() {
     if (activeSection === 'expenses') return <Expenses />;
     if (activeSection === 'khata') return <AccountingKhata />;
     if (activeSection === 'amc') return <AmcContracts onRenewContract={(c) => console.log('Renew', c)} />;
+    if (activeSection === 'calendar') return <CalendarView />;
     return renderDataTable();
   };
 

@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Invoice, ServiceTicket } from '../types';
-import { FileText, LogOut, Ticket, Receipt, User, Loader2, Download } from 'lucide-react';
+import { FileText, LogOut, Ticket, Receipt, User, Loader2, Download, CheckCircle } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import html2pdf from 'html2pdf.js';
 import { InvoicePdfTemplate } from '../components/InvoicePdfTemplate';
@@ -209,9 +209,25 @@ export default function PortalDashboard() {
                               expDate.setMonth(expDate.getMonth() + inv.warranty_months);
                               const isExpired = new Date() > expDate;
                               return (
-                                <p className={`px-2 inline-flex items-center text-xs leading-5 font-semibold rounded-full ${isExpired ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-indigo-50 text-indigo-700 border border-indigo-200'}`}>
-                                  {isExpired ? 'Warranty Expired' : `Warranty till ${format(expDate, 'MMM yyyy')}`}
-                                </p>
+                                <div className="flex items-center space-x-2">
+                                  <p className={`px-2 inline-flex items-center text-xs leading-5 font-semibold rounded-full ${isExpired ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-indigo-50 text-indigo-700 border border-indigo-200'}`}>
+                                    {isExpired ? 'Warranty Expired' : `Warranty till ${format(expDate, 'MMM yyyy')}`}
+                                  </p>
+                                  <button
+                                    onClick={async () => {
+                                      try {
+                                        const { generateWarrantyCertificate } = await import('../components/WarrantyCertificate');
+                                        await generateWarrantyCertificate(inv, null);
+                                      } catch (err: any) {
+                                        alert(err.message);
+                                      }
+                                    }}
+                                    className="inline-flex items-center px-2.5 py-1.5 border border-amber-200 shadow-sm text-xs font-medium rounded text-amber-700 bg-amber-50 hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500"
+                                  >
+                                    <CheckCircle className="w-3.5 h-3.5 mr-1" />
+                                    Get Certificate
+                                  </button>
+                                </div>
                               );
                             })()
                           )}

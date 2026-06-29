@@ -6,6 +6,7 @@ import { ERPUtils } from '../utils/erp';
 
 export default function PurchaseSoftware() {
   const [purchaseNo, setPurchaseNo] = useState('');
+  const [docType, setDocType] = useState<'Bill' | 'PO'>('Bill');
   const [date, setDate] = useState('');
   const [selectedSupplierId, setSelectedSupplierId] = useState<string>('');
   const [supplierName, setSupplierName] = useState('');
@@ -110,6 +111,7 @@ export default function PurchaseSoftware() {
   const clearForm = () => {
     setSelectedPurchaseId('');
     setPurchaseNo('');
+    setDocType('Bill');
     setDate(new Date().toLocaleDateString('en-GB'));
     setSelectedSupplierId('');
     setSupplierName('');
@@ -178,6 +180,7 @@ export default function PurchaseSoftware() {
 
       const payload = {
         purchase_no: pNo,
+        doc_type: docType,
         supplier_id: selectedSupplierId || null,
         supplier_name: supplierName,
         date: date,
@@ -194,12 +197,12 @@ export default function PurchaseSoftware() {
       if (isUpdate) {
         const { data: savedPurchase, error } = await supabase.from('purchases').update(payload).eq('id', selectedPurchaseId).select().single();
         if (error) throw error;
-        if (savedPurchase) await ERPUtils.recordPurchase(savedPurchase as Purchase);
+        if (savedPurchase && docType === 'Bill') await ERPUtils.recordPurchase(savedPurchase as Purchase);
         showToast('Purchase entry updated successfully!');
       } else {
         const { data: savedPurchase, error } = await supabase.from('purchases').insert([payload]).select().single();
         if (error) throw error;
-        if (savedPurchase) await ERPUtils.recordPurchase(savedPurchase as Purchase);
+        if (savedPurchase && docType === 'Bill') await ERPUtils.recordPurchase(savedPurchase as Purchase);
         showToast('Purchase entry saved successfully!');
       }
 
@@ -240,6 +243,7 @@ export default function PurchaseSoftware() {
     if (!p) return;
     setSelectedPurchaseId(p.id);
     setPurchaseNo(p.purchase_no);
+    setDocType(p.doc_type || 'Bill');
     setDate(p.date);
     setSelectedSupplierId(p.supplier_id || '');
     setSupplierName(p.supplier_name);
@@ -314,7 +318,26 @@ export default function PurchaseSoftware() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Date */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Purchase Date</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Document Type</label>
+              <div className="flex bg-gray-100 rounded-lg p-1 w-fit">
+                <button
+                  type="button"
+                  onClick={() => setDocType('Bill')}
+                  className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${docType === 'Bill' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  Bill
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDocType('PO')}
+                  className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${docType === 'PO' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  Purchase Order
+                </button>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
                 <input type="text" value={date} onChange={e => setDate(e.target.value)} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" placeholder="DD/MM/YYYY" />
               </div>
               
@@ -513,6 +536,9 @@ export default function PurchaseSoftware() {
                         <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 font-medium">
                           ₹{p.balance_due.toLocaleString('en-IN')} Due
                         </span>
+                      )}
+                      {p.doc_type === 'PO' && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-700 font-medium">PO</span>
                       )}
                     </div>
                     <div className="text-xs text-gray-500 mt-0.5">{p.supplier_name} • {p.date}</div>
