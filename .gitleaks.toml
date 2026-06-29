@@ -1,0 +1,5 @@
+[allowlist]
+description = "Ignore dist folder containing bundled Supabase public anon key"
+paths = [
+    '''dist/.*'''
+]
