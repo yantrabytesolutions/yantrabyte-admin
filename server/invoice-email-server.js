@@ -5,6 +5,7 @@ import { Readable } from 'stream';
 import nodemailer from 'nodemailer';
 import { google } from 'googleapis';
 import { createClient } from '@supabase/supabase-js';
+import cron from 'node-cron';
 
 dotenv.config();
 
@@ -582,6 +583,115 @@ app.post('/api/invoices/reminders', requireSupabaseUser, async (req, res) => {
   }
 
   return res.json({ ok: true, results });
+});
+
+// --- AUTOMATED CRON JOB ---
+// Runs daily at 10:00 AM (server time)
+cron.schedule('0 10 * * *', async () => {
+  console.log('Running automated email reminders job at 10:00 AM...');
+  const missing = getMissingEnv();
+  if (missing.length > 0) {
+    console.error(`Skipping cron job. Missing env: ${missing.join(', ')}`);
+    return;
+  }
+  
+  try {
+    const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.VITE_SUPABASE_ANON_KEY, {
+      auth: { persistSession: false },
+    });
+
+    const today = new Date().toISOString().split('T')[0];
+    const { data: invoices, error } = await supabase
+      .from('invoices')
+      .select('*')
+      .eq('doc_type', 'Invoice')
+      .gt('balance_due', 0);
+      
+    if (error) throw error;
+    if (!invoices || invoices.length === 0) return;
+    
+    const clientsMap = {};
+    for (const inv of invoices) {
+      if (inv.due_date && inv.due_date < today && inv.customer_email && isValidEmail(inv.customer_email)) {
+        if (!clientsMap[inv.customer_email]) {
+          clientsMap[inv.customer_email] = {
+            customer_name: inv.customer_name,
+            customer_email: inv.customer_email,
+            invoices: [],
+            balance_due: 0,
+            ids: []
+          };
+        }
+        clientsMap[inv.customer_email].invoices.push(inv.invoice_no);
+        clientsMap[inv.customer_email].balance_due += (inv.balance_due || 0);
+        clientsMap[inv.customer_email].ids.push(inv.id);
+      }
+    }
+    
+    const clients = Object.values(clientsMap);
+    if (clients.length === 0) {
+      console.log('No overdue invoices require reminders today.');
+      return;
+    }
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: GMAIL_USER_DEFAULT,
+        pass: GMAIL_PASS_DEFAULT,
+      },
+    });
+
+    let sentCount = 0;
+    for (const client of clients) {
+      try {
+        const portalLinks = client.ids.map(id => `<a href="https://yantrabyte.com/portal/${id}">View Invoice ${client.invoices[client.ids.indexOf(id)]}</a>`).join('<br/>');
+        const textLinks = client.ids.map(id => `https://yantrabyte.com/portal/${id}`).join(', ');
+
+        await transporter.sendMail({
+          from: `"YantraByte Solutions" <${GMAIL_USER_DEFAULT}>`,
+          to: client.customer_email,
+          replyTo: process.env.GMAIL_REPLY_TO || GMAIL_USER_DEFAULT,
+          subject: `Automated Payment Reminder - YantraByte Solutions`,
+          text: [
+            `Dear ${client.customer_name || 'Customer'},`,
+            '',
+            `This is an automated reminder that you have an outstanding balance of ₹${(client.balance_due || 0).toLocaleString('en-IN')}.`,
+            `This balance is associated with the following invoice(s): ${client.invoices.join(', ')}.`,
+            `You can view and download your invoices securely here: ${textLinks}`,
+            '',
+            'Kindly clear the balance at your earliest convenience via our UPI ID: s0424237152@slc or our bank account details.',
+            '',
+            'If you have already made the payment, please ignore this email.',
+            '',
+            'Regards,',
+            'YantraByte Solutions',
+          ].join('\n'),
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+              <p>Dear ${client.customer_name || 'Customer'},</p>
+              <p>This is an automated reminder that you have an outstanding balance of <strong style="color: #e53e3e;">₹${(client.balance_due || 0).toLocaleString('en-IN')}</strong>.</p>
+              <p>This balance is associated with the following invoice(s): <strong>${client.invoices.join(', ')}</strong>.</p>
+              <div style="margin: 20px 0; padding: 15px; background-color: #f8fafc; border-left: 4px solid #0B5394;">
+                <p style="margin-top: 0;">You can view and download your invoices securely here:</p>
+                ${portalLinks}
+              </div>
+              <p>Kindly clear the balance at your earliest convenience via our UPI ID: <strong>s0424237152@slc</strong> or our bank account details.</p>
+              <p><em>If you have already made the payment, please ignore this email.</em></p>
+              <p>Regards,<br/><strong>YantraByte Solutions</strong></p>
+            </div>
+          `,
+        });
+        sentCount++;
+        console.log(`Successfully sent automated reminder to ${client.customer_email}`);
+      } catch (err) {
+        console.error(`Failed to send automated reminder to ${client.customer_email}:`, err.message);
+      }
+    }
+    console.log(`Automated reminder job completed. Sent ${sentCount} emails.`);
+  } catch (error) {
+    console.error('Error in automated reminder cron job:', error.message);
+  }
 });
 
 app.listen(port, () => {
