@@ -128,6 +128,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurringInterval, setRecurringInterval] = useState('monthly');
   const [termsConditions, setTermsConditions] = useState('');
+  const [quoteValidityDays, setQuoteValidityDays] = useState('7');
+  const [quoteAdvancePercent, setQuoteAdvancePercent] = useState('85');
   const [warrantyMonths, setWarrantyMonths] = useState<number | ''>('');
   const [items, setItems] = useState<InvoiceItem[]>([]);
   
@@ -1633,6 +1635,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                   <button onClick={() => setTermsConditions("1. Goods once sold will not be taken back.\n2. Warranty as per manufacturer terms.\n3. Subject to local jurisdiction.")} className="text-[10px] bg-gray-100 px-2 py-1 rounded hover:bg-gray-200">General</button>
                   <button onClick={() => setTermsConditions("1. We are not responsible for any data loss during repair. Please backup your data.\n2. 30 days warranty on repaired parts only.\n3. Physical or liquid damage voids warranty.")} className="text-[10px] bg-gray-100 px-2 py-1 rounded hover:bg-gray-200">Service</button>
                   <button onClick={() => setTermsConditions("1. AMC covers standard service visits as per contract.\n2. Spare parts are charged extra unless specified.\n3. Contract is non-transferable.")} className="text-[10px] bg-gray-100 px-2 py-1 rounded hover:bg-gray-200">AMC</button>
+                  <button onClick={() => setTermsConditions(`1. Estimate valid for ${quoteValidityDays} days.\n2. Advance payment of ${quoteAdvancePercent}% required and remaining against Delivery.\n3. Final amount may vary if hidden faults are found.`)} className="text-[10px] bg-purple-50 text-purple-600 px-2 py-1 rounded border border-purple-200 hover:bg-purple-100">Quotation</button>
                   <button onClick={() => setTermsConditions("")} className="text-[10px] text-red-600 bg-red-50 px-2 py-1 rounded hover:bg-red-100">Clear</button>
                 </div>
               </div>
@@ -1642,6 +1645,24 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                 className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500 h-20" 
                 placeholder="Enter terms and conditions for this invoice..."
               ></textarea>
+              {docType === 'Quotation' && (
+                <div className="mt-2 flex gap-3 items-end">
+                  <div>
+                    <label className="block text-[10px] text-gray-500 mb-0.5">Validity (Days)</label>
+                    <input type="number" value={quoteValidityDays} onChange={e => setQuoteValidityDays(e.target.value)} className="w-20 text-xs p-1.5 border border-gray-200 rounded" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-gray-500 mb-0.5">Advance (%)</label>
+                    <input type="number" value={quoteAdvancePercent} onChange={e => setQuoteAdvancePercent(e.target.value)} className="w-20 text-xs p-1.5 border border-gray-200 rounded" />
+                  </div>
+                  <button 
+                    onClick={() => setTermsConditions(`1. Estimate valid for ${quoteValidityDays} days.\n2. Advance payment of ${quoteAdvancePercent}% required and remaining against Delivery.\n3. Final amount may vary if hidden faults are found.`)}
+                    className="text-[11px] bg-blue-50 text-blue-600 px-3 py-1.5 rounded border border-blue-200 hover:bg-blue-100 font-medium"
+                  >
+                    Apply to Terms
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -2122,7 +2143,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               <div className="font-bold text-center p-1 text-white text-sm" style={{ backgroundColor: '#0B5394' }}>Terms & Conditions</div>
               <div className="p-3 space-y-1 whitespace-pre-wrap text-[13px]" style={{ color: '#444444' }}>
                 {termsConditions || (docType === 'Quotation' ? (
-                  "1. Estimate valid for 7 days.\n2. Advance payment of 85% required and remaining against Delivery.\n3. Final amount may vary if hidden faults are found."
+                  `1. Estimate valid for ${quoteValidityDays} days.\n2. Advance payment of ${quoteAdvancePercent}% required and remaining against Delivery.\n3. Final amount may vary if hidden faults are found.`
                 ) : (
                   "1. Service warranty is valid for 30 days only.\n2. No warranty for Windows installation/software issues.\n3. YantraByte Solutions is not responsible for any data loss.\n4. Customer should take backup of all important files prior.\n5. Physical, liquid or burnt damages void warranty.\n6. No warranty for swollen batteries or electrical faults."
                 ))}

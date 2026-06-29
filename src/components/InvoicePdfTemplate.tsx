@@ -185,7 +185,9 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ invoice }
         <div className="w-3/5 flex flex-col" style={{ border: '1px solid #000' }}>
           <div className="font-bold text-center p-1 text-white text-sm" style={{ backgroundColor: '#0B5394' }}>Terms & Conditions</div>
           <div className="p-3 space-y-1 text-[13px]" style={{ color: '#444444' }}>
-            {invoice.doc_type === 'Quotation' ? (
+            {invoice.terms_conditions ? (
+              <div className="whitespace-pre-wrap">{invoice.terms_conditions}</div>
+            ) : invoice.doc_type === 'Quotation' ? (
               <>
                 <p>1. Estimate valid for 7 days.</p>
                 <p>2. Advance payment of 85% required and remaining against Delivery.</p>
