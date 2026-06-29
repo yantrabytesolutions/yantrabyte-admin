@@ -161,7 +161,7 @@ Deno.serve(async (req) => {
     const token = await getAccessToken(clientId, clientSecret, refreshToken);
     await ensureSheet(spreadsheetId, sheetName, token);
 
-    let finalRow = [...row];
+    const finalRow = [...row];
 
     if (pdfBase64 && invoiceNo) {
       const folderId = Deno.env.get('GOOGLE_DRIVE_FOLDER_ID');
@@ -184,9 +184,6 @@ Deno.serve(async (req) => {
       await setHeaderRow(spreadsheetId, sheetName, headers, token);
     }
 
-<<<<<<< HEAD
-    const updatedRange = await appendRow(spreadsheetId, sheetName, finalRow, token);
-=======
     const updateOrAppendRow = async () => {
       const { keyColumnIndex, keyValue } = body;
       if (keyColumnIndex !== undefined && keyValue !== undefined) {
@@ -208,7 +205,7 @@ Deno.serve(async (req) => {
             {
               method: 'PUT',
               headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ values: [row] }),
+              body: JSON.stringify({ values: [finalRow] }),
             }
           );
           const updateData = await updateRes.json();
@@ -216,11 +213,10 @@ Deno.serve(async (req) => {
           return updateData.updatedRange || '';
         }
       }
-      return await appendRow(spreadsheetId, sheetName, row, token);
+      return await appendRow(spreadsheetId, sheetName, finalRow, token);
     };
 
     const updatedRange = await updateOrAppendRow();
->>>>>>> 5d7a0115be6279683d293f5780e477fdf33de30a
 
     return new Response(
       JSON.stringify({ ok: true, updatedRange }),

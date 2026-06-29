@@ -40,6 +40,7 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [customerName, customerId]);
 
   const fetchData = async () => {

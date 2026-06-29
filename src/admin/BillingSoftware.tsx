@@ -1162,19 +1162,13 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     }
 
     void appendBackupRow({
-<<<<<<< HEAD
       sheetName: inv.doc_type === 'Quotation' ? 'Quotations' : 'Invoices',
       headers: INVOICE_HEADERS,
       row: invoiceRow(inv),
       pdfBase64,
-      invoiceNo: inv.invoice_no
-=======
-      sheetName: inv.doc_type === 'Quotation' ? 'Quotation' : 'Invoices',
-      headers: INVOICE_HEADERS,
-      row: invoiceRow(inv),
+      invoiceNo: inv.invoice_no,
       keyColumnIndex: 0,
       keyValue: inv.invoice_no,
->>>>>>> 5d7a0115be6279683d293f5780e477fdf33de30a
     }).then(result => {
       if (result.ok) {
         showToast('Google Sheet backup updated');

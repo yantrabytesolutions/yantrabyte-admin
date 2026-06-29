@@ -4,13 +4,10 @@ export type SheetBackupPayload = {
   sheetName: string;
   headers: Array<string | number>;
   row: Array<string | number | null | undefined>;
-<<<<<<< HEAD
   pdfBase64?: string;
   invoiceNo?: string;
-=======
   keyColumnIndex?: number;
   keyValue?: string | number;
->>>>>>> 5d7a0115be6279683d293f5780e477fdf33de30a
 };
 
 export type SheetBackupResult = {
