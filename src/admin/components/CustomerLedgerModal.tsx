@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, Plus, Clock, CheckCircle, FileText, IndianRupee } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Invoice } from '../../types';
@@ -40,9 +40,9 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
 
   useEffect(() => {
     fetchData();
-  }, [customerName, customerId]);
+  }, [fetchData]);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     // Fetch Invoices for this customer
     let invQuery = supabase.from('invoices').select('*').eq('customer_name', customerName).eq('doc_type', 'Invoice');
@@ -65,7 +65,7 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
     setInvoices((invData || []).filter(i => i.doc_type === 'Invoice'));
     setPayments(payData || []);
     setLoading(false);
-  };
+  }, [customerName, customerId]);
 
   const handleRecordPayment = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -2106,7 +2106,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               <div className="font-bold text-center p-1 text-white text-sm" style={{ backgroundColor: '#0B5394' }}>Terms & Conditions</div>
               <div className="p-3 space-y-1 whitespace-pre-wrap text-[13px]" style={{ color: '#444444' }}>
                 {termsConditions || (docType === 'Quotation' ? (
-                  "1. Estimate valid for 7 days.\n2. Advance payment of 50% required.\n3. Final amount may vary if hidden faults are found."
+                  "1. Estimate valid for 7 days.\n2. Advance payment of 85% required and remaining against Delivery.\n3. Final amount may vary if hidden faults are found."
                 ) : (
                   "1. Service warranty is valid for 30 days only.\n2. No warranty for Windows installation/software issues.\n3. YantraByte Solutions is not responsible for any data loss.\n4. Customer should take backup of all important files prior.\n5. Physical, liquid or burnt damages void warranty.\n6. No warranty for swollen batteries or electrical faults."
                 ))}
