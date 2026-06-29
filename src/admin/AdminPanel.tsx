@@ -766,7 +766,7 @@ export default function AdminPanel() {
   };
 
   const printDeviceLabel = (item: Record<string, unknown>) => {
-    const trackingUrl = `${window.location.origin}/track?ticket=${item.ticket_number}`;
+    const trackingUrl = `${window.location.origin}/track-ticket?t=${item.ticket_number}`;
     const qrSvgString = renderToString(<QRCodeSVG value={trackingUrl} size={64} level="H" />);
     
     const win = window.open('', '_blank', 'width=400,height=300');
