@@ -38,10 +38,6 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
   const [payRef, setPayRef] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
   const fetchData = useCallback(async () => {
     setLoading(true);
     // Fetch Invoices for this customer
@@ -66,6 +62,10 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
     setPayments(payData || []);
     setLoading(false);
   }, [customerName, customerId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleRecordPayment = async (e: React.FormEvent) => {
     e.preventDefault();
