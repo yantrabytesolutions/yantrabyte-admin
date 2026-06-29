@@ -585,6 +585,95 @@ app.post('/api/invoices/reminders', requireSupabaseUser, async (req, res) => {
   return res.json({ ok: true, results });
 });
 
+app.post('/api/tickets/notify', requireSupabaseUser, async (req, res) => {
+  const { ticket_number, customer_name, customer_email, status, device_type } = req.body || {};
+
+  if (!customer_email || !isValidEmail(customer_email)) {
+    return res.status(400).json({ error: 'Valid customer_email is required' });
+  }
+
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: GMAIL_USER_DEFAULT,
+      pass: GMAIL_PASS_DEFAULT,
+    },
+  });
+
+  const portalLink = `https://yantrabyte.anantatechcare.com/track-ticket`; // Assuming this will be the track page link
+
+  try {
+    const mailResult = await transporter.sendMail({
+      from: `"YantraByte Solutions" <${GMAIL_USER_DEFAULT}>`,
+      to: customer_email,
+      replyTo: process.env.GMAIL_REPLY_TO || GMAIL_USER_DEFAULT,
+      subject: `Service Ticket Update [${ticket_number}] - YantraByte Solutions`,
+      html: `
+        <div style="font-family: Arial, sans-serif; color: #333;">
+          <h2 style="color: #0B5394;">Service Ticket Update</h2>
+          <p>Dear ${customer_name || 'Customer'},</p>
+          <p>This is an automated update regarding your service ticket <strong>${ticket_number}</strong> for your <strong>${device_type || 'device'}</strong>.</p>
+          <p>The current status of your ticket has been updated to: <strong style="color: #B91C1C;">${status.toUpperCase()}</strong></p>
+          <p>You can track the live status of your repair at any time by visiting our tracking portal:</p>
+          <p><a href="${portalLink}" style="display: inline-block; padding: 10px 15px; background-color: #0B5394; color: #fff; text-decoration: none; border-radius: 5px;">Track Ticket Status</a></p>
+          <p>If you have any questions, feel free to reply to this email or contact us.</p>
+          <br/>
+          <p>Regards,<br/><strong>YantraByte Solutions</strong></p>
+        </div>
+      `,
+    });
+    return res.json({ ok: true, messageId: mailResult.messageId });
+  } catch (error) {
+    console.error(`Ticket update email failed for ${customer_email}:`, getDeliveryErrorMessage(error));
+    return res.status(500).json({ error: getDeliveryErrorMessage(error) });
+  }
+});
+
+app.get('/api/tickets/track/:ticket_number', async (req, res) => {
+  const { ticket_number } = req.params;
+  const { phone } = req.query;
+
+  if (!phone) {
+    return res.status(400).json({ error: 'Phone number is required' });
+  }
+
+  try {
+    const supabaseAdmin = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY);
+    const { data, error } = await supabaseAdmin
+      .from('service_tickets')
+      .select('ticket_number, status, device_type, created_at, customer_name, issue_description, customer_phone')
+      .eq('ticket_number', ticket_number)
+      .single();
+
+    if (error || !data) {
+      return res.status(404).json({ error: 'Ticket not found' });
+    }
+
+    // Verify phone number (last 4 digits at least or exact match)
+    const cleanInputPhone = String(phone).replace(/\D/g, '');
+    const cleanDbPhone = String(data.customer_phone).replace(/\D/g, '');
+    
+    if (cleanDbPhone && cleanInputPhone && !cleanDbPhone.endsWith(cleanInputPhone.slice(-4))) {
+       return res.status(404).json({ error: 'Ticket not found or phone mismatch' });
+    }
+
+    // Obfuscate customer name for privacy
+    const obfuscatedName = data.customer_name ? data.customer_name.substring(0, 2) + '*'.repeat(data.customer_name.length - 2) : 'Customer';
+
+    return res.json({
+      ticket_number: data.ticket_number,
+      status: data.status,
+      device_type: data.device_type,
+      created_at: data.created_at,
+      customer_name: obfuscatedName,
+      issue_description: data.issue_description
+    });
+  } catch (error) {
+    console.error(`Error tracking ticket ${ticket_number}:`, error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // --- AUTOMATED CRON JOB ---
 // Runs daily at 10:00 AM (server time)
 cron.schedule('0 10 * * *', async () => {

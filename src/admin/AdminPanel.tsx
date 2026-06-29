@@ -231,7 +231,8 @@ const TICKETS_FIELDS: FormField[] = [
     { label: 'Urgent', value: 'urgent' }
   ]},
   { key: 'warranty_months', label: 'Warranty (Months)', type: 'number' },
-  { key: 'notes', label: 'Internal Notes', type: 'textarea', rows: 3 }
+  { key: 'notes', label: 'Internal Notes', type: 'textarea', rows: 3 },
+  { key: 'technician_notes', label: 'Technician Notes', type: 'textarea', rows: 3 }
 ];
 
 const CUSTOMERS_FIELDS: FormField[] = [
@@ -1260,8 +1261,31 @@ export default function AdminPanel() {
           sendTelegramNotification(`🔧 <b>Ticket Updated</b>\nTicket: #${record.ticket_number}\nCustomer: ${record.customer_name}\nDevice: ${record.device_type}\nStatus: ${record.status}`);
           
           // Smart WhatsApp Status Template Prompt
-          if (record.status !== editingItem.status && window.confirm(`Status changed to ${record.status}. Do you want to send an automatic WhatsApp update to the customer?`)) {
-            sendWhatsAppAlert(record);
+          if (record.status !== editingItem.status) {
+            if (window.confirm(`Status changed to ${record.status}. Do you want to send an automatic WhatsApp update to the customer?`)) {
+              sendWhatsAppAlert(record);
+            }
+            if (record.customer_email && window.confirm(`Do you want to send an automated status update email to ${record.customer_email}?`)) {
+              try {
+                fetch('http://localhost:4000/api/tickets/notify', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    ticket_number: record.ticket_number,
+                    customer_name: record.customer_name,
+                    customer_email: record.customer_email,
+                    status: record.status,
+                    device_type: record.device_type,
+                    supabase_user_token: (await supabase.auth.getSession()).data.session?.access_token || ''
+                  })
+                }).then(res => res.json()).then(data => {
+                  if (data.ok) showToast('Status email sent successfully');
+                  else showToast('Failed to send status email', 'error');
+                });
+              } catch (e) {
+                console.error(e);
+              }
+            }
           }
         }
         showToast('Item updated successfully');

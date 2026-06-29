@@ -169,6 +169,23 @@ export default function PortalDashboard() {
                           {inv.invoice_no} ({inv.doc_type})
                         </p>
                         <div className="ml-2 flex-shrink-0 flex gap-2">
+                          {inv.doc_type === 'Quotation' && inv.payment_status !== 'Approved' && (
+                            <button
+                              onClick={async () => {
+                                if (!window.confirm("Are you sure you want to approve this quotation?")) return;
+                                const { error } = await supabase.from('invoices').update({ payment_status: 'Approved' }).eq('id', inv.id);
+                                if (!error) {
+                                  alert("Quotation approved successfully!");
+                                  fetchData();
+                                } else {
+                                  alert("Failed to approve quotation: " + error.message);
+                                }
+                              }}
+                              className="inline-flex items-center px-2.5 py-1.5 border border-transparent shadow-sm text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                            >
+                              Approve
+                            </button>
+                          )}
                           <button
                             onClick={() => handleDownloadPdf(inv)}
                             disabled={downloadingInvoiceId === inv.id}

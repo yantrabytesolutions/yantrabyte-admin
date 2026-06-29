@@ -28,22 +28,17 @@ export function TrackTicket() {
       const cleanPhone = phone.replace(/\D/g, '').slice(-10);
       const cleanTicket = ticketNo.trim();
 
-      const { data, error: fetchError } = await supabase
-        .from('service_tickets')
-        .select('*')
-        .ilike('ticket_number', cleanTicket)
-        .like('customer_phone', `%${cleanPhone}%`)
-        .maybeSingle();
-
-      if (fetchError) throw fetchError;
-      if (!data) {
-        setError('No ticket found matching this number and phone combination.');
-      } else {
-        setTicket(data);
+      const res = await fetch(`http://localhost:4000/api/tickets/track/${encodeURIComponent(cleanTicket)}?phone=${encodeURIComponent(cleanPhone)}`);
+      if (!res.ok) {
+        if (res.status === 404) throw new Error('No ticket found matching this number and phone combination.');
+        throw new Error('Failed to fetch ticket status.');
       }
-    } catch (err) {
+      
+      const data = await res.json();
+      setTicket(data);
+    } catch (err: any) {
       console.error(err);
-      setError('Failed to fetch ticket status. Please try again.');
+      setError(err.message || 'Failed to fetch ticket status. Please try again.');
     } finally {
       setLoading(false);
     }

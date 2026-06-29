@@ -101,8 +101,19 @@ export const ERPUtils = {
         });
       }
     }
+    }
     if (invTransactions.length > 0) {
       await supabase.from('inventory_transactions').insert(invTransactions);
+      
+      // Update stock_count on products
+      for (const tx of invTransactions) {
+        // Fetch current stock
+        const { data: product } = await supabase.from('products').select('stock_count').eq('id', tx.product_id).single();
+        if (product) {
+          const newStock = (product.stock_count || 0) + tx.quantity_change;
+          await supabase.from('products').update({ stock_count: newStock }).eq('id', tx.product_id);
+        }
+      }
     }
   },
 
