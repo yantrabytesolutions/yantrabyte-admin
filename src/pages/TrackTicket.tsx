@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Search, PackageSearch, AlertCircle, Clock, CheckCircle2, MonitorPlay } from 'lucide-react';
-import { supabase } from '../lib/supabase';
 import type { ServiceTicket } from '../types';
 import SEO from '../components/SEO';
 
