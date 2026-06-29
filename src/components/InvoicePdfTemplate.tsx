@@ -188,8 +188,9 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ invoice }
             {invoice.doc_type === 'Quotation' ? (
               <>
                 <p>1. Estimate valid for 7 days.</p>
-                <p>2. Advance payment of 50% required.</p>
-                <p>3. Final amount may vary if hidden faults are found.</p>
+                <p>2. Advance payment of 85% required.</p>
+                <p>3. 15% payment on Delivery.</p>
+                <p>4. Final amount may vary if hidden faults are found.</p>
               </>
             ) : (
               <>
