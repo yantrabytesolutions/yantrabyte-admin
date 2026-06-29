@@ -5,8 +5,8 @@ import {
   PieChart, Pie, Cell
 } from 'recharts';
 import { format, subMonths, startOfMonth, parseISO } from 'date-fns';
-import { Invoice, Purchase, ServiceTicket } from '../types';
-import { AlertCircle, IndianRupee, TrendingDown, Clock, CheckCircle, Receipt, MessageSquare, Mail, Loader2, FileText } from 'lucide-react';
+import { Invoice, Purchase, ServiceTicket, Expense } from '../types';
+import { AlertCircle, IndianRupee, TrendingDown, TrendingUp, Clock, CheckCircle, Receipt, MessageSquare, Mail, Loader2, FileText } from 'lucide-react';
 import CustomerLedgerModal from './components/CustomerLedgerModal';
 
 interface OutstandingClient {
@@ -55,17 +55,19 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       // 1. Fetch data for the last 6 months
       const sixMonthsAgo = startOfMonth(subMonths(new Date(), 5)).toISOString();
       
-      const [invoicesRes, purchasesRes, ticketsRes, productsRes] = await Promise.all([
+      const [invoicesRes, purchasesRes, ticketsRes, productsRes, expensesRes] = await Promise.all([
         supabase.from('invoices').select('*').gte('created_at', sixMonthsAgo),
         supabase.from('purchases').select('*').gte('created_at', sixMonthsAgo),
         supabase.from('service_tickets').select('*'),
-        supabase.from('products').select('*')
+        supabase.from('products').select('*'),
+        supabase.from('expenses').select('*').gte('date', sixMonthsAgo)
       ]);
 
       const invoices = (invoicesRes.data || []) as Invoice[];
       const purchases = (purchasesRes.data || []) as Purchase[];
       const tickets = (ticketsRes.data || []) as ServiceTicket[];
       const products = (productsRes.data || []);
+      const expenses = (expensesRes.data || []) as Expense[];
       
       setLowStockProducts(products.filter(p => typeof p.stock_count === 'number' && p.stock_count < 5));
 
@@ -87,6 +89,9 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       let exp = 0;
       purchases.forEach(pur => {
         exp += Number(pur.grand_total) || 0;
+      });
+      expenses.forEach(ex => {
+        exp += Number(ex.amount) || 0;
       });
       setTotalExpenses(exp);
 
@@ -261,7 +266,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4">
            <div className="p-3 bg-emerald-100 text-emerald-600 rounded-lg"><IndianRupee className="w-6 h-6" /></div>
            <div>
@@ -277,17 +282,24 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
            </div>
          </div>
          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4">
+           <div className="p-3 bg-blue-100 text-blue-600 rounded-lg"><TrendingUp className="w-6 h-6" /></div>
+           <div>
+             <p className="text-xs font-semibold text-gray-500 uppercase">Net Profit (6m)</p>
+             <h3 className="text-2xl font-bold text-gray-900">₹{(totalRevenue - totalExpenses).toLocaleString('en-IN')}</h3>
+           </div>
+         </div>
+         <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4">
            <div className="p-3 bg-amber-100 text-amber-600 rounded-lg"><AlertCircle className="w-6 h-6" /></div>
            <div>
-             <p className="text-xs font-semibold text-gray-500 uppercase">Outstanding Dues</p>
-             <h3 className="text-2xl font-bold text-amber-600">₹{totalOutstanding.toLocaleString('en-IN')}</h3>
+             <p className="text-xs font-semibold text-gray-500 uppercase">Outstanding</p>
+             <h3 className="text-xl font-bold text-amber-600">₹{totalOutstanding.toLocaleString('en-IN')}</h3>
            </div>
          </div>
          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4">
            <div className="p-3 bg-blue-100 text-blue-600 rounded-lg"><Clock className="w-6 h-6" /></div>
            <div>
-             <p className="text-xs font-semibold text-gray-500 uppercase">Active Tickets</p>
-             <h3 className="text-2xl font-bold text-gray-900">{activeTickets}</h3>
+             <p className="text-xs font-semibold text-gray-500 uppercase">Tickets</p>
+             <h3 className="text-xl font-bold text-gray-900">{activeTickets}</h3>
            </div>
          </div>
          <div 
@@ -296,8 +308,8 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
          >
            <div className="p-3 bg-blue-100 text-blue-600 rounded-lg"><Receipt className="w-6 h-6" /></div>
            <div>
-             <p className="text-xs font-semibold text-gray-500 uppercase">Generated Invoices</p>
-             <h3 className="text-2xl font-bold text-gray-900">{totalInvoices}</h3>
+             <p className="text-xs font-semibold text-gray-500 uppercase">Invoices</p>
+             <h3 className="text-xl font-bold text-gray-900">{totalInvoices}</h3>
            </div>
          </div>
       </div>
