@@ -35,9 +35,10 @@ function numberToWords(num: number): string {
 
 interface Props {
   invoice: Invoice;
+  companySignature?: string;
 }
 
-export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ invoice }, ref) => {
+export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ invoice, companySignature }, ref) => {
   const items: InvoiceItem[] = Array.isArray(invoice.items) ? invoice.items : [];
   
   return (
@@ -229,7 +230,11 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ invoice }
           <div className="text-center mt-auto flex flex-col justify-end pb-2">
             <div className="font-bold text-[12px]" style={{ color: '#000' }}>For YantraByte Solutions</div>
             <div className="flex justify-center my-1" style={{ overflow: 'hidden' }}>
-              <img src="/seal.png" alt="Seal" style={{ height: '75px', maxWidth: '100px', width: 'auto', objectFit: 'contain' }} crossOrigin="anonymous" />
+              {companySignature ? (
+                <img src={companySignature} alt="Company Signature" style={{ height: '75px', maxWidth: '150px', width: 'auto', objectFit: 'contain' }} crossOrigin="anonymous" />
+              ) : (
+                <img src="/seal.png" alt="Seal" style={{ height: '75px', maxWidth: '100px', width: 'auto', objectFit: 'contain' }} crossOrigin="anonymous" />
+              )}
             </div>
             <div className="font-bold text-[10px]" style={{ color: '#000' }}>RAMESH A S</div>
             <div className="text-[9px]" style={{ color: '#444444' }}>Authorized Signatory</div>

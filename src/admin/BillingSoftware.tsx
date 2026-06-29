@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Invoice, InvoiceItem, ServiceTicket, Product, Customer, Purchase } from '../types';
-import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt, Mail, FileSpreadsheet, Pencil, MessageSquare, Send, List, Search, Clock } from 'lucide-react';
+import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt, Mail, FileSpreadsheet, Pencil, MessageSquare, Send, List, Search, Clock, Settings } from 'lucide-react';
 import { sendTelegramNotification } from '../utils/telegram';
 import html2pdf from 'html2pdf.js';
+
 import { QRCodeSVG } from 'qrcode.react';
+import SignatureCanvas from 'react-signature-canvas';
 import { PRESET_ITEMS } from './presetItems';
 import { downloadExcelWorkbook } from '../utils/spreadsheetXml';
 import { appendBackupRow } from '../utils/googleSheetBackup';
@@ -47,7 +49,7 @@ function numberToWords(num: number): string {
 interface BillingSoftwareProps {
   initialAutofillTicket?: ServiceTicket | null;
   onClearAutofill?: () => void;
-  initialTab?: 'editor' | 'history' | 'quotations' | 'pending';
+  initialTab?: 'editor' | 'history' | 'quotations' | 'pending' | 'settings';
 }
 
 type DeliveryPopup = {
@@ -132,6 +134,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const [quoteAdvancePercent, setQuoteAdvancePercent] = useState('85');
   const [warrantyMonths, setWarrantyMonths] = useState<number | ''>('');
   const [items, setItems] = useState<InvoiceItem[]>([]);
+  const [companySignatureBase64, setCompanySignatureBase64] = useState<string | null>(null);
+  const signatureCanvasRef = useRef<any>(null);
   
   const [itemDesc, setItemDesc] = useState('');
   const [itemQty, setItemQty] = useState(1);
@@ -154,7 +158,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const [printInvoiceNumber, setPrintInvoiceNumber] = useState('');
   const [deliveryPopup, setDeliveryPopup] = useState<DeliveryPopup>(null);
 
-  const [activeTab, setActiveTab] = useState<'editor' | 'history' | 'quotations' | 'pending'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'editor' | 'history' | 'quotations' | 'pending' | 'settings'>(initialTab);
   const [historySearchTerm, setHistorySearchTerm] = useState('');
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
   const [historyDrawerData, setHistoryDrawerData] = useState<{
@@ -212,6 +216,22 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       fetchCustomers();
       fetchServiceTickets();
       fetchProducts();
+      fetchCompanySignature();
+    };
+
+    const fetchCompanySignature = async () => {
+      try {
+        const { data } = await supabase
+          .from('site_settings')
+          .select('value')
+          .eq('key', 'company_signature_url')
+          .single();
+        if (data && data.value) {
+          setCompanySignatureBase64(data.value);
+        }
+      } catch (err) {
+        console.warn('Could not fetch company signature', err);
+      }
     };
 
     loadBillingData();
@@ -812,6 +832,35 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleSaveSignature = async () => {
+    if (!signatureCanvasRef.current || signatureCanvasRef.current.isEmpty()) {
+      showToast('Please draw a signature first', 'error');
+      return;
+    }
+    const signatureBase64 = signatureCanvasRef.current.getTrimmedCanvas().toDataURL('image/png');
+    setCompanySignatureBase64(signatureBase64);
+    
+    try {
+      const { data: existing } = await supabase.from('site_settings').select('id').eq('key', 'company_signature_url').single();
+      if (existing) {
+        await supabase.from('site_settings').update({ value: signatureBase64 }).eq('id', existing.id);
+      } else {
+        await supabase.from('site_settings').insert([{ key: 'company_signature_url', value: signatureBase64 }]);
+      }
+      showToast('Company Signature saved securely!');
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to save signature securely', 'error');
+    }
+  };
+
+  const handleClearSignature = () => {
+    if (signatureCanvasRef.current) {
+      signatureCanvasRef.current.clear();
+    }
+    setCompanySignatureBase64(null);
   };
 
   const handleSave = async (action: 'save' | 'download' | 'email' = 'save') => {
@@ -1439,8 +1488,15 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         >
           <Clock className="w-4 h-4 mr-2" /> Pending Payments
         </button>
+        <button 
+          onClick={() => setActiveTab('settings')}
+          className={`py-3 px-6 text-sm font-medium border-b-2 transition-colors flex items-center whitespace-nowrap ${activeTab === 'settings' ? 'border-gray-800 text-gray-800 bg-gray-100 rounded-t-lg' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+        >
+          <Settings className="w-4 h-4 mr-2" /> Settings
+        </button>
       </div>
 
+      {/* Main Content Area */}
       {activeTab === 'editor' ? (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
@@ -1858,7 +1914,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           </div>
         </div>
       </div>
-      ) : (
+      ) : activeTab !== 'settings' ? (
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <h3 className="text-xl font-bold text-gray-800">Saved Documents</h3>
@@ -1974,7 +2030,49 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             </table>
           </div>
         </div>
-      )}
+      ) : activeTab === 'settings' ? (
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <h3 className="text-xl font-bold text-gray-800 mb-6 border-b pb-4">Billing Settings</h3>
+          
+          <div className="max-w-2xl">
+            <h4 className="text-lg font-medium text-gray-800 mb-2">Company Signature / Stamp</h4>
+            <p className="text-sm text-gray-600 mb-6">Draw your authorized signature or stamp. This will appear at the bottom of all generated invoices and quotations instead of the default seal.</p>
+            
+            <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-4 flex flex-col items-center">
+              {companySignatureBase64 ? (
+                <div className="text-center w-full">
+                  <div className="bg-white p-4 inline-block rounded border mb-4 shadow-sm">
+                    <img src={companySignatureBase64} alt="Company Signature" className="max-h-24 object-contain" />
+                  </div>
+                  <div className="flex justify-center gap-3">
+                    <button onClick={handleClearSignature} className="px-4 py-2 bg-red-50 text-red-600 rounded-md hover:bg-red-100 font-medium text-sm transition-colors border border-red-200">
+                      Remove Signature
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="w-full flex flex-col items-center">
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 w-full max-w-sm mb-4">
+                    <SignatureCanvas 
+                      ref={signatureCanvasRef} 
+                      canvasProps={{ className: 'w-full h-40 rounded-lg cursor-crosshair' }} 
+                      backgroundColor="white"
+                    />
+                  </div>
+                  <div className="flex justify-center gap-3 w-full max-w-sm">
+                    <button onClick={handleClearSignature} className="flex-1 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 font-medium text-sm transition-colors">
+                      Clear Canvas
+                    </button>
+                    <button onClick={handleSaveSignature} className="flex-1 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium text-sm transition-colors shadow-sm">
+                      Save Signature
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {/* --- HIDDEN PRINT TEMPLATE --- */}
       <div style={{ position: 'absolute', top: 0, left: 0, width: '794px', opacity: 0, pointerEvents: 'none', zIndex: -1000 }}>
@@ -2173,7 +2271,11 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               <div className="text-center mt-auto flex flex-col justify-end pb-2">
                 <div className="font-bold text-[12px]" style={{ color: '#000' }}>For YantraByte Solutions</div>
                 <div className="flex justify-center my-1" style={{ overflow: 'hidden' }}>
-                  <img src="/seal.png" alt="Seal" style={{ height: '75px', maxWidth: '100px', width: 'auto', objectFit: 'contain' }} crossOrigin="anonymous" />
+                  {companySignatureBase64 ? (
+                    <img src={companySignatureBase64} alt="Company Signature" style={{ height: '75px', maxWidth: '150px', width: 'auto', objectFit: 'contain' }} crossOrigin="anonymous" />
+                  ) : (
+                    <img src="/seal.png" alt="Seal" style={{ height: '75px', maxWidth: '100px', width: 'auto', objectFit: 'contain' }} crossOrigin="anonymous" />
+                  )}
                 </div>
                 <div className="font-bold text-[10px]" style={{ color: '#000' }}>RAMESH A S</div>
                 <div className="text-[9px]" style={{ color: '#444444' }}>Authorized Signatory</div>

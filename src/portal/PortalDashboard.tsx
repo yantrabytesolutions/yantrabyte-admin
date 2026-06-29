@@ -20,6 +20,8 @@ export default function PortalDashboard() {
   const navigate = useNavigate();
   const phone = sessionStorage.getItem('portal_phone');
 
+  const [companySignatureBase64, setCompanySignatureBase64] = useState<string | null>(null);
+
   useEffect(() => {
     if (!phone) {
       navigate('/portal');
@@ -46,6 +48,16 @@ export default function PortalDashboard() {
 
       const fetchedInvoices = (invData || []) as Invoice[];
       const fetchedTickets = (ticketData || []) as ServiceTicket[];
+
+      const { data: settingData } = await supabase
+        .from('site_settings')
+        .select('value')
+        .eq('key', 'company_signature_url')
+        .single();
+      
+      if (settingData && settingData.value) {
+        setCompanySignatureBase64(settingData.value);
+      }
 
       setInvoices(fetchedInvoices);
       setTickets(fetchedTickets);
@@ -286,10 +298,12 @@ export default function PortalDashboard() {
       {/* Hidden Invoice Template for PDF Generation */}
       <div style={{ position: 'absolute', top: 0, left: 0, width: '794px', opacity: 0, pointerEvents: 'none', zIndex: -1000 }}>
         {activeInvoiceForPdf && (
-          <InvoicePdfTemplate 
-            ref={printRef} 
-            invoice={activeInvoiceForPdf} 
-          />
+          <div ref={printRef} className="bg-white text-black" style={{ width: '794px', height: '1115px', position: 'relative' }}>
+            <InvoicePdfTemplate 
+              invoice={activeInvoiceForPdf} 
+              companySignature={companySignatureBase64 || undefined} 
+            />
+          </div>
         )}
       </div>
     </div>

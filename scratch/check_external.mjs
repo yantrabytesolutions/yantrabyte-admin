@@ -1,0 +1,24 @@
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = 'https://eyajwjrafudarccvcada.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5YWp3anJhZnVkYXJjY3ZjYWRhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODkxODQ2MiwiZXhwIjoyMDk0NDk0NDYyfQ.9A9D9dPb_GoHJiREuIWML1PATN-es4MC9_DE8wvK76g';
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+async function check() {
+  const { data, error } = await supabase
+    .from('external_repairs')
+    .select('*')
+    .or('sent_to.ilike.%guru%,material_name.ilike.%guru%,notes.ilike.%guru%,sent_to.ilike.%mobile%,material_name.ilike.%mobile%,notes.ilike.%mobile%');
+    
+  if (error) {
+    console.error(error);
+  } else {
+    console.log("External Repairs for guru or mobile:");
+    data.forEach(t => {
+      console.log(JSON.stringify(t, null, 2));
+    });
+  }
+}
+
+check();

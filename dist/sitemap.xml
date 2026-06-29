@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Static Pages -->
+  <url><loc>https://yantrabyte.anantatechcare.com/</loc><priority>1.0</priority><lastmod>2026-06-13</lastmod><changefreq>weekly</changefreq></url>
+  <url><loc>https://yantrabyte.anantatechcare.com/about</loc><priority>0.8</priority><lastmod>2026-06-13</lastmod><changefreq>monthly</changefreq></url>
+  <url><loc>https://yantrabyte.anantatechcare.com/services</loc><priority>0.9</priority><lastmod>2026-06-13</lastmod><changefreq>weekly</changefreq></url>
+  <url><loc>https://yantrabyte.anantatechcare.com/industries</loc><priority>0.8</priority><lastmod>2026-06-13</lastmod><changefreq>monthly</changefreq></url>
+  <url><loc>https://yantrabyte.anantatechcare.com/testimonials</loc><priority>0.7</priority><lastmod>2026-06-13</lastmod><changefreq>monthly</changefreq></url>
+  <url><loc>https://yantrabyte.anantatechcare.com/blog</loc><priority>0.8</priority><lastmod>2026-06-13</lastmod><changefreq>weekly</changefreq></url>
+  <url><loc>https://yantrabyte.anantatechcare.com/contact</loc><priority>0.9</priority><lastmod>2026-06-13</lastmod><changefreq>monthly</changefreq></url>
+  <url><loc>https://yantrabyte.anantatechcare.com/track-ticket</loc><priority>0.8</priority><lastmod>2026-06-13</lastmod><changefreq>monthly</changefreq></url>
+  <url><loc>https://yantrabyte.anantatechcare.com/privacy</loc><priority>0.5</priority><lastmod>2026-06-13</lastmod><changefreq>yearly</changefreq></url>
+  <url><loc>https://yantrabyte.anantatechcare.com/terms</loc><priority>0.5</priority><lastmod>2026-06-13</lastmod><changefreq>yearly</changefreq></url>
+
+  <!-- Service Pages -->
+  <url><loc>https://yantrabyte.anantatechcare.com/services/cctv-installation</loc><lastmod>2026-06-13</lastmod><changefreq>monthly</changefreq></url>
+  <url><loc>https://yantrabyte.anantatechcare.com/services/laptop-repair</loc><lastmod>2026-06-13</lastmod><changefreq>monthly</changefreq></url>
+  <url><loc>https://yantrabyte.anantatechcare.com/services/desktop-repair</loc><lastmod>2026-06-13</lastmod><changefreq>monthly</changefreq></url>
+  <url><loc>https://yantrabyte.anantatechcare.com/services/networking</loc><lastmod>2026-06-13</lastmod><changefreq>monthly</changefreq></url>
+  <url><loc>https://yantrabyte.anantatechcare.com/services/printer-services</loc><lastmod>2026-06-13</lastmod><changefreq>monthly</changefreq></url>
+  <url><loc>https://yantrabyte.anantatechcare.com/services/am-support</loc><lastmod>2026-06-13</lastmod><changefreq>monthly</changefreq></url>
+  <url><loc>https://yantrabyte.anantatechcare.com/services/wifi-solutions</loc><lastmod>2026-06-13</lastmod><changefreq>monthly</changefreq></url>
+  <url><loc>https://yantrabyte.anantatechcare.com/services/server-setup</loc><lastmod>2026-06-13</lastmod><changefreq>monthly</changefreq></url>
+  <url><loc>https://yantrabyte.anantatechcare.com/services/data-recovery</loc><lastmod>2026-06-13</lastmod><changefreq>monthly</changefreq></url>
+  <url><loc>https://yantrabyte.anantatechcare.com/services/cloud-solutions</loc><lastmod>2026-06-13</lastmod><changefreq>monthly</changefreq></url>
+  <url><loc>https://yantrabyte.anantatechcare.com/services/access-control</loc><lastmod>2026-06-13</lastmod><changefreq>monthly</changefreq></url>
+  <url><loc>https://yantrabyte.anantatechcare.com/services/it-consulting</loc><lastmod>2026-06-13</lastmod><changefreq>monthly</changefreq></url>
+  <url><loc>https://yantrabyte.anantatechcare.com/services/hardware-upgrades</loc><lastmod>2026-06-13</lastmod><changefreq>monthly</changefreq></url>
+
+  <!-- Blog Pages -->
+  <url><loc>https://yantrabyte.anantatechcare.com/blog/tips-choosing-right-cctv-system</loc><lastmod>2026-06-13</lastmod><changefreq>monthly</changefreq></url>
+  <url><loc>https://yantrabyte.anantatechcare.com/blog/secure-office-network-cyber-threats</loc><lastmod>2026-06-13</lastmod><changefreq>monthly</changefreq></url>
+  <url><loc>https://yantrabyte.anantatechcare.com/blog/complete-guide-office-wifi-setup</loc><lastmod>2026-06-13</lastmod><changefreq>monthly</changefreq></url>
+  <url><loc>https://yantrabyte.anantatechcare.com/blog/smart-office-automation-boost-productivity</loc><lastmod>2026-06-13</lastmod><changefreq>monthly</changefreq></url>
+</urlset>
