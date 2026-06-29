@@ -47,6 +47,18 @@ export const ERPUtils = {
 
     // Delete any existing journal entries for this invoice to handle updates
     await supabase.from('journal_entries').delete().eq('reference_id', invoice.id);
+    
+    // Revert existing inventory transactions to prevent double counting
+    const { data: oldTx } = await supabase.from('inventory_transactions').select('*').eq('reference_id', invoice.id);
+    if (oldTx && oldTx.length > 0) {
+      for (const tx of oldTx) {
+        const { data: product } = await supabase.from('products').select('stock_count').eq('id', tx.product_id).single();
+        if (product) {
+          const revertedStock = (product.stock_count || 0) - tx.quantity_change;
+          await supabase.from('products').update({ stock_count: revertedStock }).eq('id', tx.product_id);
+        }
+      }
+    }
     await supabase.from('inventory_transactions').delete().eq('reference_id', invoice.id);
 
     // 2. Journal Entry for the Sale
@@ -170,6 +182,18 @@ export const ERPUtils = {
     }
 
     await supabase.from('journal_entries').delete().eq('reference_id', purchase.id);
+    
+    // Revert existing inventory transactions to prevent double counting
+    const { data: oldTxPurchase } = await supabase.from('inventory_transactions').select('*').eq('reference_id', purchase.id);
+    if (oldTxPurchase && oldTxPurchase.length > 0) {
+      for (const tx of oldTxPurchase) {
+        const { data: product } = await supabase.from('products').select('stock_count').eq('id', tx.product_id).single();
+        if (product) {
+          const revertedStock = (product.stock_count || 0) - tx.quantity_change;
+          await supabase.from('products').update({ stock_count: revertedStock }).eq('id', tx.product_id);
+        }
+      }
+    }
     await supabase.from('inventory_transactions').delete().eq('reference_id', purchase.id);
 
     // Journal Entry for Purchase
@@ -207,6 +231,15 @@ export const ERPUtils = {
     }
     if (invTransactions.length > 0) {
       await supabase.from('inventory_transactions').insert(invTransactions);
+      
+      // Update stock_count on products (increase for purchase)
+      for (const tx of invTransactions) {
+        const { data: product } = await supabase.from('products').select('stock_count').eq('id', tx.product_id).single();
+        if (product) {
+          const newStock = (product.stock_count || 0) + tx.quantity_change;
+          await supabase.from('products').update({ stock_count: newStock }).eq('id', tx.product_id);
+        }
+      }
     }
   }
 };
