@@ -647,7 +647,13 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
   const generateInvoiceNo = (type: string = docType) => {
     const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const seq = (invoices.length + 1).toString().padStart(3, '0');
+    let typeCount = 0;
+    if (type === 'Quotation') {
+      typeCount = invoices.filter(i => i.doc_type === 'Quotation').length;
+    } else {
+      typeCount = invoices.filter(i => i.doc_type !== 'Quotation').length;
+    }
+    const seq = (typeCount + 1).toString().padStart(3, '0');
     const prefix = type === 'Quotation' ? 'YBQ' : 'YBS';
     return `${prefix}-${datePart}-${seq}`;
   };
