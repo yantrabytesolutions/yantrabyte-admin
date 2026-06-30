@@ -125,6 +125,19 @@ serve(async (req) => {
       throw new Error('Upload failed: ' + uploadData.error.message);
     }
 
+    // Set sharing permissions to 'Anyone with the link can view'
+    await fetch(`https://www.googleapis.com/drive/v3/files/${uploadData.id}/permissions`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        role: 'reader',
+        type: 'anyone'
+      })
+    });
+
     return new Response(
       JSON.stringify({ ok: true, fileId: uploadData.id }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

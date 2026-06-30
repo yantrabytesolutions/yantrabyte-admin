@@ -120,6 +120,19 @@ async function uploadToDrive(fileName: string, base64Data: string, folderId: str
     throw new Error('Failed to upload file content: ' + errorBody);
   }
 
+  // Step 2.5: Set sharing permissions to 'Anyone with the link can view'
+  await fetch(`https://www.googleapis.com/drive/v3/files/${meta.id}/permissions`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      role: 'reader',
+      type: 'anyone'
+    })
+  });
+
   // Step 3: Get webViewLink
   const linkRes = await fetch(`https://www.googleapis.com/drive/v3/files/${meta.id}?fields=webViewLink`, {
     headers: {
