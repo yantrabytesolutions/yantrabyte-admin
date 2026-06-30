@@ -790,5 +790,11 @@ function exportCurrentSheetToPdf_(spreadsheetId, gid, fileName) {
 
   var token    = ScriptApp.getOAuthToken();
   var response = UrlFetchApp.fetch(url, { headers: { Authorization: 'Bearer ' + token } });
-  return folder.createFile(response.getBlob().setName(fileName + '.pdf'));
+  var file = folder.createFile(response.getBlob().setName(fileName + '.pdf'));
+  try {
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  } catch (e) {
+    Logger.log('Sharing failed: ' + e.message);
+  }
+  return file;
 }
