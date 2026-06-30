@@ -739,7 +739,7 @@ function createPrintableInvoiceSheet_(ss, data) {
   sh.getRange(fr+4,4,1,2).merge().setValue('  IFSC: NESF0000333').setFontSize(8);
   sh.getRange(fr+5,4,1,2).merge().setValue('  UPI: s0424237152@slc').setFontSize(8).setFontWeight('bold');
 
-  sh.getRange(fr+6,4,5,2).merge().setValue('For YantraByte Solutions\n\n\nRAMESH A S\nAuthorized Signatory')
+  sh.getRange(fr+6,4,5,2).merge().setValue('For YantraByte Solutions')
     .setHorizontalAlignment('center').setVerticalAlignment('bottom')
     .setFontWeight('bold').setFontSize(9);
 

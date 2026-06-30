@@ -918,8 +918,6 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                 <div className="h-16 w-32 flex items-center justify-center relative my-0.5">
                   <img src="/seal.png" alt="Seal" style={{ maxHeight: '75%', maxWidth: '75%', objectFit: 'contain' }} crossOrigin="anonymous" />
                 </div>
-                <p className="font-bold mt-1" style={{ color: '#000000', fontSize: '11px' }}>RAMESH A S</p>
-                <p style={{ color: '#444444', fontSize: '10px' }}>Authorized Signatory</p>
               </div>
             </div>
           </div>
