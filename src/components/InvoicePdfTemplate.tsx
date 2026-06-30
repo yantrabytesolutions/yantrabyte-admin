@@ -236,8 +236,8 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ invoice, 
                 <img src="/seal.png" alt="Seal" style={{ height: '75px', maxWidth: '100px', width: 'auto', objectFit: 'contain' }} crossOrigin="anonymous" />
               )}
             </div>
-            <div className="font-bold text-[10px]" style={{ color: '#000' }}>RAMESH A S</div>
-            <div className="text-[9px]" style={{ color: '#444444' }}>Authorized Signatory</div>
+            <div className="font-bold text-[10px]" style={{ color: '#000', padding: '0 100px' }}>&nbsp;</div>
+            <div className="text-[9px]" style={{ color: '#444444' }}>&nbsp;</div>
           </div>
         </div>
 
