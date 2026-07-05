@@ -51,32 +51,32 @@ interface FormField {
 
 // ─── Section Config ─────────────────────────────────────────────────────────
 
-const SECTION_CONFIG: Record<Section, { label: string; icon: React.ElementType; table: string; orderField: string; publishedField?: string }> = {
-  dashboard: { label: 'Dashboard', icon: LayoutDashboard, table: '', orderField: '' },
-  calendar: { label: 'Calendar', icon: Calendar, table: '', orderField: '' },
-  pages: { label: 'Pages', icon: FileText, table: 'pages', orderField: 'page_order', publishedField: 'is_published' },
-  services: { label: 'Services', icon: Wrench, table: 'services', orderField: 'sort_order', publishedField: 'is_published' },
-  products: { label: 'Products', icon: Package, table: 'products', orderField: 'sort_order', publishedField: 'is_published' },
-  testimonials: { label: 'Testimonials', icon: MessageSquareQuote, table: 'testimonials', orderField: 'sort_order', publishedField: 'is_published' },
-  blog: { label: 'Blog Posts', icon: PenTool, table: 'blog_posts', orderField: 'sort_order', publishedField: 'is_published' },
-  team: { label: 'Team Members', icon: Users, table: 'team_members', orderField: 'sort_order', publishedField: 'is_published' },
-  careers: { label: 'Careers', icon: Briefcase, table: 'careers', orderField: 'sort_order', publishedField: 'is_active' },
-  industries: { label: 'Industries', icon: Building2, table: 'industries', orderField: 'sort_order', publishedField: 'is_published' },
-  faqs: { label: 'FAQs', icon: HelpCircle, table: 'faqs', orderField: 'sort_order', publishedField: 'is_published' },
-  gallery: { label: 'Gallery', icon: Image, table: 'gallery_images', orderField: 'sort_order', publishedField: 'is_published' },
-  'client-logos': { label: 'Client Logos', icon: Award, table: 'client_logos', orderField: 'sort_order', publishedField: 'is_published' },
-  contacts: { label: 'Contact Submissions', icon: Mail, table: 'contact_submissions', orderField: 'created_at' },
-  tickets: { label: 'Service Ticket', icon: Ticket, table: 'service_tickets', orderField: 'created_at' },
-  billing: { label: 'Billing Software', icon: Receipt, table: 'invoices', orderField: 'created_at' },
-  purchase: { label: 'Purchase Entry', icon: Truck, table: 'purchases', orderField: 'created_at' },
-  external: { label: 'External Repairs', icon: ExternalLink, table: '', orderField: '' },
-  inventory: { label: 'Inventory Movement', icon: Package, table: 'inventory_transactions', orderField: 'transaction_date' },
-  reports: { label: 'Financial Reports', icon: Activity, table: '', orderField: '' },
-  expenses: { label: 'Expenses', icon: IndianRupee, table: 'expenses', orderField: 'date' },
-  khata: { label: 'Khata', icon: IndianRupee, table: 'khata', orderField: 'date' },
-  amc: { label: 'AMC Contracts', icon: Shield, table: 'amc_contracts', orderField: 'end_date' },
-  settings: { label: 'Site Settings', icon: Settings, table: 'site_settings', orderField: 'key' },
-  customers: { label: 'Customers', icon: Users, table: 'customers', orderField: 'created_at' },
+const SECTION_CONFIG: Record<Section, { label: string; icon: React.ElementType; table: string; orderField: string; publishedField?: string; subtitle?: string }> = {
+  dashboard: { label: 'Dashboard', icon: LayoutDashboard, table: '', orderField: '', subtitle: 'Overview of your business metrics' },
+  calendar: { label: 'Calendar', icon: Calendar, table: '', orderField: '', subtitle: 'Manage appointments and schedules' },
+  pages: { label: 'Pages', icon: FileText, table: 'pages', orderField: 'page_order', publishedField: 'is_published', subtitle: 'Manage your website content pages' },
+  services: { label: 'Services', icon: Wrench, table: 'services', orderField: 'sort_order', publishedField: 'is_published', subtitle: 'Manage service offerings' },
+  products: { label: 'Products', icon: Package, table: 'products', orderField: 'sort_order', publishedField: 'is_published', subtitle: 'Manage product catalog' },
+  testimonials: { label: 'Testimonials', icon: MessageSquareQuote, table: 'testimonials', orderField: 'sort_order', publishedField: 'is_published', subtitle: 'Manage customer testimonials' },
+  blog: { label: 'Blog Posts', icon: PenTool, table: 'blog_posts', orderField: 'sort_order', publishedField: 'is_published', subtitle: 'Manage blog content' },
+  team: { label: 'Team Members', icon: Users, table: 'team_members', orderField: 'sort_order', publishedField: 'is_published', subtitle: 'Manage team profiles' },
+  careers: { label: 'Careers', icon: Briefcase, table: 'careers', orderField: 'sort_order', publishedField: 'is_active', subtitle: 'Manage job postings' },
+  industries: { label: 'Industries', icon: Building2, table: 'industries', orderField: 'sort_order', publishedField: 'is_published', subtitle: 'Manage industry verticals' },
+  faqs: { label: 'FAQs', icon: HelpCircle, table: 'faqs', orderField: 'sort_order', publishedField: 'is_published', subtitle: 'Manage frequently asked questions' },
+  gallery: { label: 'Gallery', icon: Image, table: 'gallery_images', orderField: 'sort_order', publishedField: 'is_published', subtitle: 'Manage image gallery' },
+  'client-logos': { label: 'Client Logos', icon: Award, table: 'client_logos', orderField: 'sort_order', publishedField: 'is_published', subtitle: 'Manage client and partner logos' },
+  contacts: { label: 'Contact Submissions', icon: Mail, table: 'contact_submissions', orderField: 'created_at', subtitle: 'View customer inquiries' },
+  tickets: { label: 'Service Ticket', icon: Ticket, table: 'service_tickets', orderField: 'created_at', subtitle: 'Manage repair and service tickets' },
+  billing: { label: 'Billing Software', icon: Receipt, table: 'invoices', orderField: 'created_at', subtitle: 'Create and manage invoices' },
+  purchase: { label: 'Purchase Entry', icon: Truck, table: 'purchases', orderField: 'created_at', subtitle: 'Manage supplier purchases' },
+  external: { label: 'External Repairs', icon: ExternalLink, table: '', orderField: '', subtitle: 'Manage outsourced repairs' },
+  inventory: { label: 'Inventory Movement', icon: Package, table: 'inventory_transactions', orderField: 'transaction_date', subtitle: 'Track stock in and out' },
+  reports: { label: 'Financial Reports', icon: Activity, table: '', orderField: '', subtitle: 'View accounting reports' },
+  expenses: { label: 'Expenses', icon: IndianRupee, table: 'expenses', orderField: 'date', subtitle: 'Track operational expenses' },
+  khata: { label: 'Khata', icon: IndianRupee, table: 'khata', orderField: 'date', subtitle: 'View financial ledgers and accounting' },
+  amc: { label: 'AMC Contracts', icon: Shield, table: 'amc_contracts', orderField: 'end_date', subtitle: 'Manage Annual Maintenance Contracts' },
+  settings: { label: 'Site Settings', icon: Settings, table: 'site_settings', orderField: 'key', subtitle: 'Configure global website settings' },
+  customers: { label: 'Customers', icon: Users, table: 'customers', orderField: 'created_at', subtitle: 'Manage customer database' },
 };
 
 // ─── Form Field Definitions ─────────────────────────────────────────────────
@@ -2279,7 +2279,7 @@ export default function AdminPanel() {
               <h2 className="text-white font-semibold text-lg">
                 {SECTION_CONFIG[activeSection]?.label || 'Dashboard'}
               </h2>
-              <p className="text-[#64748B] text-xs">Manage your website content</p>
+              <p className="text-[#64748B] text-xs">{SECTION_CONFIG[activeSection]?.subtitle || 'Manage your website content'}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
