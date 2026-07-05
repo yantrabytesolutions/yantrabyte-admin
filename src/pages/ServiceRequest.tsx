@@ -264,7 +264,7 @@ export default function ServiceRequest() {
       let ticketNumber = '';
       let insertSuccess = false;
       let insertError = null;
-      let maxRetries = 3;
+      const maxRetries = 3;
       let currentTry = 0;
 
       while (!insertSuccess && currentTry < maxRetries) {

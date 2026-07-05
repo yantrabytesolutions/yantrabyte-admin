@@ -212,7 +212,7 @@ Deno.serve(async (req) => {
         }
         finalRow.push(fileUrl);
       }
-    }
+
     }
 
     // Set headers if sheet is empty
