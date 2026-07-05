@@ -370,14 +370,18 @@ Deno.serve(async (req) => {
     const driveFolderId = Deno.env.get('GOOGLE_DRIVE_FOLDER_ID') || '';
     
     let driveViewLink: string | null = null;
+    let driveErrorMsg: string | null = null;
     if (pdfBytes && clientId && clientSecret && refreshToken && driveFolderId) {
       try {
         const driveToken = await getUserOAuthToken(clientId, clientSecret, refreshToken);
         driveViewLink = await uploadPdfToDrive(driveToken, driveFolderId, pdfFilename, pdfBytes);
         console.log('Drive link:', driveViewLink);
       } catch (driveErr) {
+        driveErrorMsg = String(driveErr);
         console.error('Drive upload error:', driveErr);
       }
+    } else {
+        driveErrorMsg = `Missing secrets. clientId:${!!clientId}, clientSecret:${!!clientSecret}, refreshToken:${!!refreshToken}, driveFolderId:${!!driveFolderId}`;
     }
 
     if (!gmailUser || !gmailPass) {
@@ -535,7 +539,11 @@ Deno.serve(async (req) => {
     const emailOk = true;
 
     return new Response(
+<<<<<<< HEAD
       JSON.stringify({ ok: true, email: { ok: emailOk, pdf: !!pdfBytes, pdfError: pdfErrorStr, pdfBase64 }, telegram: { ok: !!tgToken }, storage: { ok: !!driveViewLink, url: driveViewLink } }),
+=======
+      JSON.stringify({ ok: true, email: { ok: true, pdf: !!pdfBase64 }, telegram: { ok: !!tgToken }, drive: { ok: !!driveViewLink, link: driveViewLink, error: driveErrorMsg } }),
+>>>>>>> 1ec7463 (chore: refactor billing software and update typings)
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (err) {

@@ -12,7 +12,11 @@ import { downloadExcelWorkbook } from '../utils/spreadsheetXml';
 import { appendBackupRow } from '../utils/googleSheetBackup';
 import { uploadInvoiceToDrive } from '../utils/googleDriveBackup';
 import { ERPUtils } from '../utils/erp';
+<<<<<<< HEAD
 import CustomerLedgerModal from './components/CustomerLedgerModal';
+=======
+import { InvoicePdfTemplate } from '../components/InvoicePdfTemplate';
+>>>>>>> 1ec7463 (chore: refactor billing software and update typings)
 
 // --- Utility Functions ---
 function numberToWords(num: number): string {
@@ -530,6 +534,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setIsRecurring(inv.is_recurring || false);
     setRecurringInterval(inv.recurring_interval || 'monthly');
     setTermsConditions(inv.terms_conditions || '');
+<<<<<<< HEAD
     setWarrantyMonths((inv as any).warranty_months || '');
     
     let parsedItems = inv.items;
@@ -542,6 +547,10 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     }
     setItems(Array.isArray(parsedItems) ? parsedItems : []);
     
+=======
+    setWarrantyMonths(inv.warranty_months || '');
+    setItems(inv.items || []);
+>>>>>>> 1ec7463 (chore: refactor billing software and update typings)
     window.scrollTo({ top: 0, behavior: 'smooth' });
     showToast(`Invoice ${inv.invoice_no} loaded for editing`);
   };
@@ -568,7 +577,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setAdvancePaid(inv.advance_paid);
     setPaymentMode(inv.payment_mode || 'Not specified');
     setDueDate(inv.due_date || '');
-    setWarrantyMonths((inv as any).warranty_months || '');
+    setWarrantyMonths(inv.warranty_months || '');
     setItems(inv.items || []);
     
     showToast(`Converted quotation ${inv.invoice_no} to a new draft Invoice! Click Save or Print to finalize.`);
@@ -611,7 +620,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
     if (!phone) { showToast('No phone number available', 'error'); return; }
     
-    const pdfUrl = (inv as any).pdf_url;
+    const pdfUrl = inv.pdf_url;
     let text = `Hi ${inv.customer_name}, your ${inv.doc_type || 'Invoice'} ${inv.invoice_no} for ₹${inv.grand_total} has been generated. Thank you for your business!`;
     if (pdfUrl) text += `\n\nYou can view and download your ${inv.doc_type || 'Invoice'} here: ${pdfUrl}`;
     
@@ -644,6 +653,26 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const totalOutstanding = invoices.filter(i => i.doc_type === 'Invoice').reduce((acc, i) => acc + Math.max(i.balance_due || 0, 0), 0);
   const invoiceCount = invoices.filter(i => i.doc_type === 'Invoice').length;
   const quoteCount = invoices.filter(i => i.doc_type === 'Quotation').length;
+
+  const generateInvoiceNoAsync = async (type: string = docType) => {
+    const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const prefix = type === 'Quotation' ? 'YBQ' : 'YBS';
+    const basePrefix = `${prefix}-${datePart}-`;
+    
+    const { data } = await supabase
+      .from('invoices')
+      .select('invoice_no')
+      .like('invoice_no', `${basePrefix}%`)
+      .order('invoice_no', { ascending: false })
+      .limit(1);
+      
+    let seq = 1;
+    if (data && data.length > 0 && data[0].invoice_no) {
+      const lastSeq = parseInt(data[0].invoice_no.split('-').pop() || '0', 10);
+      if (!isNaN(lastSeq)) seq = lastSeq + 1;
+    }
+    return `${basePrefix}${seq.toString().padStart(3, '0')}`;
+  };
 
   const generateInvoiceNo = (type: string = docType) => {
     const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
@@ -789,7 +818,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       if (!inv) return;
 
       const date = new Date().toLocaleDateString('en-GB'); // dd/mm/yyyy
-      const invoiceNo = generateInvoiceNo('Invoice');
+      const invoiceNo = await generateInvoiceNoAsync('Invoice');
       
       let nextDue: string | null = null;
       if (inv.recurring_interval) {
@@ -900,9 +929,14 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setIsSendingEmail(action === 'email');
     try {
       const isUpdate = !!selectedInvoiceId;
+<<<<<<< HEAD
       const invoiceNo = isUpdate ? invoices.find(i => i.id === selectedInvoiceId)?.invoice_no || generateInvoiceNo() : generateInvoiceNo();
       const [y, m, d] = invoiceDate.split('-');
       const date = d && m && y ? `${d}/${m}/${y}` : new Date().toLocaleDateString('en-GB'); // dd/mm/yyyy
+=======
+      const invoiceNo = isUpdate ? (invoices.find(i => i.id === selectedInvoiceId)?.invoice_no || await generateInvoiceNoAsync()) : await generateInvoiceNoAsync();
+      const date = new Date().toLocaleDateString('en-GB'); // dd/mm/yyyy
+>>>>>>> 1ec7463 (chore: refactor billing software and update typings)
       const customerId = await saveCustomerFromForm();
 
       const legacyPayload = {
@@ -979,7 +1013,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         }
 
       if (pdfUrl) {
-        (payload as any).pdf_url = pdfUrl;
+        (payload as Invoice).pdf_url = pdfUrl;
       }
 
       if (isUpdate) {
@@ -1202,7 +1236,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     inv.payment_status || getPaymentStatus(inv.doc_type, inv.balance_due || 0, inv.advance_paid || 0),
     inv.payment_mode || 'Not specified',
     inv.due_date || '',
-    (inv as any).pdf_url || '',
+    inv.pdf_url || '',
   ];
 
   const backupInvoiceToGoogleSheet = async (inv: Invoice) => {
@@ -2095,6 +2129,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
       {/* --- HIDDEN PRINT TEMPLATE --- */}
       <div style={{ position: 'absolute', top: 0, left: 0, width: '794px', opacity: 0, pointerEvents: 'none', zIndex: -1000 }}>
+<<<<<<< HEAD
         <div ref={printRef} className="bg-white p-[24px] text-black flex flex-col" style={{ 
           width: '794px', 
           height: '1115px',
@@ -2304,6 +2339,31 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           </div>
 
         </div>
+=======
+        <InvoicePdfTemplate 
+          ref={printRef}
+          invoice={{
+            id: selectedInvoiceId || '',
+            invoice_no: printInvoiceNumber || (selectedInvoiceId ? (invoices.find(i=>i.id===selectedInvoiceId)?.invoice_no || 'DRAFT') : 'DRAFT'),
+            doc_type: docType,
+            date: new Date().toISOString(),
+            customer_name: customerName,
+            phone: phone || '',
+            email: email || '',
+            address: address || '',
+            items: items,
+            subtotal: subtotal,
+            discount: discount,
+            tax: tax,
+            round_off: roundOff,
+            grand_total: grandTotal,
+            advance_paid: advancePaid,
+            balance_due: balanceDue,
+            terms_conditions: termsConditions || (docType === 'Quotation' ? "1. Estimate valid for 7 days.\n2. Advance payment of 50% required.\n3. Final amount may vary if hidden faults are found." : "1. Service warranty is valid for 30 days only.\n2. No warranty for Windows installation/software issues.\n3. YantraByte Solutions is not responsible for any data loss.\n4. Customer should take backup of all important files prior.\n5. Physical, liquid or burnt damages void warranty.\n6. No warranty for swollen batteries or electrical faults."),
+            created_at: new Date().toISOString()
+          }}
+        />
+>>>>>>> 1ec7463 (chore: refactor billing software and update typings)
       </div>
 
       {/* --- CUSTOMER HISTORY DRAWER --- */}

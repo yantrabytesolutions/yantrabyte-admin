@@ -227,109 +227,121 @@ function loadInvoice(invoiceNo) {
 // SAVE invoice (new or update existing)
 // =============================================
 function saveInvoice(data) {
-  const sh = getOrCreateInvoiceSheet_();
-  if (!data.items || !data.items.length) throw new Error('Add at least one item');
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000); // Wait up to 30 seconds for other processes to finish
+  try {
+    const sh = getOrCreateInvoiceSheet_();
+    if (!data.items || !data.items.length) throw new Error('Add at least one item');
 
-  const totals = calculateTotals_(data);
-  var invoiceNo, date;
+    const totals = calculateTotals_(data);
+    var invoiceNo, date;
 
-  if (data.editInvoiceNo) {
-    invoiceNo = data.editInvoiceNo;
-    var rowIdx = findInvoiceRow_(sh, invoiceNo);
-    if (rowIdx === -1) throw new Error('Invoice "' + invoiceNo + '" not found for update.');
-    var rawDate = sh.getRange(rowIdx, 1).getValue();
-    if (Object.prototype.toString.call(rawDate) === '[object Date]') {
-      date = Utilities.formatDate(rawDate, APP.TIMEZONE, 'dd/MM/yyyy');
+    if (data.editInvoiceNo) {
+      invoiceNo = data.editInvoiceNo;
+      var rowIdx = findInvoiceRow_(sh, invoiceNo);
+      if (rowIdx === -1) throw new Error('Invoice "' + invoiceNo + '" not found for update.');
+      var rawDate = sh.getRange(rowIdx, 1).getValue();
+      if (Object.prototype.toString.call(rawDate) === '[object Date]') {
+        date = Utilities.formatDate(rawDate, APP.TIMEZONE, 'dd/MM/yyyy');
+      } else {
+        date = String(rawDate || '');
+      }
+      var existingPdfUrl = String(sh.getRange(rowIdx, 15).getValue() || '');
+      var rowData = buildRowData_(date, invoiceNo, data, totals, existingPdfUrl);
+      sh.getRange(rowIdx, 1, 1, rowData.length).setValues([rowData]);
     } else {
-      date = String(rawDate || '');
+      invoiceNo = generateInvoiceNo_();
+      date = Utilities.formatDate(new Date(), APP.TIMEZONE, 'dd/MM/yyyy');
+      var rowData = buildRowData_(date, invoiceNo, data, totals, '');
+      sh.appendRow(rowData);
     }
-    var existingPdfUrl = String(sh.getRange(rowIdx, 15).getValue() || '');
-    var rowData = buildRowData_(date, invoiceNo, data, totals, existingPdfUrl);
-    sh.getRange(rowIdx, 1, 1, rowData.length).setValues([rowData]);
-  } else {
-    invoiceNo = generateInvoiceNo_();
-    date = Utilities.formatDate(new Date(), APP.TIMEZONE, 'dd/MM/yyyy');
-    var rowData = buildRowData_(date, invoiceNo, data, totals, '');
-    sh.appendRow(rowData);
-  }
 
-  return {
-    ok: true, invoiceNo: invoiceNo,
-    subtotal:   totals.subtotal,
-    grandTotal: totals.grandTotal,
-    balance:    totals.balance,
-    isUpdate:   !!data.editInvoiceNo
-  };
+    return {
+      ok: true, invoiceNo: invoiceNo,
+      subtotal:   totals.subtotal,
+      grandTotal: totals.grandTotal,
+      balance:    totals.balance,
+      isUpdate:   !!data.editInvoiceNo
+    };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 // =============================================
 // GENERATE PDF (new or re-generate for existing)
 // =============================================
 function generatePdf(data) {
-  const ss       = SpreadsheetApp.openById('17nAWzE_OZ6b0ANksVsAn08aqTcMGncbMqgKJAdjdejk');
-  const logSheet = getOrCreateInvoiceSheet_();
-  if (!data.items || !data.items.length) throw new Error('Add at least one item');
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    const ss       = SpreadsheetApp.openById('17nAWzE_OZ6b0ANksVsAn08aqTcMGncbMqgKJAdjdejk');
+    const logSheet = getOrCreateInvoiceSheet_();
+    if (!data.items || !data.items.length) throw new Error('Add at least one item');
 
-  const totals       = calculateTotals_(data);
-  const cleanName    = String(data.customerName || '').trim();
-  const cleanPhone   = String(data.phone        || '').trim();
-  const cleanEmail   = String(data.email        || '').trim();
-  const cleanAddress = String(data.address      || '').trim();
+    const totals       = calculateTotals_(data);
+    const cleanName    = String(data.customerName || '').trim();
+    const cleanPhone   = String(data.phone        || '').trim();
+    const cleanEmail   = String(data.email        || '').trim();
+    const cleanAddress = String(data.address      || '').trim();
 
-  var invoiceNo, date, isUpdate = false;
+    var invoiceNo, date, isUpdate = false;
 
-  if (data.editInvoiceNo) {
-    invoiceNo = data.editInvoiceNo;
-    var rowIdx = findInvoiceRow_(logSheet, invoiceNo);
-    if (rowIdx === -1) throw new Error('Invoice "' + invoiceNo + '" not found for update.');
-    var rawDate = logSheet.getRange(rowIdx, 1).getValue();
-    if (Object.prototype.toString.call(rawDate) === '[object Date]') {
-      date = Utilities.formatDate(rawDate, APP.TIMEZONE, 'dd/MM/yyyy');
+    if (data.editInvoiceNo) {
+      invoiceNo = data.editInvoiceNo;
+      var rowIdx = findInvoiceRow_(logSheet, invoiceNo);
+      if (rowIdx === -1) throw new Error('Invoice "' + invoiceNo + '" not found for update.');
+      var rawDate = logSheet.getRange(rowIdx, 1).getValue();
+      if (Object.prototype.toString.call(rawDate) === '[object Date]') {
+        date = Utilities.formatDate(rawDate, APP.TIMEZONE, 'dd/MM/yyyy');
+      } else {
+        date = String(rawDate || '');
+      }
+      isUpdate = true;
     } else {
-      date = String(rawDate || '');
+      invoiceNo = generateInvoiceNo_();
+      date = Utilities.formatDate(new Date(), APP.TIMEZONE, 'dd/MM/yyyy');
     }
-    isUpdate = true;
-  } else {
-    invoiceNo = generateInvoiceNo_();
-    date = Utilities.formatDate(new Date(), APP.TIMEZONE, 'dd/MM/yyyy');
+
+    createPrintableInvoiceSheet_(ss, {
+      docType:      data.docType || 'Invoice',
+      invoiceNo:    invoiceNo,
+      date:         date,
+      customerName: cleanName,
+      phone:        cleanPhone,
+      email:        cleanEmail,
+      address:      cleanAddress,
+      items:        data.items || [],
+      subtotal:     totals.subtotal,
+      discount:     totals.discount,
+      tax:          totals.tax,
+      roundOff:     totals.roundOff,
+      grandTotal:   totals.grandTotal,
+      advancePaid:  totals.advance,
+      balanceDue:   totals.balance
+    });
+
+    SpreadsheetApp.flush();
+    Utilities.sleep(3000);
+
+    const printSheet = ss.getSheetByName(APP.PRINT_SHEET);
+    var pdfFile = exportCurrentSheetToPdf_(ss.getId(), printSheet.getSheetId(), invoiceNo);
+
+    var rowData = buildRowData_(date, invoiceNo,
+      { customerName: cleanName, phone: cleanPhone, email: cleanEmail, address: cleanAddress, items: data.items },
+      totals, pdfFile.getUrl());
+
+    if (isUpdate) {
+      var rowIdx = findInvoiceRow_(logSheet, invoiceNo);
+      logSheet.getRange(rowIdx, 1, 1, rowData.length).setValues([rowData]);
+    } else {
+      logSheet.appendRow(rowData);
+    }
+
+    return { ok: true, invoiceNo: invoiceNo, pdfUrl: pdfFile.getUrl(), isUpdate: isUpdate };
+  } finally {
+    lock.releaseLock();
   }
-
-  createPrintableInvoiceSheet_(ss, {
-    docType:      data.docType || 'Invoice',
-    invoiceNo:    invoiceNo,
-    date:         date,
-    customerName: cleanName,
-    phone:        cleanPhone,
-    email:        cleanEmail,
-    address:      cleanAddress,
-    items:        data.items || [],
-    subtotal:     totals.subtotal,
-    discount:     totals.discount,
-    tax:          totals.tax,
-    roundOff:     totals.roundOff,
-    grandTotal:   totals.grandTotal,
-    advancePaid:  totals.advance,
-    balanceDue:   totals.balance
-  });
-
-  SpreadsheetApp.flush();
-  Utilities.sleep(3000);
-
-  const printSheet = ss.getSheetByName(APP.PRINT_SHEET);
-  var pdfFile = exportCurrentSheetToPdf_(ss.getId(), printSheet.getSheetId(), invoiceNo);
-
-  var rowData = buildRowData_(date, invoiceNo,
-    { customerName: cleanName, phone: cleanPhone, email: cleanEmail, address: cleanAddress, items: data.items },
-    totals, pdfFile.getUrl());
-
-  if (isUpdate) {
-    var rowIdx = findInvoiceRow_(logSheet, invoiceNo);
-    logSheet.getRange(rowIdx, 1, 1, rowData.length).setValues([rowData]);
-  } else {
-    logSheet.appendRow(rowData);
-  }
-
-  return { ok: true, invoiceNo: invoiceNo, pdfUrl: pdfFile.getUrl(), isUpdate: isUpdate };
 }
 
 // ============================================================
@@ -401,39 +413,45 @@ function buildPurchaseRowData_(date, purchaseNo, data, totals) {
 // SAVE a purchase entry (new or update)
 // =============================================
 function savePurchase(data) {
-  const sh = getOrCreatePurchaseSheet_();
-  if (!data.items || !data.items.length) throw new Error('Add at least one item');
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    const sh = getOrCreatePurchaseSheet_();
+    if (!data.items || !data.items.length) throw new Error('Add at least one item');
 
-  const totals = calculateTotals_(data);
-  var purchaseNo, date;
+    const totals = calculateTotals_(data);
+    var purchaseNo, date;
 
-  if (data.editPurchaseNo) {
-    purchaseNo = data.editPurchaseNo;
-    var rowIdx = findPurchaseRow_(sh, purchaseNo);
-    if (rowIdx === -1) throw new Error('Purchase "' + purchaseNo + '" not found for update.');
-    var rawDate = sh.getRange(rowIdx, 1).getValue();
-    if (Object.prototype.toString.call(rawDate) === '[object Date]') {
-      date = Utilities.formatDate(rawDate, APP.TIMEZONE, 'dd/MM/yyyy');
+    if (data.editPurchaseNo) {
+      purchaseNo = data.editPurchaseNo;
+      var rowIdx = findPurchaseRow_(sh, purchaseNo);
+      if (rowIdx === -1) throw new Error('Purchase "' + purchaseNo + '" not found for update.');
+      var rawDate = sh.getRange(rowIdx, 1).getValue();
+      if (Object.prototype.toString.call(rawDate) === '[object Date]') {
+        date = Utilities.formatDate(rawDate, APP.TIMEZONE, 'dd/MM/yyyy');
+      } else {
+        date = String(rawDate || '');
+      }
+      var rowData = buildPurchaseRowData_(date, purchaseNo, data, totals);
+      sh.getRange(rowIdx, 1, 1, rowData.length).setValues([rowData]);
     } else {
-      date = String(rawDate || '');
+      purchaseNo = generatePurchaseNo_();
+      date = Utilities.formatDate(new Date(), APP.TIMEZONE, 'dd/MM/yyyy');
+      var rowData = buildPurchaseRowData_(date, purchaseNo, data, totals);
+      sh.appendRow(rowData);
     }
-    var rowData = buildPurchaseRowData_(date, purchaseNo, data, totals);
-    sh.getRange(rowIdx, 1, 1, rowData.length).setValues([rowData]);
-  } else {
-    purchaseNo = generatePurchaseNo_();
-    date = Utilities.formatDate(new Date(), APP.TIMEZONE, 'dd/MM/yyyy');
-    var rowData = buildPurchaseRowData_(date, purchaseNo, data, totals);
-    sh.appendRow(rowData);
-  }
 
-  return {
-    ok:          true,
-    purchaseNo:  purchaseNo,
-    subtotal:    totals.subtotal,
-    grandTotal:  totals.grandTotal,
-    balance:     totals.balance,
-    isUpdate:    !!data.editPurchaseNo
-  };
+    return {
+      ok:          true,
+      purchaseNo:  purchaseNo,
+      subtotal:    totals.subtotal,
+      grandTotal:  totals.grandTotal,
+      balance:     totals.balance,
+      isUpdate:    !!data.editPurchaseNo
+    };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 // =============================================

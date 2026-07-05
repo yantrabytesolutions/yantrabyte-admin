@@ -82,6 +82,25 @@ export default function PurchaseSoftware() {
   const totalSupplierDues = purchases.reduce((acc, p) => acc + (p.balance_due || 0), 0);
   const totalPaidToSuppliers = purchases.reduce((acc, p) => acc + (p.amount_paid || 0), 0);
 
+  const generatePurchaseNoAsync = async () => {
+    const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const prefix = `YBP-${datePart}-`;
+    
+    const { data } = await supabase
+      .from('purchases')
+      .select('purchase_no')
+      .like('purchase_no', `${prefix}%`)
+      .order('purchase_no', { ascending: false })
+      .limit(1);
+      
+    let seq = 1;
+    if (data && data.length > 0 && data[0].purchase_no) {
+      const lastSeq = parseInt(data[0].purchase_no.split('-').pop() || '0', 10);
+      if (!isNaN(lastSeq)) seq = lastSeq + 1;
+    }
+    return `${prefix}${seq.toString().padStart(3, '0')}`;
+  };
+
   const generatePurchaseNo = () => {
     const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const seq = (purchases.length + 1).toString().padStart(3, '0');
@@ -176,7 +195,7 @@ export default function PurchaseSoftware() {
     setIsSaving(true);
     try {
       const isUpdate = !!selectedPurchaseId;
-      const pNo = isUpdate ? purchases.find(p => p.id === selectedPurchaseId)?.purchase_no || generatePurchaseNo() : generatePurchaseNo();
+      const pNo = isUpdate ? (purchases.find(p => p.id === selectedPurchaseId)?.purchase_no || await generatePurchaseNoAsync()) : await generatePurchaseNoAsync();
 
       const payload = {
         purchase_no: pNo,

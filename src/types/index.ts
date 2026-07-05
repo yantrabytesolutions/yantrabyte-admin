@@ -215,6 +215,7 @@ export interface Invoice {
   due_date?: string | null;
   terms_conditions?: string;
   warranty_months?: number;
+  pdf_url?: string;
   created_at: string;
 }
 

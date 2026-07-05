@@ -261,55 +261,69 @@ export default function ServiceRequest() {
         uploadedVideoUrl = videoPublicUrl;
       }
 
-      const { data: ticketNumberFromRpc, error: rpcError } = await supabase
-        .rpc('get_next_service_ticket_number');
+      let ticketNumber = '';
+      let insertSuccess = false;
+      let insertError = null;
+      let maxRetries = 3;
+      let currentTry = 0;
 
-      let ticketNumber = ticketNumberFromRpc;
+      while (!insertSuccess && currentTry < maxRetries) {
+        currentTry++;
+        
+        const { data: ticketNumberFromRpc, error: rpcError } = await supabase
+          .rpc('get_next_service_ticket_number');
 
-      // Fallback if RPC fails or doesn't exist yet
-      if (rpcError || !ticketNumber) {
-        console.warn('RPC get_next_service_ticket_number failed or returned empty:', rpcError);
-        const now = new Date();
-        const month = now.getMonth() + 1;
-        const fullYear = now.getFullYear();
-        
-        let startYear = fullYear;
-        let endYear = fullYear + 1;
-        if (month < 4) {
-          startYear = fullYear - 1;
-          endYear = fullYear;
-        }
-        
-        const prefix = `YBS-${startYear}-${endYear}-`;
-        
-        let seq = 1;
-        try {
-          const { data: latestTickets, error: selectError } = await supabase
-            .from('service_tickets')
-            .select('ticket_number')
-            .like('ticket_number', `${prefix}%`)
-            .order('created_at', { ascending: false })
-            .limit(1);
-            
-          if (selectError) {
-            console.warn('Fallback select error:', selectError);
+        ticketNumber = ticketNumberFromRpc;
+
+        // Fallback if RPC fails or doesn't exist yet
+        if (rpcError || !ticketNumber) {
+          console.warn('RPC get_next_service_ticket_number failed or returned empty:', rpcError);
+          const now = new Date();
+          const month = now.getMonth() + 1;
+          const fullYear = now.getFullYear();
+          
+          let startYear = fullYear;
+          let endYear = fullYear + 1;
+          if (month < 4) {
+            startYear = fullYear - 1;
+            endYear = fullYear;
           }
-            
-          if (latestTickets && latestTickets.length > 0 && latestTickets[0].ticket_number) {
-            const lastTicket = latestTickets[0].ticket_number;
-            const match = lastTicket.match(/-(\d+)$/);
-            if (match) {
-              seq = parseInt(match[1], 10) + 1;
+          
+          const prefix = `YBS-${startYear}-${endYear}-`;
+          
+          let seq = 1;
+          try {
+            const { data: latestTickets, error: selectError } = await supabase
+              .from('service_tickets')
+              .select('ticket_number')
+              .like('ticket_number', `${prefix}%`)
+              .order('created_at', { ascending: false })
+              .limit(1);
+              
+            if (selectError) {
+              console.warn('Fallback select error:', selectError);
             }
-          } else {
-             // If we can't find previous tickets, use a random sequence to avoid unique constraint violations
-             seq = Math.floor(Math.random() * 900) + 100;
+              
+            if (latestTickets && latestTickets.length > 0 && latestTickets[0].ticket_number) {
+              const lastTicket = latestTickets[0].ticket_number;
+              const match = lastTicket.match(/-(\d+)$/);
+              if (match) {
+                seq = parseInt(match[1], 10) + 1;
+              }
+            } else {
+               // If we can't find previous tickets, use a random sequence to avoid unique constraint violations
+               seq = Math.floor(Math.random() * 900) + 100;
+            }
+          } catch (err) {
+            console.warn('Failed to fetch latest ticket number, starting at random.', err);
+            seq = Math.floor(Math.random() * 900) + 100;
           }
-        } catch (err) {
-          console.warn('Failed to fetch latest ticket number, starting at random.', err);
-          seq = Math.floor(Math.random() * 900) + 100;
+
+          const paddedSeq = String(seq).padStart(3, '0');
+          ticketNumber = `${prefix}${paddedSeq}`;
         }
 
+<<<<<<< HEAD
       const paddedSeq = String(seq).padStart(3, '0');
       ticketNumber = `${prefix}${paddedSeq}`;
     }
@@ -334,6 +348,37 @@ export default function ServiceRequest() {
 
       if (insertError) {
         console.error('Insert Error:', insertError);
+=======
+        const ticketPayload = {
+          ticket_number: ticketNumber,
+          ...form,
+          pickup_date: form.pickup_date || null,
+          attachment_url: uploadedUrl,
+          video_url: uploadedVideoUrl,
+          customer_signature: signatureBase64,
+          status: 'open'
+        };
+
+        const { error: err } = await supabase
+          .from('service_tickets')
+          .insert([ticketPayload]);
+
+        if (err) {
+          if (err.code === '23505' || String(err.message).includes('unique constraint') || String(err.message).includes('duplicate key')) {
+             console.warn(`Retry ${currentTry} due to unique constraint on ticket number:`, ticketNumber);
+             insertError = err;
+          } else {
+             throw err;
+          }
+        } else {
+          insertSuccess = true;
+          insertError = null;
+        }
+      }
+
+      if (!insertSuccess && insertError) {
+        console.error('Insert Error after retries:', insertError);
+>>>>>>> 1ec7463 (chore: refactor billing software and update typings)
         throw insertError;
       }
 

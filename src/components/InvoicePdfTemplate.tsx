@@ -168,7 +168,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ invoice, 
             </div>
             <div className="flex justify-between p-1.5 px-3" style={{ borderBottom: '1px solid #000' }}>
               <span style={{ color: '#333333' }}>Advance Paid</span>
-              <span style={{ color: '#000000' }}>{((invoice as any).advance_paid || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
+              <span style={{ color: '#000000' }}>{(invoice.advance_paid || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
             </div>
             <div className="flex justify-between p-1.5 px-3 font-bold" style={{ backgroundColor: '#FFF2CC', color: '#B91C1C' }}>
               <span>Balance Due</span>

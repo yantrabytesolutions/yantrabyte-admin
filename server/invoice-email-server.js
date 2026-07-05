@@ -511,16 +511,43 @@ app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {
     console.error('Invoice email failed:', getDeliveryErrorMessage(error));
   }
 
+  let driveResult = {
+    ok: false,
+    skipped: true,
+    error: 'Google Drive backup was not attempted because email delivery failed.',
+  };
+
   if (mailError) {
-    return res.status(422).json({
+    return res.status(502).json({
       error: `Gmail send failed: ${getDeliveryErrorMessage(mailError)}`,
       email: { ok: false },
+      drive: driveResult,
     });
   }
 
+  try {
+    driveResult = await uploadPdfToDrive({
+      pdfBuffer,
+      filename: safeFilename,
+      customerName: cleanCustomerName,
+      invoiceNumber: cleanInvoiceNumber,
+      documentType: cleanDocumentType,
+    });
+    console.log(`[Success] Uploaded ${safeFilename} to Google Drive (ID: ${driveResult.file?.id})`);
+  } catch (error) {
+    driveResult = {
+      ok: false,
+      skipped: false,
+      error: getDeliveryErrorMessage(error),
+    };
+    console.error(`[Error] Google Drive invoice backup failed for ${safeFilename}:`, getDeliveryErrorMessage(error));
+  }
+
+  console.log(`[Success] Email sent to ${to} for ${cleanInvoiceNumber}`);
   return res.json({
     ok: true,
     email: { ok: true, messageId: mailResult.messageId },
+    drive: driveResult,
   });
 });
 

@@ -79,6 +79,7 @@ async function appendRow(spreadsheetId: string, sheetName: string, row: unknown[
   return data.updates?.updatedRange || '';
 }
 
+<<<<<<< HEAD
 async function uploadToDrive(fileName: string, base64Data: string, folderId: string, token: string): Promise<string> {
   // Step 1: Create file metadata
   const metaRes = await fetch('https://www.googleapis.com/drive/v3/files', {
@@ -141,6 +142,21 @@ async function uploadToDrive(fileName: string, base64Data: string, folderId: str
   });
   const linkData = await linkRes.json();
   return linkData.webViewLink || `https://drive.google.com/file/d/${meta.id}/view`;
+=======
+async function clearSheet(spreadsheetId: string, sheetName: string, token: string): Promise<void> {
+  const quotedSheet = `'${sheetName.replace(/'/g, "''")}'`;
+  const res = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(quotedSheet + '!A:Z')}:clear`,
+    {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    }
+  );
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.error?.message || 'Sheets clear failed');
+  }
+>>>>>>> 1ec7463 (chore: refactor billing software and update typings)
 }
 
 Deno.serve(async (req) => {
@@ -162,11 +178,15 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
+<<<<<<< HEAD
     const { sheetName, headers, row, pdfBase64, invoiceNo } = body;
+=======
+    const { sheetName, headers, row, action } = body;
+>>>>>>> 1ec7463 (chore: refactor billing software and update typings)
 
-    if (!sheetName || !Array.isArray(headers) || !Array.isArray(row)) {
+    if (!sheetName) {
       return new Response(
-        JSON.stringify({ ok: false, error: 'sheetName, headers (array), and row (array) are required' }),
+        JSON.stringify({ ok: false, error: 'sheetName is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -174,6 +194,7 @@ Deno.serve(async (req) => {
     const token = await getAccessToken(clientId, clientSecret, refreshToken);
     await ensureSheet(spreadsheetId, sheetName, token);
 
+<<<<<<< HEAD
     const finalRow = [...row];
 
     if (pdfBase64 && invoiceNo) {
@@ -189,6 +210,18 @@ Deno.serve(async (req) => {
         }
         finalRow.push(fileUrl);
       }
+=======
+    if (action === 'clear') {
+      await clearSheet(spreadsheetId, sheetName, token);
+      return new Response(JSON.stringify({ ok: true, cleared: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    if (!Array.isArray(headers) || !Array.isArray(row)) {
+      return new Response(
+        JSON.stringify({ ok: false, error: 'headers (array), and row (array) are required for append/update' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+>>>>>>> 1ec7463 (chore: refactor billing software and update typings)
     }
 
     // Set headers if sheet is empty
