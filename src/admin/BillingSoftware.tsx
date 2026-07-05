@@ -12,11 +12,8 @@ import { downloadExcelWorkbook } from '../utils/spreadsheetXml';
 import { appendBackupRow } from '../utils/googleSheetBackup';
 import { uploadInvoiceToDrive } from '../utils/googleDriveBackup';
 import { ERPUtils } from '../utils/erp';
-<<<<<<< HEAD
 import CustomerLedgerModal from './components/CustomerLedgerModal';
-=======
 import { InvoicePdfTemplate } from '../components/InvoicePdfTemplate';
->>>>>>> 1ec7463 (chore: refactor billing software and update typings)
 
 // --- Utility Functions ---
 function numberToWords(num: number): string {
@@ -534,8 +531,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setIsRecurring(inv.is_recurring || false);
     setRecurringInterval(inv.recurring_interval || 'monthly');
     setTermsConditions(inv.terms_conditions || '');
-<<<<<<< HEAD
-    setWarrantyMonths((inv as any).warranty_months || '');
+    setWarrantyMonths(inv.warranty_months || '');
     
     let parsedItems = inv.items;
     if (typeof parsedItems === 'string') {
@@ -546,11 +542,6 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       }
     }
     setItems(Array.isArray(parsedItems) ? parsedItems : []);
-    
-=======
-    setWarrantyMonths(inv.warranty_months || '');
-    setItems(inv.items || []);
->>>>>>> 1ec7463 (chore: refactor billing software and update typings)
     window.scrollTo({ top: 0, behavior: 'smooth' });
     showToast(`Invoice ${inv.invoice_no} loaded for editing`);
   };
@@ -929,14 +920,9 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setIsSendingEmail(action === 'email');
     try {
       const isUpdate = !!selectedInvoiceId;
-<<<<<<< HEAD
-      const invoiceNo = isUpdate ? invoices.find(i => i.id === selectedInvoiceId)?.invoice_no || generateInvoiceNo() : generateInvoiceNo();
+      const invoiceNo = isUpdate ? (invoices.find(i => i.id === selectedInvoiceId)?.invoice_no || await generateInvoiceNoAsync()) : await generateInvoiceNoAsync();
       const [y, m, d] = invoiceDate.split('-');
       const date = d && m && y ? `${d}/${m}/${y}` : new Date().toLocaleDateString('en-GB'); // dd/mm/yyyy
-=======
-      const invoiceNo = isUpdate ? (invoices.find(i => i.id === selectedInvoiceId)?.invoice_no || await generateInvoiceNoAsync()) : await generateInvoiceNoAsync();
-      const date = new Date().toLocaleDateString('en-GB'); // dd/mm/yyyy
->>>>>>> 1ec7463 (chore: refactor billing software and update typings)
       const customerId = await saveCustomerFromForm();
 
       const legacyPayload = {
@@ -2129,7 +2115,6 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
       {/* --- HIDDEN PRINT TEMPLATE --- */}
       <div style={{ position: 'absolute', top: 0, left: 0, width: '794px', opacity: 0, pointerEvents: 'none', zIndex: -1000 }}>
-<<<<<<< HEAD
         <div ref={printRef} className="bg-white p-[24px] text-black flex flex-col" style={{ 
           width: '794px', 
           height: '1115px',
@@ -2339,31 +2324,6 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           </div>
 
         </div>
-=======
-        <InvoicePdfTemplate 
-          ref={printRef}
-          invoice={{
-            id: selectedInvoiceId || '',
-            invoice_no: printInvoiceNumber || (selectedInvoiceId ? (invoices.find(i=>i.id===selectedInvoiceId)?.invoice_no || 'DRAFT') : 'DRAFT'),
-            doc_type: docType,
-            date: new Date().toISOString(),
-            customer_name: customerName,
-            phone: phone || '',
-            email: email || '',
-            address: address || '',
-            items: items,
-            subtotal: subtotal,
-            discount: discount,
-            tax: tax,
-            round_off: roundOff,
-            grand_total: grandTotal,
-            advance_paid: advancePaid,
-            balance_due: balanceDue,
-            terms_conditions: termsConditions || (docType === 'Quotation' ? "1. Estimate valid for 7 days.\n2. Advance payment of 50% required.\n3. Final amount may vary if hidden faults are found." : "1. Service warranty is valid for 30 days only.\n2. No warranty for Windows installation/software issues.\n3. YantraByte Solutions is not responsible for any data loss.\n4. Customer should take backup of all important files prior.\n5. Physical, liquid or burnt damages void warranty.\n6. No warranty for swollen batteries or electrical faults."),
-            created_at: new Date().toISOString()
-          }}
-        />
->>>>>>> 1ec7463 (chore: refactor billing software and update typings)
       </div>
 
       {/* --- CUSTOMER HISTORY DRAWER --- */}

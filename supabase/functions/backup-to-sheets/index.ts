@@ -79,7 +79,6 @@ async function appendRow(spreadsheetId: string, sheetName: string, row: unknown[
   return data.updates?.updatedRange || '';
 }
 
-<<<<<<< HEAD
 async function uploadToDrive(fileName: string, base64Data: string, folderId: string, token: string): Promise<string> {
   // Step 1: Create file metadata
   const metaRes = await fetch('https://www.googleapis.com/drive/v3/files', {
@@ -142,7 +141,6 @@ async function uploadToDrive(fileName: string, base64Data: string, folderId: str
   });
   const linkData = await linkRes.json();
   return linkData.webViewLink || `https://drive.google.com/file/d/${meta.id}/view`;
-=======
 async function clearSheet(spreadsheetId: string, sheetName: string, token: string): Promise<void> {
   const quotedSheet = `'${sheetName.replace(/'/g, "''")}'`;
   const res = await fetch(
@@ -156,7 +154,6 @@ async function clearSheet(spreadsheetId: string, sheetName: string, token: strin
     const data = await res.json();
     throw new Error(data.error?.message || 'Sheets clear failed');
   }
->>>>>>> 1ec7463 (chore: refactor billing software and update typings)
 }
 
 Deno.serve(async (req) => {
@@ -178,11 +175,7 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-<<<<<<< HEAD
-    const { sheetName, headers, row, pdfBase64, invoiceNo } = body;
-=======
-    const { sheetName, headers, row, action } = body;
->>>>>>> 1ec7463 (chore: refactor billing software and update typings)
+    const { sheetName, headers, row, action, pdfBase64, invoiceNo } = body;
 
     if (!sheetName) {
       return new Response(
@@ -194,23 +187,6 @@ Deno.serve(async (req) => {
     const token = await getAccessToken(clientId, clientSecret, refreshToken);
     await ensureSheet(spreadsheetId, sheetName, token);
 
-<<<<<<< HEAD
-    const finalRow = [...row];
-
-    if (pdfBase64 && invoiceNo) {
-      const folderId = Deno.env.get('GOOGLE_DRIVE_FOLDER_ID');
-      if (!folderId) {
-        console.warn('GOOGLE_DRIVE_FOLDER_ID not set. Skipping PDF upload.');
-      } else {
-        const fileUrl = await uploadToDrive(`${invoiceNo}.pdf`, pdfBase64, folderId, token);
-        // Append PDF link to the row
-        // Check if headers contains "PDF Link", if not, we can just append it
-        if (!headers.includes('PDF Link')) {
-          headers.push('PDF Link');
-        }
-        finalRow.push(fileUrl);
-      }
-=======
     if (action === 'clear') {
       await clearSheet(spreadsheetId, sheetName, token);
       return new Response(JSON.stringify({ ok: true, cleared: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -221,7 +197,22 @@ Deno.serve(async (req) => {
         JSON.stringify({ ok: false, error: 'headers (array), and row (array) are required for append/update' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
->>>>>>> 1ec7463 (chore: refactor billing software and update typings)
+    }
+
+    const finalRow = [...row];
+
+    if (pdfBase64 && invoiceNo) {
+      const folderId = Deno.env.get('GOOGLE_DRIVE_FOLDER_ID');
+      if (!folderId) {
+        console.warn('GOOGLE_DRIVE_FOLDER_ID not set. Skipping PDF upload.');
+      } else {
+        const fileUrl = await uploadToDrive(`${invoiceNo}.pdf`, pdfBase64, folderId, token);
+        if (!headers.includes('PDF Link')) {
+          headers.push('PDF Link');
+        }
+        finalRow.push(fileUrl);
+      }
+    }
     }
 
     // Set headers if sheet is empty

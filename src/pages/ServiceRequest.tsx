@@ -323,11 +323,6 @@ export default function ServiceRequest() {
           ticketNumber = `${prefix}${paddedSeq}`;
         }
 
-<<<<<<< HEAD
-      const paddedSeq = String(seq).padStart(3, '0');
-      ticketNumber = `${prefix}${paddedSeq}`;
-    }
-
     const finalDeviceType = form.device_type === 'Other' && otherDeviceType.trim() 
       ? otherDeviceType.trim() 
       : form.device_type;
@@ -336,49 +331,32 @@ export default function ServiceRequest() {
       ticket_number: ticketNumber,
       ...form,
       device_type: finalDeviceType,
+      pickup_date: form.pickup_date || null,
       attachment_url: uploadedUrl,
       video_url: uploadedVideoUrl,
       customer_signature: signatureBase64,
       status: 'open'
     };
 
-      const { error: insertError } = await supabase
-        .from('service_tickets')
-        .insert([ticketPayload]);
+    const { error: err } = await supabase
+      .from('service_tickets')
+      .insert([ticketPayload]);
 
-      if (insertError) {
-        console.error('Insert Error:', insertError);
-=======
-        const ticketPayload = {
-          ticket_number: ticketNumber,
-          ...form,
-          pickup_date: form.pickup_date || null,
-          attachment_url: uploadedUrl,
-          video_url: uploadedVideoUrl,
-          customer_signature: signatureBase64,
-          status: 'open'
-        };
-
-        const { error: err } = await supabase
-          .from('service_tickets')
-          .insert([ticketPayload]);
-
-        if (err) {
-          if (err.code === '23505' || String(err.message).includes('unique constraint') || String(err.message).includes('duplicate key')) {
-             console.warn(`Retry ${currentTry} due to unique constraint on ticket number:`, ticketNumber);
-             insertError = err;
-          } else {
-             throw err;
-          }
-        } else {
-          insertSuccess = true;
-          insertError = null;
-        }
+    if (err) {
+      if (err.code === '23505' || String(err.message).includes('unique constraint') || String(err.message).includes('duplicate key')) {
+         console.warn(`Retry ${currentTry} due to unique constraint on ticket number:`, ticketNumber);
+         insertError = err;
+      } else {
+         throw err;
       }
+    } else {
+      insertSuccess = true;
+      insertError = null;
+    }
+  }
 
-      if (!insertSuccess && insertError) {
-        console.error('Insert Error after retries:', insertError);
->>>>>>> 1ec7463 (chore: refactor billing software and update typings)
+  if (!insertSuccess && insertError) {
+    console.error('Insert Error after retries:', insertError);
         throw insertError;
       }
 

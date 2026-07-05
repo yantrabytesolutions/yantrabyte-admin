@@ -539,11 +539,7 @@ Deno.serve(async (req) => {
     const emailOk = true;
 
     return new Response(
-<<<<<<< HEAD
       JSON.stringify({ ok: true, email: { ok: emailOk, pdf: !!pdfBytes, pdfError: pdfErrorStr, pdfBase64 }, telegram: { ok: !!tgToken }, storage: { ok: !!driveViewLink, url: driveViewLink } }),
-=======
-      JSON.stringify({ ok: true, email: { ok: true, pdf: !!pdfBase64 }, telegram: { ok: !!tgToken }, drive: { ok: !!driveViewLink, link: driveViewLink, error: driveErrorMsg } }),
->>>>>>> 1ec7463 (chore: refactor billing software and update typings)
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (err) {
