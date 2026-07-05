@@ -141,6 +141,8 @@ async function uploadToDrive(fileName: string, base64Data: string, folderId: str
   });
   const linkData = await linkRes.json();
   return linkData.webViewLink || `https://drive.google.com/file/d/${meta.id}/view`;
+}
+
 async function clearSheet(spreadsheetId: string, sheetName: string, token: string): Promise<void> {
   const quotedSheet = `'${sheetName.replace(/'/g, "''")}'`;
   const res = await fetch(
