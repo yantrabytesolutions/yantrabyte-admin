@@ -13,7 +13,7 @@ import { appendBackupRow } from '../utils/googleSheetBackup';
 import { uploadInvoiceToDrive } from '../utils/googleDriveBackup';
 import { ERPUtils } from '../utils/erp';
 import CustomerLedgerModal from './components/CustomerLedgerModal';
-import { InvoicePdfTemplate } from '../components/InvoicePdfTemplate';
+
 
 // --- Utility Functions ---
 function numberToWords(num: number): string {
@@ -665,18 +665,6 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     return `${basePrefix}${seq.toString().padStart(3, '0')}`;
   };
 
-  const generateInvoiceNo = (type: string = docType) => {
-    const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    let typeCount = 0;
-    if (type === 'Quotation') {
-      typeCount = invoices.filter(i => i.doc_type === 'Quotation').length;
-    } else {
-      typeCount = invoices.filter(i => i.doc_type !== 'Quotation').length;
-    }
-    const seq = (typeCount + 1).toString().padStart(3, '0');
-    const prefix = type === 'Quotation' ? 'YBQ' : 'YBS';
-    return `${prefix}-${datePart}-${seq}`;
-  };
 
 
 

@@ -41,6 +41,7 @@ type RequestForm = {
   preferred_contact: 'whatsapp' | 'phone' | 'email';
   whatsapp_opt_in: boolean;
   pre_approved_budget: string;
+  pickup_date?: string;
 };
 
 const initialForm: RequestForm = {
@@ -267,6 +268,12 @@ export default function ServiceRequest() {
       const maxRetries = 3;
       let currentTry = 0;
 
+      const finalDeviceType = form.device_type === 'Other' && otherDeviceType.trim() 
+        ? otherDeviceType.trim() 
+        : form.device_type;
+        
+      let ticketPayload: any = null;
+
       while (!insertSuccess && currentTry < maxRetries) {
         currentTry++;
         
@@ -323,11 +330,7 @@ export default function ServiceRequest() {
           ticketNumber = `${prefix}${paddedSeq}`;
         }
 
-    const finalDeviceType = form.device_type === 'Other' && otherDeviceType.trim() 
-      ? otherDeviceType.trim() 
-      : form.device_type;
-
-    const ticketPayload = {
+    ticketPayload = {
       ticket_number: ticketNumber,
       ...form,
       device_type: finalDeviceType,

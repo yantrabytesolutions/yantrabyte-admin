@@ -101,12 +101,6 @@ export default function PurchaseSoftware() {
     return `${prefix}${seq.toString().padStart(3, '0')}`;
   };
 
-  const generatePurchaseNo = () => {
-    const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const seq = (purchases.length + 1).toString().padStart(3, '0');
-    return `YBP-${datePart}-${seq}`;
-  };
-
   const handleAddItem = () => {
     if (!itemDesc.trim()) {
       showToast('Please enter an item description.', 'error');
