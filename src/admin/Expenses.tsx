@@ -104,6 +104,7 @@ export default function Expenses() {
         receipt_url: uploadedUrl
       };
 
+      let activeSavedExp = null;
       if (editingExpense) {
         const { data: savedExp, error } = await supabase
           .from('expenses')
@@ -112,7 +113,10 @@ export default function Expenses() {
           .select()
           .single();
         if (error) throw error;
-        if (savedExp) await ERPUtils.recordExpense(savedExp as Expense);
+        if (savedExp) {
+          activeSavedExp = savedExp;
+          await ERPUtils.recordExpense(savedExp as Expense);
+        }
       } else {
         const { data: savedExp, error } = await supabase
           .from('expenses')
@@ -120,8 +124,37 @@ export default function Expenses() {
           .select()
           .single();
         if (error) throw error;
-        if (savedExp) await ERPUtils.recordExpense(savedExp as Expense);
+        if (savedExp) {
+          activeSavedExp = savedExp;
+          await ERPUtils.recordExpense(savedExp as Expense);
+        }
       }
+
+      if (activeSavedExp) {
+        try {
+          const { appendBackupRow } = await import('../utils/googleSheetBackup');
+          const headers = ['Expense ID', 'Date', 'Category', 'Description', 'Amount', 'Receipt URL', 'Created At'];
+          const row = [
+            activeSavedExp.id,
+            activeSavedExp.date || '',
+            activeSavedExp.category || '',
+            activeSavedExp.description || '',
+            activeSavedExp.amount || 0,
+            activeSavedExp.receipt_url || 'N/A',
+            activeSavedExp.created_at ? new Date(activeSavedExp.created_at).toLocaleString() : new Date().toLocaleString()
+          ];
+          await appendBackupRow({
+            sheetName: 'Expenses',
+            headers,
+            row,
+            keyColumnIndex: 0,
+            keyValue: activeSavedExp.id,
+          });
+        } catch (backupError) {
+          console.warn('Network error triggering Google Sheet backup:', backupError);
+        }
+      }
+
       setShowModal(false);
       fetchExpenses();
       setAttachment(null);

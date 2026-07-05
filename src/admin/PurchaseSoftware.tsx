@@ -207,16 +207,44 @@ export default function PurchaseSoftware() {
         balance_due: balanceDue,
       };
 
+      let activeSavedPurchase = null;
       if (isUpdate) {
         const { data: savedPurchase, error } = await supabase.from('purchases').update(payload).eq('id', selectedPurchaseId).select().single();
         if (error) throw error;
         if (savedPurchase && docType === 'Bill') await ERPUtils.recordPurchase(savedPurchase as Purchase);
+        activeSavedPurchase = savedPurchase;
         showToast('Purchase entry updated successfully!');
       } else {
         const { data: savedPurchase, error } = await supabase.from('purchases').insert([payload]).select().single();
         if (error) throw error;
         if (savedPurchase && docType === 'Bill') await ERPUtils.recordPurchase(savedPurchase as Purchase);
+        activeSavedPurchase = savedPurchase;
         showToast('Purchase entry saved successfully!');
+      }
+
+      if (activeSavedPurchase) {
+        try {
+          const { appendBackupRow } = await import('../utils/googleSheetBackup');
+          const headers = ['Purchase No', 'Date', 'Supplier', 'Items', 'Total', 'Status', 'Created At'];
+          const row = [
+            activeSavedPurchase.purchase_no,
+            activeSavedPurchase.date || '',
+            supplierName || '',
+            activeSavedPurchase.items ? (activeSavedPurchase.items as any[]).map(i => `${i.description} (x${i.qty})`).join(', ') : '',
+            activeSavedPurchase.grand_total || 0,
+            activeSavedPurchase.status || '',
+            activeSavedPurchase.created_at ? new Date(activeSavedPurchase.created_at).toLocaleString() : new Date().toLocaleString()
+          ];
+          await appendBackupRow({
+            sheetName: 'Purchases',
+            headers,
+            row,
+            keyColumnIndex: 0,
+            keyValue: activeSavedPurchase.purchase_no,
+          });
+        } catch (backupError) {
+          console.warn('Network error triggering Google Sheet backup:', backupError);
+        }
       }
 
       clearForm();
