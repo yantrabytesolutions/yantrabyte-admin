@@ -456,31 +456,18 @@ export default function ServiceRequest() {
               <ClipboardCheck className="h-4 w-4" />
               Service Ticket
             </div>
-            <motion.h1 
-              variants={{
-                hidden: { opacity: 1 },
-                visible: {
-                  opacity: 1,
-                  transition: { staggerChildren: 0.12 }
-                }
-              }}
-              initial="hidden"
-              animate="visible"
-              className="max-w-xl text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl text-gradient flex flex-wrap gap-x-2"
-            >
+            <h1 className="max-w-xl text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl text-gradient">
               {"Create Your Repair or IT Support Ticket".split(" ").map((word, i) => (
                 <motion.span 
                   key={i} 
-                  variants={{
-                    hidden: { opacity: 0, y: 20 },
-                    visible: { opacity: 1, y: 0, transition: { type: 'spring', damping: 12, stiffness: 100 } }
-                  }}
-                  className="inline-block"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.4, delay: 0.3 + i * 0.15 }}
                 >
-                  {word}
+                  {word}{" "}
                 </motion.span>
               ))}
-            </motion.h1>
+            </h1>
             <p className="mt-4 max-w-xl text-sm leading-7 text-[#CBD5E1] sm:text-base">
               Submit your device or service issue here. Your ticket number will be generated immediately and sent to our admin dashboard.
             </p>
