@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { AlertCircle, ClipboardCheck, Loader2, MapPin, Phone, Send, Wrench, Laptop, Monitor, Printer, Video, Wifi, Fingerprint, Server, Package, UploadCloud, Film, X, ChevronRight, ChevronLeft, CheckCircle2 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import SignatureCanvas from 'react-signature-canvas';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const DEVICE_CATEGORIES = [
   { id: 'Laptop with charger', label: 'Laptop (w/ charger)', icon: Laptop },
@@ -449,8 +450,8 @@ export default function ServiceRequest() {
       {/* Background Orbs */}
       <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-[#0EA5E9]/20 blur-[100px] pointer-events-none"></div>
       <div className="absolute top-40 -right-40 h-96 w-96 rounded-full bg-[#38BDF8]/10 blur-[100px] pointer-events-none"></div>
-        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.4fr]">
-          <div className="pt-4 text-white">
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, staggerChildren: 0.2 }} className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.4fr]">
+          <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, delay: 0.1 }} className="pt-4 text-white">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#0EA5E9]/30 bg-[#0EA5E9]/10 px-3 py-1 text-sm font-semibold text-[#7DD3FC]">
               <ClipboardCheck className="h-4 w-4" />
               Service Ticket
@@ -580,7 +581,7 @@ export default function ServiceRequest() {
 
                 {/* STEP 1: Contact Information */}
                 {step === 1 && (
-                  <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.4 }} className="space-y-5">
                     <div>
                       <h2 className="text-xl font-bold text-white">Contact Information</h2>
                       <p className="mt-1 text-sm text-slate-400">How can we reach you?</p>
@@ -668,7 +669,7 @@ export default function ServiceRequest() {
 
                 {/* STEP 2: Device Details */}
                 {step === 2 && (
-                  <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.4 }} className="space-y-5">
                     <div>
                       <h2 className="text-xl font-bold text-white">Device & Issue</h2>
                       <p className="mt-1 text-sm text-slate-400">What needs to be fixed?</p>
@@ -885,7 +886,7 @@ export default function ServiceRequest() {
 
                 {/* STEP 3: Terms & Signature */}
                 {step === 3 && (
-                  <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.4 }} className="space-y-5">
                     <div>
                       <h2 className="text-xl font-bold text-white">Verification & Submit</h2>
                       <p className="mt-1 text-sm text-slate-400">Please review terms and sign below.</p>
