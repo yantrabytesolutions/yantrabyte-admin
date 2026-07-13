@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase';
 import { AlertCircle, ClipboardCheck, Loader2, MapPin, Phone, Send, Wrench, Laptop, Monitor, Printer, Video, Wifi, Fingerprint, Server, Package, UploadCloud, Film, X, ChevronRight, ChevronLeft, CheckCircle2 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import SignatureCanvas from 'react-signature-canvas';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 const DEVICE_CATEGORIES = [
   { id: 'Laptop with charger', label: 'Laptop (w/ charger)', icon: Laptop },
