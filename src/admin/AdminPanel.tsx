@@ -66,7 +66,7 @@ const SECTION_CONFIG: Record<Section, { label: string; icon: React.ElementType; 
   gallery: { label: 'Gallery', icon: Image, table: 'gallery_images', orderField: 'sort_order', publishedField: 'is_published', subtitle: 'Manage image gallery' },
   'client-logos': { label: 'Client Logos', icon: Award, table: 'client_logos', orderField: 'sort_order', publishedField: 'is_published', subtitle: 'Manage client and partner logos' },
   contacts: { label: 'Contact Submissions', icon: Mail, table: 'contact_submissions', orderField: 'created_at', subtitle: 'View customer inquiries' },
-  tickets: { label: 'Service Ticket', icon: Ticket, table: '', orderField: '', subtitle: 'Manage repair and service tickets' },
+  tickets: { label: 'Service Ticket', icon: Ticket, table: 'service_tickets', orderField: 'created_at', subtitle: 'Manage repair and service tickets' },
   billing: { label: 'Billing Software', icon: Receipt, table: '', orderField: '', subtitle: 'Create and manage invoices' },
   purchase: { label: 'Purchase Entry', icon: Truck, table: '', orderField: '', subtitle: 'Manage supplier purchases' },
   external: { label: 'External Repairs', icon: ExternalLink, table: '', orderField: '', subtitle: 'Manage outsourced repairs' },
