@@ -494,9 +494,13 @@ export default function ServiceRequest() {
                 className="w-full h-48 object-cover opacity-80 hover:opacity-100 transition-opacity"
               />
             </div>
-          </div>
+          </motion.div>
 
-          <div className="rounded-2xl glass-strong p-5 shadow-2xl sm:p-6 glow-blue-sm border-t border-l border-white/20">
+          <motion.div 
+            initial={{ opacity: 0, x: 30 }} 
+            animate={{ opacity: 1, x: 0 }} 
+            transition={{ duration: 0.6, delay: 0.2 }} 
+            className="rounded-2xl glass-strong p-5 shadow-2xl sm:p-6 glow-blue-sm border-t border-l border-white/20">
             {createdTicket ? (
               <div className="flex min-h-[520px] flex-col items-center justify-center text-center">
                 {/* Official Seal */}
@@ -664,7 +668,7 @@ export default function ServiceRequest() {
                     >
                       Next Step <ChevronRight className="h-4 w-4" />
                     </button>
-                  </div>
+                  </motion.div>
                 )}
 
                 {/* STEP 2: Device Details */}
@@ -881,7 +885,7 @@ export default function ServiceRequest() {
                         Next Step <ChevronRight className="h-4 w-4" />
                       </button>
                     </div>
-                  </div>
+                  </motion.div>
                 )}
 
                 {/* STEP 3: Terms & Signature */}
@@ -982,12 +986,12 @@ export default function ServiceRequest() {
                         <span className="relative">Create Service Ticket</span>
                       </button>
                     </div>
-                  </div>
+                  </motion.div>
                 )}
               </form>
             )}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </section>
     </>
   );
