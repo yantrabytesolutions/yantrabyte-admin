@@ -1591,12 +1591,13 @@ export default function AdminPanel() {
           <select
             value={status}
             onChange={e => updateTicketStatus(String(item.id), e.target.value)}
+            style={{ colorScheme: 'dark' }}
             className={`px-2 py-0.5 rounded-full text-xs font-medium border bg-[#0F172A] text-white cursor-pointer outline-none transition-all ${colors[status] || 'bg-white/5 text-[#64748B] border-white/10'}`}
           >
-            <option value="open" className="bg-[#0F172A] text-white">Open</option>
-            <option value="in-progress" className="bg-[#0F172A] text-white">In Progress</option>
-            <option value="completed" className="bg-[#0F172A] text-white">Completed</option>
-            <option value="closed" className="bg-[#0F172A] text-white">Closed</option>
+            <option value="open">Open</option>
+            <option value="in-progress">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="closed">Closed</option>
           </select>
         );
       }
@@ -1797,11 +1798,12 @@ export default function AdminPanel() {
                           <select
                             value={String(item.status || 'new')}
                             onChange={e => updateContactStatus(String(item.id), e.target.value)}
+                            style={{ colorScheme: 'dark' }}
                             className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-[#94A3B8] text-xs focus:outline-none focus:border-[#0EA5E9]/50"
                           >
-                            <option value="new" className="bg-[#0F172A] text-white">New</option>
-                            <option value="read" className="bg-[#0F172A] text-white">Read</option>
-                            <option value="replied" className="bg-[#0F172A] text-white">Replied</option>
+                            <option value="new">New</option>
+                            <option value="read">Read</option>
+                            <option value="replied">Replied</option>
                           </select>
                         )}
                         {!isReadOnly && (
