@@ -606,7 +606,7 @@ export default function ServiceRequest() {
                         <input
                           value={form.customer_name}
                           onChange={e => updateField('customer_name', e.target.value)}
-                          className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-black bg-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                           placeholder="Customer name"
                         />
                       </label>
@@ -615,7 +615,7 @@ export default function ServiceRequest() {
                         <input
                           value={form.customer_phone}
                           onChange={e => updateField('customer_phone', e.target.value)}
-                          className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-black bg-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                           placeholder="10-digit number"
                         />
                       </label>
@@ -628,7 +628,7 @@ export default function ServiceRequest() {
                           type="email"
                           value={form.customer_email}
                           onChange={e => updateField('customer_email', e.target.value)}
-                          className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-black bg-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                           placeholder="Email address"
                         />
                       </label>
@@ -637,7 +637,7 @@ export default function ServiceRequest() {
                         <select
                           value={form.preferred_contact}
                           onChange={e => updateField('preferred_contact', e.target.value)}
-                          className="mt-1 w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          className="mt-1 w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-black bg-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                         >
                           <option value="whatsapp">WhatsApp</option>
                           <option value="phone">Phone Call</option>
@@ -652,7 +652,7 @@ export default function ServiceRequest() {
                         rows={2}
                         value={form.customer_address}
                         onChange={e => updateField('customer_address', e.target.value)}
-                        className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 resize-none"
+                        className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-black bg-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 resize-none"
                         placeholder="Full address for pickup or record"
                       />
                     </label>
@@ -719,7 +719,7 @@ export default function ServiceRequest() {
                         <input
                           value={otherDeviceType}
                           onChange={e => setOtherDeviceType(e.target.value)}
-                          className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-black bg-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                           placeholder="e.g. Projector, Scanner, etc."
                         />
                       </label>
@@ -745,7 +745,7 @@ export default function ServiceRequest() {
                         <input
                           value={form.device_make_model}
                           onChange={e => updateField('device_make_model', e.target.value)}
-                          className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-black bg-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                           placeholder="e.g., Dell XPS 15, HP LaserJet"
                         />
                       </label>
@@ -754,7 +754,7 @@ export default function ServiceRequest() {
                         <input
                           value={form.device_password}
                           onChange={e => updateField('device_password', e.target.value)}
-                          className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-black bg-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                           placeholder="Optional but recommended for testing"
                         />
                       </label>
@@ -766,7 +766,7 @@ export default function ServiceRequest() {
                         value={form.issue_description}
                         onChange={e => updateField('issue_description', e.target.value)}
                         rows={4}
-                        className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                        className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-black bg-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                         placeholder="Describe the problem in detail..."
                       />
                     </label>
@@ -838,7 +838,7 @@ export default function ServiceRequest() {
                         <select
                           value={form.priority}
                           onChange={e => updateField('priority', e.target.value)}
-                          className="mt-1 w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          className="mt-1 w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-black bg-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                         >
                           {PRIORITY_OPTIONS.map(option => (
                             <option key={option.value} value={option.value}>{option.label}</option>
@@ -868,7 +868,7 @@ export default function ServiceRequest() {
                         <select
                           value={form.pre_approved_budget}
                           onChange={e => updateField('pre_approved_budget', e.target.value)}
-                          className="mt-1 w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          className="mt-1 w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-black bg-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                         >
                           <option value="No Pre-Approval">No Pre-Approval (Call me first)</option>
                           <option value="Up to ₹500">Up to ₹500 (Save time)</option>
@@ -948,7 +948,7 @@ export default function ServiceRequest() {
                           type="number"
                           value={captchaInput}
                           onChange={e => setCaptchaInput(e.target.value)}
-                          className="w-24 rounded-md border border-white/10 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          className="w-24 rounded-md border border-white/10 px-3 py-2 text-black bg-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                           placeholder="?"
                         />
                       </div>
