@@ -54,7 +54,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ invoice, 
         backgroundRepeat: 'no-repeat',
         pointerEvents: 'none',
         zIndex: 50,
-        opacity: 0.1
+        opacity: 0.2
       }}>
       </div>
 

@@ -561,7 +561,7 @@ export default function AdminPanel() {
     element.innerHTML = `
       <div style="width: 794px; height: 1080px; padding: 28px; box-sizing: border-box; overflow: hidden; background-color: #ffffff; position: relative;">
         <!-- Watermark -->
-        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url(/hardware_watermark.png); background-size: cover; background-position: center; background-repeat: no-repeat; pointer-events: none; z-index: 50; opacity: 0.1;">
+        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url(/hardware_watermark.png); background-size: cover; background-position: center; background-repeat: no-repeat; pointer-events: none; z-index: 50; opacity: 0.2;">
         </div>
         <div style="border: 2px solid #000000; padding: 18px; min-height: 1020px; box-sizing: border-box; position: relative; z-index: 10;">
         <!-- Header -->

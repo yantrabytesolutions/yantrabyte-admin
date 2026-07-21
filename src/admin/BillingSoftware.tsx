@@ -2129,7 +2129,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             backgroundRepeat: 'no-repeat',
             pointerEvents: 'none',
             zIndex: 50,
-            opacity: 0.1
+            opacity: 0.2
           }}>
           </div>
           
