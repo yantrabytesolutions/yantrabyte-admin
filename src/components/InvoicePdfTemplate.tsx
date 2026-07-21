@@ -48,13 +48,14 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ invoice, 
       <div style={{
         position: 'absolute',
         top: 0, left: 0, width: '100%', height: '100%',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        backgroundImage: 'url(/hardware_watermark.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
         pointerEvents: 'none',
         zIndex: 50,
-        overflow: 'hidden',
         opacity: 0.1
       }}>
-        <img src="/hardware_watermark.png" alt="Watermark" style={{ width: '100%', height: '100%', objectFit: 'cover' }} crossOrigin="anonymous" />
       </div>
 
       {/* Outer Border for main content */}
