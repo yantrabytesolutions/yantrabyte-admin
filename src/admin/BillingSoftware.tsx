@@ -646,23 +646,29 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const quoteCount = invoices.filter(i => i.doc_type === 'Quotation').length;
 
   const generateInvoiceNoAsync = async (type: string = docType) => {
-    const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const prefix = type === 'Quotation' ? 'YBQ' : 'YBS';
-    const basePrefix = `${prefix}-${datePart}-`;
     
     const { data } = await supabase
       .from('invoices')
       .select('invoice_no')
-      .like('invoice_no', `${basePrefix}%`)
-      .order('invoice_no', { ascending: false })
-      .limit(1);
+      .like('invoice_no', `${prefix}-%`);
       
-    let seq = 1;
-    if (data && data.length > 0 && data[0].invoice_no) {
-      const lastSeq = parseInt(data[0].invoice_no.split('-').pop() || '0', 10);
-      if (!isNaN(lastSeq)) seq = lastSeq + 1;
+    let maxSeq = 0;
+    if (data) {
+      data.forEach(row => {
+        if (row.invoice_no) {
+          const parts = row.invoice_no.split('-');
+          const lastPart = parts[parts.length - 1];
+          const num = parseInt(lastPart, 10);
+          if (!isNaN(num) && num > maxSeq) {
+            maxSeq = num;
+          }
+        }
+      });
     }
-    return `${basePrefix}${seq.toString().padStart(3, '0')}`;
+    
+    const seq = maxSeq + 1;
+    return `${prefix}-${seq.toString().padStart(3, '0')}`;
   };
 
 
