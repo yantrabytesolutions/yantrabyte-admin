@@ -646,6 +646,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const quoteCount = invoices.filter(i => i.doc_type === 'Quotation').length;
 
   const generateInvoiceNoAsync = async (type: string = docType) => {
+    const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const prefix = type === 'Quotation' ? 'YBQ' : 'YBS';
     
     const { data } = await supabase
@@ -668,7 +669,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     }
     
     const seq = maxSeq + 1;
-    return `${prefix}-${seq.toString().padStart(3, '0')}`;
+    return `${prefix}-${datePart}-${seq.toString().padStart(3, '0')}`;
   };
 
 
