@@ -5,9 +5,9 @@ import { QRCodeSVG } from 'qrcode.react';
 import type { Invoice } from '../types';
 import SEO from '../components/SEO';
 
-export function EstimateApproval() {
+export function QuotationApproval() {
   const { id } = useParams<{ id: string }>();
-  const [estimate, setEstimate] = useState<Invoice | null>(null);
+  const [quotation, setQuotation] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [signature, setSignature] = useState('');
@@ -15,12 +15,12 @@ export function EstimateApproval() {
   const [approvalResult, setApprovalResult] = useState<'Approved' | 'Rejected' | null>(null);
 
   useEffect(() => {
-    const fetchEstimate = async () => {
+    const fetchQuotation = async () => {
       try {
-        const res = await fetch(`/api/invoices/estimate/${id}`);
-        if (!res.ok) throw new Error('Estimate not found or link is invalid.');
+        const res = await fetch(`/api/invoices/quotation/${id}`);
+        if (!res.ok) throw new Error('Quotation not found or link is invalid.');
         const data = await res.json();
-        setEstimate(data);
+        setQuotation(data);
         if (['Approved', 'Rejected'].includes(data.payment_status)) {
           setApprovalResult(data.payment_status as 'Approved' | 'Rejected');
         }
@@ -30,7 +30,7 @@ export function EstimateApproval() {
         setLoading(false);
       }
     };
-    if (id) fetchEstimate();
+    if (id) fetchQuotation();
   }, [id]);
 
   const handleDecision = async (status: 'Approved' | 'Rejected') => {
@@ -43,7 +43,7 @@ export function EstimateApproval() {
     setError('');
     
     try {
-      const res = await fetch(`/api/invoices/estimate/${id}/approve`, {
+      const res = await fetch(`/api/invoices/quotation/${id}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status, signature: status === 'Approved' ? signature.trim() : '' })
@@ -66,21 +66,21 @@ export function EstimateApproval() {
     );
   }
 
-  if (error && !estimate) {
+  if (error && !quotation) {
     return (
       <div className="min-h-[calc(100vh-6rem)] bg-[#0f172a] text-white flex flex-col items-center justify-center p-6 text-center">
         <XCircle className="w-16 h-16 text-red-500 mb-4" />
-        <h1 className="text-2xl font-bold mb-2">Estimate Not Found</h1>
+        <h1 className="text-2xl font-bold mb-2">Quotation Not Found</h1>
         <p className="text-slate-400 max-w-md">{error}</p>
       </div>
     );
   }
 
-  if (!estimate) return null;
+  if (!quotation) return null;
 
   return (
     <div className="min-h-[calc(100vh-6rem)] bg-[#0f172a] text-slate-300 py-12 px-4 relative overflow-hidden">
-      <SEO title={`Estimate ${estimate.invoice_no}`} description="Review and approve your repair estimate online." />
+      <SEO title={`Quotation ${quotation.invoice_no}`} description="Review and approve your repair quotation online." />
       
       {/* Decorative blobs */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-3xl translate-x-1/3 -translate-y-1/3 pointer-events-none" />
@@ -95,7 +95,7 @@ export function EstimateApproval() {
             ) : (
               <XCircle className="w-20 h-20 text-red-500 mx-auto mb-6" />
             )}
-            <h1 className="text-4xl font-bold text-white mb-4">Estimate {approvalResult}</h1>
+            <h1 className="text-4xl font-bold text-white mb-4">Quotation {approvalResult}</h1>
             
             {approvalResult === 'Approved' ? (
               <div className="text-left bg-black/20 p-6 md:p-8 rounded-xl border border-white/10 mt-8">
@@ -106,7 +106,7 @@ export function EstimateApproval() {
                   <div className="flex-1 space-y-4 w-full">
                     <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 text-center">
                       <p className="text-sm text-blue-300 uppercase tracking-wider mb-1">Advance Amount</p>
-                      <p className="text-3xl font-bold text-white">₹{(estimate.grand_total * 0.8).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+                      <p className="text-3xl font-bold text-white">₹{(quotation.grand_total * 0.8).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
                     </div>
                     <div className="text-sm text-slate-300 space-y-2 p-4 bg-white/5 rounded-lg border border-white/5">
                       <p><strong className="text-white">Bank:</strong> North East Small Finance Bank</p>
@@ -118,7 +118,7 @@ export function EstimateApproval() {
                   </div>
                   <div className="w-48 h-48 bg-white rounded-xl p-2 flex-shrink-0 flex items-center justify-center relative overflow-hidden border-4 border-white/10 shadow-xl">
                     <QRCodeSVG 
-                      value={`upi://pay?pa=s0424237152@slc&pn=${encodeURIComponent('YantraByte Solutions')}&am=${(estimate.grand_total * 0.8).toFixed(2)}&cu=INR`} 
+                      value={`upi://pay?pa=s0424237152@slc&pn=${encodeURIComponent('YantraByte Solutions')}&am=${(quotation.grand_total * 0.8).toFixed(2)}&cu=INR`} 
                       size={170} 
                     />
                   </div>
@@ -126,7 +126,7 @@ export function EstimateApproval() {
               </div>
             ) : (
               <p className="text-lg text-slate-400 mb-8">
-                Your estimate has been rejected. We will contact you to discuss alternatives or return your device.
+                Your quotation has been rejected. We will contact you to discuss alternatives or return your device.
               </p>
             )}
           </div>
@@ -136,14 +136,14 @@ export function EstimateApproval() {
               <div>
                 <h1 className="text-3xl font-bold text-white flex items-center gap-3">
                   <FileText className="w-8 h-8 text-blue-400" />
-                  Service Estimate
+                  Service Quotation
                 </h1>
-                <p className="text-slate-400 mt-2">#{estimate.invoice_no} • {new Date(estimate.date).toLocaleDateString()}</p>
+                <p className="text-slate-400 mt-2">#{quotation.invoice_no} • {new Date(quotation.date).toLocaleDateString()}</p>
               </div>
               <div className="mt-4 md:mt-0 text-left md:text-right">
                 <p className="text-sm text-slate-400 uppercase tracking-wider">Prepared For</p>
-                <p className="text-lg font-semibold text-white">{estimate.customer_name}</p>
-                <p className="text-slate-400">{estimate.phone}</p>
+                <p className="text-lg font-semibold text-white">{quotation.customer_name}</p>
+                <p className="text-slate-400">{quotation.phone}</p>
               </div>
             </div>
 
@@ -158,7 +158,7 @@ export function EstimateApproval() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
-                  {estimate.items.map((item, idx) => (
+                  {quotation.items.map((item, idx) => (
                     <tr key={idx} className="hover:bg-white/5 transition-colors">
                       <td className="py-4 px-4 font-medium text-white">{item.description}</td>
                       <td className="py-4 px-4 text-right">{item.qty}</td>
@@ -174,30 +174,30 @@ export function EstimateApproval() {
               <div className="flex-1 bg-black/20 p-6 rounded-xl border border-white/5">
                 <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-3">Terms & Conditions</h3>
                 <p className="text-sm text-slate-400 whitespace-pre-line leading-relaxed">
-                  {estimate.terms_conditions || "Standard repair terms apply. Prices may vary if hidden faults are discovered during repair."}
+                  {quotation.terms_conditions || "Standard repair terms apply. Prices may vary if hidden faults are discovered during repair."}
                 </p>
               </div>
               
               <div className="w-full md:w-64 space-y-3 bg-white/5 p-6 rounded-xl border border-white/10">
                 <div className="flex justify-between text-sm">
                   <span>Subtotal:</span>
-                  <span className="text-white">₹{estimate.subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                  <span className="text-white">₹{quotation.subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                 </div>
-                {estimate.discount > 0 && (
+                {quotation.discount > 0 && (
                   <div className="flex justify-between text-sm text-emerald-400">
                     <span>Discount:</span>
-                    <span>- ₹{estimate.discount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                    <span>- ₹{quotation.discount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                   </div>
                 )}
-                {estimate.tax > 0 && (
+                {quotation.tax > 0 && (
                   <div className="flex justify-between text-sm">
                     <span>Tax (18% GST):</span>
-                    <span className="text-white">₹{estimate.tax.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                    <span className="text-white">₹{quotation.tax.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-lg font-bold text-white pt-3 border-t border-white/10">
                   <span>Grand Total:</span>
-                  <span className="text-blue-400">₹{estimate.grand_total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                  <span className="text-blue-400">₹{quotation.grand_total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                 </div>
               </div>
             </div>
@@ -238,7 +238,7 @@ export function EstimateApproval() {
                     disabled={isSubmitting}
                     className="flex-1 md:flex-none px-8 py-3 rounded-lg font-semibold bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isSubmitting ? 'Processing...' : 'Approve Estimate'}
+                    {isSubmitting ? 'Processing...' : 'Approve Quotation'}
                   </button>
                 </div>
               </div>

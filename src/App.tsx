@@ -13,7 +13,7 @@ import ServiceRequest from './pages/ServiceRequest';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import { TrackTicket } from './pages/TrackTicket';
-import { EstimateApproval } from './pages/EstimateApproval';
+import { QuotationApproval } from './pages/QuotationApproval';
 import AdminPanel from './admin/AdminPanel';
 import PortalLogin from './portal/PortalLogin';
 import PortalDashboard from './portal/PortalDashboard';
@@ -63,7 +63,7 @@ function App() {
           <Route path="/service-request" element={<ServiceRequest />} />
           <Route path="/servicerequest" element={<ServiceRequest />} />
           <Route path="/track-ticket" element={<TrackTicket />} />
-          <Route path="/estimate/:id" element={<EstimateApproval />} />
+          <Route path="/quotation/:id" element={<QuotationApproval />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
         </Route>

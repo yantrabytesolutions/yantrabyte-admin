@@ -795,8 +795,8 @@ app.get('/api/tickets/track/:ticket_number', async (req, res) => {
   }
 });
 
-// --- ESTIMATE APPROVAL ENDPOINTS ---
-app.get('/api/invoices/estimate/:id', async (req, res) => {
+// --- QUOTATION APPROVAL ENDPOINTS ---
+app.get('/api/invoices/quotation/:id', async (req, res) => {
   const { id } = req.params;
   try {
     const supabaseAdmin = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY, {
@@ -813,15 +813,15 @@ app.get('/api/invoices/estimate/:id', async (req, res) => {
       .eq('doc_type', 'Quotation')
       .single();
       
-    if (error || !data) return res.status(404).json({ error: 'Estimate not found' });
+    if (error || !data) return res.status(404).json({ error: 'Quotation not found' });
     return res.json(data);
   } catch (err) {
-    console.error('Error fetching estimate:', err);
+    console.error('Error fetching quotation:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-app.post('/api/invoices/estimate/:id/approve', async (req, res) => {
+app.post('/api/invoices/quotation/:id/approve', async (req, res) => {
   const { id } = req.params;
   const { status, signature } = req.body;
   
