@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Invoice, InvoiceItem, ServiceTicket, Product, Customer, Purchase } from '../types';
-import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt, Mail, FileSpreadsheet, Pencil, MessageSquare, Send, List, Search, Clock, Settings } from 'lucide-react';
+import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt, Mail, FileSpreadsheet, Pencil, MessageSquare, Send, List, Search, Clock, Settings, Link } from 'lucide-react';
 import { sendTelegramNotification } from '../utils/telegram';
 import html2pdf from 'html2pdf.js';
 
@@ -1057,6 +1057,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             body: JSON.stringify({
               to: email,
               customerName,
+              customerPhone: phone,
               invoiceNumber: payload.invoice_no,
               documentType: docType,
               filename: `YBS-${payload.invoice_no}.pdf`,
@@ -1997,7 +1998,13 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                       {inv.doc_type === 'Cancelled' ? (
                         <span className="text-xs px-2 py-1 rounded-full bg-red-50 text-red-700 font-medium border border-red-100">Cancelled</span>
                       ) : inv.doc_type === 'Quotation' ? (
-                        <span className="text-xs px-2 py-1 rounded-full bg-purple-50 text-purple-700 font-medium border border-purple-100">Quotation</span>
+                        <span className={`text-xs px-2 py-1 rounded-full font-medium border ${
+                          inv.payment_status === 'Approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                          inv.payment_status === 'Rejected' ? 'bg-red-50 text-red-700 border-red-100' :
+                          'bg-purple-50 text-purple-700 border-purple-100'
+                        }`}>
+                          {inv.payment_status === 'Approved' ? 'Approved' : inv.payment_status === 'Rejected' ? 'Rejected' : 'Quotation'}
+                        </span>
                       ) : (inv.balance_due || 0) <= 0 ? (
                         <span className="text-xs px-2 py-1 rounded-full bg-green-50 text-green-700 font-medium border border-green-100">Paid</span>
                       ) : (inv.payment_status || getPaymentStatus(inv.doc_type, inv.balance_due || 0, inv.advance_paid || 0)) === 'Partial' ? (
@@ -2033,9 +2040,19 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                           </button>
                         )}
                         {inv.doc_type === 'Quotation' && (
-                          <button onClick={(e) => { e.stopPropagation(); handleConvertToInvoice(inv.id); setActiveTab('editor'); }} className="p-1.5 text-gray-500 hover:bg-emerald-50 hover:text-emerald-600 rounded-md transition-colors" title="Convert to Invoice">
-                            <Copy className="w-4 h-4" />
-                          </button>
+                          <>
+                            <button onClick={(e) => { 
+                              e.stopPropagation(); 
+                              const link = `https://yantrabyte.com/estimate/${inv.id}`;
+                              navigator.clipboard.writeText(link);
+                              showToast('Estimate link copied to clipboard!', 'success');
+                            }} className="p-1.5 text-gray-500 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors" title="Copy Estimate Link">
+                              <Link className="w-4 h-4" />
+                            </button>
+                            <button onClick={(e) => { e.stopPropagation(); handleConvertToInvoice(inv.id); setActiveTab('editor'); }} className="p-1.5 text-gray-500 hover:bg-emerald-50 hover:text-emerald-600 rounded-md transition-colors" title="Convert to Invoice">
+                              <Copy className="w-4 h-4" />
+                            </button>
+                          </>
                         )}
                         {inv.doc_type === 'Invoice' && (inv.balance_due || 0) > 0 && (
                           <button onClick={(e) => { e.stopPropagation(); handleMarkAsPaid(inv.id); }} className="p-1.5 text-gray-500 hover:bg-green-50 hover:text-green-600 rounded-md transition-colors" title="Mark as Paid">

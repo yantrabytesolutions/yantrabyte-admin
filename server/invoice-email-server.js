@@ -5,13 +5,66 @@ import { Readable } from 'stream';
 import nodemailer from 'nodemailer';
 import { google } from 'googleapis';
 import { createClient } from '@supabase/supabase-js';
+import WebSocket from 'ws';
+global.WebSocket = WebSocket;
 import cron from 'node-cron';
+import pkg from 'whatsapp-web.js';
+const { Client, LocalAuth, MessageMedia } = pkg;
+import qrcodeTerminal from 'qrcode-terminal';
+import QRCode from 'qrcode';
+import fs from 'fs';
+import path from 'path';
 
 dotenv.config();
 
 const app = express();
 const port = Number(process.env.INVOICE_API_PORT || process.env.PORT || 4000);
 const maxPdfSize = process.env.INVOICE_MAX_JSON_SIZE || '50mb';
+
+// --- WhatsApp Client Setup ---
+const whatsappClient = new Client({
+  authStrategy: new LocalAuth(),
+  puppeteer: {
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
+  }
+});
+
+let isWhatsappReady = false;
+
+whatsappClient.on('qr', async (qr) => {
+  console.log('========================================================');
+  console.log('SCAN THIS QR CODE WITH YOUR WHATSAPP BUSINESS APP:');
+  console.log('========================================================');
+  qrcodeTerminal.generate(qr, { small: true });
+  
+  try {
+    const dataUrl = await QRCode.toDataURL(qr);
+    const html = `<html><body style="display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh;background:#f0f2f5;font-family:sans-serif;text-align:center;">
+      <div>
+        <h2>Scan with WhatsApp Business</h2>
+        <img src="${dataUrl}" style="width:350px;height:350px;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+        <p style="margin-top:20px;color:#555;font-size:16px;">If you can't scan the terminal, scan this high-quality QR code instead.</p>
+        <p style="color:#888;font-size:13px;margin-top:10px;">This QR code refreshes every 20 seconds. If it doesn't scan, refresh the page.</p>
+      </div>
+    </body></html>`;
+    const outputPath = path.join(process.cwd(), 'public', 'whatsapp-qr.html');
+    fs.writeFileSync(outputPath, html);
+    console.log('');
+    console.log('🌟 Or open this link in your browser to scan a larger, perfect QR code:');
+    console.log('👉 http://localhost:5174/whatsapp-qr.html');
+    console.log('========================================================');
+  } catch (err) {
+    console.error('Failed to generate HTML QR code', err);
+  }
+});
+
+whatsappClient.on('ready', () => {
+  console.log('✅ WhatsApp Client is ready! You can now send automated messages.');
+  isWhatsappReady = true;
+});
+
+whatsappClient.initialize();
+// -----------------------------
 
 app.use(cors());
 app.use(express.json({ limit: maxPdfSize, extended: true }));
@@ -250,6 +303,7 @@ async function requireSupabaseUser(req, res, next) {
 
   const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.VITE_SUPABASE_ANON_KEY, {
     auth: { persistSession: false },
+    realtime: { transport: WebSocket }
   });
   const { data, error } = await supabase.auth.getUser(token);
 
@@ -453,6 +507,7 @@ app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {
     documentType = 'Invoice',
     filename,
     pdfBase64,
+    customerPhone
   } = req.body || {};
 
   if (!isValidEmail(to)) {
@@ -544,10 +599,30 @@ app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {
   }
 
   console.log(`[Success] Email sent to ${to} for ${cleanInvoiceNumber}`);
+  
+  let whatsappStatus = 'skipped';
+  if (isWhatsappReady && customerPhone) {
+    let cleanPhone = String(customerPhone).replace(/\D/g, '');
+    if (cleanPhone.length === 10) cleanPhone = '91' + cleanPhone;
+    if (cleanPhone.length >= 10) {
+      try {
+        const media = new MessageMedia('application/pdf', pdfBase64, safeFilename);
+        const caption = `Dear ${cleanCustomerName},\n\nPlease find attached your ${cleanDocumentType.toLowerCase()} *${cleanInvoiceNumber}*.\n\nRegards,\nYantraByte Solutions`;
+        await whatsappClient.sendMessage(`${cleanPhone}@c.us`, media, { caption });
+        whatsappStatus = 'sent';
+        console.log(`[Success] WhatsApp sent to ${customerPhone} for ${cleanInvoiceNumber}`);
+      } catch (err) {
+        console.error(`[Error] WhatsApp invoice send failed:`, err);
+        whatsappStatus = 'failed';
+      }
+    }
+  }
+
   return res.json({
     ok: true,
     email: { ok: true, messageId: mailResult.messageId },
     drive: driveResult,
+    whatsapp: whatsappStatus
   });
 });
 
@@ -613,7 +688,7 @@ app.post('/api/invoices/reminders', requireSupabaseUser, async (req, res) => {
 });
 
 app.post('/api/tickets/notify', requireSupabaseUser, async (req, res) => {
-  const { ticket_number, customer_name, customer_email, status, device_type } = req.body || {};
+  const { ticket_number, customer_name, customer_email, status, device_type, customer_phone } = req.body || {};
 
   if (!customer_email || !isValidEmail(customer_email)) {
     return res.status(400).json({ error: 'Valid customer_email is required' });
@@ -649,7 +724,24 @@ app.post('/api/tickets/notify', requireSupabaseUser, async (req, res) => {
         </div>
       `,
     });
-    return res.json({ ok: true, messageId: mailResult.messageId });
+    
+    let whatsappStatus = 'skipped';
+    if (isWhatsappReady && customer_phone) {
+      let cleanPhone = String(customer_phone).replace(/\D/g, '');
+      if (cleanPhone.length === 10) cleanPhone = '91' + cleanPhone;
+      if (cleanPhone.length >= 10) {
+        try {
+          const messageText = `*Service Ticket Update*\n\nDear ${customer_name || 'Customer'},\n\nYour service ticket *${ticket_number}* for your *${device_type || 'device'}* has been updated to: *${status.toUpperCase()}*.\n\nTrack your live status here: ${portalLink}\n\nRegards,\nYantraByte Solutions`;
+          await whatsappClient.sendMessage(`${cleanPhone}@c.us`, messageText);
+          whatsappStatus = 'sent';
+        } catch (err) {
+          console.error('WhatsApp ticket update failed:', err);
+          whatsappStatus = 'failed';
+        }
+      }
+    }
+    
+    return res.json({ ok: true, messageId: mailResult.messageId, whatsapp: whatsappStatus });
   } catch (error) {
     console.error(`Ticket update email failed for ${customer_email}:`, getDeliveryErrorMessage(error));
     return res.status(500).json({ error: getDeliveryErrorMessage(error) });
@@ -665,7 +757,9 @@ app.get('/api/tickets/track/:ticket_number', async (req, res) => {
   }
 
   try {
-    const supabaseAdmin = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY);
+    const supabaseAdmin = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY, {
+      realtime: { transport: WebSocket }
+    });
     const { data, error } = await supabaseAdmin
       .from('service_tickets')
       .select('ticket_number, status, device_type, created_at, customer_name, issue_description, customer_phone')
@@ -701,6 +795,77 @@ app.get('/api/tickets/track/:ticket_number', async (req, res) => {
   }
 });
 
+// --- ESTIMATE APPROVAL ENDPOINTS ---
+app.get('/api/invoices/estimate/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const supabaseAdmin = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY, {
+      realtime: { transport: WebSocket }
+    });
+    
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    const filterColumn = isUUID ? 'id' : 'invoice_no';
+    
+    const { data, error } = await supabaseAdmin
+      .from('invoices')
+      .select('*')
+      .eq(filterColumn, id)
+      .eq('doc_type', 'Quotation')
+      .single();
+      
+    if (error || !data) return res.status(404).json({ error: 'Estimate not found' });
+    return res.json(data);
+  } catch (err) {
+    console.error('Error fetching estimate:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/invoices/estimate/:id/approve', async (req, res) => {
+  const { id } = req.params;
+  const { status, signature } = req.body;
+  
+  if (!['Approved', 'Rejected'].includes(status)) {
+    return res.status(400).json({ error: 'Invalid status' });
+  }
+  
+  try {
+    const supabaseAdmin = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY, {
+      realtime: { transport: WebSocket }
+    });
+    
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    const filterColumn = isUUID ? 'id' : 'invoice_no';
+    
+    const { data: inv, error: fetchErr } = await supabaseAdmin
+      .from('invoices')
+      .select('terms_conditions')
+      .eq(filterColumn, id)
+      .single();
+      
+    if (fetchErr || !inv) return res.status(404).json({ error: 'Estimate not found' });
+    
+    const timestamp = new Date().toLocaleString('en-IN');
+    const signatureText = signature ? `\n\nDigital Signature: ${signature} on ${timestamp}` : `\n\n[System] Customer ${status} on ${timestamp}`;
+    const newTerms = (inv.terms_conditions || '') + signatureText;
+    
+    const { error: updateErr } = await supabaseAdmin
+      .from('invoices')
+      .update({
+        payment_status: status,
+        terms_conditions: newTerms.trim()
+      })
+      .eq(filterColumn, id);
+      
+    if (updateErr) throw updateErr;
+    
+    return res.json({ success: true, status });
+  } catch (err) {
+    console.error('Error updating estimate:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // --- AUTOMATED CRON JOB ---
 // Runs daily at 10:00 AM (server time)
 cron.schedule('0 10 * * *', async () => {
@@ -714,6 +879,7 @@ cron.schedule('0 10 * * *', async () => {
   try {
     const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.VITE_SUPABASE_ANON_KEY, {
       auth: { persistSession: false },
+      realtime: { transport: WebSocket }
     });
 
     const today = new Date().toISOString().split('T')[0];
