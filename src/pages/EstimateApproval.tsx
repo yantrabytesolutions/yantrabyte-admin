@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { FileText, CheckCircle2, XCircle, ShieldCheck, AlertCircle } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import type { Invoice } from '../types';
 import SEO from '../components/SEO';
 
@@ -88,18 +89,46 @@ export function EstimateApproval() {
       <div className="max-w-3xl mx-auto relative z-10">
         
         {approvalResult ? (
-          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-10 text-center shadow-2xl animate-fade-in-up">
+          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 md:p-10 text-center shadow-2xl animate-fade-in-up max-w-2xl mx-auto">
             {approvalResult === 'Approved' ? (
               <CheckCircle2 className="w-20 h-20 text-emerald-500 mx-auto mb-6" />
             ) : (
               <XCircle className="w-20 h-20 text-red-500 mx-auto mb-6" />
             )}
             <h1 className="text-4xl font-bold text-white mb-4">Estimate {approvalResult}</h1>
-            <p className="text-lg text-slate-400 mb-8">
-              {approvalResult === 'Approved' 
-                ? "Thank you! Your approval has been recorded. We will proceed with the service." 
-                : "Your estimate has been rejected. We will contact you to discuss alternatives or return your device."}
-            </p>
+            
+            {approvalResult === 'Approved' ? (
+              <div className="text-left bg-black/20 p-6 md:p-8 rounded-xl border border-white/10 mt-8">
+                <p className="text-lg text-slate-300 mb-8 text-center">
+                  Thank you! Your approval has been recorded. To proceed with the service, please make an advance payment of <strong className="text-white">80%</strong>.
+                </p>
+                <div className="flex flex-col md:flex-row gap-8 items-center justify-center">
+                  <div className="flex-1 space-y-4 w-full">
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 text-center">
+                      <p className="text-sm text-blue-300 uppercase tracking-wider mb-1">Advance Amount</p>
+                      <p className="text-3xl font-bold text-white">₹{(estimate.grand_total * 0.8).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+                    </div>
+                    <div className="text-sm text-slate-300 space-y-2 p-4 bg-white/5 rounded-lg border border-white/5">
+                      <p><strong className="text-white">Bank:</strong> North East Small Finance Bank</p>
+                      <p><strong className="text-white">A/C Name:</strong> YantraByte Solutions</p>
+                      <p><strong className="text-white">A/C No:</strong> 033311501023226</p>
+                      <p><strong className="text-white">IFSC Code:</strong> NESF0000333</p>
+                      <p className="pt-2 mt-2 border-t border-white/10"><strong className="text-white">UPI ID:</strong> s0424237152@slc</p>
+                    </div>
+                  </div>
+                  <div className="w-48 h-48 bg-white rounded-xl p-2 flex-shrink-0 flex items-center justify-center relative overflow-hidden border-4 border-white/10 shadow-xl">
+                    <QRCodeSVG 
+                      value={`upi://pay?pa=s0424237152@slc&pn=${encodeURIComponent('YantraByte Solutions')}&am=${(estimate.grand_total * 0.8).toFixed(2)}&cu=INR`} 
+                      size={170} 
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="text-lg text-slate-400 mb-8">
+                Your estimate has been rejected. We will contact you to discuss alternatives or return your device.
+              </p>
+            )}
           </div>
         ) : (
           <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 md:p-10 shadow-2xl">

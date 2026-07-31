@@ -839,7 +839,7 @@ app.post('/api/invoices/estimate/:id/approve', async (req, res) => {
     
     const { data: inv, error: fetchErr } = await supabaseAdmin
       .from('invoices')
-      .select('terms_conditions')
+      .select('terms_conditions, customer_name, phone, grand_total, invoice_no')
       .eq(filterColumn, id)
       .single();
       
@@ -858,6 +858,29 @@ app.post('/api/invoices/estimate/:id/approve', async (req, res) => {
       .eq(filterColumn, id);
       
     if (updateErr) throw updateErr;
+
+    // --- NEW: WhatsApp message on approval ---
+    if (status === 'Approved' && isWhatsappReady && inv.phone) {
+      try {
+        const cleanPhone = inv.phone.replace(/\D/g, '');
+        if (cleanPhone.length >= 10) {
+          const advanceAmount = (inv.grand_total * 0.8).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+          const messageText = `Hi ${inv.customer_name},\n\nThank you for approving the estimate #${inv.invoice_no}. \n\nTo proceed with the service, please make an advance payment of 80% (₹${advanceAmount}).\n\n*Bank & Payment Details:*\nBank: North East Small Finance Bank\nA/C Name: YantraByte Solutions\nA/C No: 033311501023226\nIFSC: NESF0000333\nUPI ID: s0424237152@slc\n\nThank you!`;
+          
+          const qrPath = path.join(process.cwd(), 'public', 'payment-qr.png');
+          if (fs.existsSync(qrPath)) {
+            const media = MessageMedia.fromFilePath(qrPath);
+            await whatsappClient.sendMessage(`${cleanPhone}@c.us`, media, { caption: messageText });
+          } else {
+            await whatsappClient.sendMessage(`${cleanPhone}@c.us`, messageText);
+          }
+          console.log(`[Success] Advance payment WhatsApp sent to ${inv.phone}`);
+        }
+      } catch (waErr) {
+        console.error('[Error] Failed to send WhatsApp advance payment request:', waErr);
+      }
+    }
+    // ------------------------------------------
     
     return res.json({ success: true, status });
   } catch (err) {
@@ -927,8 +950,8 @@ cron.schedule('0 10 * * *', async () => {
     let sentCount = 0;
     for (const client of clients) {
       try {
-        const portalLinks = client.ids.map(id => `<a href="https://yantrabyte.com/portal/${id}">View Invoice ${client.invoices[client.ids.indexOf(id)]}</a>`).join('<br/>');
-        const textLinks = client.ids.map(id => `https://yantrabyte.com/portal/${id}`).join(', ');
+        const portalLinks = client.ids.map(id => `<a href="https://yantrabyte.anantatechcare.com/portal/${id}">View Invoice ${client.invoices[client.ids.indexOf(id)]}</a>`).join('<br/>');
+        const textLinks = client.ids.map(id => `https://yantrabyte.anantatechcare.com/portal/${id}`).join(', ');
 
         await transporter.sendMail({
           from: `"YantraByte Solutions" <${GMAIL_USER_DEFAULT}>`,
