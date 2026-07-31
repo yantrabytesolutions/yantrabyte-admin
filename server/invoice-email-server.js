@@ -892,7 +892,7 @@ app.post('/api/invoices/quotation/:id/approve', async (req, res) => {
 // --- AUTOMATED CRON JOB ---
 // Runs daily at 10:00 AM (server time)
 cron.schedule('0 10 * * *', async () => {
-  console.log('Running automated email reminders job at 10:00 AM...');
+  console.log('Running automated email & whatsapp reminders job at 10:00 AM...');
   const missing = getMissingEnv();
   if (missing.length > 0) {
     console.error(`Skipping cron job. Missing env: ${missing.join(', ')}`);
@@ -905,95 +905,149 @@ cron.schedule('0 10 * * *', async () => {
       realtime: { transport: WebSocket }
     });
 
-    const today = new Date().toISOString().split('T')[0];
-    const { data: invoices, error } = await supabase
+    const now = new Date();
+    // Reset time to start of day for accurate day diff calculation
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: GMAIL_USER_DEFAULT, pass: GMAIL_PASS_DEFAULT },
+    });
+
+    let emailsSent = 0;
+    let whatsappSent = 0;
+
+    // 1. Process Pending Quotations (3 or 4 days old)
+    const { data: quotations, error: qErr } = await supabase
+      .from('invoices')
+      .select('*')
+      .eq('doc_type', 'Quotation');
+      
+    if (!qErr && quotations) {
+      const pendingQuotations = quotations.filter(q => q.payment_status !== 'Approved' && q.payment_status !== 'Rejected');
+      for (const q of pendingQuotations) {
+        if (!q.date) continue;
+        const qDate = new Date(q.date);
+        const qStart = new Date(qDate.getFullYear(), qDate.getMonth(), qDate.getDate());
+        const diffDays = Math.floor((todayStart.getTime() - qStart.getTime()) / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 3 || diffDays === 4) {
+          const qLink = `https://yantrabyte.anantatechcare.com/quotation/${q.invoice_no}`;
+          
+          // Send Email
+          if (q.customer_email && isValidEmail(q.customer_email)) {
+            try {
+              await transporter.sendMail({
+                from: `"YantraByte Solutions" <${GMAIL_USER_DEFAULT}>`,
+                to: q.customer_email,
+                replyTo: process.env.GMAIL_REPLY_TO || GMAIL_USER_DEFAULT,
+                subject: `Reminder: Action Required for Quotation #${q.invoice_no}`,
+                html: `
+                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+                    <p>Dear ${q.customer_name || 'Customer'},</p>
+                    <p>This is a gentle reminder that your quotation <strong>#${q.invoice_no}</strong> is awaiting your approval.</p>
+                    <div style="margin: 20px 0; padding: 15px; background-color: #f8fafc; border-left: 4px solid #0B5394;">
+                      <a href="${qLink}" style="display: inline-block; padding: 10px 15px; background-color: #0B5394; color: #fff; text-decoration: none; border-radius: 5px;">Review & Approve Quotation</a>
+                    </div>
+                    <p>If you have any questions or require modifications to this quotation, please let us know.</p>
+                    <p>Regards,<br/><strong>YantraByte Solutions</strong></p>
+                  </div>
+                `,
+              });
+              emailsSent++;
+            } catch (err) {
+              console.error(`Failed to send quotation reminder email to ${q.customer_email}:`, err.message);
+            }
+          }
+
+          // Send WhatsApp
+          if (isWhatsappReady && q.phone) {
+            try {
+              const cleanPhone = q.phone.replace(/\D/g, '');
+              if (cleanPhone.length >= 10) {
+                const messageText = `Hi ${q.customer_name || 'Customer'},\n\nThis is a gentle reminder regarding your quotation *#${q.invoice_no}* which is currently awaiting your approval.\n\nYou can review and approve it here:\n${qLink}\n\nPlease let us know if you have any questions!\n\nRegards,\nYantraByte Solutions`;
+                if (cleanPhone.length === 10) {
+                  await whatsappClient.sendMessage(`91${cleanPhone}@c.us`, messageText);
+                } else {
+                  await whatsappClient.sendMessage(`${cleanPhone}@c.us`, messageText);
+                }
+                whatsappSent++;
+              }
+            } catch (waErr) {
+              console.error(`[Error] Failed to send WhatsApp reminder for Quotation ${q.invoice_no}:`, waErr.message);
+            }
+          }
+        }
+      }
+    }
+
+    // 2. Process Unpaid Invoices (3 or 4 days overdue)
+    const { data: invoices, error: iErr } = await supabase
       .from('invoices')
       .select('*')
       .eq('doc_type', 'Invoice')
       .gt('balance_due', 0);
-      
-    if (error) throw error;
-    if (!invoices || invoices.length === 0) return;
-    
-    const clientsMap = {};
-    for (const inv of invoices) {
-      if (inv.due_date && inv.due_date < today && inv.customer_email && isValidEmail(inv.customer_email)) {
-        if (!clientsMap[inv.customer_email]) {
-          clientsMap[inv.customer_email] = {
-            customer_name: inv.customer_name,
-            customer_email: inv.customer_email,
-            invoices: [],
-            balance_due: 0,
-            ids: []
-          };
+
+    if (!iErr && invoices) {
+      for (const inv of invoices) {
+        if (!inv.due_date && !inv.date) continue;
+        const dueDate = new Date(inv.due_date || inv.date);
+        const dueStart = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+        const diffDays = Math.floor((todayStart.getTime() - dueStart.getTime()) / (1000 * 60 * 60 * 24));
+
+        // Overdue by 3 or 4 days
+        if (todayStart > dueStart && (diffDays === 3 || diffDays === 4)) {
+          const invLink = `https://yantrabyte.anantatechcare.com/portal/${inv.id}`;
+          
+          // Send Email
+          if (inv.customer_email && isValidEmail(inv.customer_email)) {
+            try {
+              await transporter.sendMail({
+                from: `"YantraByte Solutions" <${GMAIL_USER_DEFAULT}>`,
+                to: inv.customer_email,
+                replyTo: process.env.GMAIL_REPLY_TO || GMAIL_USER_DEFAULT,
+                subject: `Payment Reminder: Invoice #${inv.invoice_no}`,
+                html: `
+                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+                    <p>Dear ${inv.customer_name || 'Customer'},</p>
+                    <p>This is an automated reminder that you have an outstanding balance of <strong style="color: #e53e3e;">₹${(inv.balance_due || 0).toLocaleString('en-IN')}</strong> for Invoice <strong>#${inv.invoice_no}</strong>.</p>
+                    <div style="margin: 20px 0; padding: 15px; background-color: #f8fafc; border-left: 4px solid #0B5394;">
+                      <a href="${invLink}" style="display: inline-block; padding: 10px 15px; background-color: #0B5394; color: #fff; text-decoration: none; border-radius: 5px;">View & Download Invoice</a>
+                    </div>
+                    <p>Kindly clear the balance at your earliest convenience via our UPI ID: <strong>s0424237152@slc</strong> or our bank account details.</p>
+                    <p><em>If you have already made the payment, please ignore this email.</em></p>
+                    <p>Regards,<br/><strong>YantraByte Solutions</strong></p>
+                  </div>
+                `,
+              });
+              emailsSent++;
+            } catch (err) {
+              console.error(`Failed to send invoice reminder email to ${inv.customer_email}:`, err.message);
+            }
+          }
+
+          // Send WhatsApp
+          if (isWhatsappReady && inv.phone) {
+            try {
+              const cleanPhone = inv.phone.replace(/\D/g, '');
+              if (cleanPhone.length >= 10) {
+                const messageText = `Hi ${inv.customer_name || 'Customer'},\n\nThis is an automated reminder regarding your outstanding balance of *₹${(inv.balance_due || 0).toLocaleString('en-IN')}* for Invoice *#${inv.invoice_no}*.\n\nYou can view your invoice securely here:\n${invLink}\n\nKindly clear the balance via UPI: *s0424237152@slc* or our bank details at your earliest convenience.\n\n(If you have already paid, please ignore this message.)\n\nRegards,\nYantraByte Solutions`;
+                if (cleanPhone.length === 10) {
+                  await whatsappClient.sendMessage(`91${cleanPhone}@c.us`, messageText);
+                } else {
+                  await whatsappClient.sendMessage(`${cleanPhone}@c.us`, messageText);
+                }
+                whatsappSent++;
+              }
+            } catch (waErr) {
+              console.error(`[Error] Failed to send WhatsApp reminder for Invoice ${inv.invoice_no}:`, waErr.message);
+            }
+          }
         }
-        clientsMap[inv.customer_email].invoices.push(inv.invoice_no);
-        clientsMap[inv.customer_email].balance_due += (inv.balance_due || 0);
-        clientsMap[inv.customer_email].ids.push(inv.id);
       }
     }
-    
-    const clients = Object.values(clientsMap);
-    if (clients.length === 0) {
-      console.log('No overdue invoices require reminders today.');
-      return;
-    }
 
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: GMAIL_USER_DEFAULT,
-        pass: GMAIL_PASS_DEFAULT,
-      },
-    });
-
-    let sentCount = 0;
-    for (const client of clients) {
-      try {
-        const portalLinks = client.ids.map(id => `<a href="https://yantrabyte.anantatechcare.com/portal/${id}">View Invoice ${client.invoices[client.ids.indexOf(id)]}</a>`).join('<br/>');
-        const textLinks = client.ids.map(id => `https://yantrabyte.anantatechcare.com/portal/${id}`).join(', ');
-
-        await transporter.sendMail({
-          from: `"YantraByte Solutions" <${GMAIL_USER_DEFAULT}>`,
-          to: client.customer_email,
-          replyTo: process.env.GMAIL_REPLY_TO || GMAIL_USER_DEFAULT,
-          subject: `Automated Payment Reminder - YantraByte Solutions`,
-          text: [
-            `Dear ${client.customer_name || 'Customer'},`,
-            '',
-            `This is an automated reminder that you have an outstanding balance of ₹${(client.balance_due || 0).toLocaleString('en-IN')}.`,
-            `This balance is associated with the following invoice(s): ${client.invoices.join(', ')}.`,
-            `You can view and download your invoices securely here: ${textLinks}`,
-            '',
-            'Kindly clear the balance at your earliest convenience via our UPI ID: s0424237152@slc or our bank account details.',
-            '',
-            'If you have already made the payment, please ignore this email.',
-            '',
-            'Regards,',
-            'YantraByte Solutions',
-          ].join('\n'),
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-              <p>Dear ${client.customer_name || 'Customer'},</p>
-              <p>This is an automated reminder that you have an outstanding balance of <strong style="color: #e53e3e;">₹${(client.balance_due || 0).toLocaleString('en-IN')}</strong>.</p>
-              <p>This balance is associated with the following invoice(s): <strong>${client.invoices.join(', ')}</strong>.</p>
-              <div style="margin: 20px 0; padding: 15px; background-color: #f8fafc; border-left: 4px solid #0B5394;">
-                <p style="margin-top: 0;">You can view and download your invoices securely here:</p>
-                ${portalLinks}
-              </div>
-              <p>Kindly clear the balance at your earliest convenience via our UPI ID: <strong>s0424237152@slc</strong> or our bank account details.</p>
-              <p><em>If you have already made the payment, please ignore this email.</em></p>
-              <p>Regards,<br/><strong>YantraByte Solutions</strong></p>
-            </div>
-          `,
-        });
-        sentCount++;
-        console.log(`Successfully sent automated reminder to ${client.customer_email}`);
-      } catch (err) {
-        console.error(`Failed to send automated reminder to ${client.customer_email}:`, err.message);
-      }
-    }
-    console.log(`Automated reminder job completed. Sent ${sentCount} emails.`);
+    console.log(`Automated reminder job completed. Sent ${emailsSent} emails and ${whatsappSent} WhatsApp messages.`);
   } catch (error) {
     console.error('Error in automated reminder cron job:', error.message);
   }
