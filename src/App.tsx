@@ -46,12 +46,20 @@ const DomainGuard = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const RootRoute = () => {
+  const hostname = window.location.hostname;
+  if (hostname === 'yantrabyte.anantatechcare.com') {
+    return <ServiceRequest />;
+  }
+  return <Home />;
+};
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route element={<Layout />}>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<RootRoute />} />
           <Route path="/about" element={<About />} />
           <Route path="/services" element={<Services />} />
           <Route path="/services/:slug" element={<ServiceDetail />} />
