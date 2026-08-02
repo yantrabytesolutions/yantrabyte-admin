@@ -211,7 +211,7 @@ export default function ServiceRequest() {
 
     try {
       let uploadedUrl = null;
-      let signatureBase64 = null;
+      const signatureBase64 = null;
 
       if (attachment) {
         const fileExt = attachment.name.split('.').pop();
