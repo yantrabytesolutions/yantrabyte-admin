@@ -4,7 +4,7 @@ import SEO from '../components/SEO';
 import { supabase } from '../lib/supabase';
 import { AlertCircle, ClipboardCheck, Loader2, MapPin, Phone, Send, Wrench, Laptop, Monitor, Printer, Video, Wifi, Fingerprint, Server, Package, UploadCloud, Film, X, ChevronRight, ChevronLeft, CheckCircle2 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import SignatureCanvas from 'react-signature-canvas';
+
 import { motion } from 'framer-motion';
 
 const DEVICE_CATEGORIES = [
@@ -70,7 +70,7 @@ export default function ServiceRequest() {
   const [attachment, setAttachment] = useState<File | null>(null);
   const [videoAttachment, setVideoAttachment] = useState<File | null>(null);
   const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
-  const sigCanvas = useRef<SignatureCanvas>(null);
+
   const [captchaA, _setCaptchaA] = useState(Math.floor(Math.random() * 10) + 1);
   const [captchaB, _setCaptchaB] = useState(Math.floor(Math.random() * 10) + 1);
   const [captchaInput, setCaptchaInput] = useState('');
@@ -183,11 +183,6 @@ export default function ServiceRequest() {
     setVideoPreviewUrl(null);
   };
 
-  const clearSignature = () => {
-    if (sigCanvas.current) {
-      sigCanvas.current.clear();
-    }
-  };
 
   const submitTicket = async (e: FormEvent) => {
     e.preventDefault();
@@ -203,10 +198,7 @@ export default function ServiceRequest() {
       return;
     }
 
-    if (!sigCanvas.current || sigCanvas.current.isEmpty()) {
-      setError('Please sign the document before submitting.');
-      return;
-    }
+
     
     const phoneRegex = /^[0-9]{10}$/;
     if (!phoneRegex.test(form.customer_phone.replace(/\D/g, ''))) {
@@ -220,10 +212,6 @@ export default function ServiceRequest() {
     try {
       let uploadedUrl = null;
       let signatureBase64 = null;
-
-      if (sigCanvas.current && !sigCanvas.current.isEmpty()) {
-        signatureBase64 = sigCanvas.current.getCanvas().toDataURL('image/png');
-      }
 
       if (attachment) {
         const fileExt = attachment.name.split('.').pop();
@@ -427,7 +415,7 @@ export default function ServiceRequest() {
       setAttachment(null);
       setTermsAccepted(false);
       removeVideo();
-      if (sigCanvas.current) { sigCanvas.current.clear(); }
+
       setStep(1);
     } catch (err: any) {
       console.error('Submit Ticket Error:', err);
@@ -954,28 +942,7 @@ export default function ServiceRequest() {
                       </div>
                     </div>
 
-                    <div className="block">
-                      <div className="flex justify-between items-end mb-2">
-                        <div>
-                          <span className="text-sm font-semibold text-slate-300">Digital Signature *</span>
-                          <p className="text-xs text-slate-400 mt-0.5">Please sign below to agree to the terms.</p>
-                        </div>
-                      </div>
-                      <div className="relative border-2 border-dashed border-[#0EA5E9]/50 bg-[#0EA5E9]/5 rounded-xl overflow-hidden touch-none group transition-colors hover:border-[#0EA5E9]">
-                        <button 
-                          type="button" 
-                          onClick={clearSignature} 
-                          className="absolute top-2 right-2 z-10 flex items-center gap-1 rounded bg-white/5/80 backdrop-blur border border-white/10 px-2 py-1 text-xs font-medium text-slate-400 shadow-sm transition hover:bg-red-50 hover:text-red-600"
-                        >
-                          <X className="h-3 w-3" /> Clear
-                        </button>
-                        <SignatureCanvas 
-                          ref={sigCanvas}
-                          canvasProps={{ className: 'w-full h-36 cursor-crosshair' }}
-                          penColor="#ffffff"
-                        />
-                      </div>
-                    </div>
+
 
                     <div className="mt-6 flex gap-3">
                       <button
