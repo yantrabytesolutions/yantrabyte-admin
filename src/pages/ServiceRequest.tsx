@@ -1,4 +1,4 @@
-import { FormEvent, useState, useRef } from 'react';
+import { FormEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { supabase } from '../lib/supabase';
@@ -211,7 +211,7 @@ export default function ServiceRequest() {
 
     try {
       let uploadedUrl = null;
-      const signatureBase64 = null;
+
 
       if (attachment) {
         const fileExt = attachment.name.split('.').pop();
@@ -326,7 +326,7 @@ export default function ServiceRequest() {
       pickup_date: form.pickup_date || null,
       attachment_url: uploadedUrl,
       video_url: uploadedVideoUrl,
-      customer_signature: signatureBase64,
+      customer_signature: null,
       status: 'open'
     };
 
