@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'seal.png'],
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'logo6.png'],
       workbox: {
         maximumFileSizeToCacheInBytes: 5000000 // 5 MB to accommodate the large React app bundle
       },
@@ -23,12 +23,12 @@ export default defineConfig({
         start_url: '/admin',
         icons: [
           {
-            src: 'seal.png',
+            src: 'logo6.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: 'seal.png',
+            src: 'logo6.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'
