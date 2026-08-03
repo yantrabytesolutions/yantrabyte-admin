@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { FileText, CheckCircle2, XCircle, ShieldCheck, AlertCircle } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import html2pdf from 'html2pdf.js';
 import type { Invoice } from '../types';
 import SEO from '../components/SEO';
 
@@ -12,7 +13,7 @@ export function QuotationApproval() {
   const [error, setError] = useState('');
   const [signature, setSignature] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [approvalResult, setApprovalResult] = useState<'Approved' | 'Rejected' | null>(null);
+  const [approvalResult, setApprovalResult] = useState<'Approved' | 'Rejected' | 'Expired' | null>(null);
 
   useEffect(() => {
     const fetchQuotation = async () => {
@@ -22,8 +23,8 @@ export function QuotationApproval() {
         if (!res.ok) throw new Error('Quotation not found or link is invalid.');
         const data = await res.json();
         setQuotation(data);
-        if (['Approved', 'Rejected'].includes(data.payment_status)) {
-          setApprovalResult(data.payment_status as 'Approved' | 'Rejected');
+        if (['Approved', 'Rejected', 'Expired'].includes(data.payment_status)) {
+          setApprovalResult(data.payment_status as 'Approved' | 'Rejected' | 'Expired');
         }
       } catch (err: any) {
         setError(err.message);
@@ -60,6 +61,20 @@ export function QuotationApproval() {
     }
   };
 
+  const handleDownloadPDF = () => {
+    if (!quotation) return;
+    const element = document.getElementById('quotation-content');
+    if (!element) return;
+    const opt = {
+      margin: 0.5,
+      filename: `${quotation.invoice_no}.pdf`,
+      image: { type: 'jpeg' as const, quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' as const }
+    };
+    html2pdf().set(opt).from(element).save();
+  };
+
   if (loading) {
     return (
       <div className="min-h-[calc(100vh-6rem)] bg-[#0f172a] text-white flex items-center justify-center">
@@ -92,12 +107,26 @@ export function QuotationApproval() {
         
         {approvalResult ? (
           <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 md:p-10 text-center shadow-2xl animate-fade-in-up max-w-2xl mx-auto">
-            {approvalResult === 'Approved' ? (
+            {approvalResult === 'Expired' ? (
+              <>
+                <AlertCircle className="w-20 h-20 text-yellow-500 mx-auto mb-6" />
+                <h1 className="text-4xl font-bold text-white mb-4">Quotation Expired</h1>
+                <p className="text-lg text-slate-400 mb-8">
+                  This quotation has expired as it was not approved within 30 days. Please contact us for a fresh quotation.
+                </p>
+                <a href="tel:+919986742525" className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-semibold transition-colors">
+                  📞 Call Us: 9986742525
+                </a>
+              </>
+            ) : approvalResult === 'Approved' ? (
               <CheckCircle2 className="w-20 h-20 text-emerald-500 mx-auto mb-6" />
             ) : (
               <XCircle className="w-20 h-20 text-red-500 mx-auto mb-6" />
             )}
-            <h1 className="text-4xl font-bold text-white mb-4">Quotation {approvalResult}</h1>
+            
+            {approvalResult !== 'Expired' && (
+              <h1 className="text-4xl font-bold text-white mb-4">Quotation {approvalResult}</h1>
+            )}
             
             {approvalResult === 'Approved' ? (
               <div className="text-left bg-black/20 p-6 md:p-8 rounded-xl border border-white/10 mt-8">
@@ -125,15 +154,32 @@ export function QuotationApproval() {
                     />
                   </div>
                 </div>
+                <div className="mt-6 bg-white/5 rounded-xl p-4 border border-white/10">
+                  <p className="text-sm text-slate-400 mb-2">Payment Status</p>
+                  {quotation.advance_paid > 0 ? (
+                    <div>
+                      <div className="flex justify-between text-sm mb-2">
+                        <span className="text-emerald-400">✓ Advance Paid</span>
+                        <span className="text-white font-semibold">₹{quotation.advance_paid.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                      </div>
+                      <div className="w-full bg-white/10 rounded-full h-2">
+                        <div className="bg-emerald-500 h-2 rounded-full" style={{ width: `${Math.min((quotation.advance_paid / quotation.grand_total) * 100, 100)}%` }}></div>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1">Balance: ₹{quotation.balance_due.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+                    </div>
+                  ) : (
+                    <p className="text-yellow-400 text-sm">⏳ Awaiting advance payment</p>
+                  )}
+                </div>
               </div>
-            ) : (
+            ) : approvalResult === 'Rejected' ? (
               <p className="text-lg text-slate-400 mb-8">
                 Your quotation has been rejected. We will contact you to discuss alternatives or return your device.
               </p>
-            )}
+            ) : null}
           </div>
         ) : (
-          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 md:p-10 shadow-2xl">
+          <div id="quotation-content" className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 md:p-10 shadow-2xl">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-8 border-b border-white/10">
               <div>
                 <h1 className="text-3xl font-bold text-white flex items-center gap-3">
@@ -147,6 +193,15 @@ export function QuotationApproval() {
                 <p className="text-lg font-semibold text-white">{quotation.customer_name}</p>
                 <p className="text-slate-400">{quotation.phone}</p>
               </div>
+            </div>
+            
+            <div className="flex justify-end mb-4">
+              <button
+                onClick={handleDownloadPDF}
+                className="px-4 py-2 text-sm bg-white/10 hover:bg-white/20 border border-white/10 rounded-lg text-white transition-colors flex items-center gap-2"
+              >
+                <FileText className="w-4 h-4" /> Download PDF
+              </button>
             </div>
 
             <div className="overflow-x-auto mb-8">

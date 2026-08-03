@@ -19,6 +19,8 @@ const routes = [
   'track',
   'privacy',
   'terms',
+  'quotation',
+  'my-invoices',
 ];
 
 if (!existsSync(indexFile)) {

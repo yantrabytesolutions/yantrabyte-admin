@@ -14,6 +14,7 @@ import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import { TrackTicket } from './pages/TrackTicket';
 import { QuotationApproval } from './pages/QuotationApproval';
+import { CustomerHistory } from './pages/CustomerHistory';
 import AdminPanel from './admin/AdminPanel';
 import PortalLogin from './portal/PortalLogin';
 import PortalDashboard from './portal/PortalDashboard';
@@ -72,6 +73,7 @@ function App() {
           <Route path="/servicerequest" element={<ServiceRequest />} />
           <Route path="/track-ticket" element={<TrackTicket />} />
           <Route path="/quotation/:id" element={<QuotationApproval />} />
+          <Route path="/my-invoices" element={<CustomerHistory />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
         </Route>

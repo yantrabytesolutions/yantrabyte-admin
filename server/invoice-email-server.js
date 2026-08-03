@@ -881,6 +881,36 @@ app.post('/api/invoices/quotation/:id/approve', async (req, res) => {
       }
     }
     // ------------------------------------------
+
+    // --- NEW: Email Notification on Quotation Approval ---
+    try {
+      if (GMAIL_USER_DEFAULT && GMAIL_PASS_DEFAULT) {
+        const transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: GMAIL_USER_DEFAULT,
+            pass: GMAIL_PASS_DEFAULT,
+          },
+        });
+
+        await transporter.sendMail({
+          from: `"YantraByte Solutions" <${GMAIL_USER_DEFAULT}>`,
+          to: 'yantrabyte.solutions@gmail.com',
+          subject: `Quotation ${inv.invoice_no} ${status} by ${inv.customer_name}`,
+          html: `
+            <h3>Quotation Update</h3>
+            <p><strong>Customer Name:</strong> ${inv.customer_name}</p>
+            <p><strong>Invoice Number:</strong> ${inv.invoice_no}</p>
+            <p><strong>Status:</strong> ${status}</p>
+            <p><strong>Grand Total:</strong> ₹${inv.grand_total}</p>
+            <p><strong>Timestamp:</strong> ${timestamp}</p>
+          `
+        });
+        console.log(`[Success] Owner email notification sent for ${inv.invoice_no}`);
+      }
+    } catch (emailErr) {
+      console.error('[Error] Failed to send owner email notification:', emailErr.message);
+    }
     
     return res.json({ success: true, status });
   } catch (err) {
@@ -1050,6 +1080,60 @@ cron.schedule('0 10 * * *', async () => {
     console.log(`Automated reminder job completed. Sent ${emailsSent} emails and ${whatsappSent} WhatsApp messages.`);
   } catch (error) {
     console.error('Error in automated reminder cron job:', error.message);
+  }
+});
+
+// --- QUOTATION EXPIRY CRON ---
+cron.schedule('0 0 * * *', async () => {
+  console.log('Running quotation expiry check...');
+  try {
+    const supabaseAdmin = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY, {
+      realtime: { transport: WebSocket }
+    });
+    
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const { data, error } = await supabaseAdmin
+      .from('invoices')
+      .update({ payment_status: 'Expired' })
+      .eq('doc_type', 'Quotation')
+      .eq('payment_status', 'Due')
+      .lt('created_at', thirtyDaysAgo.toISOString());
+    
+    if (error) console.error('Expiry cron error:', error.message);
+    else console.log('Quotation expiry check completed.');
+  } catch (err) {
+    console.error('Quotation expiry cron failed:', err.message);
+  }
+});
+
+// --- CUSTOMER HISTORY ENDPOINT ---
+app.get('/api/invoices/customer/:phone', async (req, res) => {
+  const { phone } = req.params;
+  try {
+    const supabaseAdmin = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY, {
+      realtime: { transport: WebSocket }
+    });
+    
+    const cleanPhone = phone.replace(/\D/g, '');
+    if (cleanPhone.length < 10) return res.status(400).json({ error: 'Invalid phone number' });
+    
+    // Search with last 10 digits to handle various formats
+    const last10 = cleanPhone.slice(-10);
+    
+    const { data, error } = await supabaseAdmin
+      .from('invoices')
+      .select('id, invoice_no, doc_type, date, customer_name, grand_total, payment_status, created_at')
+      .ilike('phone', `%${last10}%`)
+      .order('created_at', { ascending: false })
+      .limit(50);
+    
+    if (error) throw error;
+    return res.json(data || []);
+  } catch (err) {
+    console.error('Error fetching customer history:', err);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
