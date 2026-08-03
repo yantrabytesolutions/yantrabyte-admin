@@ -17,7 +17,8 @@ export function QuotationApproval() {
   useEffect(() => {
     const fetchQuotation = async () => {
       try {
-        const res = await fetch(`/api/invoices/quotation/${id}`);
+        const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+        const res = await fetch(`${API_BASE_URL}/api/invoices/quotation/${id}`);
         if (!res.ok) throw new Error('Quotation not found or link is invalid.');
         const data = await res.json();
         setQuotation(data);
@@ -43,7 +44,8 @@ export function QuotationApproval() {
     setError('');
     
     try {
-      const res = await fetch(`/api/invoices/quotation/${id}/approve`, {
+      const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+      const res = await fetch(`${API_BASE_URL}/api/invoices/quotation/${id}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status, signature: status === 'Approved' ? signature.trim() : '' })
