@@ -100,13 +100,13 @@ export function QuotationApproval() {
             {approvalResult === 'Approved' ? (
               <div className="text-left bg-black/20 p-6 md:p-8 rounded-xl border border-white/10 mt-8">
                 <p className="text-lg text-slate-300 mb-8 text-center">
-                  Thank you! Your approval has been recorded. To proceed with the service, please make an advance payment of <strong className="text-white">80%</strong>.
+                  Thank you! Your approval has been recorded. To proceed with the service, please make an advance payment of <strong className="text-white">85%</strong> and the remaining balance at the time of delivery.
                 </p>
                 <div className="flex flex-col md:flex-row gap-8 items-center justify-center">
                   <div className="flex-1 space-y-4 w-full">
                     <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 text-center">
                       <p className="text-sm text-blue-300 uppercase tracking-wider mb-1">Advance Amount</p>
-                      <p className="text-3xl font-bold text-white">₹{(quotation.grand_total * 0.8).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+                      <p className="text-3xl font-bold text-white">₹{(quotation.grand_total * 0.85).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
                     </div>
                     <div className="text-sm text-slate-300 space-y-2 p-4 bg-white/5 rounded-lg border border-white/5">
                       <p><strong className="text-white">Bank:</strong> North East Small Finance Bank</p>
@@ -118,7 +118,7 @@ export function QuotationApproval() {
                   </div>
                   <div className="w-48 h-48 bg-white rounded-xl p-2 flex-shrink-0 flex items-center justify-center relative overflow-hidden border-4 border-white/10 shadow-xl">
                     <QRCodeSVG 
-                      value={`upi://pay?pa=s0424237152@slc&pn=${encodeURIComponent('YantraByte Solutions')}&am=${(quotation.grand_total * 0.8).toFixed(2)}&cu=INR`} 
+                      value={`upi://pay?pa=s0424237152@slc&pn=${encodeURIComponent('YantraByte Solutions')}&am=${(quotation.grand_total * 0.85).toFixed(2)}&cu=INR`} 
                       size={170} 
                     />
                   </div>

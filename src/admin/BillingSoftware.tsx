@@ -613,7 +613,13 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     
     const pdfUrl = inv.pdf_url;
     let text = `Hi ${inv.customer_name}, your ${inv.doc_type || 'Invoice'} ${inv.invoice_no} for ₹${inv.grand_total} has been generated. Thank you for your business!`;
-    if (pdfUrl) text += `\n\nYou can view and download your ${inv.doc_type || 'Invoice'} here: ${pdfUrl}`;
+    
+    if (inv.doc_type === 'Quotation' || inv.doc_type === 'Estimate') {
+      const estimateLink = `${window.location.origin}/quotation/${inv.id}`;
+      text += `\n\nYou can view and approve your estimate here: ${estimateLink}`;
+    } else if (pdfUrl) {
+      text += `\n\nYou can view and download your ${inv.doc_type || 'Invoice'} here: ${pdfUrl}`;
+    }
     
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
   };
@@ -2043,7 +2049,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                           <>
                             <button onClick={(e) => { 
                               e.stopPropagation(); 
-                              const link = `https://yantrabyte.com/estimate/${inv.id}`;
+                              const link = `${window.location.origin}/quotation/${inv.id}`;
                               navigator.clipboard.writeText(link);
                               showToast('Estimate link copied to clipboard!', 'success');
                             }} className="p-1.5 text-gray-500 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors" title="Copy Estimate Link">
