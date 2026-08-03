@@ -112,7 +112,7 @@ export function QuotationApproval() {
                 <AlertCircle className="w-20 h-20 text-yellow-500 mx-auto mb-6" />
                 <h1 className="text-4xl font-bold text-white mb-4">Quotation Expired</h1>
                 <p className="text-lg text-slate-400 mb-8">
-                  This quotation has expired as it was not approved within 30 days. Please contact us for a fresh quotation.
+                  This quotation has expired as it was not approved within 7 days. Please contact us for a fresh quotation.
                 </p>
                 <a href="tel:+919986742525" className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-semibold transition-colors">
                   📞 Call Us: 9986742525

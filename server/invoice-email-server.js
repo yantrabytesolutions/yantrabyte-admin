@@ -1091,15 +1091,15 @@ cron.schedule('0 0 * * *', async () => {
       realtime: { transport: WebSocket }
     });
     
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     
     const { data, error } = await supabaseAdmin
       .from('invoices')
       .update({ payment_status: 'Expired' })
       .eq('doc_type', 'Quotation')
       .eq('payment_status', 'Due')
-      .lt('created_at', thirtyDaysAgo.toISOString());
+      .lt('created_at', sevenDaysAgo.toISOString());
     
     if (error) console.error('Expiry cron error:', error.message);
     else console.log('Quotation expiry check completed.');
