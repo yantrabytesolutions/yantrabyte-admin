@@ -1162,7 +1162,7 @@ cron.schedule('0 9 * * *', async () => {
       await transporter.sendMail({
         from: '"YantraByte System" <' + GMAIL_USER_DEFAULT + '>',
         to: 'yantrabyte.solutions@gmail.com',
-        subject: \`Low Stock Alert: \${lowStockProducts.length} items need re-ordering\`,
+        subject: `Low Stock Alert: ${lowStockProducts.length} items need re-ordering`,
         html: htmlBody,
       });
       
