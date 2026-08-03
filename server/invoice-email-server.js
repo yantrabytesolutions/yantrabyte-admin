@@ -1108,6 +1108,73 @@ cron.schedule('0 0 * * *', async () => {
   }
 });
 
+// --- LOW STOCK ALERTS CRON ---
+cron.schedule('0 9 * * *', async () => {
+  console.log('Running low stock alert check at 9:00 AM...');
+  try {
+    const supabaseAdmin = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY, {
+      realtime: { transport: WebSocket }
+    });
+    
+    // Find products with low stock (< 5)
+    const { data: lowStockProducts, error } = await supabaseAdmin
+      .from('products')
+      .select('name, stock_count')
+      .lt('stock_count', 5)
+      .eq('is_published', true);
+      
+    if (error) {
+      console.error('Low stock query error:', error.message);
+      return;
+    }
+    
+    if (lowStockProducts && lowStockProducts.length > 0) {
+      console.log(`Found ${lowStockProducts.length} low stock items. Sending alert...`);
+      
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: GMAIL_USER_DEFAULT,
+          pass: GMAIL_PASS_DEFAULT,
+        },
+      });
+      
+      const htmlBody = `
+        <div style="font-family: Arial, sans-serif;">
+          <h2 style="color: #d97706;">Low Stock Alert</h2>
+          <p>The following items are running low on stock (less than 5 remaining):</p>
+          <table style="width: 100%; max-width: 500px; border-collapse: collapse; margin-top: 10px;">
+            <tr style="background-color: #f3f4f6; text-align: left;">
+              <th style="padding: 10px; border: 1px solid #e5e7eb;">Product Name</th>
+              <th style="padding: 10px; border: 1px solid #e5e7eb; width: 100px;">Current Stock</th>
+            </tr>
+            ${lowStockProducts.map(p => `
+              <tr>
+                <td style="padding: 10px; border: 1px solid #e5e7eb;">${p.name}</td>
+                <td style="padding: 10px; border: 1px solid #e5e7eb; font-weight: bold; color: #dc2626;">${p.stock_count || 0}</td>
+              </tr>
+            `).join('')}
+          </table>
+          <p style="margin-top: 20px;">Please re-order these items to maintain inventory.</p>
+        </div>
+      `;
+      
+      await transporter.sendMail({
+        from: '"YantraByte System" <' + GMAIL_USER_DEFAULT + '>',
+        to: 'yantrabyte.solutions@gmail.com',
+        subject: \`Low Stock Alert: \${lowStockProducts.length} items need re-ordering\`,
+        html: htmlBody,
+      });
+      
+      console.log('Low stock alert email sent successfully.');
+    } else {
+      console.log('Inventory looks good, no low stock items.');
+    }
+  } catch (err) {
+    console.error('Low stock cron failed:', err.message);
+  }
+});
+
 // --- CUSTOMER HISTORY ENDPOINT ---
 app.get('/api/invoices/customer/:phone', async (req, res) => {
   const { phone } = req.params;

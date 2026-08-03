@@ -1272,10 +1272,7 @@ export default function AdminPanel() {
           
           // Smart WhatsApp Status Template Prompt
           if (record.status !== editingItem.status) {
-            if (window.confirm(`Status changed to ${record.status}. Do you want to send an automatic WhatsApp update to the customer?`)) {
-              sendWhatsAppAlert(record);
-            }
-            if (record.customer_email && window.confirm(`Do you want to send an automated status update email to ${record.customer_email}?`)) {
+            if (window.confirm(`Status changed to ${record.status}. Do you want to send an automated status update (Email/WhatsApp) to the customer?`)) {
               try {
                 fetch('http://localhost:4000/api/tickets/notify', {
                   method: 'POST',
@@ -1284,13 +1281,17 @@ export default function AdminPanel() {
                     ticket_number: record.ticket_number,
                     customer_name: record.customer_name,
                     customer_email: record.customer_email,
+                    customer_phone: record.customer_phone,
                     status: record.status,
                     device_type: record.device_type,
                     supabase_user_token: (await supabase.auth.getSession()).data.session?.access_token || ''
                   })
                 }).then(res => res.json()).then(data => {
-                  if (data.ok) showToast('Status email sent successfully');
-                  else showToast('Failed to send status email', 'error');
+                  if (data.ok) {
+                    showToast(`Status update sent! Email: ${data.messageId ? 'Yes' : 'No'}, WhatsApp: ${data.whatsapp === 'sent' ? 'Yes' : 'No'}`);
+                  } else {
+                    showToast('Failed to send status updates', 'error');
+                  }
                 });
               } catch (e) {
                 console.error(e);
