@@ -13,13 +13,14 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 5000000 // 5 MB to accommodate the large React app bundle
       },
       manifest: {
-        name: 'YantraByte Solutions',
-        short_name: 'YantraByte',
+        name: 'YantraByte Billing Software',
+        short_name: 'YB Billing',
         description: 'YantraByte Billing & Service Management ERP',
         theme_color: '#0EA5E9',
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
+        start_url: '/admin',
         icons: [
           {
             src: 'seal.png',
