@@ -178,8 +178,8 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       });
       
       expenses.forEach(exp => {
-        if (!exp.created_at && !exp.date) return;
-        const dateStr = exp.created_at || exp.date;
+        if (!(exp as any).created_at && !exp.date) return;
+        const dateStr = (exp as any).created_at || exp.date;
         const monthLabel = format(parseISO(dateStr), 'MMM yyyy');
         if (monthlyData[monthLabel]) {
           monthlyData[monthLabel].expenses += Number(exp.amount) || 0;
