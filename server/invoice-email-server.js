@@ -1175,6 +1175,69 @@ cron.schedule('0 9 * * *', async () => {
   }
 });
 
+// --- GOOGLE REVIEW AUTOMATION CRON ---
+cron.schedule('0 11 * * *', async () => {
+  console.log('Running Google Review automation check...');
+  try {
+    const supabaseAdmin = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY, {
+      realtime: { transport: WebSocket }
+    });
+    
+    // Find paid invoices created more than 48 hours ago, where review has not been requested
+    const twoDaysAgo = new Date();
+    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+    
+    const { data, error } = await supabaseAdmin
+      .from('invoices')
+      .select('id, invoice_no, doc_type, customer_name, phone, created_at')
+      .eq('payment_status', 'Paid')
+      .eq('doc_type', 'Invoice')
+      .eq('review_requested', false)
+      .lt('created_at', twoDaysAgo.toISOString())
+      .limit(20); // Process in batches
+      
+    if (error) {
+      console.error('Review cron db error:', error.message);
+      return;
+    }
+    
+    if (!data || data.length === 0) {
+      console.log('No new invoices eligible for review request today.');
+      return;
+    }
+    
+    console.log(`Found ${data.length} invoices eligible for review request.`);
+    
+    for (const inv of data) {
+      if (!inv.phone) continue;
+      
+      const GOOGLE_REVIEW_LINK = "https://g.page/r/CUCghqVAwGaXEBM/review";
+      
+      const cleanPhone = inv.phone.replace(/\D/g, '');
+      const waNumber = cleanPhone.length === 10 ? `91${cleanPhone}@c.us` : `${cleanPhone}@c.us`;
+      
+      const message = `Hi ${inv.customer_name},\n\nThis is YantraByte. We hope your device is working perfectly after our recent service! 💻✨\n\nIf you were satisfied with our work, it would mean the world to us if you could leave a quick 5-star review on Google. It helps our small business immensely!\n\nLeave a review here: ${GOOGLE_REVIEW_LINK}\n\nThank you for choosing Ananta Techcare (YantraByte)! 🙏`;
+      
+      if (whatsappClientReady) {
+        try {
+          await whatsappClient.sendMessage(waNumber, message);
+          console.log(`Sent review request for Invoice ${inv.invoice_no} to ${waNumber}`);
+          
+          // Mark as requested
+          await supabaseAdmin.from('invoices').update({ review_requested: true }).eq('id', inv.id);
+        } catch (msgErr) {
+          console.error(`Failed to send review request to ${waNumber}:`, msgErr.message);
+        }
+      } else {
+        console.warn('WhatsApp client not ready. Skipping review request sending.');
+      }
+    }
+  } catch (err) {
+    console.error('Google Review cron failed:', err.message);
+  }
+});
+
+
 // --- CUSTOMER HISTORY ENDPOINT ---
 app.get('/api/invoices/customer/:phone', async (req, res) => {
   const { phone } = req.params;

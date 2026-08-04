@@ -169,10 +169,20 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       });
 
       purchases.forEach(pur => {
-        if (!pur.created_at) return;
-        const monthLabel = format(parseISO(pur.created_at), 'MMM yyyy');
+        if (!pur.created_at && !pur.date) return;
+        const dateStr = pur.created_at || pur.date;
+        const monthLabel = format(parseISO(dateStr), 'MMM yyyy');
         if (monthlyData[monthLabel]) {
           monthlyData[monthLabel].expenses += Number(pur.grand_total) || 0;
+        }
+      });
+      
+      expenses.forEach(exp => {
+        if (!exp.created_at && !exp.date) return;
+        const dateStr = exp.created_at || exp.date;
+        const monthLabel = format(parseISO(dateStr), 'MMM yyyy');
+        if (monthlyData[monthLabel]) {
+          monthlyData[monthLabel].expenses += Number(exp.amount) || 0;
         }
       });
 
