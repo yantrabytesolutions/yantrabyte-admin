@@ -19,7 +19,7 @@ dotenv.config();
 
 const app = express();
 const port = Number(process.env.INVOICE_API_PORT || process.env.PORT || 4000);
-const maxPdfSize = process.env.INVOICE_MAX_JSON_SIZE || '50mb';
+const maxPdfSize = process.env.INVOICE_MAX_JSON_SIZE || '200mb';
 
 // --- WhatsApp Client Setup ---
 const whatsappClient = new Client({
@@ -66,9 +66,13 @@ whatsappClient.on('ready', () => {
 whatsappClient.initialize();
 // -----------------------------
 
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - content-length: ${req.headers['content-length']}`);
+  next();
+});
 app.use(cors());
-app.use(express.json({ limit: maxPdfSize, extended: true }));
-app.use(express.urlencoded({ limit: maxPdfSize, extended: true }));
+app.use(express.json({ limit: '500mb' }));
+app.use(express.urlencoded({ limit: '500mb', extended: true }));
 
 const requiredEnv = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'];
 const GMAIL_USER_DEFAULT = process.env.GMAIL_USER || 'yantrabyte.solutions@gmail.com';
@@ -507,13 +511,14 @@ app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {
     documentType = 'Invoice',
     filename,
     pdfBase64,
+    pdfUrl,
     customerPhone
   } = req.body || {};
 
   if (!isValidEmail(to)) {
     return res.status(400).json({ error: 'Customer email address is missing or invalid' });
   }
-  if (!pdfBase64) {
+  if (!pdfBase64 && !pdfUrl) {
     return res.status(400).json({ error: 'PDF attachment is missing' });
   }
 
@@ -521,7 +526,20 @@ app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {
   const cleanDocumentType = String(documentType || 'Invoice');
   const cleanCustomerName = String(customerName || 'Customer');
   const safeFilename = sanitizeFilename(filename || `${cleanInvoiceNumber}.pdf`);
-  const pdfBuffer = Buffer.from(pdfBase64, 'base64');
+  
+  let pdfBuffer;
+  if (pdfBase64) {
+    pdfBuffer = Buffer.from(pdfBase64, 'base64');
+  } else if (pdfUrl) {
+    try {
+      const pdfRes = await fetch(pdfUrl);
+      if (!pdfRes.ok) throw new Error(`Failed to download PDF: ${pdfRes.statusText}`);
+      const arrayBuffer = await pdfRes.arrayBuffer();
+      pdfBuffer = Buffer.from(arrayBuffer);
+    } catch (e) {
+      return res.status(500).json({ error: 'Failed to retrieve PDF from storage' });
+    }
+  }
 
   const transporter = nodemailer.createTransport({
     service: 'gmail',

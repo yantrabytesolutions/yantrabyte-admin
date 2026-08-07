@@ -1053,7 +1053,6 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           const token = sessionData.session?.access_token;
           if (!token) throw new Error('Please login again before sending email.');
           
-          const pdfBase64 = await blobToBase64(pdfBlob);
           const response = await fetch('/api/invoices/email', {
             method: 'POST',
             headers: {
@@ -1067,7 +1066,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               invoiceNumber: payload.invoice_no,
               documentType: docType,
               filename: `YBS-${payload.invoice_no}.pdf`,
-              pdfBase64,
+              pdfUrl: pdfUrl,
             }),
           });
           
@@ -1975,7 +1974,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                   <th className="px-4 py-3">Date</th>
                   <th className="px-4 py-3">Amount</th>
                   <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
+                  <th className="px-4 py-3 text-right sticky right-0 bg-gray-50 z-10 border-l border-gray-200 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)]">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -1991,7 +1990,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                   <tr 
                     key={inv.id} 
                     onClick={() => { loadInvoice(inv.id); setActiveTab('editor'); }}
-                    className={`hover:bg-gray-50 transition-colors cursor-pointer ${selectedInvoiceId === inv.id ? 'bg-blue-50/30' : ''}`}
+                    className={`hover:bg-gray-50 transition-colors cursor-pointer ${selectedInvoiceId === inv.id ? 'bg-blue-50' : 'bg-white'}`}
                   >
                     <td className="px-4 py-4">
                       <div className="font-semibold text-gray-900">{inv.invoice_no}</div>
@@ -2024,7 +2023,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-4 text-right">
+                    <td className="px-4 py-4 text-right sticky right-0 bg-inherit z-10 border-l border-gray-100 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)]">
                       <div className="flex justify-end items-center space-x-2">
                         <button onClick={(e) => { e.stopPropagation(); loadInvoice(inv.id); setActiveTab('editor'); }} className="p-1.5 text-gray-500 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors" title="Edit / Load">
                           <Pencil className="w-4 h-4" />
@@ -2574,7 +2573,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                           <th className="px-4 py-3 font-semibold">Interval</th>
                           <th className="px-4 py-3 font-semibold">Next Due Date</th>
                           <th className="px-4 py-3 font-semibold text-right">Amount</th>
-                          <th className="px-4 py-3 font-semibold text-center">Action</th>
+                          <th className="px-4 py-3 font-semibold text-center sticky right-0 bg-gray-50 z-10 border-l border-gray-200">Action</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100">
@@ -2591,7 +2590,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                               ) : '-'}
                             </td>
                             <td className="px-4 py-3 text-right font-medium text-gray-900">₹{inv.grand_total}</td>
-                            <td className="px-4 py-3 text-center">
+                            <td className="px-4 py-3 text-center sticky right-0 bg-inherit z-10 border-l border-gray-100 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)]">
                               <button
                                 onClick={() => generateRecurringInvoice(inv.id)}
                                 disabled={isSaving}
@@ -2652,7 +2651,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                           <th className="px-4 py-3 font-semibold">Customer</th>
                           <th className="px-4 py-3 font-semibold">Due Date</th>
                           <th className="px-4 py-3 font-semibold text-right">Balance Due</th>
-                          <th className="px-4 py-3 font-semibold text-center">Action</th>
+                          <th className="px-4 py-3 font-semibold text-center sticky right-0 bg-gray-50 z-10 border-l border-gray-200">Action</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100">
@@ -2676,7 +2675,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                               >
                                 ₹{inv.balance_due?.toLocaleString('en-IN')}
                               </td>
-                              <td className="px-4 py-3 text-center">
+                              <td className="px-4 py-3 text-center sticky right-0 bg-inherit z-10 border-l border-gray-100 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)]">
                                 {phoneNum ? (
                                   <a
                                     href={whatsappUrl}

@@ -1770,20 +1770,20 @@ export default function AdminPanel() {
                       {col.label}
                     </th>
                   ))}
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-[#94A3B8] uppercase tracking-wider">
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-[#94A3B8] uppercase tracking-wider sticky right-0 bg-[#0B1120] z-10 border-l border-white/10 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.3)]">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {filteredData.map((item) => (
-                  <tr key={String(item.id)} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                  <tr key={String(item.id)} className="group border-b border-white/5 hover:bg-white/[0.02] transition-colors">
                     {columns.map(col => (
                       <td key={col.key} className="px-4 py-3">
                         {renderCellValue(item, col.key)}
                       </td>
                     ))}
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 sticky right-0 bg-[#0B1120] group-hover:bg-[#131B2C] z-10 border-l border-white/10 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.3)]">
                       <div className="flex items-center justify-end gap-2">
                         {config.publishedField && (
                           <button

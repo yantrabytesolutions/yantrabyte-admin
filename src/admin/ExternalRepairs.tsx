@@ -304,12 +304,12 @@ export default function ExternalRepairs() {
                   <th className="px-6 py-3">Linked Ticket</th>
                   <th className="px-6 py-3">Status</th>
                   <th className="px-6 py-3 text-right">Cost</th>
-                  <th className="px-6 py-3 text-center">Actions</th>
+                  <th className="px-6 py-3 text-center sticky right-0 bg-gray-50 z-10 border-l border-gray-100">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 text-gray-700">
                 {filtered.map((rep) => (
-                  <tr key={rep.id} className="hover:bg-gray-50/50 transition-colors">
+                  <tr key={rep.id} className="group hover:bg-gray-50/50 transition-colors bg-white">
                     <td className="px-6 py-4">
                       <div className="font-semibold text-gray-900">{rep.material_name}</div>
                       {rep.serial_number && (
@@ -354,7 +354,7 @@ export default function ExternalRepairs() {
                     <td className="px-6 py-4 text-right font-semibold text-gray-900">
                       {rep.cost > 0 ? `₹${rep.cost.toLocaleString('en-IN')}` : <span className="text-gray-400">₹0</span>}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 sticky right-0 bg-inherit z-10 border-l border-gray-100 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)]">
                       <div className="flex justify-center items-center gap-2">
                         {rep.status === 'sent' && (
                           <button

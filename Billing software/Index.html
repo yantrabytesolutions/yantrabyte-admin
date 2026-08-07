@@ -11,17 +11,25 @@
     body {
       font-family: 'Inter', Arial, sans-serif;
       background: linear-gradient(135deg, #e8f0fe 0%, #f4f6f8 50%, #e3edf7 100%);
-      min-height: 100vh;
+      height: 100vh;
+      overflow: hidden;
       padding: 20px;
+      display: flex;
+      flex-direction: column;
     }
 
     .wrap {
       max-width: 960px;
+      width: 100%;
       margin: 0 auto;
       background: #ffffff;
       border-radius: 16px;
-      padding: 28px 32px;
+      padding: 28px 32px 0 32px;
       box-shadow: 0 4px 24px rgba(11, 83, 148, 0.10), 0 1px 4px rgba(0,0,0,0.04);
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
     }
 
     /* Header */
@@ -100,7 +108,14 @@
     .tab-icon { font-size: 16px; }
 
     /* ============ PANELS ============ */
-    .panel { display: none; }
+    .panel {
+      display: none;
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: 28px;
+      padding-right: 10px;
+      margin-right: -10px;
+    }
     .panel.active { display: block; }
 
     /* Invoice Number Display */

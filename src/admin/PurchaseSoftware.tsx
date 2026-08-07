@@ -492,14 +492,14 @@ export default function PurchaseSoftware() {
                     <th className="px-4 py-2 font-medium text-center w-16">Qty</th>
                     <th className="px-4 py-2 font-medium text-right w-24">Cost Rate</th>
                     <th className="px-4 py-2 font-medium text-right w-24">Total</th>
-                    <th className="px-4 py-2 font-medium text-center w-12"></th>
+                    <th className="px-4 py-2 font-medium text-center w-12 sticky right-0 bg-gray-50 z-10 border-l border-gray-100"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
                   {items.length === 0 ? (
                     <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">No items added yet.</td></tr>
                   ) : items.map((it, idx) => (
-                    <tr key={idx} className="hover:bg-gray-50">
+                    <tr key={idx} className="group hover:bg-gray-50 bg-white">
                       <td className="px-4 py-2 text-gray-500">{idx + 1}</td>
                       <td className="px-4 py-2 font-medium text-gray-800">
                         {it.description}
@@ -510,7 +510,7 @@ export default function PurchaseSoftware() {
                       <td className="px-4 py-2 text-center text-gray-600">{it.qty}</td>
                       <td className="px-4 py-2 text-right text-gray-600">₹{it.rate.toLocaleString('en-IN')}</td>
                       <td className="px-4 py-2 text-right font-medium text-gray-800">₹{(it.qty * it.rate).toLocaleString('en-IN')}</td>
-                      <td className="px-4 py-2 text-center">
+                      <td className="px-4 py-2 text-center sticky right-0 bg-inherit z-10 border-l border-gray-100 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)]">
                         <button onClick={() => removeItem(idx)} className="text-red-400 hover:text-red-600 transition-colors"><Trash2 className="w-4 h-4" /></button>
                       </td>
                     </tr>
