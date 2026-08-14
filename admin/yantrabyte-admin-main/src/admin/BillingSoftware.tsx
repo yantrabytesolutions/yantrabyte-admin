@@ -435,9 +435,6 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const generatePdf = (invoiceNumber: string) => {
     if (!printRef.current) return;
     const element = printRef.current;
-    
-    // We make it temporarily visible for printing
-    element.style.display = 'block';
 
     const opt = {
       margin: 0,
@@ -448,7 +445,6 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     };
 
     html2pdf().set(opt).from(element).save().then(() => {
-      element.style.display = 'none';
       showToast('PDF Generated successfully!');
     });
   };
@@ -770,8 +766,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       </div>
 
       {/* --- HIDDEN PRINT TEMPLATE --- */}
-      <div style={{ display: 'none' }}>
-        <div ref={printRef} className="bg-white p-[10px] w-full text-black" style={{ fontFamily: 'Arial, sans-serif', width: '794px', height: '1080px', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', top: '-10000px', left: '-10000px', zIndex: -1000 }}>
+        <div ref={printRef} className="bg-white p-[24px] w-full text-black flex flex-col" style={{ fontFamily: 'Arial, sans-serif', width: '794px', height: '1115px', position: 'relative', overflow: 'hidden', boxSizing: 'border-box' }}>
           
           {/* Watermark Overlay */}
           <div style={{
@@ -798,12 +794,13 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             </div>
           </div>
 
+          {/* Main Invoice Body */}
           <div className="font-bold text-center py-1 border-x border-t text-base tracking-widest uppercase" style={{ backgroundColor: '#0B5394', color: '#ffffff', borderColor: '#000000' }}>
             {docType === 'Quotation' ? 'QUOTATION' : 'INVOICE'}
           </div>
 
-          <div className="flex justify-between border">
-            <div className="w-1/2 p-2 border-r font-bold" style={{ borderColor: '#000000', color: '#0B5394' }}>
+          <div className="flex justify-between border-x border-t" style={{ borderColor: '#000000' }}>
+            <div className="w-1/2 p-2 border-r font-bold" style={{ borderColor: '#000000', color: '#0B5394', backgroundColor: 'transparent' }}>
               {docType === 'Quotation' ? 'Quotation No: ' : 'Invoice No: '} {selectedInvoiceId ? (invoices.find(i=>i.id===selectedInvoiceId)?.invoice_no || 'DRAFT') : 'DRAFT'}
             </div>
             <div className="w-1/2 p-2 text-right font-bold" style={{ color: '#333333' }}>
@@ -811,7 +808,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             </div>
           </div>
 
-          <div className="border-x border-b" style={{ borderColor: '#000000' }}>
+          <div className="border-x border-t" style={{ borderColor: '#000000' }}>
             <div className="p-1 px-2 font-bold text-sm border-b" style={{ backgroundColor: 'transparent', borderColor: '#000000', color: '#000000' }}>Bill To:</div>
             <div className="p-2 text-sm leading-tight" style={{ color: '#000000' }}>
               <div className="font-bold text-base mb-1">{customerName || '—'}</div>
@@ -821,41 +818,41 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           </div>
 
           {/* Items Table */}
-          <table className="w-full mt-2 border text-sm text-left" style={{ borderColor: '#000000', borderCollapse: 'collapse' }}>
+          <table className="w-full border-x border-t text-sm text-left" style={{ borderColor: '#000000', borderCollapse: 'collapse' }}>
             <thead>
               <tr className="text-center" style={{ backgroundColor: '#0B5394', color: '#ffffff' }}>
-                <th className="border p-1.5 w-10" style={{ borderColor: '#000000' }}>Sl No.</th>
-                <th className="border p-1.5 text-left" style={{ borderColor: '#000000' }}>Description</th>
-                <th className="border p-1.5 w-12" style={{ borderColor: '#000000' }}>Qty</th>
-                <th className="border p-1.5 w-20" style={{ borderColor: '#000000' }}>Rate</th>
-                <th className="border p-1.5 w-24 text-right" style={{ borderColor: '#000000' }}>Amount</th>
+                <th className="border-r border-b p-1.5 w-10" style={{ borderColor: '#000000' }}>Sl No.</th>
+                <th className="border-r border-b p-1.5 text-left" style={{ borderColor: '#000000' }}>Description</th>
+                <th className="border-r border-b p-1.5 w-12" style={{ borderColor: '#000000' }}>Qty</th>
+                <th className="border-r border-b p-1.5 w-20 text-center" style={{ borderColor: '#000000' }}>Rate</th>
+                <th className="border-b p-1.5 w-24 text-right" style={{ borderColor: '#000000' }}>Amount</th>
               </tr>
             </thead>
             <tbody>
               {items.map((it, idx) => (
                 <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? 'transparent' : 'rgba(248, 250, 252, 0.6)' }}>
-                  <td className="border p-1.5 text-center" style={{ borderColor: '#000000', color: '#000000' }}>{idx + 1}</td>
-                  <td className="border p-1.5 font-medium" style={{ borderColor: '#000000', color: '#000000' }}>{it.description}</td>
-                  <td className="border p-1.5 text-center" style={{ borderColor: '#000000', color: '#000000' }}>{it.qty}</td>
-                  <td className="border p-1.5 text-right" style={{ borderColor: '#000000', color: '#000000' }}>{it.rate.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                  <td className="border p-1.5 text-right font-bold" style={{ borderColor: '#000000', color: '#000000' }}>{(it.qty * it.rate).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                  <td className="border-r p-1.5 text-center" style={{ borderColor: '#000000', color: '#000000' }}>{idx + 1}</td>
+                  <td className="border-r p-1.5 font-medium" style={{ borderColor: '#000000', color: '#000000' }}>{it.description}</td>
+                  <td className="border-r p-1.5 text-center" style={{ borderColor: '#000000', color: '#000000' }}>{it.qty}</td>
+                  <td className="border-r p-1.5 text-right" style={{ borderColor: '#000000', color: '#000000' }}>{it.rate.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                  <td className="p-1.5 text-right font-bold" style={{ color: '#000000' }}>{(it.qty * it.rate).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
                 </tr>
               ))}
               {/* Padding rows */}
               {[...Array(Math.max(0, 6 - items.length))].map((_, idx) => (
                 <tr key={`empty-${idx}`} style={{ backgroundColor: 'transparent' }}>
-                  <td className="border-x p-1.5 text-transparent" style={{ borderColor: '#000000' }}>.</td>
-                  <td className="border-x p-1.5 text-transparent" style={{ borderColor: '#000000' }}>.</td>
-                  <td className="border-x p-1.5 text-transparent" style={{ borderColor: '#000000' }}>.</td>
-                  <td className="border-x p-1.5 text-transparent" style={{ borderColor: '#000000' }}>.</td>
-                  <td className="border-x p-1.5 text-transparent" style={{ borderColor: '#000000' }}>.</td>
+                  <td className="border-r p-1.5 text-transparent" style={{ borderColor: '#000000' }}>.</td>
+                  <td className="border-r p-1.5 text-transparent" style={{ borderColor: '#000000' }}>.</td>
+                  <td className="border-r p-1.5 text-transparent" style={{ borderColor: '#000000' }}>.</td>
+                  <td className="border-r p-1.5 text-transparent" style={{ borderColor: '#000000' }}>.</td>
+                  <td className="p-1.5 text-transparent">.</td>
                 </tr>
               ))}
             </tbody>
           </table>
 
           {/* Totals Box */}
-          <div className="flex border-x border-b text-sm" style={{ borderColor: '#000000' }}>
+          <div className="flex border-x border-t text-sm" style={{ borderColor: '#000000' }}>
             <div className="w-3/5 p-2 border-r" style={{ borderColor: '#000000' }}>
               <div className="font-bold inline-block px-2 mb-1" style={{ backgroundColor: '#D9EAF7', color: '#000000' }}>Amount in Words:</div>
               <div className="italic ml-2" style={{ color: '#333333' }}>{numberToWords(grandTotal)} Only</div>
@@ -872,7 +869,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           </div>
 
           {/* Footer Terms */}
-          <div className="flex border-x border-b text-xs mt-2" style={{ borderColor: '#000000' }}>
+          <div className="flex border mt-auto text-xs" style={{ borderColor: '#000000' }}>
             <div className="w-3/5 p-2 border-r" style={{ borderColor: '#000000' }}>
               <div className="font-bold inline-block w-full p-1 mb-1 text-center" style={{ backgroundColor: '#0B5394', color: '#ffffff' }}>Terms & Conditions</div>
               <div className="space-y-0.5 ml-2" style={{ color: '#444444' }}>
