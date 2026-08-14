@@ -1035,8 +1035,10 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       await fetchCustomers();
       
       if (action === 'download' || action === 'email') {
-        // Automated internal Telegram notification for invoices
-        if (payload.doc_type !== 'Quotation') {
+        // Automated internal Telegram notification for invoices and quotations
+        if (payload.doc_type === 'Quotation') {
+          sendTelegramNotification(`📝 <b>New Quotation Generated</b>\nQuotation: #${payload.invoice_no}\nCustomer: ${payload.customer_name}\nAmount: ₹${payload.grand_total}\nLink: ${pdfUrl || 'N/A'}`);
+        } else {
           sendTelegramNotification(`💰 <b>New Invoice Generated</b>\nInvoice: #${payload.invoice_no}\nCustomer: ${payload.customer_name}\nAmount: ₹${payload.grand_total}\nLink: ${pdfUrl || 'N/A'}`);
         }
       }
