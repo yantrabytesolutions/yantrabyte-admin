@@ -1,0 +1,1115 @@
+[
+  {
+    "id": "2c8ccf1d-44e1-41a0-80ff-7c837ec0e419",
+    "invoice_no": "YBQ-20260814-020",
+    "doc_type": "Quotation",
+    "date": "14/08/2026",
+    "customer_name": "Dharmpal k",
+    "phone": "9986015929",
+    "email": "dharmpal.k@gmail.com",
+    "address": "",
+    "items": [
+      {
+        "qty": 1,
+        "rate": 2500,
+        "description": "Intel 6th Gen Processor"
+      },
+      {
+        "qty": 1,
+        "rate": 5250,
+        "description": "H110 MotherBoard "
+      },
+      {
+        "qty": 1,
+        "rate": 1500,
+        "description": "Zebronic Cabinet"
+      },
+      {
+        "qty": 1,
+        "rate": 8500,
+        "description": "Ram 16gb"
+      },
+      {
+        "qty": 1,
+        "rate": 6500,
+        "description": "512gb Sata SSD"
+      },
+      {
+        "qty": 1,
+        "rate": 500,
+        "description": "Processor Fan"
+      }
+    ],
+    "subtotal": 24750,
+    "discount": 0,
+    "tax": 0,
+    "round_off": 0,
+    "grand_total": 24750,
+    "advance_paid": 0,
+    "balance_due": 24750,
+    "created_at": "2026-08-14T14:46:04.300426+00:00",
+    "payment_status": "Due",
+    "due_date": null,
+    "customer_id": null,
+    "payments": [],
+    "terms_conditions": null,
+    "warranty_months": null
+  },
+  {
+    "id": "0f3b0baa-c4a7-4468-a31a-4ce6c3468633",
+    "invoice_no": "YBS-20260807-021",
+    "doc_type": "Invoice",
+    "date": "25/06/2026",
+    "customer_name": "Drakshayni",
+    "phone": "99726 40959",
+    "email": "drakshayinianp@gmail.com",
+    "address": "# 520 SVS patells apartment Byatarayanapura",
+    "items": [
+      {
+        "qty": 1,
+        "rate": 10500,
+        "description": "Epson 16170 printer charges print head"
+      },
+      {
+        "qty": 1,
+        "rate": 3500,
+        "description": "ink pumping unit "
+      },
+      {
+        "qty": 1,
+        "rate": 900,
+        "description": "Service charges "
+      }
+    ],
+    "subtotal": 14900,
+    "discount": 0,
+    "tax": 0,
+    "round_off": 0,
+    "grand_total": 14900,
+    "advance_paid": 0,
+    "balance_due": 14900,
+    "created_at": "2026-08-07T08:44:47.015222+00:00",
+    "payment_status": "Due",
+    "due_date": null,
+    "customer_id": null,
+    "payments": [],
+    "terms_conditions": null,
+    "warranty_months": null
+  },
+  {
+    "id": "b5738ad3-7276-464b-8be1-b789916a7d23",
+    "invoice_no": "YBS-20260805-020",
+    "doc_type": "Invoice",
+    "date": "05/08/2026",
+    "customer_name": "IIBS",
+    "phone": "",
+    "email": "",
+    "address": "75, Bangalore North, Jala Hobli, Begur, Muthugadahalli, Bengaluru, Karnataka 562110",
+    "items": [
+      {
+        "qty": 1,
+        "rate": 2500,
+        "description": "Lenovo Laptop Base"
+      }
+    ],
+    "subtotal": 2500,
+    "discount": 0,
+    "tax": 0,
+    "round_off": 0,
+    "grand_total": 2500,
+    "advance_paid": 0,
+    "balance_due": 2500,
+    "created_at": "2026-08-05T04:26:41.538921+00:00",
+    "payment_status": "Due",
+    "due_date": null,
+    "customer_id": null,
+    "payments": [],
+    "terms_conditions": null,
+    "warranty_months": null
+  },
+  {
+    "id": "cfad9c42-9f5a-4555-92d6-aacf42ed87d5",
+    "invoice_no": "YBS-20260804-019",
+    "doc_type": "Invoice",
+    "date": "04/08/2026",
+    "customer_name": "Priya v",
+    "phone": "8867009880",
+    "email": "",
+    "address": "#98 6th Main 1st c Cross Remco layout Hampinagar Bangalore 560104",
+    "items": [
+      {
+        "qty": 1,
+        "rate": 800,
+        "description": "Service Charges"
+      },
+      {
+        "qty": 1,
+        "rate": 850,
+        "description": "Usb Casing"
+      },
+      {
+        "qty": 1,
+        "rate": 1500,
+        "description": "Dell Laptop Motherboard & Components Charges"
+      }
+    ],
+    "subtotal": 3150,
+    "discount": 0,
+    "tax": 0,
+    "round_off": 0,
+    "grand_total": 3150,
+    "advance_paid": 0,
+    "balance_due": 3150,
+    "created_at": "2026-08-04T05:06:31.782854+00:00",
+    "payment_status": "Due",
+    "due_date": null,
+    "customer_id": null,
+    "payments": [],
+    "terms_conditions": null,
+    "warranty_months": null
+  },
+  {
+    "id": "059957dc-f882-47ae-844d-9cd6ebe2972d",
+    "invoice_no": "YBQ-20260803-019",
+    "doc_type": "Quotation",
+    "date": "03/08/2026",
+    "customer_name": "Priya v",
+    "phone": "8867009880",
+    "email": "",
+    "address": "#98 6th main 1st c cross remco layout hampinagar bangalore 560104",
+    "items": [
+      {
+        "qty": 1,
+        "rate": 800,
+        "description": "Service Charges"
+      },
+      {
+        "qty": 1,
+        "rate": 850,
+        "description": "Usb Casing"
+      },
+      {
+        "qty": 1,
+        "rate": 1500,
+        "description": "Dell Laptop Motherboard & Components Charges"
+      }
+    ],
+    "subtotal": 3150,
+    "discount": 0,
+    "tax": 0,
+    "round_off": 0,
+    "grand_total": 3150,
+    "advance_paid": 0,
+    "balance_due": 3150,
+    "created_at": "2026-08-03T14:59:45.6479+00:00",
+    "payment_status": "Approved",
+    "due_date": null,
+    "customer_id": null,
+    "payments": [],
+    "terms_conditions": "Digital Signature: Priya on 3/8/2026, 5:22:52 pm",
+    "warranty_months": null
+  },
+  {
+    "id": "fed5a771-b3c8-4830-9ee0-0f541d16de55",
+    "invoice_no": "YBQ-20260803-018",
+    "doc_type": "Quotation",
+    "date": "03/08/2026",
+    "customer_name": "Chandraprabha",
+    "phone": "831 022 8320",
+    "email": "shivanisiya67@gmail.com",
+    "address": "SLV GREEN LEAF APARTMENT,  Vidyaranpura, 560097",
+    "items": [
+      {
+        "qty": 1,
+        "rate": 2000,
+        "description": "Laptop Motherboard & Components Service Charges"
+      },
+      {
+        "qty": 1,
+        "rate": 2500,
+        "description": "Hp Laptop Battery with Six Months Warranty"
+      }
+    ],
+    "subtotal": 4500,
+    "discount": 0,
+    "tax": 0,
+    "round_off": 0,
+    "grand_total": 4500,
+    "advance_paid": 0,
+    "balance_due": 4500,
+    "created_at": "2026-08-03T10:57:03.66788+00:00",
+    "payment_status": "Expired",
+    "due_date": null,
+    "customer_id": null,
+    "payments": [],
+    "terms_conditions": null,
+    "warranty_months": null
+  },
+  {
+    "id": "8f02c076-0ceb-4409-9394-4ca4e456e472",
+    "invoice_no": "YBQ-20260731-017",
+    "doc_type": "Quotation",
+    "date": "31/07/2026",
+    "customer_name": "RAMESH",
+    "phone": "9901733369",
+    "email": "rameshas2105@gmail.com",
+    "address": "Vidyaranyanpura",
+    "items": [
+      {
+        "qty": 1,
+        "rate": 200,
+        "description": "Service Chagers"
+      }
+    ],
+    "subtotal": 200,
+    "discount": 0,
+    "tax": 0,
+    "round_off": 0,
+    "grand_total": 200,
+    "advance_paid": 0,
+    "balance_due": 200,
+    "created_at": "2026-07-31T17:54:14.704145+00:00",
+    "payment_status": "Approved",
+    "due_date": null,
+    "customer_id": null,
+    "payments": [],
+    "terms_conditions": "Digital Signature: asr on 31/7/2026, 11:32:39 pm",
+    "warranty_months": null
+  },
+  {
+    "id": "4136a500-4996-4792-a804-2cbe9f55c19e",
+    "invoice_no": "YBS-20260727-018",
+    "doc_type": "Invoice",
+    "date": "27/07/2026",
+    "customer_name": "Yogesh Aradhya",
+    "phone": "97413 22746",
+    "email": "yogesharadhya03@gmail.com",
+    "address": "12, Sri Sai Krupa Nilaya, 8th cross, Kanshiram nagar, Bengaluru 560097",
+    "items": [
+      {
+        "qty": 1,
+        "rate": 700,
+        "description": "Service Charges "
+      }
+    ],
+    "subtotal": 700,
+    "discount": 0,
+    "tax": 0,
+    "round_off": 0,
+    "grand_total": 700,
+    "advance_paid": 700,
+    "balance_due": 0,
+    "created_at": "2026-07-27T12:22:18.098131+00:00",
+    "payment_status": "Paid",
+    "due_date": null,
+    "customer_id": null,
+    "payments": [],
+    "terms_conditions": null,
+    "warranty_months": null
+  },
+  {
+    "id": "1bafbb2c-9811-4a0d-88cc-013a5ca54187",
+    "invoice_no": "YBS-20260722-017",
+    "doc_type": "Invoice",
+    "date": "22/07/2026",
+    "customer_name": "Yogesh Aradhya",
+    "phone": "97413 22746",
+    "email": "yogesharadhya03@gmail.com",
+    "address": "12, Sri Sai Krupa Nilaya, 8th cross, Kanshiram nagar, Bengaluru 560097",
+    "items": [
+      {
+        "qty": 1,
+        "rate": 3850,
+        "description": "Laptop Screen With 1 Year Warranty "
+      },
+      {
+        "qty": 1,
+        "rate": 500,
+        "description": "Service Charges "
+      }
+    ],
+    "subtotal": 4350,
+    "discount": 0,
+    "tax": 0,
+    "round_off": 0,
+    "grand_total": 4350,
+    "advance_paid": 4350,
+    "balance_due": 0,
+    "created_at": "2026-07-22T14:24:55.691345+00:00",
+    "payment_status": "Paid",
+    "due_date": null,
+    "customer_id": null,
+    "payments": [],
+    "terms_conditions": null,
+    "warranty_months": null
+  },
+  {
+    "id": "f8cf1058-f9a6-4d96-9480-e2dacb7c4948",
+    "invoice_no": "YBS-20260721-016",
+    "doc_type": "Invoice",
+    "date": "21/07/2026",
+    "customer_name": "Dr.Sreelekshmi's Kerala Ayurveda Centre (Yelahanka New Town)",
+    "phone": "9449569718",
+    "email": "",
+    "address": "House No 137, B3, 3rd Main Rd, 4th Phase, Yelahanka New Town, Bengaluru, Karnataka 560064",
+    "items": [
+      {
+        "qty": 1,
+        "rate": 850,
+        "description": "Zebronics SMPS With 1 year Warranty"
+      },
+      {
+        "qty": 1,
+        "rate": 350,
+        "description": "Service Charges"
+      }
+    ],
+    "subtotal": 1200,
+    "discount": 0,
+    "tax": 0,
+    "round_off": 0,
+    "grand_total": 1200,
+    "advance_paid": 0,
+    "balance_due": 1200,
+    "created_at": "2026-07-21T12:21:55.646776+00:00",
+    "payment_status": "Due",
+    "due_date": null,
+    "customer_id": null,
+    "payments": [],
+    "terms_conditions": null,
+    "warranty_months": null
+  },
+  {
+    "id": "827a0296-13ac-4f55-b9d9-7faffba7334a",
+    "invoice_no": "YBQ-20260721-001",
+    "doc_type": "Quotation",
+    "date": "21/07/2026",
+    "customer_name": "Yogesh Aradhya",
+    "phone": "97413 22746",
+    "email": "yogesharadhya03@gmail.com",
+    "address": "12, Sri Sai Krupa Nilaya, 8th cross, Kanshiram nagar, Bengaluru 560097",
+    "items": [
+      {
+        "qty": 1,
+        "rate": 3850,
+        "description": "Laptop Screen with 1 year warranty "
+      },
+      {
+        "qty": 1,
+        "rate": 500,
+        "description": "Service charges "
+      }
+    ],
+    "subtotal": 4350,
+    "discount": 0,
+    "tax": 0,
+    "round_off": 0,
+    "grand_total": 4350,
+    "advance_paid": 0,
+    "balance_due": 4350,
+    "created_at": "2026-07-21T10:46:28.215064+00:00",
+    "payment_status": "Expired",
+    "due_date": null,
+    "customer_id": null,
+    "payments": [],
+    "terms_conditions": null,
+    "warranty_months": null
+  },
+  {
+    "id": "1c96edbe-007e-4aea-b589-c6bd6c3c2e87",
+    "invoice_no": "YBQ-20260720-001",
+    "doc_type": "Invoice",
+    "date": "20/07/2026",
+    "customer_name": "Dr.Sreelekshmi's Kerala Ayurveda Centre (Yelahanka New Town)",
+    "phone": "9449569718",
+    "email": "thomasnvarghese@gmail.com",
+    "address": "House No 137, B3, 3rd Main Rd, 4th Phase, Yelahanka New Town, Bengaluru, Karnataka 560064",
+    "items": [
+      {
+        "qty": 1,
+        "rate": 850,
+        "description": "Zebronics SMPS With 1 year Warranty"
+      },
+      {
+        "qty": 1,
+        "rate": 350,
+        "description": "Service Charges"
+      }
+    ],
+    "subtotal": 1200,
+    "discount": 0,
+    "tax": 0,
+    "round_off": 0,
+    "grand_total": 1200,
+    "advance_paid": 0,
+    "balance_due": 1200,
+    "created_at": "2026-07-20T15:19:26.933895+00:00",
+    "payment_status": "Due",
+    "due_date": null,
+    "customer_id": null,
+    "payments": [],
+    "terms_conditions": null,
+    "warranty_months": null
+  },
+  {
+    "id": "8c481dcf-1379-49a1-8cf3-f9edd361f88b",
+    "invoice_no": "YBS-20260701-013",
+    "doc_type": "Invoice",
+    "date": "01/07/2026",
+    "customer_name": "IIBS",
+    "phone": "",
+    "email": "",
+    "address": "75, Bangalore North, Jala Hobli, Begur, Muthugadahalli, Bengaluru, Karnataka 562110",
+    "items": [
+      {
+        "qty": 1,
+        "rate": 1500,
+        "description": "CannonMf4320D Printer Service Charges"
+      }
+    ],
+    "subtotal": 1500,
+    "discount": 0,
+    "tax": 0,
+    "round_off": 0,
+    "grand_total": 1500,
+    "advance_paid": 1500,
+    "balance_due": 0,
+    "created_at": "2026-07-01T05:59:56.085563+00:00",
+    "payment_status": "Paid",
+    "due_date": null,
+    "customer_id": null,
+    "payments": [],
+    "terms_conditions": null,
+    "warranty_months": null
+  },
+  {
+    "id": "7fb30d3f-1b16-4a30-8e5f-91898fc176d4",
+    "invoice_no": "YBQ-20260629-016",
+    "doc_type": "Quotation",
+    "date": "29/06/2026",
+    "customer_name": "Uv Suresh",
+    "phone": "9448368498",
+    "email": "unchil1957@gmail.com",
+    "address": "",
+    "items": [
+      {
+        "qty": 1,
+        "rate": 2850,
+        "description": "I5 6th Gen Processor"
+      },
+      {
+        "qty": 1,
+        "rate": 7250,
+        "description": "DDR4 16gb Ram"
+      },
+      {
+        "qty": 1,
+        "rate": 4500,
+        "description": "EVM 256 SATA SSD"
+      },
+      {
+        "qty": 1,
+        "rate": 600,
+        "description": "Wifi usb "
+      },
+      {
+        "qty": 1,
+        "rate": 600,
+        "description": "Bluetooth USB "
+      },
+      {
+        "qty": 1,
+        "rate": 2500,
+        "description": "Finger Cabinet with 450W SMPS"
+      },
+      {
+        "qty": 1,
+        "rate": 500,
+        "description": "Processor Fan"
+      },
+      {
+        "qty": 1,
+        "rate": 8250,
+        "description": "Gigabyte  MotherBoard H 110"
+      }
+    ],
+    "subtotal": 27050,
+    "discount": 0,
+    "tax": 0,
+    "round_off": 0,
+    "grand_total": 27050,
+    "advance_paid": 0,
+    "balance_due": 27050,
+    "created_at": "2026-06-29T11:06:51.101979+00:00",
+    "payment_status": "Expired",
+    "due_date": null,
+    "customer_id": null,
+    "payments": [],
+    "terms_conditions": null,
+    "warranty_months": null
+  },
+  {
+    "id": "3bf7621a-fc1d-43b7-99da-4cc7db546063",
+    "invoice_no": "YBS-20260625-015",
+    "doc_type": "Invoice",
+    "date": "25/06/2026",
+    "customer_name": "Test",
+    "phone": "Test",
+    "email": "rameshas2105@gmail.com",
+    "address": "",
+    "items": [
+      {
+        "qty": 1,
+        "rate": 500,
+        "description": "Service Charges"
+      },
+      {
+        "qty": 1,
+        "rate": 850,
+        "description": "Zebronics SMPS"
+      }
+    ],
+    "subtotal": 1350,
+    "discount": 0,
+    "tax": 0,
+    "round_off": 0,
+    "grand_total": 1350,
+    "advance_paid": 0,
+    "balance_due": 1350,
+    "created_at": "2026-06-25T17:08:42.08441+00:00",
+    "payment_status": "Due",
+    "due_date": null,
+    "customer_id": null,
+    "payments": [],
+    "terms_conditions": null,
+    "warranty_months": null
+  },
+  {
+    "id": "c829615d-ef37-4f3d-bcf3-499cc0c2ea0d",
+    "invoice_no": "YBQ-20260625-014",
+    "doc_type": "Quotation",
+    "date": "25/06/2026",
+    "customer_name": "Drakshayni",
+    "phone": "99726 40959",
+    "email": "drakshayinianp@gmail.com",
+    "address": "# 520 SVS patells apartment Byatarayanapura",
+    "items": [
+      {
+        "qty": 1,
+        "rate": 10500,
+        "description": "Epson l6170 printer charges print head "
+      },
+      {
+        "qty": 1,
+        "rate": 3500,
+        "description": " ink pumping unit"
+      },
+      {
+        "qty": 1,
+        "rate": 900,
+        "description": "Service charges "
+      }
+    ],
+    "subtotal": 14900,
+    "discount": 0,
+    "tax": 0,
+    "round_off": 0,
+    "grand_total": 14900,
+    "advance_paid": 0,
+    "balance_due": 14900,
+    "created_at": "2026-06-25T15:49:44.439359+00:00",
+    "payment_status": "Expired",
+    "due_date": null,
+    "customer_id": null,
+    "payments": [],
+    "terms_conditions": null,
+    "warranty_months": null
+  },
+  {
+    "id": "33f63c40-68de-4089-94de-ab2caabb98de",
+    "invoice_no": "YBS-20260621-013",
+    "doc_type": "Invoice",
+    "date": "22/06/2026",
+    "customer_name": "Jayaprakash Reddy",
+    "phone": "7204207382",
+    "email": "jpreddygm@gmail.com",
+    "address": "No.25, 1st FLOOR, Behind Ramakrishna Apartments\nDoddabommasandra, Vidyaranyapura Post\nBENGALURU, KARNATAKA 560097\nIndia",
+    "items": [
+      {
+        "qty": 1,
+        "rate": 1200,
+        "description": "Dell Laptop Touchpad Service Charges"
+      }
+    ],
+    "subtotal": 1200,
+    "discount": 250,
+    "tax": 0,
+    "round_off": 0,
+    "grand_total": 950,
+    "advance_paid": 950,
+    "balance_due": 0,
+    "created_at": "2026-06-21T04:48:21.773835+00:00",
+    "payment_status": "Paid",
+    "due_date": null,
+    "customer_id": null,
+    "payments": [],
+    "terms_conditions": null,
+    "warranty_months": null
+  },
+  {
+    "id": "48f2d370-fb33-4c4a-a3eb-535d69a05cb9",
+    "invoice_no": "YBS-20260621-012",
+    "doc_type": "Invoice",
+    "date": "21/06/2026",
+    "customer_name": "Aarmour Surveillance",
+    "phone": "9902583833",
+    "email": "info@aarmour.asia",
+    "address": "",
+    "items": [
+      {
+        "qty": 1,
+        "rate": 1800,
+        "description": "Dell laptop Motherboard & Components Charges / Laptop not Powering ON"
+      },
+      {
+        "qty": 1,
+        "rate": 2200,
+        "description": "Dell Laptop Battery"
+      },
+      {
+        "qty": 1,
+        "rate": 1300,
+        "description": "Hp laptop Motherboard & Components Charges "
+      },
+      {
+        "qty": 1,
+        "rate": 1650,
+        "description": "Hp Laptop keyboard/ with 3 Months Warranty "
+      }
+    ],
+    "subtotal": 6950,
+    "discount": 0,
+    "tax": 0,
+    "round_off": 0,
+    "grand_total": 6950,
+    "advance_paid": 6950,
+    "balance_due": 0,
+    "created_at": "2026-06-21T04:33:50.874873+00:00",
+    "payment_status": "Due",
+    "due_date": null,
+    "customer_id": null,
+    "payments": [],
+    "terms_conditions": null,
+    "warranty_months": null
+  },
+  {
+    "id": "ff6f75d2-86cb-4787-82a4-bafc16ba6e04",
+    "invoice_no": "YBS-20260616-011",
+    "doc_type": "Invoice",
+    "date": "18/06/2026",
+    "customer_name": "Aarmour Surveillance",
+    "phone": "9902583833",
+    "email": "info@aarmour.asia",
+    "address": "",
+    "items": [
+      {
+        "qty": 1,
+        "rate": 400,
+        "description": "Visiting Charges for Brand Tusker / Dell Laptop Service Charges for Booting Issuse"
+      }
+    ],
+    "subtotal": 400,
+    "discount": 0,
+    "tax": 0,
+    "round_off": 0,
+    "grand_total": 400,
+    "advance_paid": 400,
+    "balance_due": 0,
+    "created_at": "2026-06-16T14:44:33.185579+00:00",
+    "payment_status": "Paid",
+    "due_date": null,
+    "customer_id": null,
+    "payments": [],
+    "terms_conditions": null,
+    "warranty_months": null
+  },
+  {
+    "id": "3bfe3772-8f9d-4c3f-8aa1-0aa02fb28b10",
+    "invoice_no": "YBS-20260614-010",
+    "doc_type": "Invoice",
+    "date": "14/06/2026",
+    "customer_name": "jameel",
+    "phone": "+91 98853 31724",
+    "email": "jameel259@gmail.com",
+    "address": "H.no.11,11th cross Veerasagar main road, Mundeshwar layout - Attur Yelahanka 560064",
+    "items": [
+      {
+        "qty": 1,
+        "rate": 700,
+        "description": "Lenovo Laptop Servive Charges"
+      },
+      {
+        "qty": 1,
+        "rate": 700,
+        "description": "Dell System Service Charges"
+      }
+    ],
+    "subtotal": 1400,
+    "discount": 0,
+    "tax": 0,
+    "round_off": 0,
+    "grand_total": 1400,
+    "advance_paid": 1400,
+    "balance_due": 0,
+    "created_at": "2026-06-14T04:57:08.559571+00:00",
+    "payment_status": "Due",
+    "due_date": null,
+    "customer_id": null,
+    "payments": [],
+    "terms_conditions": null,
+    "warranty_months": null
+  },
+  {
+    "id": "9f1dd0ed-f830-4674-904f-7678e7ca706a",
+    "invoice_no": "YBS-20260613-009",
+    "doc_type": "Invoice",
+    "date": "13/06/2026",
+    "customer_name": "Dr Sreelekshmi",
+    "phone": "9207199609",
+    "email": "",
+    "address": "House No 137, B3, 3rd Main Rd, 4th Phase, Yelahanka New Town, Bengaluru, Karnataka 560064",
+    "items": [
+      {
+        "qty": 1,
+        "rate": 800,
+        "description": "Service Charges (Biometric Device usb port fixing Charges)"
+      }
+    ],
+    "subtotal": 800,
+    "discount": 0,
+    "tax": 0,
+    "round_off": 0,
+    "grand_total": 800,
+    "advance_paid": 800,
+    "balance_due": 0,
+    "created_at": "2026-06-13T10:59:49.636162+00:00",
+    "payment_status": "Paid",
+    "due_date": null,
+    "customer_id": null,
+    "payments": [],
+    "terms_conditions": null,
+    "warranty_months": null
+  },
+  {
+    "id": "245fce3c-bcb3-432e-9ddc-6119c7933c1e",
+    "invoice_no": "YBS-20260531-006",
+    "doc_type": "Invoice",
+    "date": "31/05/2026",
+    "customer_name": "Dikshit Achari",
+    "phone": "8088898483",
+    "email": "dikshitachari05@gmail.com",
+    "address": "Address: Sri Balaji Boys PG, Adityanagar, Vidyaranyapura, Bengaluru",
+    "items": [
+      {
+        "qty": 1,
+        "rate": 0,
+        "description": "Service & Repair: Acer Laptop with Charger (Water spilled inside the laptop.)"
+      },
+      {
+        "qty": 1,
+        "rate": 1800,
+        "item_name": "Laptop MotherBoard & Components Service Charges",
+        "description": ""
+      }
+    ],
+    "subtotal": 1800,
+    "discount": 0,
+    "tax": 0,
+    "round_off": 0,
+    "grand_total": 1800,
+    "advance_paid": 1800,
+    "balance_due": 0,
+    "created_at": "2026-05-31T05:17:01.192156+00:00",
+    "payment_status": "Due",
+    "due_date": null,
+    "customer_id": null,
+    "payments": [
+      {
+        "date": "2026-05-31",
+        "mode": "UPI",
+        "amount": 1800
+      }
+    ],
+    "terms_conditions": null,
+    "warranty_months": null
+  },
+  {
+    "id": "b413be92-79d9-4eb0-8b56-86b0a93dd72b",
+    "invoice_no": "YBS-20260530-005",
+    "doc_type": "Invoice",
+    "date": "26/06/2026",
+    "customer_name": "Dr Sreelekshmi",
+    "phone": "99449569718",
+    "email": "",
+    "address": "House No 1135, 9th Cross Rd, 7th Block, HMT Layout, Vidyaranyapura, Bengaluru, Karnataka 560097",
+    "items": [
+      {
+        "qty": 1,
+        "rate": 500,
+        "description": "Service Charges(windows Installation)"
+      }
+    ],
+    "subtotal": 500,
+    "discount": 0,
+    "tax": 0,
+    "round_off": 0,
+    "grand_total": 500,
+    "advance_paid": 0,
+    "balance_due": 500,
+    "created_at": "2026-05-30T10:53:21.184419+00:00",
+    "payment_status": "Due",
+    "due_date": null,
+    "customer_id": null,
+    "payments": [],
+    "terms_conditions": null,
+    "warranty_months": null
+  },
+  {
+    "id": "38f330e7-49b2-40a8-924c-941d3b3991b7",
+    "invoice_no": "YBS-20260529-004",
+    "doc_type": "Cancelled",
+    "date": "29/05/2026",
+    "customer_name": "Dr Sreelekshmi",
+    "phone": "99449569718",
+    "email": "",
+    "address": "House No 1135, 9th Cross Rd, 7th Block, HMT Layout, Vidyaranyapura, Bengaluru, Karnataka 560097",
+    "items": [
+      {
+        "qty": 1,
+        "rate": 500,
+        "item_name": "Service Charges",
+        "description": ""
+      }
+    ],
+    "subtotal": 500,
+    "discount": 0,
+    "tax": 0,
+    "round_off": 0,
+    "grand_total": 500,
+    "advance_paid": 0,
+    "balance_due": 500,
+    "created_at": "2026-05-29T08:47:01.733016+00:00",
+    "payment_status": "Due",
+    "due_date": null,
+    "customer_id": null,
+    "payments": [],
+    "terms_conditions": null,
+    "warranty_months": null
+  },
+  {
+    "id": "3f9e3a00-f91f-4aee-a74d-e254fa31977e",
+    "invoice_no": "YBQ-20260527-005",
+    "doc_type": "Quotation",
+    "date": "27/05/2026",
+    "customer_name": "Aarmour Surveillance",
+    "phone": "9902583833",
+    "email": "info@aarmour.asia",
+    "address": "",
+    "items": [
+      {
+        "qty": 1,
+        "rate": 950,
+        "item_name": "Dell Inspiron 15-3567",
+        "description": "Fabrication "
+      },
+      {
+        "qty": 1,
+        "rate": 1500,
+        "description": "Lenovo Laptop MotherBoard & Components Service Charges"
+      },
+      {
+        "qty": 1,
+        "rate": 3250,
+        "description": "Dell Laptop Screen with 1 year warranty"
+      }
+    ],
+    "subtotal": 5700,
+    "discount": 0,
+    "tax": 0,
+    "round_off": 0,
+    "grand_total": 5700,
+    "advance_paid": 0,
+    "balance_due": 5700,
+    "created_at": "2026-05-27T10:29:05.139367+00:00",
+    "payment_status": "Expired",
+    "due_date": null,
+    "customer_id": null,
+    "payments": [],
+    "terms_conditions": null,
+    "warranty_months": null
+  },
+  {
+    "id": "c8f1bc52-86c3-4958-b9ad-3ab4eb8f4478",
+    "invoice_no": "YBQ-20260519-004",
+    "doc_type": "Quotation",
+    "date": "19/06/2026",
+    "customer_name": "Aarmour Surveillance",
+    "phone": "9902583833",
+    "email": "info@aarmour.asia",
+    "address": "",
+    "items": [
+      {
+        "qty": 1,
+        "rate": 1800,
+        "item_name": "Dell Inspiron 15-3567",
+        "description": "Dell laptop Motherboard & Components Charges / Laptop not Powering ON"
+      },
+      {
+        "qty": 1,
+        "rate": 2200,
+        "item_name": "Dell Inspiron 15-3567",
+        "description": "Dell Laptop Battery"
+      },
+      {
+        "qty": 1,
+        "rate": 1300,
+        "item_name": "HP Elite ProBook -840 G3",
+        "description": "Hp laptop Motherboard & Components Charges"
+      },
+      {
+        "qty": 1,
+        "rate": 1650,
+        "item_name": "HP Elite ProBook -840 G3",
+        "description": "Hp Laptop keyboard"
+      }
+    ],
+    "subtotal": 6950,
+    "discount": 0,
+    "tax": 0,
+    "round_off": 0,
+    "grand_total": 6950,
+    "advance_paid": 6950,
+    "balance_due": 0,
+    "created_at": "2026-05-19T14:04:30.425682+00:00",
+    "payment_status": "Expired",
+    "due_date": null,
+    "customer_id": null,
+    "payments": [],
+    "terms_conditions": null,
+    "warranty_months": null
+  },
+  {
+    "id": "83381feb-87d6-4faf-8b0c-f1244f246a37",
+    "invoice_no": "YBS-20260517-003",
+    "doc_type": "Invoice",
+    "date": "22/05/2026",
+    "customer_name": "Sagar",
+    "phone": "9591451419",
+    "email": "sagar.venkatesh1989@gmail.com",
+    "address": "Vidyaranyapura, bangalore ",
+    "items": [
+      {
+        "qty": 1,
+        "rate": 1500,
+        "description": "Laptop Motherboard & Components Service Charges"
+      }
+    ],
+    "subtotal": 1500,
+    "discount": 0,
+    "tax": 0,
+    "round_off": 0,
+    "grand_total": 1500,
+    "advance_paid": 1500,
+    "balance_due": 0,
+    "created_at": "2026-05-17T05:10:36.567261+00:00",
+    "payment_status": "Paid",
+    "due_date": null,
+    "customer_id": null,
+    "payments": [],
+    "terms_conditions": null,
+    "warranty_months": null
+  },
+  {
+    "id": "9f910be6-19ef-4b35-89af-1b71e5dfa071",
+    "invoice_no": "YBS-20260517-002",
+    "doc_type": "Invoice",
+    "date": "28/05/2026",
+    "customer_name": "N Prashanth",
+    "phone": "9164154505",
+    "email": "prashanthraju2004@gmail.com",
+    "address": "#417/7 , G2 , 4th cross , A sector , Yelahanka - Newtown",
+    "items": [
+      {
+        "qty": 1,
+        "rate": 3500,
+        "description": "Dell Laptop Hinges and Screen Panel"
+      }
+    ],
+    "subtotal": 3500,
+    "discount": 200,
+    "tax": 0,
+    "round_off": 0,
+    "grand_total": 3300,
+    "advance_paid": 3900,
+    "balance_due": -600,
+    "created_at": "2026-05-17T02:28:19.552194+00:00",
+    "payment_status": "Due",
+    "due_date": null,
+    "customer_id": null,
+    "payments": [
+      {
+        "date": "2026-05-28",
+        "mode": "UPI",
+        "amount": 1300
+      },
+      {
+        "date": "2026-05-28",
+        "mode": "UPI",
+        "amount": 1300
+      },
+      {
+        "date": "2026-05-28",
+        "mode": "Cash",
+        "amount": 1300
+      }
+    ],
+    "terms_conditions": null,
+    "warranty_months": null
+  },
+  {
+    "id": "146adf1d-68ff-4a48-b90e-dcb23a29a0d5",
+    "invoice_no": "YBS-20260516-001",
+    "doc_type": "Invoice",
+    "date": "22/05/2026",
+    "customer_name": "Aarmour Surveillance",
+    "phone": "9902583833",
+    "email": "info@aarmour.asia",
+    "address": "Yelahanka",
+    "items": [
+      {
+        "qty": 1,
+        "rate": 900,
+        "description": "Dell Laptop Fan Cleaning and Termal Paste"
+      },
+      {
+        "qty": 5,
+        "rate": 100,
+        "description": "Systems Checking"
+      }
+    ],
+    "subtotal": 1400,
+    "discount": 0,
+    "tax": 0,
+    "round_off": 0,
+    "grand_total": 1400,
+    "advance_paid": 1400,
+    "balance_due": 0,
+    "created_at": "2026-05-16T11:48:04.43561+00:00",
+    "payment_status": "Paid",
+    "due_date": null,
+    "customer_id": null,
+    "payments": [],
+    "terms_conditions": null,
+    "warranty_months": null
+  }
+]
