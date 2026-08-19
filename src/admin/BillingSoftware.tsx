@@ -2383,7 +2383,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             backgroundRepeat: 'no-repeat',
             pointerEvents: 'none',
             zIndex: 50,
-            opacity: 0.18
+            opacity: 0.2
           }}>
           </div>
           
@@ -2426,8 +2426,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
             {/* Invoice No and Date */}
             <div className="flex justify-between" style={{ borderBottom: '1px solid #000' }}>
-              <div className="w-1/2 p-2 font-bold text-base" style={{ borderRight: '1.5px solid #000', color: '#0B5394' }}>
-                {docType === 'Quotation' ? 'Quotation No: ' : (docType === 'Cancelled' ? 'Cancelled No: ' : 'Invoice No: ')} <span style={{ color: '#DC2626' }}>{printInvoiceNumber || (selectedInvoiceId ? (invoices.find(i=>i.id===selectedInvoiceId)?.invoice_no || 'DRAFT') : 'DRAFT')}</span>
+              <div className="w-1/2 p-2 font-bold text-base" style={{ borderRight: '1.5px solid #000', color: '#DC2626' }}>
+                {docType === 'Quotation' ? 'Quotation No: ' : (docType === 'Cancelled' ? 'Cancelled No: ' : 'Invoice No: ')} {printInvoiceNumber || (selectedInvoiceId ? (invoices.find(i=>i.id===selectedInvoiceId)?.invoice_no || 'DRAFT') : 'DRAFT')}
               </div>
               <div className="w-1/2 p-2 text-right font-bold text-base" style={{ color: '#333333' }}>
                 Date: {invoiceDate.split('-').reverse().join('/')}
@@ -2436,7 +2436,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
             {/* Bill To */}
             <div style={{ borderBottom: '1px solid #000' }}>
-              <div className="p-1 px-2 font-bold text-sm" style={{ backgroundColor: '#D9EAF7', color: '#0B5394', borderBottom: '1px solid #000' }}>
+              <div className="p-1 px-2 font-bold text-sm" style={{ backgroundColor: '#D9EAF7', color: '#7E22CE', borderBottom: '1px solid #000' }}>
                 Bill To:
               </div>
               <div className="p-2 text-sm leading-tight" style={{ color: '#000000' }}>
@@ -2447,8 +2447,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             </div>
 
             {/* Items Table */}
-            <div className="relative mt-0">
-              <table className="w-full text-sm text-left relative z-0" style={{ borderCollapse: 'collapse', borderBottom: '1px solid #000' }}>
+            <div className="relative mt-2">
+              <table className="w-full text-sm text-left relative z-0" style={{ borderCollapse: 'collapse', borderBottom: '1px solid #000', borderTop: '1px solid #000' }}>
               <thead>
                 <tr className="text-white" style={{ backgroundColor: '#0B5394' }}>
                   <th className="p-2 w-12 text-center" style={{ borderBottom: '1px solid #000', borderRight: '1px solid #000' }}>Sl<br/>No.</th>
@@ -2492,13 +2492,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             {/* Totals Box */}
             <div className="flex text-sm">
               <div className="w-3/5 p-3 flex flex-col justify-start" style={{ borderRight: '1px solid #000' }}>
-                <div className="font-bold inline-block px-2 py-0.5 mb-2" style={{ backgroundColor: '#D9EAF7', color: '#0B5394', alignSelf: 'flex-start' }}>Amount in Words:</div>
+                <div className="font-bold inline-block px-2 py-0.5 mb-2" style={{ backgroundColor: '#D9EAF7', color: '#B45309', alignSelf: 'flex-start' }}>Amount in Words:</div>
                 <div className="italic text-gray-800">{numberToWords(grandTotal)}</div>
-                {paymentMode && paymentMode !== 'Not specified' && (
-                  <div className="text-xs text-gray-600 font-medium mt-3">
-                    <span className="font-bold text-gray-800">Payment Mode:</span> {paymentMode}
-                  </div>
-                )}
               </div>
               <div className="w-2/5 flex flex-col">
                 <div className="flex justify-between p-1.5 px-3" style={{ borderBottom: '1px solid #000' }}>
@@ -2517,7 +2512,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                     <span style={{ color: '#000000' }}>{roundOff.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
                   </div>
                 )}
-                <div className="flex justify-between p-1.5 px-3 font-bold" style={{ backgroundColor: '#FFF2CC', borderBottom: '1px solid #000', color: '#0B5394' }}>
+                <div className="flex justify-between p-1.5 px-3 font-bold" style={{ backgroundColor: '#FFF2CC', borderBottom: '1px solid #000', color: '#15803D' }}>
                   <span>Grand Total</span>
                   <span className="text-base">{grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
                 </div>
@@ -2525,8 +2520,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                   <span style={{ color: '#333333' }}>Advance Paid</span>
                   <span style={{ color: '#000000' }}>{advancePaid.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
                 </div>
-                <div className="flex justify-between p-1.5 px-3 font-bold" style={{ backgroundColor: balanceDue <= 0 ? '#DCFCE7' : '#FFF2CC', color: balanceDue <= 0 ? '#15803D' : '#B91C1C' }}>
-                  <span>{balanceDue <= 0 ? 'Balance (Paid)' : 'Balance Due'}</span>
+                <div className="flex justify-between p-1.5 px-3 font-bold" style={{ backgroundColor: '#FFF2CC', color: '#B91C1C' }}>
+                  <span>Balance Due</span>
                   <span className="text-base">{balanceDue.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
                 </div>
               </div>
@@ -2540,7 +2535,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             {/* Terms Box */}
             <div className="w-3/5 flex flex-col" style={{ border: '1px solid #000' }}>
               <div className="font-bold text-center p-1 text-white text-sm" style={{ backgroundColor: '#0B5394' }}>Terms & Conditions</div>
-              <div className="p-3 space-y-1 whitespace-pre-wrap text-[13px]" style={{ color: '#222222' }}>
+              <div className="p-3 space-y-1 whitespace-pre-wrap text-[13px]" style={{ color: '#444444' }}>
                 {termsConditions || (docType === 'Quotation' ? (
                   `1. Estimate valid for ${quoteValidityDays} days.\n2. Advance payment of ${quoteAdvancePercent}% required and remaining against Delivery.\n3. Final amount may vary if hidden faults are found.`
                 ) : (
