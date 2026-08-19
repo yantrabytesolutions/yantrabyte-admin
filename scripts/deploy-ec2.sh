@@ -125,6 +125,14 @@ else
     echo "PM2 is not installed. Run: sudo npm install -g pm2"
 fi
 
+# --- SSL / CERTBOT AUTO-PROVISIONING ---
+if command -v certbot >/dev/null 2>&1; then
+    if ! sudo certbot certificates 2>/dev/null | grep -q "yantrabyte.anantatechcare.com"; then
+        echo "🔒 Provisioning SSL certificate for yantrabyte.anantatechcare.com..."
+        sudo certbot --nginx -d yantrabyte.anantatechcare.com --non-interactive --agree-tos -m yantrabyte.solutions@gmail.com --redirect || true
+    fi
+fi
+
 # --- SERVER RELOAD ---
 echo "⚡ Reloading Nginx web server..."
 if sudo nginx -t; then
