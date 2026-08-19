@@ -1975,7 +1975,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                   <th className="px-4 py-3">Document</th>
                   <th className="px-4 py-3">Customer</th>
                   <th className="px-4 py-3">Date</th>
-                  <th className="px-4 py-3">Amount</th>
+                  <th className="px-4 py-3">{activeTab === 'pending' ? 'Balance Due' : 'Amount'}</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3 text-right sticky right-0 bg-gray-50 z-10 border-l border-gray-200 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)]">Actions</th>
                 </tr>
@@ -2001,7 +2001,29 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                     </td>
                     <td className="px-4 py-4 font-medium text-gray-800">{inv.customer_name}</td>
                     <td className="px-4 py-4 text-gray-600">{inv.date}</td>
-                    <td className="px-4 py-4 font-bold text-gray-900">₹{inv.grand_total.toLocaleString('en-IN')}</td>
+                    <td className="px-4 py-4">
+                      {activeTab === 'pending' ? (
+                        <div>
+                          <div className="font-bold text-rose-600 font-mono">₹{(inv.balance_due || 0).toLocaleString('en-IN')}</div>
+                          <div className="text-xs text-gray-500 mt-0.5 font-mono">
+                            Total: ₹{inv.grand_total.toLocaleString('en-IN')}{(inv.advance_paid || 0) > 0 ? ` • Paid: ₹${(inv.advance_paid || 0).toLocaleString('en-IN')}` : ''}
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <div className="font-bold text-gray-900 font-mono">₹{inv.grand_total.toLocaleString('en-IN')}</div>
+                          {(inv.balance_due || 0) > 0 && (inv.advance_paid || 0) > 0 ? (
+                            <div className="text-xs text-rose-600 font-semibold font-mono mt-0.5">
+                              Bal: ₹{(inv.balance_due || 0).toLocaleString('en-IN')}
+                            </div>
+                          ) : (inv.balance_due || 0) > 0 && (
+                            <div className="text-xs text-amber-600 font-medium font-mono mt-0.5">
+                              Due: ₹{(inv.balance_due || 0).toLocaleString('en-IN')}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </td>
                     <td className="px-4 py-4">
                       {inv.doc_type === 'Cancelled' ? (
                         <span className="text-xs px-2 py-1 rounded-full bg-red-50 text-red-700 font-medium border border-red-100">Cancelled</span>
@@ -2016,11 +2038,18 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                       ) : (inv.balance_due || 0) <= 0 ? (
                         <span className="text-xs px-2 py-1 rounded-full bg-green-50 text-green-700 font-medium border border-green-100">Paid</span>
                       ) : (inv.payment_status || getPaymentStatus(inv.doc_type, inv.balance_due || 0, inv.advance_paid || 0)) === 'Partial' ? (
-                        <span className="text-xs px-2 py-1 rounded-full bg-amber-50 text-amber-700 font-medium border border-amber-100">Partial</span>
-                      ) : (
                         <span 
                           onClick={(e) => { e.stopPropagation(); setLedgerCustomerName(inv.customer_name); setLedgerCustomerId(inv.customer_id || null); }}
                           className="text-xs px-2 py-1 rounded-full bg-amber-50 text-amber-700 font-medium border border-amber-100 hover:bg-amber-100 cursor-pointer transition-colors"
+                          title="Click to view customer ledger"
+                        >
+                          ₹{(inv.balance_due || 0).toLocaleString('en-IN')} Due (Partial)
+                        </span>
+                      ) : (
+                        <span 
+                          onClick={(e) => { e.stopPropagation(); setLedgerCustomerName(inv.customer_name); setLedgerCustomerId(inv.customer_id || null); }}
+                          className="text-xs px-2 py-1 rounded-full bg-rose-50 text-rose-700 font-medium border border-rose-100 hover:bg-rose-100 cursor-pointer transition-colors"
+                          title="Click to view customer ledger"
                         >
                           ₹{(inv.balance_due || 0).toLocaleString('en-IN')} Due
                         </span>
@@ -2322,7 +2351,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                 </div>
                 <div className="w-16 h-16 ml-2 flex-shrink-0 flex justify-center items-center bg-white">
                   <QRCodeSVG 
-                    value={`upi://pay?pa=s0424237152@slc&pn=${encodeURIComponent('YantraByte Solutions')}&am=${grandTotal}&cu=INR`} 
+                    value={`upi://pay?pa=s0424237152@slc&pn=${encodeURIComponent('YantraByte Solutions')}&am=${balanceDue > 0 ? balanceDue : grandTotal}&cu=INR`} 
                     size={60} 
                   />
                 </div>
@@ -2418,7 +2447,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                                     onClick={(e) => { e.stopPropagation(); setLedgerCustomerName(inv.customer_name); setLedgerCustomerId(inv.customer_id || null); }}
                                     className="text-[9px] px-1.5 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 font-semibold font-mono hover:bg-rose-500/20 cursor-pointer"
                                   >
-                                    ₹{inv.balance_due} Due
+                                    ₹{(inv.balance_due || 0).toLocaleString('en-IN')} Due
                                   </span>
                                 )}
                               </div>
@@ -2429,9 +2458,15 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                               </div>
                             </div>
                             <div className="text-right flex flex-col items-end">
-                              <div className="text-lg font-bold text-white font-mono">₹{inv.grand_total.toLocaleString('en-IN')}</div>
-                              {inv.advance_paid > 0 && (
-                                <div className="text-[10px] text-[#94A3B8] mt-1 font-mono">Advance: ₹{inv.advance_paid}</div>
+                              {(inv.balance_due || 0) > 0 ? (
+                                <>
+                                  <div className="text-lg font-bold text-rose-400 font-mono">₹{(inv.balance_due || 0).toLocaleString('en-IN')} Due</div>
+                                  <div className="text-[10px] text-[#94A3B8] mt-1 font-mono">
+                                    Total: ₹{inv.grand_total.toLocaleString('en-IN')}{(inv.advance_paid || 0) > 0 ? ` | Paid: ₹${(inv.advance_paid || 0).toLocaleString('en-IN')}` : ''}
+                                  </div>
+                                </>
+                              ) : (
+                                <div className="text-lg font-bold text-white font-mono">₹{inv.grand_total.toLocaleString('en-IN')}</div>
                               )}
                               <div className="flex gap-2 mt-2">
                                 <button 

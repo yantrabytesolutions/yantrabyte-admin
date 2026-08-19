@@ -125,6 +125,9 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
   // Build unified ledger timeline
   const ledgerLines: any[] = [];
   
+  const totalPaymentsRecorded = payments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+  const totalAdvancesOnInvoices = invoices.reduce((sum, inv) => sum + (Number(inv.advance_paid) || 0), 0);
+
   invoices.forEach(inv => {
     ledgerLines.push({
       id: `inv-${inv.id}`,
@@ -135,14 +138,14 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
       debit: inv.grand_total || 0,
       credit: 0
     });
-    // If they made an initial advance payment on the invoice itself (before we had a payments table)
+    // If no payments table entries exist, use the advance_paid on the invoice
     if (inv.advance_paid && inv.advance_paid > 0 && payments.length === 0) {
       ledgerLines.push({
         id: `inv-adv-${inv.id}`,
         date: parseDateToTimestamp(inv.date) + 1000, // slightly after invoice
         dateStr: inv.date,
         type: 'initial_advance',
-        ref: `Advance for ${inv.invoice_no}`,
+        ref: `Payment / Advance (${inv.payment_mode || 'UPI'}) for ${inv.invoice_no}`,
         debit: 0,
         credit: inv.advance_paid
       });
@@ -157,9 +160,23 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
       type: 'payment',
       ref: p.reference_note ? `Payment (${p.payment_mode}) - ${p.reference_note}` : `Payment (${p.payment_mode})`,
       debit: 0,
-      credit: p.amount
+      credit: Number(p.amount) || 0
     });
   });
+
+  // If total advances on invoices exceed payments table (e.g. legacy invoice advance), add the unrecorded advance
+  if (payments.length > 0 && totalAdvancesOnInvoices > totalPaymentsRecorded) {
+    const unrecordedAdvance = totalAdvancesOnInvoices - totalPaymentsRecorded;
+    ledgerLines.push({
+      id: `inv-unrecorded-adv`,
+      date: parseDateToTimestamp(invoices[0]?.date || '') + 500,
+      dateStr: invoices[0]?.date || '',
+      type: 'initial_advance',
+      ref: `Prior Advance / Initial Payment`,
+      debit: 0,
+      credit: unrecordedAdvance
+    });
+  }
 
   ledgerLines.sort((a, b) => a.date - b.date);
 
