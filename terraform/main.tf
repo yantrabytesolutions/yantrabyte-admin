@@ -67,6 +67,9 @@ resource "aws_instance" "web_server" {
     delete_on_termination = true
   }
 
+  # Automatically execute bootstrap setup (Node, Nginx, PM2, swap, dirs)
+  user_data = file("${path.module}/user_data.sh")
+
   tags = {
     Name = var.instance_name
   }

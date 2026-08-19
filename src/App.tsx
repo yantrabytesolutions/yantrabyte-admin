@@ -18,6 +18,7 @@ import { CustomerHistory } from './pages/CustomerHistory';
 import AdminPanel from './admin/AdminPanel';
 import PortalLogin from './portal/PortalLogin';
 import PortalDashboard from './portal/PortalDashboard';
+import EstimateView from './pages/EstimateView';
 
 const DomainGuard = ({ children }: { children: React.ReactNode }) => {
   const hostname = window.location.hostname;
@@ -80,6 +81,7 @@ function App() {
         <Route path="/admin" element={<DomainGuard><AdminPanel /></DomainGuard>} />
         <Route path="/portal" element={<PortalLogin />} />
         <Route path="/portal/dashboard" element={<PortalDashboard />} />
+        <Route path="/estimate/:id" element={<EstimateView />} />
       </Routes>
     </BrowserRouter>
   );

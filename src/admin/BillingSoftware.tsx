@@ -612,13 +612,14 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     if (!phone) { showToast('No phone number available', 'error'); return; }
     
     const pdfUrl = inv.pdf_url;
+    const estimateUrl = `https://yantrabyte.anantatechcare.com/estimate/${inv.id}`;
     let text = `Hi ${inv.customer_name}, your ${inv.doc_type || 'Invoice'} ${inv.invoice_no} for ₹${inv.grand_total} has been generated. Thank you for your business!`;
     
     if (inv.doc_type === 'Quotation' || inv.doc_type === 'Estimate') {
       const estimateLink = `${window.location.origin}/quotation/${inv.id}`;
       text += `\n\nYou can view and approve your estimate here: ${estimateLink}`;
-    } else if (pdfUrl) {
-      text += `\n\nYou can view and download your ${inv.doc_type || 'Invoice'} here: ${pdfUrl}`;
+    } else {
+      text += `\n\nYou can view, download, and pay your ${inv.doc_type || 'Invoice'} securely online here: ${estimateUrl}`;
     }
     
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
@@ -631,7 +632,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
     if (!phone) { showToast('No phone number available', 'error'); return; }
     
-    const text = `Hi ${inv.customer_name}, your ${inv.doc_type || 'Invoice'} ${inv.invoice_no} for ₹${inv.grand_total} has been generated. Thank you for your business!`;
+    const estimateUrl = `https://yantrabyte.anantatechcare.com/estimate/${inv.id}`;
+    const text = `Hi ${inv.customer_name}, your ${inv.doc_type || 'Invoice'} ${inv.invoice_no} for ₹${inv.grand_total} has been generated. Thank you for your business!\n\nYou can view, download, and pay your ${inv.doc_type || 'Invoice'} securely online here: ${estimateUrl}`;
     window.open(`https://t.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
