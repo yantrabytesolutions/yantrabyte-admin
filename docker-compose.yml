@@ -5,7 +5,13 @@ services:
     image: mariadb:10.11
     container_name: nextcloud_db
     restart: always
-    command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW
+    command: >
+      --transaction-isolation=READ-COMMITTED
+      --binlog-format=ROW
+      --innodb-buffer-pool-size=64M
+      --innodb-log-buffer-size=8M
+      --max-connections=30
+      --key-buffer-size=16M
     volumes:
       - db_data:/var/lib/mysql
     environment:
@@ -43,8 +49,8 @@ services:
       - MAIL_DOMAIN=gmail.com
       - OVERWRITEPROTOCOL=https
       - OVERWRITECLIURL=https://${DOMAIN}
-      - PHP_UPLOAD_LIMIT=16G
-      - PHP_MEMORY_LIMIT=2G
+      - PHP_UPLOAD_LIMIT=10G
+      - PHP_MEMORY_LIMIT=512M
     depends_on:
       - db
     networks:
