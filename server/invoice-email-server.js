@@ -748,6 +748,137 @@ app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {
   });
 });
 
+app.post('/api/invoices/payment-receipt', async (req, res) => {
+  const {
+    customerName,
+    customerPhone,
+    customerEmail,
+    amount,
+    paymentDate,
+    paymentMode,
+    referenceNote,
+    balanceDue,
+    totalBilled,
+    totalPaid
+  } = req.body || {};
+
+  const cleanName = String(customerName || 'Customer');
+  const numAmount = Number(amount) || 0;
+  const numBalDue = Number(balanceDue) || 0;
+  const numTotalBilled = Number(totalBilled) || 0;
+  const numTotalPaid = Number(totalPaid) || 0;
+  const formattedDate = paymentDate || new Date().toLocaleDateString('en-GB');
+  const mode = String(paymentMode || 'UPI');
+  const ref = referenceNote ? String(referenceNote).trim() : '';
+
+  let whatsappStatus = 'skipped';
+  let emailStatus = 'skipped';
+
+  // 1. WhatsApp Receipt
+  if (isWhatsappReady && customerPhone) {
+    try {
+      let cleanPhone = String(customerPhone).replace(/\D/g, '');
+      if (cleanPhone.length === 10) cleanPhone = '91' + cleanPhone;
+      if (cleanPhone.length >= 10) {
+        let msg = `🧾 *PAYMENT RECEIPT - Yantrabyte Solutions*\n\n`;
+        msg += `Dear *${cleanName}*,\n\n`;
+        msg += `Thank you! We have received your payment of *₹${numAmount.toLocaleString('en-IN')}*.\n\n`;
+        msg += `*Payment Details:*\n`;
+        msg += `• *Date:* ${formattedDate}\n`;
+        msg += `• *Amount Received:* ₹${numAmount.toLocaleString('en-IN')}\n`;
+        msg += `• *Payment Mode:* ${mode}\n`;
+        if (ref) msg += `• *Reference / Note:* ${ref}\n`;
+        msg += `\n*Account Summary:*\n`;
+        if (numTotalBilled > 0) msg += `• *Total Billed:* ₹${numTotalBilled.toLocaleString('en-IN')}\n`;
+        if (numTotalPaid > 0) msg += `• *Total Paid:* ₹${numTotalPaid.toLocaleString('en-IN')}\n`;
+        msg += `• *Outstanding Balance:* ${numBalDue > 0 ? `*₹${numBalDue.toLocaleString('en-IN')}*` : '*₹0 (Fully Cleared 🎉)*'}\n\n`;
+        msg += `You can view your complete ledger & invoices here:\nhttps://yantrabyte.anantatechcare.com/my-invoices\n\n`;
+        msg += `Thank you for choosing YantraByte Solutions!\n*YantraByte Solutions*`;
+
+        await whatsappClient.sendMessage(`${cleanPhone}@c.us`, msg);
+        whatsappStatus = 'sent';
+        console.log(`[Success] Instant WhatsApp payment receipt sent to ${customerPhone} for ${cleanName}`);
+      }
+    } catch (err) {
+      console.error('[Error] WhatsApp receipt send failed:', err);
+      whatsappStatus = 'failed';
+    }
+  }
+
+  // 2. Email Receipt (if customerEmail is provided)
+  if (customerEmail && isValidEmail(customerEmail)) {
+    try {
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: GMAIL_USER_DEFAULT,
+          pass: GMAIL_PASS_DEFAULT,
+        },
+      });
+
+      await transporter.sendMail({
+        from: `"YantraByte Solutions" <${GMAIL_USER_DEFAULT}>`,
+        to: customerEmail,
+        subject: `Payment Receipt: ₹${numAmount.toLocaleString('en-IN')} received - YantraByte Solutions`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 12px; background-color: #ffffff;">
+            <div style="text-align: center; border-bottom: 2px solid #0B5394; padding-bottom: 16px; margin-bottom: 20px;">
+              <h2 style="color: #0B5394; margin: 0;">YantraByte Solutions</h2>
+              <p style="color: #6b7280; font-size: 13px; margin: 4px 0 0;">Official Payment Receipt</p>
+            </div>
+            
+            <p style="font-size: 15px; color: #111827;">Dear <strong>${cleanName}</strong>,</p>
+            <p style="font-size: 14px; color: #374151; line-height: 1.6;">
+              Thank you for your payment. We have successfully received and credited <strong>₹${numAmount.toLocaleString('en-IN')}</strong> to your account.
+            </p>
+
+            <table style="width: 100%; border-collapse: collapse; margin: 20px 0; background: #f9fafb; border-radius: 8px; overflow: hidden;">
+              <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 10px 16px; color: #6b7280; font-size: 13px;">Date:</td>
+                <td style="padding: 10px 16px; font-weight: bold; color: #111827; font-size: 13px;">${formattedDate}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 10px 16px; color: #6b7280; font-size: 13px;">Amount Received:</td>
+                <td style="padding: 10px 16px; font-weight: bold; color: #15803d; font-size: 15px;">₹${numAmount.toLocaleString('en-IN')}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 10px 16px; color: #6b7280; font-size: 13px;">Payment Mode:</td>
+                <td style="padding: 10px 16px; font-weight: bold; color: #111827; font-size: 13px;">${mode}</td>
+              </tr>
+              ${ref ? `
+              <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 10px 16px; color: #6b7280; font-size: 13px;">Reference / Note:</td>
+                <td style="padding: 10px 16px; color: #111827; font-size: 13px;">${ref}</td>
+              </tr>
+              ` : ''}
+              <tr>
+                <td style="padding: 10px 16px; color: #6b7280; font-size: 13px;">Outstanding Balance:</td>
+                <td style="padding: 10px 16px; font-weight: bold; color: ${numBalDue > 0 ? '#b91c1c' : '#15803d'}; font-size: 14px;">
+                  ${numBalDue > 0 ? `₹${numBalDue.toLocaleString('en-IN')}` : '₹0 (Fully Settled)'}
+                </td>
+              </tr>
+            </table>
+
+            <p style="font-size: 13px; color: #6b7280; text-align: center; margin-top: 24px;">
+              For any queries, please reach out to us at <a href="mailto:support@yantrabyte.com" style="color: #0B5394;">support@yantrabyte.com</a> or +91 99867 42525.
+            </p>
+          </div>
+        `
+      });
+      emailStatus = 'sent';
+    } catch (mailErr) {
+      console.error('[Error] Payment receipt email send failed:', mailErr);
+      emailStatus = 'failed';
+    }
+  }
+
+  res.json({
+    ok: true,
+    whatsapp: whatsappStatus,
+    email: emailStatus
+  });
+});
+
 app.post('/api/invoices/reminders', requireSupabaseUser, async (req, res) => {
   const { clients } = req.body || {};
 
