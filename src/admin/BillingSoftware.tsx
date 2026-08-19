@@ -612,13 +612,22 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     if (!phone) { showToast('No phone number available', 'error'); return; }
     
     const estimateUrl = `https://yantrabyte.anantatechcare.com/estimate/${inv.id}`;
-    let text = `Hi ${inv.customer_name}, your ${inv.doc_type || 'Invoice'} ${inv.invoice_no} for ₹${inv.grand_total} has been generated. Thank you for your business!`;
-    
+    const balDue = (inv.balance_due !== undefined && inv.balance_due !== null) 
+      ? Number(inv.balance_due) 
+      : Math.max(0, (Number(inv.grand_total) || 0) - (Number(inv.advance_paid) || 0));
+    const gTotal = Number(inv.grand_total) || 0;
+    const advPaid = Number(inv.advance_paid) || 0;
+
+    let text = '';
     if (inv.doc_type === 'Quotation' || inv.doc_type === 'Estimate') {
       const estimateLink = `${window.location.origin}/quotation/${inv.id}`;
-      text += `\n\nYou can view and approve your estimate here: ${estimateLink}`;
+      text = `Hi ${inv.customer_name}, your ${inv.doc_type || 'Quotation'} ${inv.invoice_no} for ₹${gTotal.toLocaleString('en-IN')} has been generated. Thank you for your business!\n\nYou can view and approve your estimate here: ${estimateLink}`;
+    } else if (balDue > 0 && advPaid > 0) {
+      text = `Hi ${inv.customer_name}, a friendly reminder that you have an outstanding balance of ₹${balDue.toLocaleString('en-IN')} (Total: ₹${gTotal.toLocaleString('en-IN')}, Paid: ₹${advPaid.toLocaleString('en-IN')}) for ${inv.doc_type || 'Invoice'} ${inv.invoice_no}.\n\nYou can view, download, and pay your invoice securely online here: ${estimateUrl}`;
+    } else if (balDue > 0) {
+      text = `Hi ${inv.customer_name}, a friendly reminder that your payment of ₹${balDue.toLocaleString('en-IN')} for ${inv.doc_type || 'Invoice'} ${inv.invoice_no} is due.\n\nYou can view, download, and pay your invoice securely online here: ${estimateUrl}`;
     } else {
-      text += `\n\nYou can view, download, and pay your ${inv.doc_type || 'Invoice'} securely online here: ${estimateUrl}`;
+      text = `Hi ${inv.customer_name}, your ${inv.doc_type || 'Invoice'} ${inv.invoice_no} for ₹${gTotal.toLocaleString('en-IN')} is fully paid. Thank you for your business!\n\nYou can view and download your invoice securely online here: ${estimateUrl}`;
     }
     
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
@@ -632,7 +641,21 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     if (!phone) { showToast('No phone number available', 'error'); return; }
     
     const estimateUrl = `https://yantrabyte.anantatechcare.com/estimate/${inv.id}`;
-    const text = `Hi ${inv.customer_name}, your ${inv.doc_type || 'Invoice'} ${inv.invoice_no} for ₹${inv.grand_total} has been generated. Thank you for your business!\n\nYou can view, download, and pay your ${inv.doc_type || 'Invoice'} securely online here: ${estimateUrl}`;
+    const balDue = (inv.balance_due !== undefined && inv.balance_due !== null) 
+      ? Number(inv.balance_due) 
+      : Math.max(0, (Number(inv.grand_total) || 0) - (Number(inv.advance_paid) || 0));
+    const gTotal = Number(inv.grand_total) || 0;
+    const advPaid = Number(inv.advance_paid) || 0;
+
+    let text = '';
+    if (balDue > 0 && advPaid > 0) {
+      text = `Hi ${inv.customer_name}, a friendly reminder that you have an outstanding balance of ₹${balDue.toLocaleString('en-IN')} (Total: ₹${gTotal.toLocaleString('en-IN')}, Paid: ₹${advPaid.toLocaleString('en-IN')}) for ${inv.doc_type || 'Invoice'} ${inv.invoice_no}.\n\nYou can view, download, and pay your invoice securely online here: ${estimateUrl}`;
+    } else if (balDue > 0) {
+      text = `Hi ${inv.customer_name}, a friendly reminder that your payment of ₹${balDue.toLocaleString('en-IN')} for ${inv.doc_type || 'Invoice'} ${inv.invoice_no} is due.\n\nYou can view, download, and pay your invoice securely online here: ${estimateUrl}`;
+    } else {
+      text = `Hi ${inv.customer_name}, your ${inv.doc_type || 'Invoice'} ${inv.invoice_no} for ₹${gTotal.toLocaleString('en-IN')} is fully paid. Thank you for your business!\n\nYou can view and download your invoice securely online here: ${estimateUrl}`;
+    }
+
     window.open(`https://t.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -2695,8 +2718,19 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                       <tbody className="divide-y divide-gray-100">
                         {invoices.filter(i => (i.balance_due || 0) > 0 && i.doc_type === 'Invoice').map(inv => {
                           const customer = customersList.find(c => c.name === inv.customer_name) || { phone: inv.phone };
-                          const phoneNum = customer?.phone?.replace(/\D/g, '');
-                          const whatsappUrl = phoneNum ? `https://wa.me/91${phoneNum}?text=${encodeURIComponent(`Dear ${inv.customer_name},\n\nThis is a gentle reminder that your payment of ₹${inv.balance_due?.toLocaleString('en-IN')} for Invoice No. ${inv.invoice_no} is currently due.\n\nPlease arrange for the payment at your earliest convenience.\n\nThank you,\nYantrabyte Solutions`)}` : '#';
+                          const phoneNum = (customer?.phone || inv.phone || '').replace(/\D/g, '');
+                          const estimateUrl = `https://yantrabyte.anantatechcare.com/estimate/${inv.id}`;
+                          const balDue = (inv.balance_due !== undefined && inv.balance_due !== null) ? Number(inv.balance_due) : ((Number(inv.grand_total) || 0) - (Number(inv.advance_paid) || 0));
+                          const gTotal = Number(inv.grand_total) || 0;
+                          const advPaid = Number(inv.advance_paid) || 0;
+                          
+                          let reminderMsg = `Dear ${inv.customer_name},\n\nThis is a gentle reminder that your payment of ₹${balDue.toLocaleString('en-IN')} for Invoice No. ${inv.invoice_no} is currently due.`;
+                          if (advPaid > 0) {
+                            reminderMsg = `Dear ${inv.customer_name},\n\nThis is a gentle reminder that your remaining balance of ₹${balDue.toLocaleString('en-IN')} (Total: ₹${gTotal.toLocaleString('en-IN')}, Paid: ₹${advPaid.toLocaleString('en-IN')}) for Invoice No. ${inv.invoice_no} is currently due.`;
+                          }
+                          reminderMsg += `\n\nYou can view and pay your invoice securely online here:\n${estimateUrl}\n\nPlease arrange for the payment at your earliest convenience.\n\nThank you,\nYantrabyte Solutions`;
+                          
+                          const whatsappUrl = phoneNum ? `https://wa.me/91${phoneNum.length === 10 ? phoneNum : phoneNum.replace(/^91/, '')}?text=${encodeURIComponent(reminderMsg)}` : '#';
                           
                           return (
                             <tr key={inv.id} className="hover:bg-gray-50/50">
