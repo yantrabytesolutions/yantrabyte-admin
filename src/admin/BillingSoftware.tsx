@@ -633,6 +633,55 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
+  const sendWhatsAppPdfInvoice = async (inv: Invoice) => {
+    let phone = (inv.phone || '').replace(/\D/g, '');
+    if (phone.length === 10) phone = '91' + phone;
+
+    if (!phone || phone.length < 10) {
+      showToast('No valid customer phone number available', 'error');
+      return;
+    }
+
+    showToast('Generating and attaching PDF for WhatsApp...');
+
+    try {
+      let pdfBase64 = '';
+      const element = await preparePdfElement(inv.invoice_no);
+      if (element) {
+        const opt = getPdfOptions(inv.invoice_no);
+        const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob') as Blob;
+        pdfBase64 = await blobToBase64(pdfBlob);
+      }
+
+      if (!pdfBase64) {
+        throw new Error('Could not render PDF preview element');
+      }
+
+      const res = await fetch('/api/invoices/send-whatsapp-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerPhone: phone,
+          customerName: inv.customer_name,
+          invoiceNumber: inv.invoice_no,
+          documentType: inv.doc_type || 'Invoice',
+          pdfBase64
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || 'WhatsApp client not connected');
+      }
+
+      showToast(`✅ PDF ${inv.doc_type || 'Invoice'} sent directly to ${inv.customer_name}'s WhatsApp!`);
+    } catch (err: any) {
+      console.warn('Direct WhatsApp PDF send error:', err);
+      showToast(`Direct WhatsApp PDF: ${err.message}. Opening standard WhatsApp chat...`);
+      sendWhatsAppInvoiceAlert(inv);
+    }
+  };
+
   const sendTelegramInvoiceAlert = (inv: Invoice) => {
     let phone = inv.phone.replace(/\D/g, '');
     if (phone.length === 10) phone = '+91' + phone;
@@ -914,7 +963,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setCompanySignatureBase64(null);
   };
 
-  const handleSave = async (action: 'save' | 'download' | 'email' = 'save') => {
+  const handleSave = async (action: 'save' | 'download' | 'email' | 'whatsapp-pdf' = 'save') => {
     if (!customerName.trim()) {
       showToast('Please enter a customer name.', 'error');
       return;
@@ -1110,6 +1159,37 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           showToast(`Invoice emailed to ${email}`);
         } else {
           throw new Error('Failed to generate PDF for emailing.');
+        }
+      }
+
+      if (action === 'whatsapp-pdf') {
+        if (pdfBlob) {
+          try {
+            const pdfBase64 = await blobToBase64(pdfBlob);
+            const waRes = await fetch('/api/invoices/send-whatsapp-pdf', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                customerPhone: phone,
+                customerName,
+                invoiceNumber: payload.invoice_no,
+                documentType: docType,
+                pdfBase64
+              })
+            });
+            const waData = await waRes.json().catch(() => ({}));
+            if (waRes.ok && waData.ok) {
+              showToast(`✅ PDF ${docType} sent directly to ${customerName}'s WhatsApp!`);
+            } else {
+              showToast(`WhatsApp direct PDF: ${waData.error || 'Opening WhatsApp chat...'}.`);
+              sendWhatsAppInvoiceAlert(payload as unknown as Invoice);
+            }
+          } catch (waErr: any) {
+            console.warn('Error sending WhatsApp PDF:', waErr);
+            sendWhatsAppInvoiceAlert(payload as unknown as Invoice);
+          }
+        } else {
+          sendWhatsAppInvoiceAlert(payload as unknown as Invoice);
         }
       }
     } catch (err: any) {
@@ -1963,6 +2043,10 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                 {isSendingEmail ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Mail className="w-4 h-4 mr-2" />}
                 Save & Email PDF
               </button>
+              <button disabled={isSaving} onClick={() => handleSave('whatsapp-pdf')} className="w-full flex items-center justify-center px-4 py-2.5 bg-[#25D366] hover:bg-[#128C7E] text-white font-bold rounded-lg transition-colors shadow-sm shadow-green-200">
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Save & Send WhatsApp PDF
+              </button>
             </div>
           </div>
         </div>
@@ -2119,7 +2203,10 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                             <CheckCircle className="w-4 h-4" />
                           </button>
                         )}
-                        <button onClick={(e) => { e.stopPropagation(); sendWhatsAppInvoiceAlert(inv); }} className="p-1.5 text-gray-500 hover:bg-green-50 hover:text-green-600 rounded-md transition-colors" title="WhatsApp Alert">
+                        <button onClick={(e) => { e.stopPropagation(); sendWhatsAppPdfInvoice(inv); }} className="p-1.5 text-gray-500 hover:bg-emerald-50 hover:text-emerald-600 rounded-md transition-colors" title="Send PDF on WhatsApp">
+                          <FileText className="w-4 h-4 text-emerald-600" />
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); sendWhatsAppInvoiceAlert(inv); }} className="p-1.5 text-gray-500 hover:bg-green-50 hover:text-green-600 rounded-md transition-colors" title="WhatsApp Message Alert">
                           <MessageSquare className="w-4 h-4" />
                         </button>
                         <button onClick={(e) => { e.stopPropagation(); sendTelegramInvoiceAlert(inv); }} className="p-1.5 text-gray-500 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors" title="Telegram Alert">

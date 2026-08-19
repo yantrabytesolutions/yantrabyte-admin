@@ -1491,7 +1491,59 @@ cron.schedule('0 11 * * *', async () => {
 });
 
 
-// --- CUSTOMER HISTORY ENDPOINT ---
+// --- WHATSAPP PDF ATTACHMENT ENDPOINT ---
+app.post('/api/invoices/send-whatsapp-pdf', async (req, res) => {
+  const {
+    customerPhone,
+    customerName,
+    invoiceNumber,
+    documentType,
+    pdfBase64,
+    customCaption
+  } = req.body || {};
+
+  if (!customerPhone) {
+    return res.status(400).json({ ok: false, error: 'Customer phone number is required' });
+  }
+
+  if (!pdfBase64) {
+    return res.status(400).json({ ok: false, error: 'PDF data is missing' });
+  }
+
+  if (!isWhatsappReady) {
+    return res.status(503).json({
+      ok: false,
+      error: 'WhatsApp Business client is not connected. Please pair your device in WhatsApp Connect.'
+    });
+  }
+
+  let cleanPhone = String(customerPhone).replace(/\D/g, '');
+  if (cleanPhone.length === 10) cleanPhone = '91' + cleanPhone;
+
+  if (cleanPhone.length < 10) {
+    return res.status(400).json({ ok: false, error: 'Invalid phone number format' });
+  }
+
+  const cleanName = String(customerName || 'Customer');
+  const cleanInvNo = String(invoiceNumber || 'Invoice');
+  const cleanDocType = String(documentType || 'Invoice');
+  const safeFilename = sanitizeFilename(`${cleanDocType}_${cleanInvNo}.pdf`);
+
+  try {
+    const media = new MessageMedia('application/pdf', pdfBase64, safeFilename);
+    const caption = customCaption || `Dear *${cleanName}*,\n\nPlease find attached your official ${cleanDocType.toLowerCase()} *#${cleanInvNo}*.\n\nYou can also view / pay online securely here:\nhttps://yantrabyte.anantatechcare.com/my-invoices\n\nThank you for choosing *YantraByte Solutions*!`;
+    
+    await whatsappClient.sendMessage(`${cleanPhone}@c.us`, media, { caption });
+    console.log(`[Success] WhatsApp PDF invoice attachment sent to ${cleanPhone} for ${cleanInvNo}`);
+    
+    return res.json({ ok: true, message: `PDF ${cleanDocType} sent to WhatsApp successfully` });
+  } catch (err) {
+    console.error(`[Error] Failed to send WhatsApp PDF to ${cleanPhone}:`, err.message);
+    return res.status(500).json({ ok: false, error: `Failed to send WhatsApp PDF: ${err.message}` });
+  }
+});
+
+// --- CUSTOMER HISTORY & PORTAL ENDPOINT ---
 app.get('/api/invoices/customer/:phone', async (req, res) => {
   const { phone } = req.params;
   try {
@@ -1505,15 +1557,33 @@ app.get('/api/invoices/customer/:phone', async (req, res) => {
     // Search with last 10 digits to handle various formats
     const last10 = cleanPhone.slice(-10);
     
-    const { data, error } = await supabaseAdmin
+    const { data: invData, error: invError } = await supabaseAdmin
       .from('invoices')
-      .select('id, invoice_no, doc_type, date, customer_name, grand_total, payment_status, created_at')
+      .select('*')
       .ilike('phone', `%${last10}%`)
       .order('created_at', { ascending: false })
       .limit(50);
     
-    if (error) throw error;
-    return res.json(data || []);
+    if (invError) throw invError;
+
+    // Also fetch service tickets if any
+    let tickets = [];
+    try {
+      const { data: tData } = await supabaseAdmin
+        .from('service_tickets')
+        .select('*')
+        .ilike('customer_phone', `%${last10}%`)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (tData) tickets = tData;
+    } catch (tErr) {
+      console.warn('Could not fetch tickets for customer portal:', tErr.message);
+    }
+
+    return res.json({
+      invoices: invData || [],
+      tickets: tickets || []
+    });
   } catch (err) {
     console.error('Error fetching customer history:', err);
     return res.status(500).json({ error: 'Internal server error' });
