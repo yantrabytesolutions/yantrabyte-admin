@@ -372,6 +372,7 @@ app.get('/api/sheets-health', (_req, res) => {
 });
 
 app.get('/api/whatsapp/status', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.json({
     ok: true,
     ready: isWhatsappReady,
@@ -379,7 +380,21 @@ app.get('/api/whatsapp/status', (_req, res) => {
   });
 });
 
+app.get('/api/whatsapp/qr-data', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.json({
+    ok: true,
+    ready: isWhatsappReady,
+    qrDataUrl: latestQrDataUrl
+  });
+});
+
 app.get('/api/whatsapp/qr', (_req, res) => {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+
   if (isWhatsappReady) {
     return res.send(`
       <!DOCTYPE html>

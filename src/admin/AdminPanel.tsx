@@ -27,6 +27,7 @@ import Expenses from './Expenses';
 import AccountingKhata from './AccountingKhata';
 import InventoryMovement from './InventoryMovement';
 import FinancialReports from './FinancialReports';
+import { WhatsAppConnectModal } from './components/WhatsAppConnectModal';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
@@ -478,6 +479,8 @@ export default function AdminPanel() {
   const [allCustomers, setAllCustomers] = useState<any[]>([]);
 
   const [userRole, setUserRole] = useState<UserRole>('admin');
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
+  const [isWhatsAppOnline, setIsWhatsAppOnline] = useState(false);
   
   const [isDarkMode, setIsDarkMode] = useState(() => {
     return localStorage.getItem('theme') === 'dark' || 
@@ -514,6 +517,25 @@ export default function AdminPanel() {
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  // --- WhatsApp Status Check ---
+  useEffect(() => {
+    if (!session) return;
+    const checkWa = async () => {
+      try {
+        const res = await fetch('/api/whatsapp/status', { headers: { 'Cache-Control': 'no-cache' } });
+        if (res.ok) {
+          const data = await res.json();
+          setIsWhatsAppOnline(!!data.ready);
+        }
+      } catch {
+        setIsWhatsAppOnline(false);
+      }
+    };
+    checkWa();
+    const interval = setInterval(checkWa, 10000);
+    return () => clearInterval(interval);
+  }, [session]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -2286,6 +2308,20 @@ export default function AdminPanel() {
           </div>
           <div className="flex items-center gap-3">
             <button
+              onClick={() => setShowWhatsAppModal(true)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                isWhatsAppOnline
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+                  : 'bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20'
+              }`}
+              title={isWhatsAppOnline ? 'WhatsApp Automation Online' : 'Click to Link WhatsApp'}
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">WhatsApp:</span>
+              <span>{isWhatsAppOnline ? 'Connected' : 'Link App'}</span>
+              <span className={`w-2 h-2 rounded-full ${isWhatsAppOnline ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+            </button>
+            <button
               onClick={() => setIsDarkMode(!isDarkMode)}
               className="p-2 rounded-lg hover:bg-white/5 text-[#94A3B8] hover:text-white transition-all"
               title="Toggle Dark Mode"
@@ -2306,6 +2342,12 @@ export default function AdminPanel() {
         <div className="p-4 lg:p-6">
           {renderContent()}
         </div>
+
+        {/* WhatsApp QR Modal */}
+        <WhatsAppConnectModal
+          isOpen={showWhatsAppModal}
+          onClose={() => setShowWhatsAppModal(false)}
+        />
       </main>
     </div>
   );

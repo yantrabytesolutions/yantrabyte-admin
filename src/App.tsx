@@ -19,6 +19,7 @@ import AdminPanel from './admin/AdminPanel';
 import PortalLogin from './portal/PortalLogin';
 import PortalDashboard from './portal/PortalDashboard';
 import EstimateView from './pages/EstimateView';
+import WhatsAppConnectPage from './pages/WhatsAppConnectPage';
 
 const DomainGuard = ({ children }: { children: React.ReactNode }) => {
   const hostname = window.location.hostname;
@@ -82,6 +83,7 @@ function App() {
         <Route path="/portal" element={<PortalLogin />} />
         <Route path="/portal/dashboard" element={<PortalDashboard />} />
         <Route path="/estimate/:id" element={<EstimateView />} />
+        <Route path="/whatsapp" element={<WhatsAppConnectPage />} />
       </Routes>
     </BrowserRouter>
   );
