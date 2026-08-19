@@ -103,8 +103,9 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
 
   const handleSendWhatsAppReceipt = (amount: number, dateStr: string, mode: string, refNote: string, targetPhone?: string) => {
     let phone = (targetPhone || customPhone || customerPhone || '').replace(/\D/g, '');
-    if (phone.length === 10) phone = '91' + phone;
-    else if (phone.length === 12 && phone.startsWith('91')) phone = phone;
+    if (phone.length === 10) {
+      phone = '91' + phone;
+    }
 
     const totalB = invoices.reduce((sum: number, inv: Invoice) => sum + (Number(inv.grand_total) || 0), 0);
     const totalP = payments.reduce((sum: number, p: any) => sum + (Number(p.amount) || 0), 0) + amount;
