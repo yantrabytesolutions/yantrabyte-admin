@@ -2364,12 +2364,14 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
       {/* --- HIDDEN PRINT TEMPLATE --- */}
       <div style={{ position: 'absolute', top: 0, left: 0, width: '794px', opacity: 0, pointerEvents: 'none', zIndex: -1000 }}>
-        <div ref={printRef} className="bg-white p-[24px] text-black flex flex-col" style={{ 
+        <div ref={printRef} style={{ 
           width: '794px', 
           height: '1115px',
+          padding: '24px',
           boxSizing: 'border-box',
           overflow: 'hidden',
-          maxWidth: 'none', 
+          backgroundColor: '#FFFFFF',
+          color: '#000000',
           fontFamily: 'Arial, sans-serif',
           position: 'relative'
         }}>
@@ -2382,8 +2384,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
             pointerEvents: 'none',
-            zIndex: 50,
-            opacity: 0.05
+            zIndex: 1,
+            opacity: 0.04
           }}>
           </div>
           
@@ -2404,195 +2406,241 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             </div>
           )}
 
-          {/* Outer Border for main content */}
-          <div className="flex flex-col relative z-10" style={{ border: '2px solid #0B5394', borderRadius: '4px', overflow: 'hidden' }}>
+          {/* Outer Border Box */}
+          <div style={{ position: 'relative', zIndex: 10, border: '2px solid #0B5394', borderRadius: '4px', overflow: 'hidden', backgroundColor: '#FFFFFF' }}>
             
-            {/* Header */}
-            <div className="flex items-center justify-between p-3.5 pb-2" style={{ borderBottom: '1.5px solid #0B5394', backgroundColor: '#FFFFFF' }}>
-              <div className="flex items-center justify-start ml-1">
-                <img src="/logo6.png" alt="YantraByte Solutions" style={{ height: '95px', width: 'auto' }} crossOrigin="anonymous" />
-              </div>
-              <div className="text-right">
-                <h1 className="text-xl font-extrabold tracking-wide" style={{ color: '#0B5394' }}>YANTRABYTE SOLUTIONS</h1>
-                <p className="text-xs mt-0.5 text-slate-700 leading-snug">47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br/>Chikkabettahalli, Bengaluru - 560097</p>
-                <p className="text-xs mt-1 text-slate-800 font-medium">Phone: 09986742525 &nbsp;|&nbsp; Email: yantrabyte.solutions@gmail.com</p>
-              </div>
-            </div>
+            {/* Header Table */}
+            <table style={{ width: '100%', borderCollapse: 'collapse', borderBottom: '1.5px solid #0B5394', backgroundColor: '#FFFFFF' }}>
+              <tbody>
+                <tr>
+                  <td style={{ width: '35%', verticalAlign: 'middle', padding: '12px 14px' }}>
+                    <img src="/logo6.png" alt="YantraByte Solutions" style={{ height: '90px', width: 'auto', display: 'block' }} crossOrigin="anonymous" />
+                  </td>
+                  <td style={{ width: '65%', verticalAlign: 'middle', textAlign: 'right', padding: '12px 14px' }}>
+                    <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#0B5394', letterSpacing: '0.5px' }}>YANTRABYTE SOLUTIONS</div>
+                    <div style={{ fontSize: '11px', color: '#334155', marginTop: '2px', lineHeight: '1.4' }}>47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br/>Chikkabettahalli, Bengaluru - 560097</div>
+                    <div style={{ fontSize: '11px', color: '#0f172a', fontWeight: 'bold', marginTop: '4px' }}>Phone: 09986742525 &nbsp;|&nbsp; Email: yantrabyte.solutions@gmail.com</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
 
-            {/* Document Title Banner */}
-            <div className="font-bold text-center py-1.5 text-sm tracking-widest uppercase text-white" style={{ backgroundColor: docType === 'Cancelled' ? '#DC2626' : '#0B5394' }}>
+            {/* Title Banner */}
+            <div style={{ width: '100%', backgroundColor: docType === 'Cancelled' ? '#DC2626' : '#0B5394', color: '#FFFFFF', textAlign: 'center', padding: '5px 0', fontSize: '13px', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase' }}>
               {docType === 'Cancelled' ? 'CANCELLED INVOICE' : (docType === 'Quotation' ? 'QUOTATION / ESTIMATE' : 'TAX INVOICE')}
             </div>
 
-            {/* Invoice No and Date Bar */}
-            <div className="flex justify-between items-center px-4 py-2" style={{ borderBottom: '1px solid #CBD5E1', backgroundColor: '#F8FAFC' }}>
-              <div className="text-sm font-semibold" style={{ color: '#0B5394' }}>
-                <span>{docType === 'Quotation' ? 'Quotation No:' : (docType === 'Cancelled' ? 'Cancelled No:' : 'Invoice No:')}</span>
-                <span className="ml-2 font-mono text-slate-900 font-extrabold text-base">{printInvoiceNumber || (selectedInvoiceId ? (invoices.find(i=>i.id===selectedInvoiceId)?.invoice_no || 'DRAFT') : 'DRAFT')}</span>
-              </div>
-              <div className="text-right text-sm font-semibold" style={{ color: '#0B5394' }}>
-                <span>Date:</span>
-                <span className="ml-2 font-mono text-slate-900 font-extrabold">{invoiceDate.split('-').reverse().join('/')}</span>
-              </div>
-            </div>
+            {/* Invoice Number & Date Table */}
+            <table style={{ width: '100%', borderCollapse: 'collapse', borderBottom: '1px solid #CBD5E1', backgroundColor: '#F8FAFC' }}>
+              <tbody>
+                <tr>
+                  <td style={{ width: '50%', padding: '6px 14px', textAlign: 'left', fontSize: '12px', fontWeight: 'bold', color: '#0B5394' }}>
+                    <span>{docType === 'Quotation' ? 'Quotation No:' : (docType === 'Cancelled' ? 'Cancelled No:' : 'Invoice No:')}</span>
+                    <span style={{ marginLeft: '8px', color: '#0f172a', fontFamily: 'monospace', fontSize: '14px' }}>
+                      {printInvoiceNumber || (selectedInvoiceId ? (invoices.find(i=>i.id===selectedInvoiceId)?.invoice_no || 'DRAFT') : 'DRAFT')}
+                    </span>
+                  </td>
+                  <td style={{ width: '50%', padding: '6px 14px', textAlign: 'right', fontSize: '12px', fontWeight: 'bold', color: '#0B5394' }}>
+                    <span>Date:</span>
+                    <span style={{ marginLeft: '8px', color: '#0f172a', fontFamily: 'monospace', fontSize: '14px' }}>
+                      {invoiceDate.split('-').reverse().join('/')}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
 
-            {/* Bill To */}
-            <div style={{ borderBottom: '1px solid #CBD5E1' }}>
-              <div className="px-4 py-1 font-bold text-xs uppercase tracking-wider text-white" style={{ backgroundColor: '#0B5394' }}>
+            {/* Bill To Box */}
+            <div style={{ width: '100%', borderBottom: '1px solid #CBD5E1' }}>
+              <div style={{ backgroundColor: '#0B5394', color: '#FFFFFF', padding: '3px 14px', fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
                 Bill To:
               </div>
-              <div className="p-3.5 text-sm leading-snug" style={{ color: '#0f172a' }}>
-                <div className="font-extrabold text-base text-slate-900 mb-1">{customerName || '—'}</div>
-                <div className="text-xs text-slate-700 font-medium">
-                  <span className="font-bold text-slate-900">Phone:</span> {phone || '—'} &nbsp;&nbsp;|&nbsp;&nbsp; <span className="font-bold text-slate-900">Email:</span> {email || '—'}
+              <div style={{ padding: '8px 14px', fontSize: '12px', lineHeight: '1.4', color: '#0f172a' }}>
+                <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#0f172a', marginBottom: '2px' }}>{customerName || '—'}</div>
+                <div style={{ color: '#334155' }}>
+                  <span style={{ fontWeight: 'bold', color: '#0f172a' }}>Phone:</span> {phone || '—'} &nbsp;&nbsp;|&nbsp;&nbsp; <span style={{ fontWeight: 'bold', color: '#0f172a' }}>Email:</span> {email || '—'}
                 </div>
-                <div className="text-xs text-slate-700 mt-0.5">
-                  <span className="font-bold text-slate-900">Address:</span> {address || '—'}
+                <div style={{ color: '#334155', marginTop: '2px' }}>
+                  <span style={{ fontWeight: 'bold', color: '#0f172a' }}>Address:</span> {address || '—'}
                 </div>
               </div>
             </div>
 
             {/* Items Table */}
-            <div className="relative">
-              <table className="w-full text-sm text-left relative z-0" style={{ borderCollapse: 'collapse', borderBottom: '1.5px solid #0B5394' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', borderBottom: '1.5px solid #0B5394' }}>
               <thead>
-                <tr className="text-white text-xs uppercase tracking-wider" style={{ backgroundColor: '#0B5394' }}>
-                  <th className="p-2.5 w-12 text-center" style={{ borderRight: '1px solid rgba(255,255,255,0.2)' }}>Sl<br/>No.</th>
-                  <th className="p-2.5 text-left" style={{ borderRight: '1px solid rgba(255,255,255,0.2)' }}>Item Description</th>
-                  <th className="p-2.5 w-16 text-center" style={{ borderRight: '1px solid rgba(255,255,255,0.2)' }}>Qty</th>
-                  <th className="p-2.5 w-24 text-right" style={{ borderRight: '1px solid rgba(255,255,255,0.2)' }}>Rate (₹)</th>
-                  <th className="p-2.5 w-28 text-right">Amount (₹)</th>
+                <tr style={{ backgroundColor: '#0B5394', color: '#FFFFFF', fontSize: '11px', textTransform: 'uppercase' }}>
+                  <th style={{ padding: '7px 10px', width: '45px', textAlign: 'center', borderRight: '1px solid rgba(255,255,255,0.2)' }}>Sl<br/>No.</th>
+                  <th style={{ padding: '7px 10px', textAlign: 'left', borderRight: '1px solid rgba(255,255,255,0.2)' }}>Item Description</th>
+                  <th style={{ padding: '7px 10px', width: '60px', textAlign: 'center', borderRight: '1px solid rgba(255,255,255,0.2)' }}>Qty</th>
+                  <th style={{ padding: '7px 10px', width: '100px', textAlign: 'right', borderRight: '1px solid rgba(255,255,255,0.2)' }}>Rate (₹)</th>
+                  <th style={{ padding: '7px 10px', width: '110px', textAlign: 'right' }}>Amount (₹)</th>
                 </tr>
               </thead>
               <tbody>
                 {items.map((it: any, idx: number) => (
-                  <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? '#FFFFFF' : '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
-                    <td className="p-2.5 text-center text-slate-600 font-medium" style={{ borderRight: '1px solid #E2E8F0' }}>{idx + 1}</td>
-                    <td className="p-2.5 font-semibold text-slate-900" style={{ borderRight: '1px solid #E2E8F0' }}>
+                  <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? '#FFFFFF' : '#F8FAFC', borderBottom: '1px solid #E2E8F0', fontSize: '12px' }}>
+                    <td style={{ padding: '7px 10px', textAlign: 'center', color: '#475569', borderRight: '1px solid #E2E8F0' }}>{idx + 1}</td>
+                    <td style={{ padding: '7px 10px', fontWeight: 'bold', color: '#0f172a', borderRight: '1px solid #E2E8F0' }}>
                       <div>{it.description || it.item || it.name || it.item_name || ''}</div>
                       {it.serial_no && (
-                        <div className="text-[11px] font-mono text-slate-500 mt-0.5 font-bold">
+                        <div style={{ fontSize: '10px', fontFamily: 'monospace', color: '#64748b', marginTop: '2px', fontWeight: 'bold' }}>
                           S/N: {it.serial_no}
                         </div>
                       )}
                     </td>
-                    <td className="p-2.5 text-center text-slate-800 font-medium" style={{ borderRight: '1px solid #E2E8F0' }}>{it.qty || 1}</td>
-                    <td className="p-2.5 text-right text-slate-800 font-medium font-mono" style={{ borderRight: '1px solid #E2E8F0' }}>{Number(it.rate || it.price || it.amount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                    <td className="p-2.5 text-right font-bold text-slate-900 font-mono">{(Number(it.qty || 1) * Number(it.rate || it.price || it.amount || 0)).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                    <td style={{ padding: '7px 10px', textAlign: 'center', color: '#1e293b', borderRight: '1px solid #E2E8F0' }}>{it.qty || 1}</td>
+                    <td style={{ padding: '7px 10px', textAlign: 'right', color: '#1e293b', fontFamily: 'monospace', borderRight: '1px solid #E2E8F0' }}>
+                      {Number(it.rate || it.price || it.amount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                    </td>
+                    <td style={{ padding: '7px 10px', textAlign: 'right', fontWeight: 'bold', color: '#0f172a', fontFamily: 'monospace' }}>
+                      {(Number(it.qty || 1) * Number(it.rate || it.price || it.amount || 0)).toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                    </td>
                   </tr>
                 ))}
-                {/* Clean padding space for short items */}
+                {/* Clean blank spacing rows */}
                 {[...Array(Math.max(0, 4 - items.length))].map((_, idx) => (
-                  <tr key={`empty-${idx}`} style={{ backgroundColor: 'transparent', height: '24px' }}>
-                    <td className="p-1 text-transparent" style={{ borderRight: '1px solid #E2E8F0' }}>&nbsp;</td>
-                    <td className="p-1 text-transparent" style={{ borderRight: '1px solid #E2E8F0' }}>&nbsp;</td>
-                    <td className="p-1 text-transparent" style={{ borderRight: '1px solid #E2E8F0' }}>&nbsp;</td>
-                    <td className="p-1 text-transparent" style={{ borderRight: '1px solid #E2E8F0' }}>&nbsp;</td>
-                    <td className="p-1 text-transparent">&nbsp;</td>
+                  <tr key={`empty-${idx}`} style={{ backgroundColor: 'transparent', height: '22px' }}>
+                    <td style={{ borderRight: '1px solid #E2E8F0' }}>&nbsp;</td>
+                    <td style={{ borderRight: '1px solid #E2E8F0' }}>&nbsp;</td>
+                    <td style={{ borderRight: '1px solid #E2E8F0' }}>&nbsp;</td>
+                    <td style={{ borderRight: '1px solid #E2E8F0' }}>&nbsp;</td>
+                    <td>&nbsp;</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            </div>
 
-            {/* Totals Box */}
-            <div className="flex text-sm">
-              <div className="w-3/5 p-3.5 flex flex-col justify-between" style={{ borderRight: '1px solid #CBD5E1', backgroundColor: '#F8FAFC' }}>
-                <div>
-                  <div className="font-bold text-xs uppercase tracking-wider text-[#0B5394] mb-1">Amount in Words:</div>
-                  <div className="font-bold text-sm text-slate-800 italic leading-snug">{numberToWords(grandTotal)}</div>
-                </div>
-                {paymentMode && paymentMode !== 'Not specified' && (
-                  <div className="text-xs text-slate-600 font-medium pt-2">
-                    <span className="font-bold text-slate-900">Payment Mode:</span> {paymentMode}
-                  </div>
-                )}
-              </div>
-              <div className="w-2/5 flex flex-col text-xs">
-                <div className="flex justify-between p-2 px-3.5" style={{ borderBottom: '1px solid #E2E8F0' }}>
-                  <span className="text-slate-600 font-medium">Subtotal</span>
-                  <span className="font-bold font-mono text-slate-900">{subtotal.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
-                </div>
-                {discount > 0 && (
-                  <div className="flex justify-between p-2 px-3.5 text-emerald-700" style={{ borderBottom: '1px solid #E2E8F0' }}>
-                    <span className="font-medium">Discount</span>
-                    <span className="font-bold font-mono">- {discount.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
-                  </div>
-                )}
-                {roundOff !== 0 && (
-                  <div className="flex justify-between p-2 px-3.5 text-slate-600" style={{ borderBottom: '1px solid #E2E8F0' }}>
-                    <span className="font-medium">Round Off</span>
-                    <span className="font-bold font-mono">{roundOff.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
-                  </div>
-                )}
-                <div className="flex justify-between p-2.5 px-3.5 font-bold" style={{ backgroundColor: '#FEF3C7', borderBottom: '1px solid #E2E8F0', color: '#0B5394' }}>
-                  <span className="text-sm">Grand Total</span>
-                  <span className="text-base font-black font-mono">₹{grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
-                </div>
-                <div className="flex justify-between p-2 px-3.5" style={{ borderBottom: '1px solid #E2E8F0' }}>
-                  <span className="text-slate-600 font-medium">Advance Paid</span>
-                  <span className="font-bold font-mono text-slate-900">₹{advancePaid.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
-                </div>
-                <div className={`flex justify-between p-2.5 px-3.5 font-bold ${
-                  balanceDue <= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
-                }`}>
-                  <span className="text-xs uppercase tracking-wider">{balanceDue <= 0 ? 'Balance Due (Paid)' : 'Balance Due'}</span>
-                  <span className="text-base font-black font-mono">₹{balanceDue.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Footer Two Boxes */}
-          <div className="flex mt-auto space-x-3 pt-3">
-            
-            {/* Terms Box */}
-            <div className="w-3/5 flex flex-col rounded overflow-hidden" style={{ border: '1.5px solid #0B5394' }}>
-              <div className="font-bold text-center p-1.5 text-white text-xs uppercase tracking-wider" style={{ backgroundColor: '#0B5394' }}>Terms & Conditions</div>
-              <div className="p-3 space-y-1 whitespace-pre-wrap text-xs leading-relaxed text-slate-800 bg-white">
-                {termsConditions || (docType === 'Quotation' ? (
-                  `1. Estimate valid for ${quoteValidityDays} days.\n2. Advance payment of ${quoteAdvancePercent}% required and remaining against Delivery.\n3. Final amount may vary if hidden faults are found.`
-                ) : (
-                  "1. Service warranty is valid for 30 days only.\n2. No warranty for Windows installation/software issues.\n3. YantraByte Solutions is not responsible for any data loss.\n4. Customer should take backup of all important files prior.\n5. Physical, liquid or burnt damages void warranty.\n6. No warranty for swollen batteries or electrical faults."
-                ))}
-              </div>
-            </div>
-
-            {/* Bank & Payment Details Box */}
-            <div className="w-2/5 flex flex-col rounded overflow-hidden" style={{ border: '1.5px solid #0B5394' }}>
-              <div className="font-bold text-center p-1.5 text-white text-xs uppercase tracking-wider" style={{ backgroundColor: '#0B5394' }}>Bank & Payment Details</div>
-              
-              <div className="p-2.5 flex justify-between items-center bg-white">
-                <div className="text-xs leading-relaxed text-slate-900">
-                  <span className="font-bold text-slate-700">Bank:</span> North East Small Finance Bank<br/>
-                  <span className="font-bold text-slate-700">A/C Name:</span> YantraByte Solutions<br/>
-                  <span className="font-bold text-slate-700">A/C No:</span> 033311501023226<br/>
-                  <span className="font-bold text-slate-700">IFSC:</span> NESF0000333<br/>
-                  <span className="font-bold text-slate-700">UPI:</span> <span className="font-mono font-bold text-blue-700">s0424237152@slc</span>
-                </div>
-                <div className="w-16 h-16 ml-2 flex-shrink-0 flex justify-center items-center bg-white p-1 border border-slate-200 rounded">
-                  <QRCodeSVG 
-                    value={`upi://pay?pa=s0424237152@slc&pn=${encodeURIComponent('YantraByte Solutions')}&am=${balanceDue > 0 ? balanceDue : grandTotal}&cu=INR`} 
-                    size={56} 
-                  />
-                </div>
-              </div>
-              
-              <div className="text-center mt-auto flex flex-col justify-end p-2 bg-slate-50 border-t border-slate-200">
-                <div className="font-bold text-[11px] text-slate-900 uppercase tracking-wide">For YantraByte Solutions</div>
-                <div className="flex justify-center my-0.5" style={{ overflow: 'hidden' }}>
-                  {companySignatureBase64 ? (
-                    <img src={companySignatureBase64} alt="Company Signature" style={{ height: '65px', maxWidth: '140px', width: 'auto', objectFit: 'contain' }} crossOrigin="anonymous" />
-                  ) : (
-                    <img src="/seal.png" alt="Seal" style={{ height: '65px', maxWidth: '90px', width: 'auto', objectFit: 'contain' }} crossOrigin="anonymous" />
-                  )}
-                </div>
-                <div className="font-bold text-[10px] text-slate-600">Authorized Signatory</div>
-              </div>
-            </div>
+            {/* Totals Table */}
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <tbody>
+                <tr>
+                  <td style={{ width: '58%', verticalAlign: 'top', padding: '10px 14px', backgroundColor: '#F8FAFC', borderRight: '1px solid #CBD5E1' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#0B5394', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>
+                      Amount in Words:
+                    </div>
+                    <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#1e293b', fontStyle: 'italic', lineHeight: '1.4' }}>
+                      {numberToWords(grandTotal)}
+                    </div>
+                    {paymentMode && paymentMode !== 'Not specified' && (
+                      <div style={{ fontSize: '11px', color: '#475569', marginTop: '10px' }}>
+                        <span style={{ fontWeight: 'bold', color: '#0f172a' }}>Payment Mode:</span> {paymentMode}
+                      </div>
+                    )}
+                  </td>
+                  <td style={{ width: '42%', verticalAlign: 'top', padding: '0' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                      <tbody>
+                        <tr style={{ borderBottom: '1px solid #E2E8F0' }}>
+                          <td style={{ padding: '5px 12px', color: '#475569' }}>Subtotal</td>
+                          <td style={{ padding: '5px 12px', textAlign: 'right', fontWeight: 'bold', fontFamily: 'monospace', color: '#0f172a' }}>
+                            {subtotal.toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                          </td>
+                        </tr>
+                        {discount > 0 && (
+                          <tr style={{ borderBottom: '1px solid #E2E8F0', color: '#15803D' }}>
+                            <td style={{ padding: '5px 12px' }}>Discount</td>
+                            <td style={{ padding: '5px 12px', textAlign: 'right', fontWeight: 'bold', fontFamily: 'monospace' }}>
+                              - {discount.toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                            </td>
+                          </tr>
+                        )}
+                        {roundOff !== 0 && (
+                          <tr style={{ borderBottom: '1px solid #E2E8F0', color: '#475569' }}>
+                            <td style={{ padding: '5px 12px' }}>Round Off</td>
+                            <td style={{ padding: '5px 12px', textAlign: 'right', fontWeight: 'bold', fontFamily: 'monospace' }}>
+                              {roundOff.toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                            </td>
+                          </tr>
+                        )}
+                        <tr style={{ backgroundColor: '#FEF3C7', borderBottom: '1px solid #E2E8F0' }}>
+                          <td style={{ padding: '7px 12px', fontWeight: 'bold', color: '#0B5394', fontSize: '13px' }}>Grand Total</td>
+                          <td style={{ padding: '7px 12px', textAlign: 'right', fontWeight: 'bold', fontSize: '15px', fontFamily: 'monospace', color: '#0B5394' }}>
+                            ₹{grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                          </td>
+                        </tr>
+                        <tr style={{ borderBottom: '1px solid #E2E8F0' }}>
+                          <td style={{ padding: '5px 12px', color: '#475569' }}>Advance Paid</td>
+                          <td style={{ padding: '5px 12px', textAlign: 'right', fontWeight: 'bold', fontFamily: 'monospace', color: '#0f172a' }}>
+                            ₹{advancePaid.toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                          </td>
+                        </tr>
+                        <tr style={{ backgroundColor: balanceDue <= 0 ? '#DCFCE7' : '#FEE2E2', color: balanceDue <= 0 ? '#15803D' : '#B91C1C' }}>
+                          <td style={{ padding: '7px 12px', fontWeight: 'bold', fontSize: '12px', textTransform: 'uppercase' }}>
+                            {balanceDue <= 0 ? 'Balance (Paid)' : 'Balance Due'}
+                          </td>
+                          <td style={{ padding: '7px 12px', textAlign: 'right', fontWeight: 'bold', fontSize: '15px', fontFamily: 'monospace' }}>
+                            ₹{balanceDue.toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
 
           </div>
+
+          {/* Footer Two Boxes Table */}
+          <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '10px 0', marginTop: '12px' }}>
+            <tbody>
+              <tr>
+                {/* Terms Box */}
+                <td style={{ width: '58%', verticalAlign: 'top', border: '1.5px solid #0B5394', borderRadius: '4px', padding: '0', backgroundColor: '#FFFFFF' }}>
+                  <div style={{ backgroundColor: '#0B5394', color: '#FFFFFF', textAlign: 'center', padding: '4px 0', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Terms & Conditions
+                  </div>
+                  <div style={{ padding: '8px 12px', fontSize: '11px', lineHeight: '1.45', color: '#1e293b', whiteSpace: 'pre-wrap' }}>
+                    {termsConditions || (docType === 'Quotation' ? (
+                      `1. Estimate valid for ${quoteValidityDays} days.\n2. Advance payment of ${quoteAdvancePercent}% required and remaining against Delivery.\n3. Final amount may vary if hidden faults are found.`
+                    ) : (
+                      "1. Service warranty is valid for 30 days only.\n2. No warranty for Windows installation/software issues.\n3. YantraByte Solutions is not responsible for any data loss.\n4. Customer should take backup of all important files prior.\n5. Physical, liquid or burnt damages void warranty.\n6. No warranty for swollen batteries or electrical faults."
+                    ))}
+                  </div>
+                </td>
+
+                {/* Bank & Payment Details Box */}
+                <td style={{ width: '42%', verticalAlign: 'top', border: '1.5px solid #0B5394', borderRadius: '4px', padding: '0', backgroundColor: '#FFFFFF' }}>
+                  <div style={{ backgroundColor: '#0B5394', color: '#FFFFFF', textAlign: 'center', padding: '4px 0', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Bank & Payment Details
+                  </div>
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <tbody>
+                      <tr>
+                        <td style={{ padding: '8px 10px', fontSize: '11px', lineHeight: '1.45', color: '#0f172a', verticalAlign: 'middle' }}>
+                          <span style={{ fontWeight: 'bold', color: '#475569' }}>Bank:</span> North East Small Finance Bank<br/>
+                          <span style={{ fontWeight: 'bold', color: '#475569' }}>A/C Name:</span> YantraByte Solutions<br/>
+                          <span style={{ fontWeight: 'bold', color: '#475569' }}>A/C No:</span> 033311501023226<br/>
+                          <span style={{ fontWeight: 'bold', color: '#475569' }}>IFSC:</span> NESF0000333<br/>
+                          <span style={{ fontWeight: 'bold', color: '#475569' }}>UPI:</span> <span style={{ fontWeight: 'bold', color: '#1d4ed8', fontFamily: 'monospace' }}>s0424237152@slc</span>
+                        </td>
+                        <td style={{ width: '65px', padding: '6px', textAlign: 'center', verticalAlign: 'middle' }}>
+                          <div style={{ display: 'inline-block', padding: '2px', border: '1px solid #E2E8F0', borderRadius: '4px', backgroundColor: '#FFFFFF' }}>
+                            <QRCodeSVG 
+                              value={`upi://pay?pa=s0424237152@slc&pn=${encodeURIComponent('YantraByte Solutions')}&am=${balanceDue > 0 ? balanceDue : grandTotal}&cu=INR`} 
+                              size={54} 
+                            />
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div style={{ textAlign: 'center', padding: '4px 8px 6px', borderTop: '1px solid #E2E8F0', backgroundColor: '#F8FAFC' }}>
+                    <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#0f172a', textTransform: 'uppercase' }}>For YANTRABYTE SOLUTIONS</div>
+                    <div style={{ margin: '3px 0', height: '55px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {companySignatureBase64 ? (
+                        <img src={companySignatureBase64} alt="Company Signature" style={{ maxHeight: '50px', maxWidth: '130px', objectFit: 'contain' }} crossOrigin="anonymous" />
+                      ) : (
+                        <img src="/seal.png" alt="Seal" style={{ maxHeight: '50px', maxWidth: '85px', objectFit: 'contain' }} crossOrigin="anonymous" />
+                      )}
+                    </div>
+                    <div style={{ fontSize: '9px', fontWeight: 'bold', color: '#64748b' }}>Authorized Signatory</div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
 
         </div>
       </div>
