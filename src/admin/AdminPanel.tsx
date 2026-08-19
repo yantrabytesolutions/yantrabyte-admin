@@ -11,7 +11,7 @@ import {
   Users, Briefcase, Building2, HelpCircle, Image, Award, Mail, Settings,
   LogOut, Plus, Pencil, Trash2, X, Eye, EyeOff, ChevronDown, Save,
   Loader2, AlertCircle, CheckCircle, Search, RefreshCw, Menu, Ticket, Receipt, CreditCard, MessageSquare,
-  Truck, ExternalLink, FileSpreadsheet, Activity, Send, UserCircle, IndianRupee, Shield, Sun, Moon, Calendar
+  Truck, ExternalLink, FileSpreadsheet, Activity, Send, UserCircle, IndianRupee, Shield, Sun, Moon, Calendar, FileCheck
 } from 'lucide-react';
 import { sendTelegramNotification } from '../utils/telegram';
 import BillingSoftware from './BillingSoftware';
@@ -28,6 +28,7 @@ import AccountingKhata from './AccountingKhata';
 import InventoryMovement from './InventoryMovement';
 import FinancialReports from './FinancialReports';
 import { WhatsAppConnectModal } from './components/WhatsAppConnectModal';
+import DigitalJobSheetModal from './components/DigitalJobSheetModal';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
@@ -481,6 +482,7 @@ export default function AdminPanel() {
   const [userRole, setUserRole] = useState<UserRole>('admin');
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [isWhatsAppOnline, setIsWhatsAppOnline] = useState(false);
+  const [selectedJobSheetTicket, setSelectedJobSheetTicket] = useState<ServiceTicket | null>(null);
   
   const [isDarkMode, setIsDarkMode] = useState(() => {
     return localStorage.getItem('theme') === 'dark' || 
@@ -1867,6 +1869,13 @@ export default function AdminPanel() {
                                 >
                                   <Receipt className="w-4 h-4" />
                                 </button>
+                                <button
+                                  onClick={() => setSelectedJobSheetTicket(item as unknown as ServiceTicket)}
+                                  className="p-1.5 rounded-lg hover:bg-white/5 text-[#64748B] hover:text-purple-400 transition-all"
+                                  title="Digital Job Sheet & Customer Touch Sign-off"
+                                >
+                                  <FileCheck className="w-4 h-4" />
+                                </button>
                                 {item.status !== 'completed' && item.status !== 'closed' && (
                                   <button
                                     onClick={() => markTicketCompleted(item)}
@@ -2348,6 +2357,18 @@ export default function AdminPanel() {
           isOpen={showWhatsAppModal}
           onClose={() => setShowWhatsAppModal(false)}
         />
+
+        {/* Digital Job Sheet & Sign-off Modal */}
+        {selectedJobSheetTicket && (
+          <DigitalJobSheetModal
+            ticket={selectedJobSheetTicket}
+            onClose={() => setSelectedJobSheetTicket(null)}
+            onSaved={() => {
+              fetchData('tickets');
+              showToast('Digital Job Sheet signed & updated!');
+            }}
+          />
+        )}
       </main>
     </div>
   );

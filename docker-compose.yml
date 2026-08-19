@@ -1,6 +1,14 @@
 version: '3.8'
 
 services:
+  redis:
+    image: redis:7-alpine
+    container_name: nextcloud_redis
+    restart: always
+    command: redis-server --maxmemory 64mb --maxmemory-policy allkeys-lru --appendonly no
+    networks:
+      - nextcloud_net
+
   db:
     image: mariadb:10.11
     container_name: nextcloud_db
@@ -8,9 +16,9 @@ services:
     command: >
       --transaction-isolation=READ-COMMITTED
       --binlog-format=ROW
-      --innodb-buffer-pool-size=64M
-      --innodb-log-buffer-size=8M
-      --max-connections=30
+      --innodb-buffer-pool-size=96M
+      --innodb-log-buffer-size=16M
+      --max-connections=40
       --key-buffer-size=16M
     volumes:
       - db_data:/var/lib/mysql
@@ -36,6 +44,8 @@ services:
       - MYSQL_DATABASE=nextcloud
       - MYSQL_USER=nextcloud
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - REDIS_HOST=redis
+      - REDIS_HOST_PORT=6379
       - NEXTCLOUD_TRUSTED_DOMAINS=${DOMAIN}
       - NEXTCLOUD_ADMIN_USER=${ADMIN_USER}
       - NEXTCLOUD_ADMIN_PASSWORD=${ADMIN_PASSWORD}
@@ -49,10 +59,11 @@ services:
       - MAIL_DOMAIN=gmail.com
       - OVERWRITEPROTOCOL=https
       - OVERWRITECLIURL=https://${DOMAIN}
-      - PHP_UPLOAD_LIMIT=10G
+      - PHP_UPLOAD_LIMIT=16G
       - PHP_MEMORY_LIMIT=512M
     depends_on:
       - db
+      - redis
     networks:
       - nextcloud_net
 

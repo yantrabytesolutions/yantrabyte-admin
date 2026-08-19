@@ -5,6 +5,7 @@ import { QRCodeSVG } from 'qrcode.react';
 
 interface InvoiceItem {
   description: string;
+  serial_no?: string;
   qty: number;
   rate: number;
 }
@@ -373,7 +374,12 @@ export default function EstimateView() {
                   <tr key={idx} style={{ background: idx % 2 === 0 ? '#fff' : '#f8fafc' }}>
                     <td style={{ padding: '11px 16px', textAlign: 'center', color: '#6b7280', borderBottom: '1px solid #f0f0f0' }}>{idx + 1}</td>
                     <td style={{ padding: '11px 16px', fontWeight: 500, color: '#1a1a2e', borderBottom: '1px solid #f0f0f0' }}>
-                      {item.description || '—'}
+                      <div>{item.description || '—'}</div>
+                      {item.serial_no && (
+                        <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px', fontWeight: 600 }}>
+                          S/N: {item.serial_no}
+                        </div>
+                      )}
                     </td>
                     <td style={{ padding: '11px 16px', textAlign: 'center', color: '#374151', borderBottom: '1px solid #f0f0f0' }}>{item.qty || 1}</td>
                     <td style={{ padding: '11px 16px', textAlign: 'right', color: '#374151', borderBottom: '1px solid #f0f0f0' }}>{formatINR(item.rate || 0)}</td>

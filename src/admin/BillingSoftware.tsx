@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Invoice, InvoiceItem, ServiceTicket, Product, Customer, Purchase } from '../types';
-import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt, Mail, FileSpreadsheet, Pencil, MessageSquare, Send, List, Search, Clock, Settings, Link } from 'lucide-react';
+import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt, Mail, FileSpreadsheet, Pencil, MessageSquare, Send, List, Search, Clock, Settings, Link, ShieldCheck } from 'lucide-react';
 import { sendTelegramNotification } from '../utils/telegram';
 import html2pdf from 'html2pdf.js';
 
@@ -139,6 +139,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const signatureCanvasRef = useRef<any>(null);
   
   const [itemDesc, setItemDesc] = useState('');
+  const [itemSerialNo, setItemSerialNo] = useState('');
   const [itemQty, setItemQty] = useState(1);
   const [itemRate, setItemRate] = useState(0);
   const [itemProductId, setItemProductId] = useState<string>('');
@@ -159,7 +160,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const [printInvoiceNumber, setPrintInvoiceNumber] = useState('');
   const [deliveryPopup, setDeliveryPopup] = useState<DeliveryPopup>(null);
 
-  const [activeTab, setActiveTab] = useState<'editor' | 'history' | 'quotations' | 'pending' | 'settings'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'editor' | 'history' | 'quotations' | 'pending' | 'renewals' | 'settings'>(initialTab);
   const [historySearchTerm, setHistorySearchTerm] = useState('');
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
   const [historyDrawerData, setHistoryDrawerData] = useState<{
@@ -394,8 +395,18 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       showToast('Quantity must be at least 1.', 'error');
       return;
     }
-    setItems([...items, { product_id: itemProductId || undefined, description: itemDesc, qty: itemQty, rate: itemRate }]);
+    setItems([
+      ...items,
+      {
+        product_id: itemProductId || undefined,
+        description: itemDesc.trim(),
+        serial_no: itemSerialNo.trim() || undefined,
+        qty: itemQty,
+        rate: itemRate,
+      }
+    ]);
     setItemDesc('');
+    setItemSerialNo('');
     setItemQty(1);
     setItemRate(0);
     setItemProductId('');
@@ -408,6 +419,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const handleEditItem = (index: number) => {
     const it = items[index];
     setItemDesc(it.description);
+    setItemSerialNo(it.serial_no || '');
     setItemQty(it.qty);
     setItemRate(it.rate);
     setItemProductId(it.product_id || '');
@@ -706,6 +718,31 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     }
 
     window.open(`https://t.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  const sendQuotationFollowUpAlert = (inv: Invoice) => {
+    let phone = (inv.phone || '').replace(/\D/g, '');
+    if (phone.length === 10) phone = '91' + phone;
+
+    if (!phone) { showToast('No phone number available for WhatsApp', 'error'); return; }
+
+    const quoteLink = `https://yantrabyte.anantatechcare.com/quotation/${inv.id}`;
+    const text = `Hi *${inv.customer_name}*,\n\nGreetings from *YantraByte Solutions*! 👋\n\nChecking in regarding your Quotation *#${inv.invoice_no}* for *₹${inv.grand_total.toLocaleString('en-IN')}*.\n\nPlease let us know if you have any questions or would like us to customize the estimate. You can review and approve your estimate online here:\n${quoteLink}\n\nWe look forward to serving you!\n*YantraByte Solutions* (Call/WA: +91 99867 42525)`;
+
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
+    showToast('Opening WhatsApp follow-up chat...');
+  };
+
+  const sendAmcRenewalAlert = (inv: Invoice) => {
+    let phone = (inv.phone || '').replace(/\D/g, '');
+    if (phone.length === 10) phone = '91' + phone;
+
+    if (!phone) { showToast('No phone number available for WhatsApp', 'error'); return; }
+
+    const text = `Hi *${inv.customer_name}*,\n\nThis is a friendly reminder from *YantraByte Solutions* that your 1-Year Annual Maintenance & Service Warranty for Invoice *#${inv.invoice_no}* is approaching its renewal date.\n\nWould you like to renew your AMC contract to ensure uninterrupted priority support and maintenance for your CCTV & IT systems?\n\nPlease reply to this message or call us at *+91 99867 42525* to renew.\n\nWarm regards,\n*YantraByte Solutions*`;
+
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
+    showToast('Opening WhatsApp AMC renewal chat...');
   };
 
   // --- Printing & PDF ---
@@ -1621,6 +1658,12 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         >
           <Clock className="w-4 h-4 mr-2" /> Pending Payments
         </button>
+        <button
+          onClick={() => setActiveTab('renewals')}
+          className={`py-3 px-6 text-sm font-medium border-b-2 transition-colors flex items-center whitespace-nowrap ${activeTab === 'renewals' ? 'border-emerald-600 text-emerald-600 bg-emerald-50/50 rounded-t-lg' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+        >
+          <ShieldCheck className="w-4 h-4 mr-2" /> AMC & Renewals
+        </button>
         <button 
           onClick={() => setActiveTab('settings')}
           className={`py-3 px-6 text-sm font-medium border-b-2 transition-colors flex items-center whitespace-nowrap ${activeTab === 'settings' ? 'border-gray-800 text-gray-800 bg-gray-100 rounded-t-lg' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
@@ -1920,7 +1963,18 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                   }
                 }} onKeyDown={e => e.key === 'Enter' && handleAddItem()} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" placeholder="Item description" />
               </div>
-              <div className="col-span-2">
+              <div className="col-span-3">
+                <label className="block text-xs font-medium text-gray-600 mb-1">Serial No. / IMEI (Optional)</label>
+                <input 
+                  type="text" 
+                  value={itemSerialNo} 
+                  onChange={e => setItemSerialNo(e.target.value)} 
+                  onKeyDown={e => e.key === 'Enter' && handleAddItem()} 
+                  className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500 font-mono text-xs" 
+                  placeholder="e.g. S/N: HIK928402" 
+                />
+              </div>
+              <div className="col-span-1">
                 <label className="block text-xs font-medium text-gray-600 mb-1">Qty</label>
                 <input type="number" value={itemQty} onChange={e => setItemQty(Number(e.target.value))} min="1" className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" />
               </div>
@@ -1928,7 +1982,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                 <label className="block text-xs font-medium text-gray-600 mb-1">Rate (₹)</label>
                 <input type="number" value={itemRate || ''} onChange={e => setItemRate(Number(e.target.value))} onKeyDown={e => e.key === 'Enter' && handleAddItem()} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" placeholder="0" />
               </div>
-              <div className="col-span-2">
+              <div className="col-span-1">
                 <button onClick={handleAddItem} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-md transition-colors text-sm flex justify-center items-center">
                   <Plus className="w-4 h-4 mr-1" /> Add
                 </button>
@@ -1940,7 +1994,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                 <thead className="bg-gray-50 border-b text-gray-600">
                   <tr>
                     <th className="px-4 py-2 font-medium w-12">#</th>
-                    <th className="px-4 py-2 font-medium">Description</th>
+                    <th className="px-4 py-2 font-medium">Description & Serial No.</th>
                     <th className="px-4 py-2 font-medium text-center w-16">Qty</th>
                     <th className="px-4 py-2 font-medium text-right w-24">Rate</th>
                     <th className="px-4 py-2 font-medium text-right w-24">Amount</th>
@@ -1953,7 +2007,14 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                   ) : items.map((it, idx) => (
                     <tr key={idx} className="hover:bg-gray-50">
                       <td className="px-4 py-2 text-gray-500">{idx + 1}</td>
-                      <td className="px-4 py-2 font-medium text-gray-800">{it.description}</td>
+                      <td className="px-4 py-2 font-medium text-gray-800">
+                        <div>{it.description}</div>
+                        {it.serial_no && (
+                          <div className="text-[11px] font-mono text-slate-500 mt-0.5 font-semibold">
+                            S/N: {it.serial_no}
+                          </div>
+                        )}
+                      </td>
                       <td className="px-4 py-2 text-center text-gray-600">{it.qty}</td>
                       <td className="px-4 py-2 text-right text-gray-600">₹{it.rate.toLocaleString('en-IN')}</td>
                       <td className="px-4 py-2 text-right font-medium text-gray-800">₹{(it.qty * it.rate).toLocaleString('en-IN')}</td>
@@ -2091,10 +2152,31 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                 {invoices.filter(inv => {
                   if (activeTab === 'quotations' && inv.doc_type !== 'Quotation') return false;
                   if (activeTab === 'pending' && (inv.doc_type !== 'Invoice' || (inv.balance_due || 0) <= 0)) return false;
+                  if (activeTab === 'renewals') {
+                    if (inv.doc_type !== 'Invoice') return false;
+                    // Check if invoice date is older than 250 days or has 12m warranty / recurring
+                    const parts = (inv.date || '').split('/');
+                    let isOlder = false;
+                    if (parts.length === 3) {
+                      const invDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+                      const diffDays = (Date.now() - invDate.getTime()) / (1000 * 3600 * 24);
+                      isOlder = diffDays >= 250;
+                    }
+                    if (!isOlder && (inv.warranty_months || 0) < 12 && !inv.is_recurring) return false;
+                  }
+
+                  const term = historySearchTerm.toLowerCase().trim();
+                  if (!term) return true;
+
+                  const hasSerialMatch = Array.isArray(inv.items) && inv.items.some((it: any) => 
+                    it.serial_no && String(it.serial_no).toLowerCase().includes(term)
+                  );
+
                   return (
-                    inv.invoice_no.toLowerCase().includes(historySearchTerm.toLowerCase()) || 
-                    inv.customer_name.toLowerCase().includes(historySearchTerm.toLowerCase()) ||
-                    inv.date.includes(historySearchTerm)
+                    inv.invoice_no.toLowerCase().includes(term) || 
+                    inv.customer_name.toLowerCase().includes(term) ||
+                    inv.date.includes(term) ||
+                    hasSerialMatch
                   );
                 }).map(inv => (
                   <tr 
@@ -2193,6 +2275,9 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                             }} className="p-1.5 text-gray-500 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors" title="Copy Estimate Link">
                               <Link className="w-4 h-4" />
                             </button>
+                            <button onClick={(e) => { e.stopPropagation(); sendQuotationFollowUpAlert(inv); }} className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-md transition-colors" title="⚡ Follow-up on WhatsApp">
+                              <MessageSquare className="w-4 h-4" />
+                            </button>
                             <button onClick={(e) => { e.stopPropagation(); handleConvertToInvoice(inv.id); setActiveTab('editor'); }} className="p-1.5 text-gray-500 hover:bg-emerald-50 hover:text-emerald-600 rounded-md transition-colors" title="Convert to Invoice">
                               <Copy className="w-4 h-4" />
                             </button>
@@ -2201,6 +2286,11 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                         {inv.doc_type === 'Invoice' && (inv.balance_due || 0) > 0 && (
                           <button onClick={(e) => { e.stopPropagation(); handleMarkAsPaid(inv.id); }} className="p-1.5 text-gray-500 hover:bg-green-50 hover:text-green-600 rounded-md transition-colors" title="Mark as Paid">
                             <CheckCircle className="w-4 h-4" />
+                          </button>
+                        )}
+                        {inv.doc_type === 'Invoice' && (
+                          <button onClick={(e) => { e.stopPropagation(); sendAmcRenewalAlert(inv); }} className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors" title="🔄 Send AMC / Warranty Renewal Alert">
+                            <ShieldCheck className="w-4 h-4" />
                           </button>
                         )}
                         <button onClick={(e) => { e.stopPropagation(); sendWhatsAppPdfInvoice(inv); }} className="p-1.5 text-gray-500 hover:bg-emerald-50 hover:text-emerald-600 rounded-md transition-colors" title="Send PDF on WhatsApp">
@@ -2372,7 +2462,14 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                 {items.map((it: any, idx: number) => (
                   <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? 'transparent' : 'rgba(248, 250, 252, 0.6)' }}>
                     <td className="p-2 text-center" style={{ borderRight: '1px solid #000', color: '#000' }}>{idx + 1}</td>
-                    <td className="p-2 font-medium" style={{ borderRight: '1px solid #000', color: '#000' }}>{it.description || it.item || it.name || it.item_name || ''}</td>
+                    <td className="p-2 font-medium" style={{ borderRight: '1px solid #000', color: '#000' }}>
+                      <div>{it.description || it.item || it.name || it.item_name || ''}</div>
+                      {it.serial_no && (
+                        <div style={{ fontSize: '11px', color: '#475569', marginTop: '2px', fontWeight: 'bold' }}>
+                          S/N: {it.serial_no}
+                        </div>
+                      )}
+                    </td>
                     <td className="p-2 text-center" style={{ borderRight: '1px solid #000', color: '#000' }}>{it.qty || 1}</td>
                     <td className="p-2 text-right" style={{ borderRight: '1px solid #000', color: '#000' }}>{Number(it.rate || it.price || it.amount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
                     <td className="p-2 text-right font-bold" style={{ color: '#000' }}>{(Number(it.qty || 1) * Number(it.rate || it.price || it.amount || 0)).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
