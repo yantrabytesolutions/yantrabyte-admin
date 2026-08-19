@@ -21,50 +21,77 @@ const app = express();
 const port = Number(process.env.INVOICE_API_PORT || process.env.PORT || 4000);
 const maxPdfSize = process.env.INVOICE_MAX_JSON_SIZE || '200mb';
 
-// --- WhatsApp Client Setup ---
+let isWhatsappReady = false;
+let latestQrCode = null;
+let latestQrDataUrl = null;
+
 const whatsappClient = new Client({
-  authStrategy: new LocalAuth(),
+  authStrategy: new LocalAuth({
+    dataPath: path.join(process.cwd(), '.wwebjs_auth')
+  }),
   puppeteer: {
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
+    headless: true,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-accelerated-2d-canvas',
+      '--no-first-run',
+      '--no-zygote',
+      '--disable-gpu'
+    ]
   }
 });
-
-let isWhatsappReady = false;
 
 whatsappClient.on('qr', async (qr) => {
   console.log('========================================================');
   console.log('SCAN THIS QR CODE WITH YOUR WHATSAPP BUSINESS APP:');
   console.log('========================================================');
   qrcodeTerminal.generate(qr, { small: true });
+  latestQrCode = qr;
   
   try {
-    const dataUrl = await QRCode.toDataURL(qr);
+    latestQrDataUrl = await QRCode.toDataURL(qr);
+    const publicDir = path.join(process.cwd(), 'public');
+    if (!fs.existsSync(publicDir)) {
+      fs.mkdirSync(publicDir, { recursive: true });
+    }
     const html = `<html><body style="display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh;background:#f0f2f5;font-family:sans-serif;text-align:center;">
       <div>
         <h2>Scan with WhatsApp Business</h2>
-        <img src="${dataUrl}" style="width:350px;height:350px;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
-        <p style="margin-top:20px;color:#555;font-size:16px;">If you can't scan the terminal, scan this high-quality QR code instead.</p>
-        <p style="color:#888;font-size:13px;margin-top:10px;">This QR code refreshes every 20 seconds. If it doesn't scan, refresh the page.</p>
+        <img src="${latestQrDataUrl}" style="width:350px;height:350px;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+        <p style="margin-top:20px;color:#555;font-size:16px;">Scan this QR code from Linked Devices in WhatsApp.</p>
       </div>
     </body></html>`;
-    const outputPath = path.join(process.cwd(), 'public', 'whatsapp-qr.html');
-    fs.writeFileSync(outputPath, html);
-    console.log('');
-    console.log('🌟 Or open this link in your browser to scan a larger, perfect QR code:');
-    console.log('👉 http://localhost:5174/whatsapp-qr.html');
-    console.log('========================================================');
+    fs.writeFileSync(path.join(publicDir, 'whatsapp-qr.html'), html);
+    console.log('🌟 Open in browser to scan: https://yantrabyte.anantatechcare.com/api/whatsapp/qr');
   } catch (err) {
     console.error('Failed to generate HTML QR code', err);
   }
 });
 
+whatsappClient.on('authenticated', () => {
+  console.log('🔐 WhatsApp Authenticated Successfully!');
+});
+
+whatsappClient.on('auth_failure', (msg) => {
+  console.error('❌ WhatsApp Auth failure:', msg);
+  isWhatsappReady = false;
+});
+
 whatsappClient.on('ready', () => {
   console.log('✅ WhatsApp Client is ready! You can now send automated messages.');
   isWhatsappReady = true;
+  latestQrCode = null;
+  latestQrDataUrl = null;
+});
+
+whatsappClient.on('disconnected', (reason) => {
+  console.log('⚠️ WhatsApp Disconnected:', reason);
+  isWhatsappReady = false;
 });
 
 whatsappClient.initialize();
-// -----------------------------
 
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - content-length: ${req.headers['content-length']}`);
@@ -342,6 +369,68 @@ app.get('/api/sheets-health', (_req, res) => {
     ok: missing.length === 0,
     missing,
   });
+});
+
+app.get('/api/whatsapp/status', (_req, res) => {
+  res.json({
+    ok: true,
+    ready: isWhatsappReady,
+    hasQr: !!latestQrDataUrl
+  });
+});
+
+app.get('/api/whatsapp/qr', (_req, res) => {
+  if (isWhatsappReady) {
+    return res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head><title>WhatsApp Status</title><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+      <body style="display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:100vh;background:#f0fdf4;font-family:sans-serif;text-align:center;margin:0;padding:20px;box-sizing:border-box;">
+        <div style="background:#fff;padding:40px;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.08);max-width:420px;width:100%;">
+          <div style="font-size:48px;margin-bottom:16px;">✅</div>
+          <h2 style="color:#15803d;margin:0 0 10px;">WhatsApp is Connected!</h2>
+          <p style="color:#4b5563;font-size:14px;line-height:1.5;">Your WhatsApp Business account is active and ready to send automated invoices, service ticket updates, and payment reminders.</p>
+        </div>
+      </body>
+      </html>
+    `);
+  }
+  if (!latestQrDataUrl) {
+    return res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head><title>WhatsApp QR</title><meta http-equiv="refresh" content="3"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+      <body style="display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:100vh;background:#f8fafc;font-family:sans-serif;text-align:center;margin:0;padding:20px;box-sizing:border-box;">
+        <div style="background:#fff;padding:40px;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.08);max-width:420px;width:100%;">
+          <div style="font-size:36px;margin-bottom:16px;">⏳</div>
+          <h2 style="color:#334155;margin:0 0 10px;">Generating WhatsApp QR...</h2>
+          <p style="color:#64748b;font-size:14px;">Please wait, refreshing in 3 seconds...</p>
+        </div>
+      </body>
+      </html>
+    `);
+  }
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Scan WhatsApp QR</title>
+      <meta http-equiv="refresh" content="20">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+    </head>
+    <body style="display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:100vh;background:#f0f2f5;font-family:sans-serif;text-align:center;margin:0;padding:20px;box-sizing:border-box;">
+      <div style="background:#fff;padding:32px;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.08);max-width:420px;width:100%;">
+        <div style="font-size:36px;margin-bottom:8px;">📱</div>
+        <h2 style="color:#111827;margin:0 0 8px;font-size:20px;">Link WhatsApp Business</h2>
+        <p style="color:#6b7280;font-size:13px;margin:0 0 20px;line-height:1.4;">Open WhatsApp on your phone ➔ <b>Linked Devices</b> ➔ <b>Link a Device</b> ➔ Scan this QR code.</p>
+        <div style="display:inline-block;padding:12px;background:#fff;border:2px solid #e5e7eb;border-radius:12px;">
+          <img src="${latestQrDataUrl}" style="width:260px;height:260px;display:block;" alt="WhatsApp QR Code">
+        </div>
+        <p style="color:#9ca3af;font-size:11px;margin:16px 0 0;">Auto-refreshes every 20 seconds. Once scanned, this page will update automatically.</p>
+      </div>
+    </body>
+    </html>
+  `);
 });
 
 app.post('/api/backups/sheet-row', requireSupabaseUser, async (req, res) => {
