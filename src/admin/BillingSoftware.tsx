@@ -611,7 +611,6 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
     if (!phone) { showToast('No phone number available', 'error'); return; }
     
-    const pdfUrl = inv.pdf_url;
     const estimateUrl = `https://yantrabyte.anantatechcare.com/estimate/${inv.id}`;
     let text = `Hi ${inv.customer_name}, your ${inv.doc_type || 'Invoice'} ${inv.invoice_no} for ₹${inv.grand_total} has been generated. Thank you for your business!`;
     
