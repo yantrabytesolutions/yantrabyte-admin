@@ -1518,7 +1518,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-6">
       <div className="flex justify-between items-center bg-white p-6 rounded-lg shadow-sm">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">YantraByte <span className="text-blue-600">Billing System</span></h2>
@@ -1899,72 +1899,82 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           </div>
 
           <div className="bg-white p-6 rounded-lg shadow-sm space-y-4">
-            <h3 className="text-lg font-semibold text-gray-800 border-b pb-4">Items & Billing</h3>
-            
-            <div className="grid grid-cols-12 gap-3 items-end">
-              <div className="col-span-6">
-                <div className="flex justify-between items-center mb-1">
-                  <label className="block text-xs font-medium text-gray-600">Description</label>
-                  <div className="flex space-x-2">
-                    <select 
-                      onChange={(e) => {
-                        const selectedVal = e.target.value;
-                        if (selectedVal) {
-                          const matched = PRESET_ITEMS.find(item => item.name === selectedVal);
-                          if (matched) {
-                            setItemDesc(matched.name);
-                            setItemRate(matched.price);
-                            setItemProductId('');
-                          }
-                        }
-                      }}
-                      value=""
-                      className="text-[10px] border rounded px-1.5 py-0.5 text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer max-w-[120px]"
-                    >
-                      <option value="">Quick Service...</option>
-                      {PRESET_ITEMS.map((item, idx) => (
-                        <option key={idx} value={item.name}>{item.name} (₹{item.price})</option>
-                      ))}
-                    </select>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-4 gap-3">
+              <h3 className="text-lg font-semibold text-gray-800">Items & Billing</h3>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-gray-500 font-medium hidden md:inline">Quick Presets:</span>
+                <select 
+                  onChange={(e) => {
+                    const selectedVal = e.target.value;
+                    if (selectedVal) {
+                      const matched = PRESET_ITEMS.find(item => item.name === selectedVal);
+                      if (matched) {
+                        setItemDesc(matched.name);
+                        setItemRate(matched.price);
+                        setItemProductId('');
+                      }
+                    }
+                  }}
+                  value=""
+                  className="text-xs border border-gray-300 rounded-md px-2.5 py-1.5 text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer shadow-sm font-medium"
+                >
+                  <option value="">⚡ Quick Service...</option>
+                  {PRESET_ITEMS.map((item, idx) => (
+                    <option key={idx} value={item.name}>{item.name} (₹{item.price})</option>
+                  ))}
+                </select>
 
-                    <select 
-                      onChange={(e) => {
-                        const selectedId = e.target.value;
-                        if (selectedId) {
-                          const matched = productsList.find(p => p.id === selectedId);
-                          if (matched) {
-                            setItemDesc(matched.name);
-                            setItemRate(Number(matched.price) || 0);
-                            setItemProductId(matched.id);
-                          }
-                        } else {
-                          setItemProductId('');
-                        }
-                      }}
-                      value={itemProductId}
-                      className="text-[10px] border rounded px-1.5 py-0.5 text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer max-w-[120px]"
-                    >
-                      <option value="">Quick Product...</option>
-                      {productsList.map((prod) => (
-                        <option key={prod.id} value={prod.id}>
-                          {prod.name} ({prod.stock_count ?? 0})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                <input type="text" value={itemDesc} onChange={e => {
-                  setItemDesc(e.target.value);
-                  if (itemProductId) {
-                    const matched = productsList.find(p => p.id === itemProductId);
-                    if (matched && matched.name !== e.target.value) {
+                <select 
+                  onChange={(e) => {
+                    const selectedId = e.target.value;
+                    if (selectedId) {
+                      const matched = productsList.find(p => p.id === selectedId);
+                      if (matched) {
+                        setItemDesc(matched.name);
+                        setItemRate(Number(matched.price) || 0);
+                        setItemProductId(matched.id);
+                      }
+                    } else {
                       setItemProductId('');
                     }
-                  }
-                }} onKeyDown={e => e.key === 'Enter' && handleAddItem()} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" placeholder="Item description" />
+                  }}
+                  value={itemProductId}
+                  className="text-xs border border-gray-300 rounded-md px-2.5 py-1.5 text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer shadow-sm font-medium max-w-[180px]"
+                >
+                  <option value="">📦 Quick Product...</option>
+                  {productsList.map((prod) => (
+                    <option key={prod.id} value={prod.id}>
+                      {prod.name} (Stock: {prod.stock_count ?? 0})
+                    </option>
+                  ))}
+                </select>
               </div>
-              <div className="col-span-3">
-                <label className="block text-xs font-medium text-gray-600 mb-1">Serial No. / IMEI (Optional)</label>
+            </div>
+            
+            <div className="grid grid-cols-12 gap-3 items-end">
+              <div className="col-span-12 sm:col-span-6 md:col-span-4">
+                <label className="block text-xs font-medium text-gray-600 mb-1">Item Description</label>
+                <input 
+                  type="text" 
+                  value={itemDesc} 
+                  onChange={e => {
+                    setItemDesc(e.target.value);
+                    if (itemProductId) {
+                      const matched = productsList.find(p => p.id === itemProductId);
+                      if (matched && matched.name !== e.target.value) {
+                        setItemProductId('');
+                      }
+                    }
+                  }} 
+                  onKeyDown={e => e.key === 'Enter' && handleAddItem()} 
+                  className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" 
+                  placeholder="e.g. Service or Product name" 
+                />
+              </div>
+              <div className="col-span-12 sm:col-span-6 md:col-span-3">
+                <label className="block text-xs font-medium text-gray-600 mb-1 truncate" title="Serial No. / IMEI (Optional)">
+                  Serial No. / IMEI (Optional)
+                </label>
                 <input 
                   type="text" 
                   value={itemSerialNo} 
@@ -1974,17 +1984,34 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                   placeholder="e.g. S/N: HIK928402" 
                 />
               </div>
-              <div className="col-span-1">
+              <div className="col-span-4 sm:col-span-3 md:col-span-1">
                 <label className="block text-xs font-medium text-gray-600 mb-1">Qty</label>
-                <input type="number" value={itemQty} onChange={e => setItemQty(Number(e.target.value))} min="1" className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" />
+                <input 
+                  type="number" 
+                  value={itemQty} 
+                  onChange={e => setItemQty(Number(e.target.value))} 
+                  min="1" 
+                  className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500 text-center" 
+                />
               </div>
-              <div className="col-span-2">
+              <div className="col-span-8 sm:col-span-4 md:col-span-2">
                 <label className="block text-xs font-medium text-gray-600 mb-1">Rate (₹)</label>
-                <input type="number" value={itemRate || ''} onChange={e => setItemRate(Number(e.target.value))} onKeyDown={e => e.key === 'Enter' && handleAddItem()} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" placeholder="0" />
+                <input 
+                  type="number" 
+                  value={itemRate || ''} 
+                  onChange={e => setItemRate(Number(e.target.value))} 
+                  onKeyDown={e => e.key === 'Enter' && handleAddItem()} 
+                  className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" 
+                  placeholder="0" 
+                />
               </div>
-              <div className="col-span-1">
-                <button onClick={handleAddItem} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-md transition-colors text-sm flex justify-center items-center">
-                  <Plus className="w-4 h-4 mr-1" /> Add
+              <div className="col-span-12 sm:col-span-5 md:col-span-2">
+                <button 
+                  type="button"
+                  onClick={handleAddItem} 
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-3 rounded-md transition-colors text-sm flex justify-center items-center shadow-sm"
+                >
+                  <Plus className="w-4 h-4 mr-1.5 shrink-0" /> Add Item
                 </button>
               </div>
             </div>
