@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Invoice, InvoiceItem, ServiceTicket, Product, Customer, Purchase } from '../types';
-import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt, Mail, FileSpreadsheet, Pencil, MessageSquare, Send, List, Search, Clock, Settings } from 'lucide-react';
+import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt, Mail, FileSpreadsheet, Pencil, MessageSquare, Send, List, Search, Clock, Settings, Link, ShieldCheck } from 'lucide-react';
 import { sendTelegramNotification } from '../utils/telegram';
 import html2pdf from 'html2pdf.js';
 
@@ -13,6 +13,7 @@ import { appendBackupRow } from '../utils/googleSheetBackup';
 import { uploadInvoiceToDrive } from '../utils/googleDriveBackup';
 import { ERPUtils } from '../utils/erp';
 import CustomerLedgerModal from './components/CustomerLedgerModal';
+
 
 // --- Utility Functions ---
 function numberToWords(num: number): string {
@@ -138,6 +139,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const signatureCanvasRef = useRef<any>(null);
   
   const [itemDesc, setItemDesc] = useState('');
+  const [itemSerialNo, setItemSerialNo] = useState('');
   const [itemQty, setItemQty] = useState(1);
   const [itemRate, setItemRate] = useState(0);
   const [itemProductId, setItemProductId] = useState<string>('');
@@ -158,7 +160,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const [printInvoiceNumber, setPrintInvoiceNumber] = useState('');
   const [deliveryPopup, setDeliveryPopup] = useState<DeliveryPopup>(null);
 
-  const [activeTab, setActiveTab] = useState<'editor' | 'history' | 'quotations' | 'pending' | 'settings'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'editor' | 'history' | 'quotations' | 'pending' | 'renewals' | 'settings'>(initialTab);
   const [historySearchTerm, setHistorySearchTerm] = useState('');
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
   const [historyDrawerData, setHistoryDrawerData] = useState<{
@@ -393,8 +395,18 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       showToast('Quantity must be at least 1.', 'error');
       return;
     }
-    setItems([...items, { product_id: itemProductId || undefined, description: itemDesc, qty: itemQty, rate: itemRate }]);
+    setItems([
+      ...items,
+      {
+        product_id: itemProductId || undefined,
+        description: itemDesc.trim(),
+        serial_no: itemSerialNo.trim() || undefined,
+        qty: itemQty,
+        rate: itemRate,
+      }
+    ]);
     setItemDesc('');
+    setItemSerialNo('');
     setItemQty(1);
     setItemRate(0);
     setItemProductId('');
@@ -407,6 +419,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const handleEditItem = (index: number) => {
     const it = items[index];
     setItemDesc(it.description);
+    setItemSerialNo(it.serial_no || '');
     setItemQty(it.qty);
     setItemRate(it.rate);
     setItemProductId(it.product_id || '');
@@ -530,7 +543,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setIsRecurring(inv.is_recurring || false);
     setRecurringInterval(inv.recurring_interval || 'monthly');
     setTermsConditions(inv.terms_conditions || '');
-    setWarrantyMonths((inv as any).warranty_months || '');
+    setWarrantyMonths(inv.warranty_months || '');
     
     let parsedItems = inv.items;
     if (typeof parsedItems === 'string') {
@@ -541,7 +554,6 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       }
     }
     setItems(Array.isArray(parsedItems) ? parsedItems : []);
-    
     window.scrollTo({ top: 0, behavior: 'smooth' });
     showToast(`Invoice ${inv.invoice_no} loaded for editing`);
   };
@@ -568,7 +580,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setAdvancePaid(inv.advance_paid);
     setPaymentMode(inv.payment_mode || 'Not specified');
     setDueDate(inv.due_date || '');
-    setWarrantyMonths((inv as any).warranty_months || '');
+    setWarrantyMonths(inv.warranty_months || '');
     setItems(inv.items || []);
     
     showToast(`Converted quotation ${inv.invoice_no} to a new draft Invoice! Click Save or Print to finalize.`);
@@ -611,11 +623,75 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
     if (!phone) { showToast('No phone number available', 'error'); return; }
     
-    const pdfUrl = (inv as any).pdf_url;
-    let text = `Hi ${inv.customer_name}, your ${inv.doc_type || 'Invoice'} ${inv.invoice_no} for ₹${inv.grand_total} has been generated. Thank you for your business!`;
-    if (pdfUrl) text += `\n\nYou can view and download your ${inv.doc_type || 'Invoice'} here: ${pdfUrl}`;
+    const estimateUrl = `https://yantrabyte.anantatechcare.com/estimate/${inv.id}`;
+    const balDue = (inv.balance_due !== undefined && inv.balance_due !== null) 
+      ? Number(inv.balance_due) 
+      : Math.max(0, (Number(inv.grand_total) || 0) - (Number(inv.advance_paid) || 0));
+    const gTotal = Number(inv.grand_total) || 0;
+    const advPaid = Number(inv.advance_paid) || 0;
+
+    let text = '';
+    if (inv.doc_type === 'Quotation' || inv.doc_type === 'Estimate') {
+      const estimateLink = `${window.location.origin}/quotation/${inv.id}`;
+      text = `Hi ${inv.customer_name}, your ${inv.doc_type || 'Quotation'} ${inv.invoice_no} for ₹${gTotal.toLocaleString('en-IN')} has been generated. Thank you for your business!\n\nYou can view and approve your estimate here: ${estimateLink}`;
+    } else if (balDue > 0 && advPaid > 0) {
+      text = `Hi ${inv.customer_name}, a friendly reminder that you have an outstanding balance of ₹${balDue.toLocaleString('en-IN')} (Total: ₹${gTotal.toLocaleString('en-IN')}, Paid: ₹${advPaid.toLocaleString('en-IN')}) for ${inv.doc_type || 'Invoice'} ${inv.invoice_no}.\n\nYou can view, download, and pay your invoice securely online here: ${estimateUrl}`;
+    } else if (balDue > 0) {
+      text = `Hi ${inv.customer_name}, a friendly reminder that your payment of ₹${balDue.toLocaleString('en-IN')} for ${inv.doc_type || 'Invoice'} ${inv.invoice_no} is due.\n\nYou can view, download, and pay your invoice securely online here: ${estimateUrl}`;
+    } else {
+      text = `Hi ${inv.customer_name}, your ${inv.doc_type || 'Invoice'} ${inv.invoice_no} for ₹${gTotal.toLocaleString('en-IN')} is fully paid. Thank you for your business!\n\nYou can view and download your invoice securely online here: ${estimateUrl}`;
+    }
     
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  const sendWhatsAppPdfInvoice = async (inv: Invoice) => {
+    let phone = (inv.phone || '').replace(/\D/g, '');
+    if (phone.length === 10) phone = '91' + phone;
+
+    if (!phone || phone.length < 10) {
+      showToast('No valid customer phone number available', 'error');
+      return;
+    }
+
+    showToast('Generating and attaching PDF for WhatsApp...');
+
+    try {
+      let pdfBase64 = '';
+      const element = await preparePdfElement(inv.invoice_no);
+      if (element) {
+        const opt = getPdfOptions(inv.invoice_no);
+        const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob') as Blob;
+        pdfBase64 = await blobToBase64(pdfBlob);
+      }
+
+      if (!pdfBase64) {
+        throw new Error('Could not render PDF preview element');
+      }
+
+      const res = await fetch('/api/invoices/send-whatsapp-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerPhone: phone,
+          customerName: inv.customer_name,
+          invoiceNumber: inv.invoice_no,
+          documentType: inv.doc_type || 'Invoice',
+          pdfBase64
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || 'WhatsApp client not connected');
+      }
+
+      showToast(`✅ PDF ${inv.doc_type || 'Invoice'} sent directly to ${inv.customer_name}'s WhatsApp!`);
+    } catch (err: any) {
+      console.warn('Direct WhatsApp PDF send error:', err);
+      showToast(`Direct WhatsApp PDF: ${err.message}. Opening standard WhatsApp chat...`);
+      sendWhatsAppInvoiceAlert(inv);
+    }
   };
 
   const sendTelegramInvoiceAlert = (inv: Invoice) => {
@@ -625,8 +701,48 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
     if (!phone) { showToast('No phone number available', 'error'); return; }
     
-    const text = `Hi ${inv.customer_name}, your ${inv.doc_type || 'Invoice'} ${inv.invoice_no} for ₹${inv.grand_total} has been generated. Thank you for your business!`;
+    const estimateUrl = `https://yantrabyte.anantatechcare.com/estimate/${inv.id}`;
+    const balDue = (inv.balance_due !== undefined && inv.balance_due !== null) 
+      ? Number(inv.balance_due) 
+      : Math.max(0, (Number(inv.grand_total) || 0) - (Number(inv.advance_paid) || 0));
+    const gTotal = Number(inv.grand_total) || 0;
+    const advPaid = Number(inv.advance_paid) || 0;
+
+    let text = '';
+    if (balDue > 0 && advPaid > 0) {
+      text = `Hi ${inv.customer_name}, a friendly reminder that you have an outstanding balance of ₹${balDue.toLocaleString('en-IN')} (Total: ₹${gTotal.toLocaleString('en-IN')}, Paid: ₹${advPaid.toLocaleString('en-IN')}) for ${inv.doc_type || 'Invoice'} ${inv.invoice_no}.\n\nYou can view, download, and pay your invoice securely online here: ${estimateUrl}`;
+    } else if (balDue > 0) {
+      text = `Hi ${inv.customer_name}, a friendly reminder that your payment of ₹${balDue.toLocaleString('en-IN')} for ${inv.doc_type || 'Invoice'} ${inv.invoice_no} is due.\n\nYou can view, download, and pay your invoice securely online here: ${estimateUrl}`;
+    } else {
+      text = `Hi ${inv.customer_name}, your ${inv.doc_type || 'Invoice'} ${inv.invoice_no} for ₹${gTotal.toLocaleString('en-IN')} is fully paid. Thank you for your business!\n\nYou can view and download your invoice securely online here: ${estimateUrl}`;
+    }
+
     window.open(`https://t.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  const sendQuotationFollowUpAlert = (inv: Invoice) => {
+    let phone = (inv.phone || '').replace(/\D/g, '');
+    if (phone.length === 10) phone = '91' + phone;
+
+    if (!phone) { showToast('No phone number available for WhatsApp', 'error'); return; }
+
+    const quoteLink = `https://yantrabyte.anantatechcare.com/quotation/${inv.id}`;
+    const text = `Hi *${inv.customer_name}*,\n\nGreetings from *YantraByte Solutions*! 👋\n\nChecking in regarding your Quotation *#${inv.invoice_no}* for *₹${inv.grand_total.toLocaleString('en-IN')}*.\n\nPlease let us know if you have any questions or would like us to customize the estimate. You can review and approve your estimate online here:\n${quoteLink}\n\nWe look forward to serving you!\n*YantraByte Solutions* (Call/WA: +91 99867 42525)`;
+
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
+    showToast('Opening WhatsApp follow-up chat...');
+  };
+
+  const sendAmcRenewalAlert = (inv: Invoice) => {
+    let phone = (inv.phone || '').replace(/\D/g, '');
+    if (phone.length === 10) phone = '91' + phone;
+
+    if (!phone) { showToast('No phone number available for WhatsApp', 'error'); return; }
+
+    const text = `Hi *${inv.customer_name}*,\n\nThis is a friendly reminder from *YantraByte Solutions* that your 1-Year Annual Maintenance & Service Warranty for Invoice *#${inv.invoice_no}* is approaching its renewal date.\n\nWould you like to renew your AMC contract to ensure uninterrupted priority support and maintenance for your CCTV & IT systems?\n\nPlease reply to this message or call us at *+91 99867 42525* to renew.\n\nWarm regards,\n*YantraByte Solutions*`;
+
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
+    showToast('Opening WhatsApp AMC renewal chat...');
   };
 
   // --- Printing & PDF ---
@@ -645,12 +761,33 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const invoiceCount = invoices.filter(i => i.doc_type === 'Invoice').length;
   const quoteCount = invoices.filter(i => i.doc_type === 'Quotation').length;
 
-  const generateInvoiceNo = (type: string = docType) => {
+  const generateInvoiceNoAsync = async (type: string = docType) => {
     const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const seq = (invoices.length + 1).toString().padStart(3, '0');
     const prefix = type === 'Quotation' ? 'YBQ' : 'YBS';
-    return `${prefix}-${datePart}-${seq}`;
+    
+    const { data } = await supabase
+      .from('invoices')
+      .select('invoice_no')
+      .like('invoice_no', `${prefix}-%`);
+      
+    let maxSeq = 0;
+    if (data) {
+      data.forEach(row => {
+        if (row.invoice_no) {
+          const parts = row.invoice_no.split('-');
+          const lastPart = parts[parts.length - 1];
+          const num = parseInt(lastPart, 10);
+          if (!isNaN(num) && num > maxSeq) {
+            maxSeq = num;
+          }
+        }
+      });
+    }
+    
+    const seq = maxSeq + 1;
+    return `${prefix}-${datePart}-${seq.toString().padStart(3, '0')}`;
   };
+
 
 
 
@@ -783,7 +920,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       if (!inv) return;
 
       const date = new Date().toLocaleDateString('en-GB'); // dd/mm/yyyy
-      const invoiceNo = generateInvoiceNo('Invoice');
+      const invoiceNo = await generateInvoiceNoAsync('Invoice');
       
       let nextDue: string | null = null;
       if (inv.recurring_interval) {
@@ -863,7 +1000,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setCompanySignatureBase64(null);
   };
 
-  const handleSave = async (action: 'save' | 'download' | 'email' = 'save') => {
+  const handleSave = async (action: 'save' | 'download' | 'email' | 'whatsapp-pdf' = 'save') => {
     if (!customerName.trim()) {
       showToast('Please enter a customer name.', 'error');
       return;
@@ -894,7 +1031,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     setIsSendingEmail(action === 'email');
     try {
       const isUpdate = !!selectedInvoiceId;
-      const invoiceNo = isUpdate ? invoices.find(i => i.id === selectedInvoiceId)?.invoice_no || generateInvoiceNo() : generateInvoiceNo();
+      const invoiceNo = isUpdate ? (invoices.find(i => i.id === selectedInvoiceId)?.invoice_no || await generateInvoiceNoAsync()) : await generateInvoiceNoAsync();
       const [y, m, d] = invoiceDate.split('-');
       const date = d && m && y ? `${d}/${m}/${y}` : new Date().toLocaleDateString('en-GB'); // dd/mm/yyyy
       const customerId = await saveCustomerFromForm();
@@ -973,7 +1110,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         }
 
       if (pdfUrl) {
-        (payload as any).pdf_url = pdfUrl;
+        (payload as Invoice).pdf_url = pdfUrl;
       }
 
       if (isUpdate) {
@@ -1008,8 +1145,10 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       await fetchCustomers();
       
       if (action === 'download' || action === 'email') {
-        // Automated internal Telegram notification for invoices
-        if (payload.doc_type !== 'Quotation') {
+        // Automated internal Telegram notification for invoices and quotations
+        if (payload.doc_type === 'Quotation') {
+          sendTelegramNotification(`📝 <b>New Quotation Generated</b>\nQuotation: #${payload.invoice_no}\nCustomer: ${payload.customer_name}\nAmount: ₹${payload.grand_total}\nLink: ${pdfUrl || 'N/A'}`);
+        } else {
           sendTelegramNotification(`💰 <b>New Invoice Generated</b>\nInvoice: #${payload.invoice_no}\nCustomer: ${payload.customer_name}\nAmount: ₹${payload.grand_total}\nLink: ${pdfUrl || 'N/A'}`);
         }
       }
@@ -1026,7 +1165,6 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           const token = sessionData.session?.access_token;
           if (!token) throw new Error('Please login again before sending email.');
           
-          const pdfBase64 = await blobToBase64(pdfBlob);
           const response = await fetch('/api/invoices/email', {
             method: 'POST',
             headers: {
@@ -1036,10 +1174,11 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             body: JSON.stringify({
               to: email,
               customerName,
+              customerPhone: phone,
               invoiceNumber: payload.invoice_no,
               documentType: docType,
               filename: `YBS-${payload.invoice_no}.pdf`,
-              pdfBase64,
+              pdfUrl: pdfUrl,
             }),
           });
           
@@ -1057,6 +1196,37 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           showToast(`Invoice emailed to ${email}`);
         } else {
           throw new Error('Failed to generate PDF for emailing.');
+        }
+      }
+
+      if (action === 'whatsapp-pdf') {
+        if (pdfBlob) {
+          try {
+            const pdfBase64 = await blobToBase64(pdfBlob);
+            const waRes = await fetch('/api/invoices/send-whatsapp-pdf', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                customerPhone: phone,
+                customerName,
+                invoiceNumber: payload.invoice_no,
+                documentType: docType,
+                pdfBase64
+              })
+            });
+            const waData = await waRes.json().catch(() => ({}));
+            if (waRes.ok && waData.ok) {
+              showToast(`✅ PDF ${docType} sent directly to ${customerName}'s WhatsApp!`);
+            } else {
+              showToast(`WhatsApp direct PDF: ${waData.error || 'Opening WhatsApp chat...'}.`);
+              sendWhatsAppInvoiceAlert(payload as unknown as Invoice);
+            }
+          } catch (waErr: any) {
+            console.warn('Error sending WhatsApp PDF:', waErr);
+            sendWhatsAppInvoiceAlert(payload as unknown as Invoice);
+          }
+        } else {
+          sendWhatsAppInvoiceAlert(payload as unknown as Invoice);
         }
       }
     } catch (err: any) {
@@ -1196,7 +1366,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     inv.payment_status || getPaymentStatus(inv.doc_type, inv.balance_due || 0, inv.advance_paid || 0),
     inv.payment_mode || 'Not specified',
     inv.due_date || '',
-    (inv as any).pdf_url || '',
+    inv.pdf_url || '',
   ];
 
   const backupInvoiceToGoogleSheet = async (inv: Invoice) => {
@@ -1348,7 +1518,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-6">
       <div className="flex justify-between items-center bg-white p-6 rounded-lg shadow-sm">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">YantraByte <span className="text-blue-600">Billing System</span></h2>
@@ -1487,6 +1657,12 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           className={`py-3 px-6 text-sm font-medium border-b-2 transition-colors flex items-center whitespace-nowrap ${activeTab === 'pending' ? 'border-amber-600 text-amber-600 bg-amber-50/50 rounded-t-lg' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
         >
           <Clock className="w-4 h-4 mr-2" /> Pending Payments
+        </button>
+        <button
+          onClick={() => setActiveTab('renewals')}
+          className={`py-3 px-6 text-sm font-medium border-b-2 transition-colors flex items-center whitespace-nowrap ${activeTab === 'renewals' ? 'border-emerald-600 text-emerald-600 bg-emerald-50/50 rounded-t-lg' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+        >
+          <ShieldCheck className="w-4 h-4 mr-2" /> AMC & Renewals
         </button>
         <button 
           onClick={() => setActiveTab('settings')}
@@ -1723,81 +1899,119 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           </div>
 
           <div className="bg-white p-6 rounded-lg shadow-sm space-y-4">
-            <h3 className="text-lg font-semibold text-gray-800 border-b pb-4">Items & Billing</h3>
-            
-            <div className="grid grid-cols-12 gap-3 items-end">
-              <div className="col-span-6">
-                <div className="flex justify-between items-center mb-1">
-                  <label className="block text-xs font-medium text-gray-600">Description</label>
-                  <div className="flex space-x-2">
-                    <select 
-                      onChange={(e) => {
-                        const selectedVal = e.target.value;
-                        if (selectedVal) {
-                          const matched = PRESET_ITEMS.find(item => item.name === selectedVal);
-                          if (matched) {
-                            setItemDesc(matched.name);
-                            setItemRate(matched.price);
-                            setItemProductId('');
-                          }
-                        }
-                      }}
-                      value=""
-                      className="text-[10px] border rounded px-1.5 py-0.5 text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer max-w-[120px]"
-                    >
-                      <option value="">Quick Service...</option>
-                      {PRESET_ITEMS.map((item, idx) => (
-                        <option key={idx} value={item.name}>{item.name} (₹{item.price})</option>
-                      ))}
-                    </select>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-4 gap-3">
+              <h3 className="text-lg font-semibold text-gray-800">Items & Billing</h3>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-gray-500 font-medium hidden md:inline">Quick Presets:</span>
+                <select 
+                  onChange={(e) => {
+                    const selectedVal = e.target.value;
+                    if (selectedVal) {
+                      const matched = PRESET_ITEMS.find(item => item.name === selectedVal);
+                      if (matched) {
+                        setItemDesc(matched.name);
+                        setItemRate(matched.price);
+                        setItemProductId('');
+                      }
+                    }
+                  }}
+                  value=""
+                  className="text-xs border border-gray-300 rounded-md px-2.5 py-1.5 text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer shadow-sm font-medium"
+                >
+                  <option value="">⚡ Quick Service...</option>
+                  {PRESET_ITEMS.map((item, idx) => (
+                    <option key={idx} value={item.name}>{item.name} (₹{item.price})</option>
+                  ))}
+                </select>
 
-                    <select 
-                      onChange={(e) => {
-                        const selectedId = e.target.value;
-                        if (selectedId) {
-                          const matched = productsList.find(p => p.id === selectedId);
-                          if (matched) {
-                            setItemDesc(matched.name);
-                            setItemRate(Number(matched.price) || 0);
-                            setItemProductId(matched.id);
-                          }
-                        } else {
-                          setItemProductId('');
-                        }
-                      }}
-                      value={itemProductId}
-                      className="text-[10px] border rounded px-1.5 py-0.5 text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer max-w-[120px]"
-                    >
-                      <option value="">Quick Product...</option>
-                      {productsList.map((prod) => (
-                        <option key={prod.id} value={prod.id}>
-                          {prod.name} ({prod.stock_count ?? 0})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                <input type="text" value={itemDesc} onChange={e => {
-                  setItemDesc(e.target.value);
-                  if (itemProductId) {
-                    const matched = productsList.find(p => p.id === itemProductId);
-                    if (matched && matched.name !== e.target.value) {
+                <select 
+                  onChange={(e) => {
+                    const selectedId = e.target.value;
+                    if (selectedId) {
+                      const matched = productsList.find(p => p.id === selectedId);
+                      if (matched) {
+                        setItemDesc(matched.name);
+                        setItemRate(Number(matched.price) || 0);
+                        setItemProductId(matched.id);
+                      }
+                    } else {
                       setItemProductId('');
                     }
-                  }
-                }} onKeyDown={e => e.key === 'Enter' && handleAddItem()} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" placeholder="Item description" />
+                  }}
+                  value={itemProductId}
+                  className="text-xs border border-gray-300 rounded-md px-2.5 py-1.5 text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer shadow-sm font-medium max-w-[180px]"
+                >
+                  <option value="">📦 Quick Product...</option>
+                  {productsList.map((prod) => (
+                    <option key={prod.id} value={prod.id}>
+                      {prod.name} (Stock: {prod.stock_count ?? 0})
+                    </option>
+                  ))}
+                </select>
               </div>
-              <div className="col-span-2">
+            </div>
+            
+            <div className="grid grid-cols-12 gap-3 items-end">
+              <div className="col-span-12 sm:col-span-6 md:col-span-4">
+                <label className="block text-xs font-medium text-gray-600 mb-1">Item Description</label>
+                <input 
+                  type="text" 
+                  value={itemDesc} 
+                  onChange={e => {
+                    setItemDesc(e.target.value);
+                    if (itemProductId) {
+                      const matched = productsList.find(p => p.id === itemProductId);
+                      if (matched && matched.name !== e.target.value) {
+                        setItemProductId('');
+                      }
+                    }
+                  }} 
+                  onKeyDown={e => e.key === 'Enter' && handleAddItem()} 
+                  className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" 
+                  placeholder="e.g. Service or Product name" 
+                />
+              </div>
+              <div className="col-span-12 sm:col-span-6 md:col-span-3">
+                <label className="block text-xs font-medium text-gray-600 mb-1 truncate" title="Serial No. / IMEI (Optional)">
+                  Serial No. / IMEI (Optional)
+                </label>
+                <input 
+                  type="text" 
+                  value={itemSerialNo} 
+                  onChange={e => setItemSerialNo(e.target.value)} 
+                  onKeyDown={e => e.key === 'Enter' && handleAddItem()} 
+                  className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500 font-mono text-xs" 
+                  placeholder="e.g. S/N: HIK928402" 
+                />
+              </div>
+              <div className="col-span-4 sm:col-span-3 md:col-span-1">
                 <label className="block text-xs font-medium text-gray-600 mb-1">Qty</label>
-                <input type="number" value={itemQty} onChange={e => setItemQty(Number(e.target.value))} min="1" className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" />
+                <input 
+                  type="number" 
+                  value={itemQty} 
+                  onChange={e => setItemQty(Number(e.target.value))} 
+                  min="1" 
+                  className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500 text-center" 
+                />
               </div>
-              <div className="col-span-2">
+              <div className="col-span-8 sm:col-span-4 md:col-span-2">
                 <label className="block text-xs font-medium text-gray-600 mb-1">Rate (₹)</label>
-                <input type="number" value={itemRate || ''} onChange={e => setItemRate(Number(e.target.value))} onKeyDown={e => e.key === 'Enter' && handleAddItem()} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" placeholder="0" />
+                <input 
+                  type="number" 
+                  value={itemRate || ''} 
+                  onChange={e => setItemRate(Number(e.target.value))} 
+                  onKeyDown={e => e.key === 'Enter' && handleAddItem()} 
+                  className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" 
+                  placeholder="0" 
+                />
               </div>
-              <div className="col-span-2">
-                <button onClick={handleAddItem} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-md transition-colors text-sm flex justify-center items-center">
-                  <Plus className="w-4 h-4 mr-1" /> Add
+              <div className="col-span-12 sm:col-span-5 md:col-span-2">
+                <button 
+                  type="button"
+                  onClick={handleAddItem} 
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-3 rounded-md transition-colors text-sm flex justify-center items-center shadow-sm"
+                >
+                  <Plus className="w-4 h-4 mr-1.5 shrink-0" /> Add Item
                 </button>
               </div>
             </div>
@@ -1807,7 +2021,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                 <thead className="bg-gray-50 border-b text-gray-600">
                   <tr>
                     <th className="px-4 py-2 font-medium w-12">#</th>
-                    <th className="px-4 py-2 font-medium">Description</th>
+                    <th className="px-4 py-2 font-medium">Description & Serial No.</th>
                     <th className="px-4 py-2 font-medium text-center w-16">Qty</th>
                     <th className="px-4 py-2 font-medium text-right w-24">Rate</th>
                     <th className="px-4 py-2 font-medium text-right w-24">Amount</th>
@@ -1820,7 +2034,14 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                   ) : items.map((it, idx) => (
                     <tr key={idx} className="hover:bg-gray-50">
                       <td className="px-4 py-2 text-gray-500">{idx + 1}</td>
-                      <td className="px-4 py-2 font-medium text-gray-800">{it.description}</td>
+                      <td className="px-4 py-2 font-medium text-gray-800">
+                        <div>{it.description}</div>
+                        {it.serial_no && (
+                          <div className="text-[11px] font-mono text-slate-500 mt-0.5 font-semibold">
+                            S/N: {it.serial_no}
+                          </div>
+                        )}
+                      </td>
                       <td className="px-4 py-2 text-center text-gray-600">{it.qty}</td>
                       <td className="px-4 py-2 text-right text-gray-600">₹{it.rate.toLocaleString('en-IN')}</td>
                       <td className="px-4 py-2 text-right font-medium text-gray-800">₹{(it.qty * it.rate).toLocaleString('en-IN')}</td>
@@ -1960,25 +2181,46 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                   <th className="px-4 py-3">Document</th>
                   <th className="px-4 py-3">Customer</th>
                   <th className="px-4 py-3">Date</th>
-                  <th className="px-4 py-3">Amount</th>
+                  <th className="px-4 py-3">{activeTab === 'pending' ? 'Balance Due' : 'Amount'}</th>
                   <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
+                  <th className="px-4 py-3 text-right sticky right-0 bg-gray-50 z-10 border-l border-gray-200 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)]">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {invoices.filter(inv => {
                   if (activeTab === 'quotations' && inv.doc_type !== 'Quotation') return false;
                   if (activeTab === 'pending' && (inv.doc_type !== 'Invoice' || (inv.balance_due || 0) <= 0)) return false;
+                  if (activeTab === 'renewals') {
+                    if (inv.doc_type !== 'Invoice') return false;
+                    // Check if invoice date is older than 250 days or has 12m warranty / recurring
+                    const parts = (inv.date || '').split('/');
+                    let isOlder = false;
+                    if (parts.length === 3) {
+                      const invDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+                      const diffDays = (Date.now() - invDate.getTime()) / (1000 * 3600 * 24);
+                      isOlder = diffDays >= 250;
+                    }
+                    if (!isOlder && (inv.warranty_months || 0) < 12 && !inv.is_recurring) return false;
+                  }
+
+                  const term = historySearchTerm.toLowerCase().trim();
+                  if (!term) return true;
+
+                  const hasSerialMatch = Array.isArray(inv.items) && inv.items.some((it: any) => 
+                    it.serial_no && String(it.serial_no).toLowerCase().includes(term)
+                  );
+
                   return (
-                    inv.invoice_no.toLowerCase().includes(historySearchTerm.toLowerCase()) || 
-                    inv.customer_name.toLowerCase().includes(historySearchTerm.toLowerCase()) ||
-                    inv.date.includes(historySearchTerm)
+                    inv.invoice_no.toLowerCase().includes(term) || 
+                    inv.customer_name.toLowerCase().includes(term) ||
+                    inv.date.includes(term) ||
+                    hasSerialMatch
                   );
                 }).map(inv => (
                   <tr 
                     key={inv.id} 
                     onClick={() => { loadInvoice(inv.id); setActiveTab('editor'); }}
-                    className={`hover:bg-gray-50 transition-colors cursor-pointer ${selectedInvoiceId === inv.id ? 'bg-blue-50/30' : ''}`}
+                    className={`hover:bg-gray-50 transition-colors cursor-pointer ${selectedInvoiceId === inv.id ? 'bg-blue-50' : 'bg-white'}`}
                   >
                     <td className="px-4 py-4">
                       <div className="font-semibold text-gray-900">{inv.invoice_no}</div>
@@ -1986,26 +2228,61 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                     </td>
                     <td className="px-4 py-4 font-medium text-gray-800">{inv.customer_name}</td>
                     <td className="px-4 py-4 text-gray-600">{inv.date}</td>
-                    <td className="px-4 py-4 font-bold text-gray-900">₹{inv.grand_total.toLocaleString('en-IN')}</td>
+                    <td className="px-4 py-4">
+                      {activeTab === 'pending' ? (
+                        <div>
+                          <div className="font-bold text-rose-600 font-mono">₹{(inv.balance_due || 0).toLocaleString('en-IN')}</div>
+                          <div className="text-xs text-gray-500 mt-0.5 font-mono">
+                            Total: ₹{inv.grand_total.toLocaleString('en-IN')}{(inv.advance_paid || 0) > 0 ? ` • Paid: ₹${(inv.advance_paid || 0).toLocaleString('en-IN')}` : ''}
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <div className="font-bold text-gray-900 font-mono">₹{inv.grand_total.toLocaleString('en-IN')}</div>
+                          {(inv.balance_due || 0) > 0 && (inv.advance_paid || 0) > 0 ? (
+                            <div className="text-xs text-rose-600 font-semibold font-mono mt-0.5">
+                              Bal: ₹{(inv.balance_due || 0).toLocaleString('en-IN')}
+                            </div>
+                          ) : (inv.balance_due || 0) > 0 && (
+                            <div className="text-xs text-amber-600 font-medium font-mono mt-0.5">
+                              Due: ₹{(inv.balance_due || 0).toLocaleString('en-IN')}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </td>
                     <td className="px-4 py-4">
                       {inv.doc_type === 'Cancelled' ? (
                         <span className="text-xs px-2 py-1 rounded-full bg-red-50 text-red-700 font-medium border border-red-100">Cancelled</span>
                       ) : inv.doc_type === 'Quotation' ? (
-                        <span className="text-xs px-2 py-1 rounded-full bg-purple-50 text-purple-700 font-medium border border-purple-100">Quotation</span>
+                        <span className={`text-xs px-2 py-1 rounded-full font-medium border ${
+                          inv.payment_status === 'Approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                          inv.payment_status === 'Rejected' ? 'bg-red-50 text-red-700 border-red-100' :
+                          'bg-purple-50 text-purple-700 border-purple-100'
+                        }`}>
+                          {inv.payment_status === 'Approved' ? 'Approved' : inv.payment_status === 'Rejected' ? 'Rejected' : 'Quotation'}
+                        </span>
                       ) : (inv.balance_due || 0) <= 0 ? (
                         <span className="text-xs px-2 py-1 rounded-full bg-green-50 text-green-700 font-medium border border-green-100">Paid</span>
                       ) : (inv.payment_status || getPaymentStatus(inv.doc_type, inv.balance_due || 0, inv.advance_paid || 0)) === 'Partial' ? (
-                        <span className="text-xs px-2 py-1 rounded-full bg-amber-50 text-amber-700 font-medium border border-amber-100">Partial</span>
-                      ) : (
                         <span 
                           onClick={(e) => { e.stopPropagation(); setLedgerCustomerName(inv.customer_name); setLedgerCustomerId(inv.customer_id || null); }}
                           className="text-xs px-2 py-1 rounded-full bg-amber-50 text-amber-700 font-medium border border-amber-100 hover:bg-amber-100 cursor-pointer transition-colors"
+                          title="Click to view customer ledger"
+                        >
+                          ₹{(inv.balance_due || 0).toLocaleString('en-IN')} Due (Partial)
+                        </span>
+                      ) : (
+                        <span 
+                          onClick={(e) => { e.stopPropagation(); setLedgerCustomerName(inv.customer_name); setLedgerCustomerId(inv.customer_id || null); }}
+                          className="text-xs px-2 py-1 rounded-full bg-rose-50 text-rose-700 font-medium border border-rose-100 hover:bg-rose-100 cursor-pointer transition-colors"
+                          title="Click to view customer ledger"
                         >
                           ₹{(inv.balance_due || 0).toLocaleString('en-IN')} Due
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-4 text-right">
+                    <td className="px-4 py-4 text-right sticky right-0 bg-inherit z-10 border-l border-gray-100 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)]">
                       <div className="flex justify-end items-center space-x-2">
                         <button onClick={(e) => { e.stopPropagation(); loadInvoice(inv.id); setActiveTab('editor'); }} className="p-1.5 text-gray-500 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors" title="Edit / Load">
                           <Pencil className="w-4 h-4" />
@@ -2027,16 +2304,37 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                           </button>
                         )}
                         {inv.doc_type === 'Quotation' && (
-                          <button onClick={(e) => { e.stopPropagation(); handleConvertToInvoice(inv.id); setActiveTab('editor'); }} className="p-1.5 text-gray-500 hover:bg-emerald-50 hover:text-emerald-600 rounded-md transition-colors" title="Convert to Invoice">
-                            <Copy className="w-4 h-4" />
-                          </button>
+                          <>
+                            <button onClick={(e) => { 
+                              e.stopPropagation(); 
+                              const link = `${window.location.origin}/quotation/${inv.id}`;
+                              navigator.clipboard.writeText(link);
+                              showToast('Estimate link copied to clipboard!', 'success');
+                            }} className="p-1.5 text-gray-500 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors" title="Copy Estimate Link">
+                              <Link className="w-4 h-4" />
+                            </button>
+                            <button onClick={(e) => { e.stopPropagation(); sendQuotationFollowUpAlert(inv); }} className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-md transition-colors" title="⚡ Follow-up on WhatsApp">
+                              <MessageSquare className="w-4 h-4" />
+                            </button>
+                            <button onClick={(e) => { e.stopPropagation(); handleConvertToInvoice(inv.id); setActiveTab('editor'); }} className="p-1.5 text-gray-500 hover:bg-emerald-50 hover:text-emerald-600 rounded-md transition-colors" title="Convert to Invoice">
+                              <Copy className="w-4 h-4" />
+                            </button>
+                          </>
                         )}
                         {inv.doc_type === 'Invoice' && (inv.balance_due || 0) > 0 && (
                           <button onClick={(e) => { e.stopPropagation(); handleMarkAsPaid(inv.id); }} className="p-1.5 text-gray-500 hover:bg-green-50 hover:text-green-600 rounded-md transition-colors" title="Mark as Paid">
                             <CheckCircle className="w-4 h-4" />
                           </button>
                         )}
-                        <button onClick={(e) => { e.stopPropagation(); sendWhatsAppInvoiceAlert(inv); }} className="p-1.5 text-gray-500 hover:bg-green-50 hover:text-green-600 rounded-md transition-colors" title="WhatsApp Alert">
+                        {inv.doc_type === 'Invoice' && (
+                          <button onClick={(e) => { e.stopPropagation(); sendAmcRenewalAlert(inv); }} className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors" title="🔄 Send AMC / Warranty Renewal Alert">
+                            <ShieldCheck className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button onClick={(e) => { e.stopPropagation(); sendWhatsAppPdfInvoice(inv); }} className="p-1.5 text-gray-500 hover:bg-emerald-50 hover:text-emerald-600 rounded-md transition-colors" title="Send PDF on WhatsApp">
+                          <FileText className="w-4 h-4 text-emerald-600" />
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); sendWhatsAppInvoiceAlert(inv); }} className="p-1.5 text-gray-500 hover:bg-green-50 hover:text-green-600 rounded-md transition-colors" title="WhatsApp Message Alert">
                           <MessageSquare className="w-4 h-4" />
                         </button>
                         <button onClick={(e) => { e.stopPropagation(); sendTelegramInvoiceAlert(inv); }} className="p-1.5 text-gray-500 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors" title="Telegram Alert">
@@ -2117,13 +2415,14 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           <div style={{
             position: 'absolute',
             top: 0, left: 0, width: '100%', height: '100%',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            backgroundImage: 'url(/hardware_watermark.png)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
             pointerEvents: 'none',
             zIndex: 50,
-            overflow: 'hidden',
-            opacity: 0.1
+            opacity: 0.2
           }}>
-            <img src="/hardware_watermark.png" alt="Watermark" style={{ width: '100%', height: '100%', objectFit: 'cover' }} crossOrigin="anonymous" />
           </div>
           
           {docType === 'Cancelled' && (
@@ -2201,7 +2500,14 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                 {items.map((it: any, idx: number) => (
                   <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? 'transparent' : 'rgba(248, 250, 252, 0.6)' }}>
                     <td className="p-2 text-center" style={{ borderRight: '1px solid #000', color: '#000' }}>{idx + 1}</td>
-                    <td className="p-2 font-medium" style={{ borderRight: '1px solid #000', color: '#000' }}>{it.description || it.item || it.name || it.item_name || ''}</td>
+                    <td className="p-2 font-medium" style={{ borderRight: '1px solid #000', color: '#000' }}>
+                      <div>{it.description || it.item || it.name || it.item_name || ''}</div>
+                      {it.serial_no && (
+                        <div style={{ fontSize: '11px', color: '#475569', marginTop: '2px', fontWeight: 'bold' }}>
+                          S/N: {it.serial_no}
+                        </div>
+                      )}
+                    </td>
                     <td className="p-2 text-center" style={{ borderRight: '1px solid #000', color: '#000' }}>{it.qty || 1}</td>
                     <td className="p-2 text-right" style={{ borderRight: '1px solid #000', color: '#000' }}>{Number(it.rate || it.price || it.amount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
                     <td className="p-2 text-right font-bold" style={{ color: '#000' }}>{(Number(it.qty || 1) * Number(it.rate || it.price || it.amount || 0)).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
@@ -2290,7 +2596,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                 </div>
                 <div className="w-16 h-16 ml-2 flex-shrink-0 flex justify-center items-center bg-white">
                   <QRCodeSVG 
-                    value={`upi://pay?pa=s0424237152@slc&pn=${encodeURIComponent('YantraByte Solutions')}&am=${grandTotal}&cu=INR`} 
+                    value={`upi://pay?pa=s0424237152@slc&pn=${encodeURIComponent('YantraByte Solutions')}&am=${balanceDue > 0 ? balanceDue : grandTotal}&cu=INR`} 
                     size={60} 
                   />
                 </div>
@@ -2305,8 +2611,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                     <img src="/seal.png" alt="Seal" style={{ height: '75px', maxWidth: '100px', width: 'auto', objectFit: 'contain' }} crossOrigin="anonymous" />
                   )}
                 </div>
-                <div className="font-bold text-[10px]" style={{ color: '#000' }}>RAMESH A S</div>
-                <div className="text-[9px]" style={{ color: '#444444' }}>Authorized Signatory</div>
+                <div className="font-bold text-[10px]" style={{ color: '#000', padding: '0 100px' }}>&nbsp;</div>
+                <div className="text-[9px]" style={{ color: '#444444' }}>&nbsp;</div>
               </div>
             </div>
 
@@ -2386,7 +2692,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                                     onClick={(e) => { e.stopPropagation(); setLedgerCustomerName(inv.customer_name); setLedgerCustomerId(inv.customer_id || null); }}
                                     className="text-[9px] px-1.5 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 font-semibold font-mono hover:bg-rose-500/20 cursor-pointer"
                                   >
-                                    ₹{inv.balance_due} Due
+                                    ₹{(inv.balance_due || 0).toLocaleString('en-IN')} Due
                                   </span>
                                 )}
                               </div>
@@ -2397,9 +2703,15 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                               </div>
                             </div>
                             <div className="text-right flex flex-col items-end">
-                              <div className="text-lg font-bold text-white font-mono">₹{inv.grand_total.toLocaleString('en-IN')}</div>
-                              {inv.advance_paid > 0 && (
-                                <div className="text-[10px] text-[#94A3B8] mt-1 font-mono">Advance: ₹{inv.advance_paid}</div>
+                              {(inv.balance_due || 0) > 0 ? (
+                                <>
+                                  <div className="text-lg font-bold text-rose-400 font-mono">₹{(inv.balance_due || 0).toLocaleString('en-IN')} Due</div>
+                                  <div className="text-[10px] text-[#94A3B8] mt-1 font-mono">
+                                    Total: ₹{inv.grand_total.toLocaleString('en-IN')}{(inv.advance_paid || 0) > 0 ? ` | Paid: ₹${(inv.advance_paid || 0).toLocaleString('en-IN')}` : ''}
+                                  </div>
+                                </>
+                              ) : (
+                                <div className="text-lg font-bold text-white font-mono">₹{inv.grand_total.toLocaleString('en-IN')}</div>
                               )}
                               <div className="flex gap-2 mt-2">
                                 <button 
@@ -2544,7 +2856,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                           <th className="px-4 py-3 font-semibold">Interval</th>
                           <th className="px-4 py-3 font-semibold">Next Due Date</th>
                           <th className="px-4 py-3 font-semibold text-right">Amount</th>
-                          <th className="px-4 py-3 font-semibold text-center">Action</th>
+                          <th className="px-4 py-3 font-semibold text-center sticky right-0 bg-gray-50 z-10 border-l border-gray-200">Action</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100">
@@ -2561,7 +2873,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                               ) : '-'}
                             </td>
                             <td className="px-4 py-3 text-right font-medium text-gray-900">₹{inv.grand_total}</td>
-                            <td className="px-4 py-3 text-center">
+                            <td className="px-4 py-3 text-center sticky right-0 bg-inherit z-10 border-l border-gray-100 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)]">
                               <button
                                 onClick={() => generateRecurringInvoice(inv.id)}
                                 disabled={isSaving}
@@ -2622,14 +2934,25 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                           <th className="px-4 py-3 font-semibold">Customer</th>
                           <th className="px-4 py-3 font-semibold">Due Date</th>
                           <th className="px-4 py-3 font-semibold text-right">Balance Due</th>
-                          <th className="px-4 py-3 font-semibold text-center">Action</th>
+                          <th className="px-4 py-3 font-semibold text-center sticky right-0 bg-gray-50 z-10 border-l border-gray-200">Action</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100">
                         {invoices.filter(i => (i.balance_due || 0) > 0 && i.doc_type === 'Invoice').map(inv => {
                           const customer = customersList.find(c => c.name === inv.customer_name) || { phone: inv.phone };
-                          const phoneNum = customer?.phone?.replace(/\D/g, '');
-                          const whatsappUrl = phoneNum ? `https://wa.me/91${phoneNum}?text=${encodeURIComponent(`Dear ${inv.customer_name},\n\nThis is a gentle reminder that your payment of ₹${inv.balance_due?.toLocaleString('en-IN')} for Invoice No. ${inv.invoice_no} is currently due.\n\nPlease arrange for the payment at your earliest convenience.\n\nThank you,\nYantrabyte Solutions`)}` : '#';
+                          const phoneNum = (customer?.phone || inv.phone || '').replace(/\D/g, '');
+                          const estimateUrl = `https://yantrabyte.anantatechcare.com/estimate/${inv.id}`;
+                          const balDue = (inv.balance_due !== undefined && inv.balance_due !== null) ? Number(inv.balance_due) : ((Number(inv.grand_total) || 0) - (Number(inv.advance_paid) || 0));
+                          const gTotal = Number(inv.grand_total) || 0;
+                          const advPaid = Number(inv.advance_paid) || 0;
+                          
+                          let reminderMsg = `Dear ${inv.customer_name},\n\nThis is a gentle reminder that your payment of ₹${balDue.toLocaleString('en-IN')} for Invoice No. ${inv.invoice_no} is currently due.`;
+                          if (advPaid > 0) {
+                            reminderMsg = `Dear ${inv.customer_name},\n\nThis is a gentle reminder that your remaining balance of ₹${balDue.toLocaleString('en-IN')} (Total: ₹${gTotal.toLocaleString('en-IN')}, Paid: ₹${advPaid.toLocaleString('en-IN')}) for Invoice No. ${inv.invoice_no} is currently due.`;
+                          }
+                          reminderMsg += `\n\nYou can view and pay your invoice securely online here:\n${estimateUrl}\n\nPlease arrange for the payment at your earliest convenience.\n\nThank you,\nYantrabyte Solutions`;
+                          
+                          const whatsappUrl = phoneNum ? `https://wa.me/91${phoneNum.length === 10 ? phoneNum : phoneNum.replace(/^91/, '')}?text=${encodeURIComponent(reminderMsg)}` : '#';
                           
                           return (
                             <tr key={inv.id} className="hover:bg-gray-50/50">
@@ -2646,7 +2969,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                               >
                                 ₹{inv.balance_due?.toLocaleString('en-IN')}
                               </td>
-                              <td className="px-4 py-3 text-center">
+                              <td className="px-4 py-3 text-center sticky right-0 bg-inherit z-10 border-l border-gray-100 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)]">
                                 {phoneNum ? (
                                   <a
                                     href={whatsappUrl}

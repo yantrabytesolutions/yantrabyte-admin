@@ -82,10 +82,23 @@ export default function PurchaseSoftware() {
   const totalSupplierDues = purchases.reduce((acc, p) => acc + (p.balance_due || 0), 0);
   const totalPaidToSuppliers = purchases.reduce((acc, p) => acc + (p.amount_paid || 0), 0);
 
-  const generatePurchaseNo = () => {
+  const generatePurchaseNoAsync = async () => {
     const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const seq = (purchases.length + 1).toString().padStart(3, '0');
-    return `YBP-${datePart}-${seq}`;
+    const prefix = `YBP-${datePart}-`;
+    
+    const { data } = await supabase
+      .from('purchases')
+      .select('purchase_no')
+      .like('purchase_no', `${prefix}%`)
+      .order('purchase_no', { ascending: false })
+      .limit(1);
+      
+    let seq = 1;
+    if (data && data.length > 0 && data[0].purchase_no) {
+      const lastSeq = parseInt(data[0].purchase_no.split('-').pop() || '0', 10);
+      if (!isNaN(lastSeq)) seq = lastSeq + 1;
+    }
+    return `${prefix}${seq.toString().padStart(3, '0')}`;
   };
 
   const handleAddItem = () => {
@@ -176,7 +189,7 @@ export default function PurchaseSoftware() {
     setIsSaving(true);
     try {
       const isUpdate = !!selectedPurchaseId;
-      const pNo = isUpdate ? purchases.find(p => p.id === selectedPurchaseId)?.purchase_no || generatePurchaseNo() : generatePurchaseNo();
+      const pNo = isUpdate ? (purchases.find(p => p.id === selectedPurchaseId)?.purchase_no || await generatePurchaseNoAsync()) : await generatePurchaseNoAsync();
 
       const payload = {
         purchase_no: pNo,
@@ -194,16 +207,44 @@ export default function PurchaseSoftware() {
         balance_due: balanceDue,
       };
 
+      let activeSavedPurchase = null;
       if (isUpdate) {
         const { data: savedPurchase, error } = await supabase.from('purchases').update(payload).eq('id', selectedPurchaseId).select().single();
         if (error) throw error;
         if (savedPurchase && docType === 'Bill') await ERPUtils.recordPurchase(savedPurchase as Purchase);
+        activeSavedPurchase = savedPurchase;
         showToast('Purchase entry updated successfully!');
       } else {
         const { data: savedPurchase, error } = await supabase.from('purchases').insert([payload]).select().single();
         if (error) throw error;
         if (savedPurchase && docType === 'Bill') await ERPUtils.recordPurchase(savedPurchase as Purchase);
+        activeSavedPurchase = savedPurchase;
         showToast('Purchase entry saved successfully!');
+      }
+
+      if (activeSavedPurchase) {
+        try {
+          const { appendBackupRow } = await import('../utils/googleSheetBackup');
+          const headers = ['Purchase No', 'Date', 'Supplier', 'Items', 'Total', 'Status', 'Created At'];
+          const row = [
+            activeSavedPurchase.purchase_no,
+            activeSavedPurchase.date || '',
+            supplierName || '',
+            activeSavedPurchase.items ? (activeSavedPurchase.items as any[]).map(i => `${i.description} (x${i.qty})`).join(', ') : '',
+            activeSavedPurchase.grand_total || 0,
+            activeSavedPurchase.status || '',
+            activeSavedPurchase.created_at ? new Date(activeSavedPurchase.created_at).toLocaleString() : new Date().toLocaleString()
+          ];
+          await appendBackupRow({
+            sheetName: 'Purchases',
+            headers,
+            row,
+            keyColumnIndex: 0,
+            keyValue: activeSavedPurchase.purchase_no,
+          });
+        } catch (backupError) {
+          console.warn('Network error triggering Google Sheet backup:', backupError);
+        }
       }
 
       clearForm();
@@ -451,14 +492,14 @@ export default function PurchaseSoftware() {
                     <th className="px-4 py-2 font-medium text-center w-16">Qty</th>
                     <th className="px-4 py-2 font-medium text-right w-24">Cost Rate</th>
                     <th className="px-4 py-2 font-medium text-right w-24">Total</th>
-                    <th className="px-4 py-2 font-medium text-center w-12"></th>
+                    <th className="px-4 py-2 font-medium text-center w-12 sticky right-0 bg-gray-50 z-10 border-l border-gray-100"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
                   {items.length === 0 ? (
                     <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">No items added yet.</td></tr>
                   ) : items.map((it, idx) => (
-                    <tr key={idx} className="hover:bg-gray-50">
+                    <tr key={idx} className="group hover:bg-gray-50 bg-white">
                       <td className="px-4 py-2 text-gray-500">{idx + 1}</td>
                       <td className="px-4 py-2 font-medium text-gray-800">
                         {it.description}
@@ -469,7 +510,7 @@ export default function PurchaseSoftware() {
                       <td className="px-4 py-2 text-center text-gray-600">{it.qty}</td>
                       <td className="px-4 py-2 text-right text-gray-600">₹{it.rate.toLocaleString('en-IN')}</td>
                       <td className="px-4 py-2 text-right font-medium text-gray-800">₹{(it.qty * it.rate).toLocaleString('en-IN')}</td>
-                      <td className="px-4 py-2 text-center">
+                      <td className="px-4 py-2 text-center sticky right-0 bg-inherit z-10 border-l border-gray-100 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)]">
                         <button onClick={() => removeItem(idx)} className="text-red-400 hover:text-red-600 transition-colors"><Trash2 className="w-4 h-4" /></button>
                       </td>
                     </tr>

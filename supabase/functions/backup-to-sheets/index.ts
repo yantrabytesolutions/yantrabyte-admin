@@ -120,6 +120,19 @@ async function uploadToDrive(fileName: string, base64Data: string, folderId: str
     throw new Error('Failed to upload file content: ' + errorBody);
   }
 
+  // Step 2.5: Set sharing permissions to 'Anyone with the link can view'
+  await fetch(`https://www.googleapis.com/drive/v3/files/${meta.id}/permissions`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      role: 'reader',
+      type: 'anyone'
+    })
+  });
+
   // Step 3: Get webViewLink
   const linkRes = await fetch(`https://www.googleapis.com/drive/v3/files/${meta.id}?fields=webViewLink`, {
     headers: {
@@ -128,6 +141,21 @@ async function uploadToDrive(fileName: string, base64Data: string, folderId: str
   });
   const linkData = await linkRes.json();
   return linkData.webViewLink || `https://drive.google.com/file/d/${meta.id}/view`;
+}
+
+async function clearSheet(spreadsheetId: string, sheetName: string, token: string): Promise<void> {
+  const quotedSheet = `'${sheetName.replace(/'/g, "''")}'`;
+  const res = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(quotedSheet + '!A:Z')}:clear`,
+    {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    }
+  );
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.error?.message || 'Sheets clear failed');
+  }
 }
 
 Deno.serve(async (req) => {
@@ -149,17 +177,29 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { sheetName, headers, row, pdfBase64, invoiceNo } = body;
+    const { sheetName, headers, row, action, pdfBase64, invoiceNo } = body;
 
-    if (!sheetName || !Array.isArray(headers) || !Array.isArray(row)) {
+    if (!sheetName) {
       return new Response(
-        JSON.stringify({ ok: false, error: 'sheetName, headers (array), and row (array) are required' }),
+        JSON.stringify({ ok: false, error: 'sheetName is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const token = await getAccessToken(clientId, clientSecret, refreshToken);
     await ensureSheet(spreadsheetId, sheetName, token);
+
+    if (action === 'clear') {
+      await clearSheet(spreadsheetId, sheetName, token);
+      return new Response(JSON.stringify({ ok: true, cleared: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    if (!Array.isArray(headers) || !Array.isArray(row)) {
+      return new Response(
+        JSON.stringify({ ok: false, error: 'headers (array), and row (array) are required for append/update' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     const finalRow = [...row];
 
@@ -169,13 +209,12 @@ Deno.serve(async (req) => {
         console.warn('GOOGLE_DRIVE_FOLDER_ID not set. Skipping PDF upload.');
       } else {
         const fileUrl = await uploadToDrive(`${invoiceNo}.pdf`, pdfBase64, folderId, token);
-        // Append PDF link to the row
-        // Check if headers contains "PDF Link", if not, we can just append it
         if (!headers.includes('PDF Link')) {
           headers.push('PDF Link');
         }
         finalRow.push(fileUrl);
       }
+
     }
 
     // Set headers if sheet is empty

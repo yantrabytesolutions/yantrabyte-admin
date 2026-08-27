@@ -588,7 +588,7 @@ function createPrintableInvoiceSheet_(ss, data) {
   sh.getRange(fr+2,4,1,2).merge().setValue('  A/C Name: YantraByte Solutions').setFontSize(8);
   sh.getRange(fr+3,4,1,2).merge().setValue('  A/C No: 033311501023226').setFontSize(8);
   sh.getRange(fr+4,4,1,2).merge().setValue('  IFSC: NESF0000333 / NESF0000096').setFontSize(8);
-  sh.getRange(fr+5,4,6,2).merge().setValue('For YantraByte Solutions\n\n\nRAMESH A S\nAuthorized Signatory')
+  sh.getRange(fr+5,4,6,2).merge().setValue('For YantraByte Solutions')
     .setHorizontalAlignment('center').setVerticalAlignment('bottom').setFontWeight('bold').setFontSize(9);
   sh.getRange(fr,1,11,3).setBorder(true,true,true,true,null,null,'#000000',SpreadsheetApp.BorderStyle.SOLID);
   sh.getRange(fr,4,11,2).setBorder(true,true,true,true,null,null,'#000000',SpreadsheetApp.BorderStyle.SOLID);
@@ -641,7 +641,13 @@ function exportCurrentSheetToPdf_(spreadsheetId, gid, fileName) {
   ].join('&');
   var token = ScriptApp.getOAuthToken();
   var response = UrlFetchApp.fetch(url, { headers: { Authorization: 'Bearer ' + token } });
-  return folder.createFile(response.getBlob().setName(fileName + '.pdf'));
+  var file = folder.createFile(response.getBlob().setName(fileName + '.pdf'));
+  try {
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  } catch (e) {
+    Logger.log('Sharing failed: ' + e.message);
+  }
+  return file;
 }
 // =============================================
 // PAYMENT STATUS
@@ -1104,7 +1110,7 @@ function createPrintableQuotationSheet_(ss, data) {
   sh.getRange(fr+3,4,1,2).merge().setValue('  IFSC: KARB0000506').setFontSize(8);
   sh.getRange(fr+4,4,1,2).merge().setValue('  Name: YantraByte Solutions').setFontSize(8);
   
-  sh.getRange(fr+6,4,2,2).merge().setValue('For YantraByte Solutions\nRAMESH A S (Authorized Signatory)')
+  sh.getRange(fr+6,4,2,2).merge().setValue('For YantraByte Solutions')
     .setHorizontalAlignment('center').setVerticalAlignment('middle').setFontWeight('bold').setFontSize(8);
   
   sh.getRange(fr+8,1,1,5).merge().setValue('Thank you for your business!')
@@ -1746,7 +1752,7 @@ function createPrintableTicketSheet_(ss, t) {
   sh.getRange(2, 1, data.length, 1).setBackground('#F3F3F3').setFontWeight('bold');
   sh.getRange(2, 1, data.length, 2).setBorder(true, true, true, true, true, true);
   
-  sh.getRange(data.length + 3, 1, 1, 2).merge().setValue('For YantraByte Solutions: RAMESH A S')
+  sh.getRange(data.length + 3, 1, 1, 2).merge().setValue('For YantraByte Solutions:')
     .setFontWeight('bold').setHorizontalAlignment('right');
   
   // Insert Seal

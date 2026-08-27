@@ -769,157 +769,156 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         </div>
       </div>
 
-      {/* --- HIDDEN PRINT TEMPLATE --- */}
+            {/* --- HIDDEN PRINT TEMPLATE --- */}
       <div style={{ display: 'none' }}>
-        <div ref={printRef} className="bg-white p-[10px] w-full text-black" style={{ fontFamily: 'Arial, sans-serif', width: '794px', height: '1080px', position: 'relative', overflow: 'hidden' }}>
-          
+        <div ref={printRef} style={{ backgroundColor: '#ffffff', padding: '24px', width: '794px', height: '1115px', color: '#000000', display: 'flex', flexDirection: 'column', fontFamily: 'Arial, sans-serif', position: 'relative', overflow: 'hidden', boxSizing: 'border-box' }}>
           {/* Watermark Overlay */}
           <div style={{
             position: 'absolute',
             top: 0, left: 0, width: '100%', height: '100%',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             pointerEvents: 'none',
-            zIndex: 50
+            zIndex: 50,
+            overflow: 'hidden',
+            opacity: 0.1
           }}>
-            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3OTQgMTEyMyI+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzNSIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0icmdiYSgxMSw4MywxNDgsMC4xNSkiIHRyYW5zZm9ybT0icm90YXRlKC00MCwgMzk3LCA1NjEpIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiBsZXR0ZXItc3BhY2luZz0iMTAiPllBTlRSQUJZVEUgU09MVVRJT05TPC90ZXh0Pjwvc3ZnPg==" style={{ width: '100%', height: '100%', objectFit: 'contain' }} alt="Watermark" />
+            <img src="/hardware_watermark.png" alt="Watermark" style={{ width: '100%', height: '100%', objectFit: 'cover' }} crossOrigin="anonymous" />
           </div>
           
           {/* Header */}
-          <div className="flex items-center justify-between border p-3 mb-2" style={{ borderColor: '#000000' }}>
-            <div className="flex items-center space-x-4">
-              <div className="w-[340px] h-28 flex items-center justify-start ml-2">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: '1px solid #000000', padding: '12px', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <div style={{ width: '340px', height: '112px', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', marginLeft: '8px' }}>
                 <img src="/logo5.png" alt="YantraByte Solutions" style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} crossOrigin="anonymous" />
               </div>
             </div>
-            <div className="text-right">
-              <h1 className="text-xl font-bold" style={{ color: '#0B5394' }}>YANTRABYTE SOLUTIONS</h1>
-              <p className="text-xs mt-1" style={{ color: '#333333' }}>47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br/>Chikkabettahalli, Bengaluru - 560097</p>
-              <p className="text-xs mt-1" style={{ color: '#333333' }}>Phone: 09986742525 | Email: yantrabyte.solutions@gmail.com</p>
+            <div style={{ textAlign: 'right' }}>
+              <h1 style={{ fontSize: '20px', fontWeight: 'bold', color: '#0B5394', margin: 0 }}>YANTRABYTE SOLUTIONS</h1>
+              <p style={{ fontSize: '12px', marginTop: '4px', color: '#333333', margin: 0 }}>47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br/>Chikkabettahalli, Bengaluru - 560097</p>
+              <p style={{ fontSize: '12px', marginTop: '4px', color: '#333333', margin: 0 }}><span style={{ fontSize: "14px" }}>📱</span> Phone: 09986742525 | <span style={{ fontSize: "14px" }}>✉️</span> Email: yantrabyte.solutions@gmail.com</p>
             </div>
           </div>
 
-          <div className="font-bold text-center py-1 border-x border-t text-base tracking-widest uppercase" style={{ backgroundColor: '#0B5394', color: '#ffffff', borderColor: '#000000' }}>
+          <div style={{ fontWeight: 'bold', textAlign: 'center', padding: '4px 0', borderLeft: '1px solid #000000', borderRight: '1px solid #000000', borderTop: '1px solid #000000', fontSize: '16px', letterSpacing: '0.1em', textTransform: 'uppercase', backgroundColor: 'transparent', color: '#0B5394' }}>
             {docType === 'Quotation' ? 'QUOTATION' : 'INVOICE'}
           </div>
 
-          <div className="flex justify-between border">
-            <div className="w-1/2 p-2 border-r font-bold" style={{ borderColor: '#000000', color: '#0B5394' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', borderLeft: '1px solid #000000', borderRight: '1px solid #000000', borderTop: '1px solid #000000' }}>
+            <div style={{ width: '50%', padding: '8px', borderRight: '1px solid #000000', fontWeight: 'bold', color: '#0B5394', backgroundColor: 'transparent' }}>
               {docType === 'Quotation' ? 'Quotation No: ' : 'Invoice No: '} {selectedInvoiceId ? (invoices.find(i=>i.id===selectedInvoiceId)?.invoice_no || 'DRAFT') : 'DRAFT'}
             </div>
-            <div className="w-1/2 p-2 text-right font-bold" style={{ color: '#333333' }}>
+            <div style={{ width: '50%', padding: '8px', textAlign: 'right', fontWeight: 'bold', color: '#333333' }}>
               Date: {new Date().toLocaleDateString('en-GB')}
             </div>
           </div>
 
-          <div className="border-x border-b" style={{ borderColor: '#000000' }}>
-            <div className="p-1 px-2 font-bold text-sm border-b" style={{ backgroundColor: 'transparent', borderColor: '#000000', color: '#000000' }}>Bill To:</div>
-            <div className="p-2 text-sm leading-tight" style={{ color: '#000000' }}>
-              <div className="font-bold text-base mb-1">{customerName || '—'}</div>
+          <div style={{ borderLeft: '1px solid #000000', borderRight: '1px solid #000000', borderTop: '1px solid #000000', borderBottom: '1px solid #000000' }}>
+            <div style={{ padding: '4px 8px', fontWeight: 'bold', fontSize: '14px', borderBottom: '1px solid #000000', backgroundColor: 'transparent', color: '#000000' }}>Bill To:</div>
+            <div style={{ padding: '8px', fontSize: '14px', lineHeight: '1.2', color: '#000000' }}>
+              <div style={{ fontWeight: 'bold', fontSize: '16px', marginBottom: '4px' }}>{customerName || '—'}</div>
               <div>Phone: {phone || '—'} &nbsp;&nbsp;&nbsp; Email: {email || '—'}</div>
               <div>Address: {address || '—'}</div>
             </div>
           </div>
 
           {/* Items Table */}
-          <table className="w-full mt-2 border text-sm text-left" style={{ borderColor: '#000000', borderCollapse: 'collapse' }}>
+          <table style={{ width: '100%', marginTop: '8px', borderLeft: '1px solid #000000', borderRight: '1px solid #000000', borderTop: '1px solid #000000', borderBottom: '1px solid #000000', fontSize: '14px', textAlign: 'left', borderCollapse: 'collapse' }}>
             <thead>
-              <tr className="text-center" style={{ backgroundColor: '#0B5394', color: '#ffffff' }}>
-                <th className="border p-1.5 w-10" style={{ borderColor: '#000000' }}>Sl No.</th>
-                <th className="border p-1.5 text-left" style={{ borderColor: '#000000' }}>Description</th>
-                <th className="border p-1.5 w-12" style={{ borderColor: '#000000' }}>Qty</th>
-                <th className="border p-1.5 w-20" style={{ borderColor: '#000000' }}>Rate</th>
-                <th className="border p-1.5 w-24 text-right" style={{ borderColor: '#000000' }}>Amount</th>
+              <tr style={{ backgroundColor: '#0B5394', color: '#ffffff', textAlign: 'center' }}>
+                <th style={{ borderRight: '1px solid #000000', borderBottom: '1px solid #000000', padding: '6px', width: '40px' }}>Sl No.</th>
+                <th style={{ borderRight: '1px solid #000000', borderBottom: '1px solid #000000', padding: '6px', textAlign: 'left' }}>Description</th>
+                <th style={{ borderRight: '1px solid #000000', borderBottom: '1px solid #000000', padding: '6px', width: '48px' }}>Qty</th>
+                <th style={{ borderRight: '1px solid #000000', borderBottom: '1px solid #000000', padding: '6px', width: '80px' }}>Rate</th>
+                <th style={{ borderBottom: '1px solid #000000', padding: '6px', width: '96px', textAlign: 'right' }}>Amount</th>
               </tr>
             </thead>
             <tbody>
               {items.map((it, idx) => (
                 <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? 'transparent' : 'rgba(248, 250, 252, 0.6)' }}>
-                  <td className="border p-1.5 text-center" style={{ borderColor: '#000000', color: '#000000' }}>{idx + 1}</td>
-                  <td className="border p-1.5 font-medium" style={{ borderColor: '#000000', color: '#000000' }}>{it.description}</td>
-                  <td className="border p-1.5 text-center" style={{ borderColor: '#000000', color: '#000000' }}>{it.qty}</td>
-                  <td className="border p-1.5 text-right" style={{ borderColor: '#000000', color: '#000000' }}>{it.rate.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                  <td className="border p-1.5 text-right font-bold" style={{ borderColor: '#000000', color: '#000000' }}>{(it.qty * it.rate).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                  <td style={{ borderRight: '1px solid #000000', padding: '6px', textAlign: 'center', color: '#000000' }}>{idx + 1}</td>
+                  <td style={{ borderRight: '1px solid #000000', padding: '6px', fontWeight: '500', color: '#000000' }}>{it.description}</td>
+                  <td style={{ borderRight: '1px solid #000000', padding: '6px', textAlign: 'center', color: '#000000' }}>{it.qty}</td>
+                  <td style={{ borderRight: '1px solid #000000', padding: '6px', textAlign: 'right', color: '#000000' }}>{it.rate.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                  <td style={{ padding: '6px', textAlign: 'right', fontWeight: 'bold', color: '#000000' }}>{(it.qty * it.rate).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
                 </tr>
               ))}
               {/* Padding rows */}
               {[...Array(Math.max(0, 6 - items.length))].map((_, idx) => (
                 <tr key={`empty-${idx}`} style={{ backgroundColor: 'transparent' }}>
-                  <td className="border-x p-1.5 text-transparent" style={{ borderColor: '#000000' }}>.</td>
-                  <td className="border-x p-1.5 text-transparent" style={{ borderColor: '#000000' }}>.</td>
-                  <td className="border-x p-1.5 text-transparent" style={{ borderColor: '#000000' }}>.</td>
-                  <td className="border-x p-1.5 text-transparent" style={{ borderColor: '#000000' }}>.</td>
-                  <td className="border-x p-1.5 text-transparent" style={{ borderColor: '#000000' }}>.</td>
+                  <td style={{ borderRight: '1px solid #000000', padding: '6px', color: 'transparent' }}>.</td>
+                  <td style={{ borderRight: '1px solid #000000', padding: '6px', color: 'transparent' }}>.</td>
+                  <td style={{ borderRight: '1px solid #000000', padding: '6px', color: 'transparent' }}>.</td>
+                  <td style={{ borderRight: '1px solid #000000', padding: '6px', color: 'transparent' }}>.</td>
+                  <td style={{ padding: '6px', color: 'transparent' }}>.</td>
                 </tr>
               ))}
             </tbody>
           </table>
 
           {/* Totals Box */}
-          <div className="flex border-x border-b text-sm" style={{ borderColor: '#000000' }}>
-            <div className="w-3/5 p-2 border-r" style={{ borderColor: '#000000' }}>
-              <div className="font-bold inline-block px-2 mb-1" style={{ backgroundColor: '#D9EAF7', color: '#000000' }}>Amount in Words:</div>
-              <div className="italic ml-2" style={{ color: '#333333' }}>{numberToWords(grandTotal)} Only</div>
+          <div style={{ display: 'flex', borderLeft: '1px solid #000000', borderRight: '1px solid #000000', borderBottom: '1px solid #000000', fontSize: '14px' }}>
+            <div style={{ width: '60%', padding: '8px', borderRight: '1px solid #000000' }}>
+              <div style={{ fontWeight: 'bold', display: 'inline-block', padding: '0 8px', marginBottom: '4px', backgroundColor: '#D9EAF7', color: '#B45309' }}>Amount in Words:</div>
+              <div style={{ fontStyle: 'italic', marginLeft: '8px', color: '#333333' }}>{numberToWords(grandTotal)} Only</div>
             </div>
-            <div className="w-2/5 flex flex-col">
-              <div className="flex justify-between p-1 px-2"><span style={{ color: '#333333' }}>Subtotal</span> <span style={{ color: '#000000' }}>{subtotal.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>
-              {discount > 0 && <div className="flex justify-between p-1 px-2"><span style={{ color: '#333333' }}>Discount</span> <span style={{ color: '#000000' }}>{discount.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>}
-              {tax > 0 && <div className="flex justify-between p-1 px-2"><span style={{ color: '#333333' }}>Tax</span> <span style={{ color: '#000000' }}>{tax.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>}
-              {roundOff !== 0 && <div className="flex justify-between p-1 px-2"><span style={{ color: '#333333' }}>Round Off</span> <span style={{ color: '#000000' }}>{roundOff.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>}
-              <div className="flex justify-between p-1 px-2 font-bold border-y" style={{ backgroundColor: '#FFF2CC', borderColor: '#000000', color: '#000000' }}><span>Grand Total</span> <span className="text-base">{grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>
-              <div className="flex justify-between p-1 px-2"><span style={{ color: '#333333' }}>Advance Paid</span> <span style={{ color: '#000000' }}>{advancePaid.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>
-              <div className="flex justify-between p-1 px-2 font-bold border-t" style={{ backgroundColor: '#FFF2CC', borderColor: '#000000', color: '#000000' }}><span>Balance Due</span> <span className="text-base">{balanceDue.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>
+            <div style={{ width: '40%', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 8px' }}><span style={{ color: '#333333' }}>Subtotal</span> <span style={{ color: '#000000' }}>{subtotal.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>
+              {discount > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 8px' }}><span style={{ color: '#333333' }}>Discount</span> <span style={{ color: '#000000' }}>{discount.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>}
+              {tax > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 8px' }}><span style={{ color: '#333333' }}>Tax</span> <span style={{ color: '#000000' }}>{tax.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>}
+              {roundOff !== 0 && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 8px' }}><span style={{ color: '#333333' }}>Round Off</span> <span style={{ color: '#000000' }}>{roundOff.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>}
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 8px', fontWeight: 'bold', borderTop: '1px solid #000000', borderBottom: '1px solid #000000', backgroundColor: '#FFF2CC', color: '#15803D' }}><span>Grand Total</span> <span style={{ fontSize: '16px' }}>{grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 8px' }}><span style={{ color: '#333333' }}>Advance Paid</span> <span style={{ color: '#000000' }}>{advancePaid.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 8px', fontWeight: 'bold', borderTop: '1px solid #000000', backgroundColor: '#FFF2CC', color: '#15803D' }}><span>Balance Due</span> <span style={{ fontSize: '16px' }}>{balanceDue.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>
             </div>
           </div>
 
           {/* Footer Terms */}
-          <div className="flex border-x border-b text-xs mt-2" style={{ borderColor: '#000000' }}>
-            <div className="w-3/5 p-2 border-r" style={{ borderColor: '#000000' }}>
-              <div className="font-bold inline-block w-full p-1 mb-1 text-center" style={{ backgroundColor: '#0B5394', color: '#ffffff' }}>Terms & Conditions</div>
-              <div className="space-y-0.5 ml-2" style={{ color: '#444444' }}>
+          <div style={{ display: 'flex', borderLeft: '1px solid #000000', borderRight: '1px solid #000000', borderBottom: '1px solid #000000', marginTop: 'auto' }}>
+            <div style={{ width: '60%', padding: '8px', borderRight: '1px solid #000000' }}>
+              <div style={{ fontWeight: 'bold', display: 'inline-block', width: '100%', padding: '4px', marginBottom: '4px', textAlign: 'center', fontSize: '14px', backgroundColor: '#0B5394', color: '#ffffff' }}>Terms & Conditions</div>
+              <div style={{ marginLeft: '8px', fontSize: '13px', color: '#444444' }}>
                 {docType === 'Quotation' ? (
                   <>
-                    <p>1. Quotation is valid for 7 days from the date of issue.</p>
-                    <p>2. Prices are inclusive of all taxes unless specified.</p>
-                    <p>3. 50% advance payment required to confirm order.</p>
-                    <p>4. Delivery within 3-5 working days after confirmation.</p>
-                    <p>5. Service warranty as per manufacturer policy.</p>
-                    <p>6. Subject to Bengaluru Jurisdiction.</p>
+                    <p style={{ margin: '2px 0' }}>1. Quotation is valid for 7 days from the date of issue.</p>
+                    <p style={{ margin: '2px 0' }}>2. Prices are inclusive of all taxes unless specified.</p>
+                    <p style={{ margin: '2px 0' }}>3. 50% advance payment required to confirm order.</p>
+                    <p style={{ margin: '2px 0' }}>4. Delivery within 3-5 working days after confirmation.</p>
+                    <p style={{ margin: '2px 0' }}>5. Service warranty as per manufacturer policy.</p>
+                    <p style={{ margin: '2px 0' }}>6. Subject to Bengaluru Jurisdiction.</p>
                   </>
                 ) : (
                   <>
-                    <p>1. Service warranty is valid for 30 days only.</p>
-                    <p>2. No warranty for Windows installation/software issues.</p>
-                    <p>3. YantraByte Solutions is not responsible for any data loss.</p>
-                    <p>4. Customer should take backup of all important files prior.</p>
-                    <p>5. Physical, liquid or burnt damages void warranty.</p>
-                    <p>6. No warranty for swollen batteries or electrical faults.</p>
+                    <p style={{ margin: '2px 0' }}>1. Service warranty is valid for 30 days only.</p>
+                    <p style={{ margin: '2px 0' }}>2. No warranty for Windows installation/software issues.</p>
+                    <p style={{ margin: '2px 0' }}>3. YantraByte Solutions is not responsible for any data loss.</p>
+                    <p style={{ margin: '2px 0' }}>4. Customer should take backup of all important files prior.</p>
+                    <p style={{ margin: '2px 0' }}>5. Physical, liquid or burnt damages void warranty.</p>
+                    <p style={{ margin: '2px 0' }}>6. No warranty for swollen batteries or electrical faults.</p>
                   </>
                 )}
               </div>
             </div>
-            <div className="w-2/5 p-2 flex flex-col justify-between">
+            <div style={{ width: '40%', padding: '8px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div>
-                <div className="font-bold inline-block w-full p-1 mb-1 text-center" style={{ backgroundColor: '#0B5394', color: '#ffffff' }}>Bank & Payment Details</div>
-                <div className="flex items-center justify-between ml-2 mt-1" style={{ backgroundColor: 'transparent' }}>
-                  <div className="leading-snug" style={{ color: '#000000', fontSize: '11px' }}>
-                    <p><span className="font-bold">Bank:</span> North East Small Finance Bank</p>
-                    <p><span className="font-bold">A/C Name:</span> YantraByte Solutions</p>
-                    <p><span className="font-bold">A/C No:</span> 033311501023226</p>
-                    <p><span className="font-bold">IFSC:</span> NESF0000333</p>
-                    <p className="mt-0.5"><span className="font-bold">UPI:</span> s0424237152@slc</p>
+                <div style={{ fontWeight: 'bold', display: 'inline-block', width: '100%', padding: '4px', marginBottom: '4px', textAlign: 'center', fontSize: '14px', backgroundColor: '#0B5394', color: '#ffffff' }}>Bank & Payment Details</div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginLeft: '8px', marginTop: '4px', backgroundColor: 'transparent' }}>
+                  <div style={{ lineHeight: '1.2', color: '#000000', fontSize: '12px' }}>
+                    <p style={{ margin: 0 }}><span style={{ fontWeight: 'bold' }}>Bank:</span> North East Small Finance Bank</p>
+                    <p style={{ margin: 0 }}><span style={{ fontWeight: 'bold' }}>A/C Name:</span> YantraByte Solutions</p>
+                    <p style={{ margin: 0 }}><span style={{ fontWeight: 'bold' }}>A/C No:</span> 033311501023226</p>
+                    <p style={{ margin: 0 }}><span style={{ fontWeight: 'bold' }}>IFSC:</span> NESF0000333</p>
+                    <p style={{ margin: '2px 0 0 0' }}><span style={{ fontWeight: 'bold' }}>UPI:</span> s0424237152@slc</p>
                   </div>
-                  <div className="w-20 h-20 flex-shrink-0 border p-0.5 mr-2" style={{ borderColor: '#dddddd' }}>
+                  <div style={{ width: '80px', height: '80px', flexShrink: 0, border: '1px solid #dddddd', padding: '2px', marginRight: '8px' }}>
                     <img src="/qr.jpg" alt="Payment QR" style={{ height: '100%', width: '100%', objectFit: 'contain' }} crossOrigin="anonymous" />
                   </div>
                 </div>
               </div>
-              <div className="text-center mt-3 pt-1 flex flex-col items-center justify-center relative">
-                <p className="font-bold mb-1" style={{ color: '#000000', fontSize: '11px' }}>For YantraByte Solutions</p>
-                <div className="h-16 w-32 flex items-center justify-center relative my-0.5">
-                  <img src="/seal.png" alt="Seal" style={{ maxHeight: '75%', maxWidth: '75%', objectFit: 'contain' }} crossOrigin="anonymous" />
+              <div style={{ textAlign: 'center', marginTop: '12px', paddingTop: '4px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                <p style={{ fontWeight: 'bold', marginBottom: '4px', color: '#000000', fontSize: '12px', margin: 0 }}>For YantraByte Solutions</p>
+                <div style={{ height: '80px', width: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', margin: '2px 0' }}>
+                  <img src="/seal.png" alt="Seal" style={{ maxHeight: '95%', maxWidth: '95%', objectFit: 'contain' }} crossOrigin="anonymous" />
                 </div>
-                <p className="font-bold mt-1" style={{ color: '#000000', fontSize: '11px' }}>RAMESH A S</p>
-                <p style={{ color: '#444444', fontSize: '10px' }}>Authorized Signatory</p>
               </div>
             </div>
           </div>

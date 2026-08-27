@@ -104,6 +104,7 @@ export default function Expenses() {
         receipt_url: uploadedUrl
       };
 
+      let activeSavedExp = null;
       if (editingExpense) {
         const { data: savedExp, error } = await supabase
           .from('expenses')
@@ -112,7 +113,10 @@ export default function Expenses() {
           .select()
           .single();
         if (error) throw error;
-        if (savedExp) await ERPUtils.recordExpense(savedExp as Expense);
+        if (savedExp) {
+          activeSavedExp = savedExp;
+          await ERPUtils.recordExpense(savedExp as Expense);
+        }
       } else {
         const { data: savedExp, error } = await supabase
           .from('expenses')
@@ -120,8 +124,37 @@ export default function Expenses() {
           .select()
           .single();
         if (error) throw error;
-        if (savedExp) await ERPUtils.recordExpense(savedExp as Expense);
+        if (savedExp) {
+          activeSavedExp = savedExp;
+          await ERPUtils.recordExpense(savedExp as Expense);
+        }
       }
+
+      if (activeSavedExp) {
+        try {
+          const { appendBackupRow } = await import('../utils/googleSheetBackup');
+          const headers = ['Expense ID', 'Date', 'Category', 'Description', 'Amount', 'Receipt URL', 'Created At'];
+          const row = [
+            activeSavedExp.id,
+            activeSavedExp.date || '',
+            activeSavedExp.category || '',
+            activeSavedExp.description || '',
+            activeSavedExp.amount || 0,
+            activeSavedExp.receipt_url || 'N/A',
+            activeSavedExp.created_at ? new Date(activeSavedExp.created_at).toLocaleString() : new Date().toLocaleString()
+          ];
+          await appendBackupRow({
+            sheetName: 'Expenses',
+            headers,
+            row,
+            keyColumnIndex: 0,
+            keyValue: activeSavedExp.id,
+          });
+        } catch (backupError) {
+          console.warn('Network error triggering Google Sheet backup:', backupError);
+        }
+      }
+
       setShowModal(false);
       fetchExpenses();
       setAttachment(null);
@@ -259,12 +292,12 @@ export default function Expenses() {
                   <th className="px-6 py-3">Description</th>
                   <th className="px-6 py-3">Expense Date</th>
                   <th className="px-6 py-3 text-right">Amount</th>
-                  <th className="px-6 py-3 text-center">Actions</th>
+                  <th className="px-6 py-3 text-center sticky right-0 bg-gray-50 z-10 border-l border-gray-100">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 text-gray-700">
                 {filtered.map((exp) => (
-                  <tr key={exp.id} className="hover:bg-slate-50 transition border-b border-slate-100">
+                  <tr key={exp.id} className="group hover:bg-slate-50 transition border-b border-slate-100 bg-white">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
                         {exp.category}
@@ -284,7 +317,7 @@ export default function Expenses() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900 text-right">
                       ₹{exp.amount.toLocaleString('en-IN')}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 sticky right-0 bg-inherit z-10 border-l border-gray-100 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)]">
                       <div className="flex justify-center items-center gap-2">
                         <button
                           onClick={() => handleOpenEdit(exp)}

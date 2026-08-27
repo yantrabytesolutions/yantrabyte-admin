@@ -370,14 +370,18 @@ Deno.serve(async (req) => {
     const driveFolderId = Deno.env.get('GOOGLE_DRIVE_FOLDER_ID') || '';
     
     let driveViewLink: string | null = null;
+    let driveErrorMsg: string | null = null;
     if (pdfBytes && clientId && clientSecret && refreshToken && driveFolderId) {
       try {
         const driveToken = await getUserOAuthToken(clientId, clientSecret, refreshToken);
         driveViewLink = await uploadPdfToDrive(driveToken, driveFolderId, pdfFilename, pdfBytes);
         console.log('Drive link:', driveViewLink);
       } catch (driveErr) {
+        driveErrorMsg = String(driveErr);
         console.error('Drive upload error:', driveErr);
       }
+    } else {
+        driveErrorMsg = `Missing secrets. clientId:${!!clientId}, clientSecret:${!!clientSecret}, refreshToken:${!!refreshToken}, driveFolderId:${!!driveFolderId}`;
     }
 
     if (!gmailUser || !gmailPass) {

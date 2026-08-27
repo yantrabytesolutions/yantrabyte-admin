@@ -11,7 +11,7 @@ import {
   Users, Briefcase, Building2, HelpCircle, Image, Award, Mail, Settings,
   LogOut, Plus, Pencil, Trash2, X, Eye, EyeOff, ChevronDown, Save,
   Loader2, AlertCircle, CheckCircle, Search, RefreshCw, Menu, Ticket, Receipt, CreditCard, MessageSquare,
-  Truck, ExternalLink, FileSpreadsheet, Activity, Send, UserCircle, IndianRupee, Shield, Sun, Moon, Calendar
+  Truck, ExternalLink, FileSpreadsheet, Activity, Send, UserCircle, IndianRupee, Shield, Sun, Moon, Calendar, FileCheck
 } from 'lucide-react';
 import { sendTelegramNotification } from '../utils/telegram';
 import BillingSoftware from './BillingSoftware';
@@ -27,6 +27,8 @@ import Expenses from './Expenses';
 import AccountingKhata from './AccountingKhata';
 import InventoryMovement from './InventoryMovement';
 import FinancialReports from './FinancialReports';
+import { WhatsAppConnectModal } from './components/WhatsAppConnectModal';
+import DigitalJobSheetModal from './components/DigitalJobSheetModal';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
@@ -51,32 +53,32 @@ interface FormField {
 
 // ─── Section Config ─────────────────────────────────────────────────────────
 
-const SECTION_CONFIG: Record<Section, { label: string; icon: React.ElementType; table: string; orderField: string; publishedField?: string }> = {
-  dashboard: { label: 'Dashboard', icon: LayoutDashboard, table: '', orderField: '' },
-  calendar: { label: 'Calendar', icon: Calendar, table: '', orderField: '' },
-  pages: { label: 'Pages', icon: FileText, table: 'pages', orderField: 'page_order', publishedField: 'is_published' },
-  services: { label: 'Services', icon: Wrench, table: 'services', orderField: 'sort_order', publishedField: 'is_published' },
-  products: { label: 'Products', icon: Package, table: 'products', orderField: 'sort_order', publishedField: 'is_published' },
-  testimonials: { label: 'Testimonials', icon: MessageSquareQuote, table: 'testimonials', orderField: 'sort_order', publishedField: 'is_published' },
-  blog: { label: 'Blog Posts', icon: PenTool, table: 'blog_posts', orderField: 'sort_order', publishedField: 'is_published' },
-  team: { label: 'Team Members', icon: Users, table: 'team_members', orderField: 'sort_order', publishedField: 'is_published' },
-  careers: { label: 'Careers', icon: Briefcase, table: 'careers', orderField: 'sort_order', publishedField: 'is_active' },
-  industries: { label: 'Industries', icon: Building2, table: 'industries', orderField: 'sort_order', publishedField: 'is_published' },
-  faqs: { label: 'FAQs', icon: HelpCircle, table: 'faqs', orderField: 'sort_order', publishedField: 'is_published' },
-  gallery: { label: 'Gallery', icon: Image, table: 'gallery_images', orderField: 'sort_order', publishedField: 'is_published' },
-  'client-logos': { label: 'Client Logos', icon: Award, table: 'client_logos', orderField: 'sort_order', publishedField: 'is_published' },
-  contacts: { label: 'Contact Submissions', icon: Mail, table: 'contact_submissions', orderField: 'created_at' },
-  tickets: { label: 'Service Ticket', icon: Ticket, table: 'service_tickets', orderField: 'created_at' },
-  billing: { label: 'Billing Software', icon: Receipt, table: 'invoices', orderField: 'created_at' },
-  purchase: { label: 'Purchase Entry', icon: Truck, table: 'purchases', orderField: 'created_at' },
-  external: { label: 'External Repairs', icon: ExternalLink, table: '', orderField: '' },
-  inventory: { label: 'Inventory Movement', icon: Package, table: 'inventory_transactions', orderField: 'transaction_date' },
-  reports: { label: 'Financial Reports', icon: Activity, table: '', orderField: '' },
-  expenses: { label: 'Expenses', icon: IndianRupee, table: 'expenses', orderField: 'date' },
-  khata: { label: 'Khata', icon: IndianRupee, table: 'khata', orderField: 'date' },
-  amc: { label: 'AMC Contracts', icon: Shield, table: 'amc_contracts', orderField: 'end_date' },
-  settings: { label: 'Site Settings', icon: Settings, table: 'site_settings', orderField: 'key' },
-  customers: { label: 'Customers', icon: Users, table: 'customers', orderField: 'created_at' },
+const SECTION_CONFIG: Record<Section, { label: string; icon: React.ElementType; table: string; orderField: string; publishedField?: string; subtitle?: string }> = {
+  dashboard: { label: 'Dashboard', icon: LayoutDashboard, table: '', orderField: '', subtitle: 'Overview of your business metrics' },
+  calendar: { label: 'Calendar', icon: Calendar, table: '', orderField: '', subtitle: 'Manage appointments and schedules' },
+  pages: { label: 'Pages', icon: FileText, table: 'pages', orderField: 'page_order', publishedField: 'is_published', subtitle: 'Manage your website content pages' },
+  services: { label: 'Services', icon: Wrench, table: 'services', orderField: 'sort_order', publishedField: 'is_published', subtitle: 'Manage service offerings' },
+  products: { label: 'Products', icon: Package, table: 'products', orderField: 'sort_order', publishedField: 'is_published', subtitle: 'Manage product catalog' },
+  testimonials: { label: 'Testimonials', icon: MessageSquareQuote, table: 'testimonials', orderField: 'sort_order', publishedField: 'is_published', subtitle: 'Manage customer testimonials' },
+  blog: { label: 'Blog Posts', icon: PenTool, table: 'blog_posts', orderField: 'sort_order', publishedField: 'is_published', subtitle: 'Manage blog content' },
+  team: { label: 'Team Members', icon: Users, table: 'team_members', orderField: 'sort_order', publishedField: 'is_published', subtitle: 'Manage team profiles' },
+  careers: { label: 'Careers', icon: Briefcase, table: 'careers', orderField: 'sort_order', publishedField: 'is_active', subtitle: 'Manage job postings' },
+  industries: { label: 'Industries', icon: Building2, table: 'industries', orderField: 'sort_order', publishedField: 'is_published', subtitle: 'Manage industry verticals' },
+  faqs: { label: 'FAQs', icon: HelpCircle, table: 'faqs', orderField: 'sort_order', publishedField: 'is_published', subtitle: 'Manage frequently asked questions' },
+  gallery: { label: 'Gallery', icon: Image, table: 'gallery_images', orderField: 'sort_order', publishedField: 'is_published', subtitle: 'Manage image gallery' },
+  'client-logos': { label: 'Client Logos', icon: Award, table: 'client_logos', orderField: 'sort_order', publishedField: 'is_published', subtitle: 'Manage client and partner logos' },
+  contacts: { label: 'Contact Submissions', icon: Mail, table: 'contact_submissions', orderField: 'created_at', subtitle: 'View customer inquiries' },
+  tickets: { label: 'Service Ticket', icon: Ticket, table: 'service_tickets', orderField: 'created_at', subtitle: 'Manage repair and service tickets' },
+  billing: { label: 'Billing Software', icon: Receipt, table: '', orderField: '', subtitle: 'Create and manage invoices' },
+  purchase: { label: 'Purchase Entry', icon: Truck, table: '', orderField: '', subtitle: 'Manage supplier purchases' },
+  external: { label: 'External Repairs', icon: ExternalLink, table: '', orderField: '', subtitle: 'Manage outsourced repairs' },
+  inventory: { label: 'Inventory Movement', icon: Package, table: 'inventory_transactions', orderField: 'transaction_date', subtitle: 'Track stock in and out' },
+  reports: { label: 'Financial Reports', icon: Activity, table: '', orderField: '', subtitle: 'View accounting reports' },
+  expenses: { label: 'Expenses', icon: IndianRupee, table: '', orderField: '', subtitle: 'Track operational expenses' },
+  khata: { label: 'Khata', icon: IndianRupee, table: '', orderField: '', subtitle: 'View financial ledgers and accounting' },
+  amc: { label: 'AMC Contracts', icon: Shield, table: '', orderField: '', subtitle: 'Manage Annual Maintenance Contracts' },
+  settings: { label: 'Site Settings', icon: Settings, table: 'site_settings', orderField: 'key', subtitle: 'Configure global website settings' },
+  customers: { label: 'Customers', icon: Users, table: 'customers', orderField: 'created_at', subtitle: 'Manage customer database' },
 };
 
 // ─── Form Field Definitions ─────────────────────────────────────────────────
@@ -478,6 +480,9 @@ export default function AdminPanel() {
   const [allCustomers, setAllCustomers] = useState<any[]>([]);
 
   const [userRole, setUserRole] = useState<UserRole>('admin');
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
+  const [isWhatsAppOnline, setIsWhatsAppOnline] = useState(false);
+  const [selectedJobSheetTicket, setSelectedJobSheetTicket] = useState<ServiceTicket | null>(null);
   
   const [isDarkMode, setIsDarkMode] = useState(() => {
     return localStorage.getItem('theme') === 'dark' || 
@@ -514,6 +519,25 @@ export default function AdminPanel() {
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  // --- WhatsApp Status Check ---
+  useEffect(() => {
+    if (!session) return;
+    const checkWa = async () => {
+      try {
+        const res = await fetch('/api/whatsapp/status', { headers: { 'Cache-Control': 'no-cache' } });
+        if (res.ok) {
+          const data = await res.json();
+          setIsWhatsAppOnline(!!data.ready);
+        }
+      } catch {
+        setIsWhatsAppOnline(false);
+      }
+    };
+    checkWa();
+    const interval = setInterval(checkWa, 10000);
+    return () => clearInterval(interval);
+  }, [session]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -561,8 +585,7 @@ export default function AdminPanel() {
     element.innerHTML = `
       <div style="width: 794px; height: 1080px; padding: 28px; box-sizing: border-box; overflow: hidden; background-color: #ffffff; position: relative;">
         <!-- Watermark -->
-        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 50; overflow: hidden; opacity: 0.1;">
-          <img src="/hardware_watermark.png" alt="Watermark" style="width: 100%; height: 100%; object-fit: cover;" crossorigin="anonymous" />
+        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url(/hardware_watermark.png); background-size: cover; background-position: center; background-repeat: no-repeat; pointer-events: none; z-index: 50; opacity: 0.2;">
         </div>
         <div style="border: 2px solid #000000; padding: 18px; min-height: 1020px; box-sizing: border-box; position: relative; z-index: 10;">
         <!-- Header -->
@@ -1273,10 +1296,7 @@ export default function AdminPanel() {
           
           // Smart WhatsApp Status Template Prompt
           if (record.status !== editingItem.status) {
-            if (window.confirm(`Status changed to ${record.status}. Do you want to send an automatic WhatsApp update to the customer?`)) {
-              sendWhatsAppAlert(record);
-            }
-            if (record.customer_email && window.confirm(`Do you want to send an automated status update email to ${record.customer_email}?`)) {
+            if (window.confirm(`Status changed to ${record.status}. Do you want to send an automated status update (Email/WhatsApp) to the customer?`)) {
               try {
                 fetch('http://localhost:4000/api/tickets/notify', {
                   method: 'POST',
@@ -1285,13 +1305,17 @@ export default function AdminPanel() {
                     ticket_number: record.ticket_number,
                     customer_name: record.customer_name,
                     customer_email: record.customer_email,
+                    customer_phone: record.customer_phone,
                     status: record.status,
                     device_type: record.device_type,
                     supabase_user_token: (await supabase.auth.getSession()).data.session?.access_token || ''
                   })
                 }).then(res => res.json()).then(data => {
-                  if (data.ok) showToast('Status email sent successfully');
-                  else showToast('Failed to send status email', 'error');
+                  if (data.ok) {
+                    showToast(`Status update sent! Email: ${data.messageId ? 'Yes' : 'No'}, WhatsApp: ${data.whatsapp === 'sent' ? 'Yes' : 'No'}`);
+                  } else {
+                    showToast('Failed to send status updates', 'error');
+                  }
                 });
               } catch (e) {
                 console.error(e);
@@ -1591,6 +1615,7 @@ export default function AdminPanel() {
           <select
             value={status}
             onChange={e => updateTicketStatus(String(item.id), e.target.value)}
+            style={{ colorScheme: 'dark' }}
             className={`px-2 py-0.5 rounded-full text-xs font-medium border bg-[#0F172A] text-white cursor-pointer outline-none transition-all ${colors[status] || 'bg-white/5 text-[#64748B] border-white/10'}`}
           >
             <option value="open">Open</option>
@@ -1769,20 +1794,20 @@ export default function AdminPanel() {
                       {col.label}
                     </th>
                   ))}
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-[#94A3B8] uppercase tracking-wider">
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-[#94A3B8] uppercase tracking-wider sticky right-0 bg-[#0B1120] z-10 border-l border-white/10 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.3)]">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {filteredData.map((item) => (
-                  <tr key={String(item.id)} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                  <tr key={String(item.id)} className="group border-b border-white/5 hover:bg-white/[0.02] transition-colors">
                     {columns.map(col => (
                       <td key={col.key} className="px-4 py-3">
                         {renderCellValue(item, col.key)}
                       </td>
                     ))}
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 sticky right-0 bg-[#0B1120] group-hover:bg-[#131B2C] z-10 border-l border-white/10 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.3)]">
                       <div className="flex items-center justify-end gap-2">
                         {config.publishedField && (
                           <button
@@ -1797,6 +1822,7 @@ export default function AdminPanel() {
                           <select
                             value={String(item.status || 'new')}
                             onChange={e => updateContactStatus(String(item.id), e.target.value)}
+                            style={{ colorScheme: 'dark' }}
                             className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-[#94A3B8] text-xs focus:outline-none focus:border-[#0EA5E9]/50"
                           >
                             <option value="new">New</option>
@@ -1842,6 +1868,13 @@ export default function AdminPanel() {
                                   title="Print Job Sheet / Drop-off Receipt"
                                 >
                                   <Receipt className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => setSelectedJobSheetTicket(item as unknown as ServiceTicket)}
+                                  className="p-1.5 rounded-lg hover:bg-white/5 text-[#64748B] hover:text-purple-400 transition-all"
+                                  title="Digital Job Sheet & Customer Touch Sign-off"
+                                >
+                                  <FileCheck className="w-4 h-4" />
                                 </button>
                                 {item.status !== 'completed' && item.status !== 'closed' && (
                                   <button
@@ -2279,10 +2312,24 @@ export default function AdminPanel() {
               <h2 className="text-white font-semibold text-lg">
                 {SECTION_CONFIG[activeSection]?.label || 'Dashboard'}
               </h2>
-              <p className="text-[#64748B] text-xs">Manage your website content</p>
+              <p className="text-[#64748B] text-xs">{SECTION_CONFIG[activeSection]?.subtitle || 'Manage your website content'}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowWhatsAppModal(true)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                isWhatsAppOnline
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+                  : 'bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20'
+              }`}
+              title={isWhatsAppOnline ? 'WhatsApp Automation Online' : 'Click to Link WhatsApp'}
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">WhatsApp:</span>
+              <span>{isWhatsAppOnline ? 'Connected' : 'Link App'}</span>
+              <span className={`w-2 h-2 rounded-full ${isWhatsAppOnline ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+            </button>
             <button
               onClick={() => setIsDarkMode(!isDarkMode)}
               className="p-2 rounded-lg hover:bg-white/5 text-[#94A3B8] hover:text-white transition-all"
@@ -2304,6 +2351,24 @@ export default function AdminPanel() {
         <div className="p-4 lg:p-6">
           {renderContent()}
         </div>
+
+        {/* WhatsApp QR Modal */}
+        <WhatsAppConnectModal
+          isOpen={showWhatsAppModal}
+          onClose={() => setShowWhatsAppModal(false)}
+        />
+
+        {/* Digital Job Sheet & Sign-off Modal */}
+        {selectedJobSheetTicket && (
+          <DigitalJobSheetModal
+            ticket={selectedJobSheetTicket}
+            onClose={() => setSelectedJobSheetTicket(null)}
+            onSaved={() => {
+              fetchData('tickets');
+              showToast('Digital Job Sheet signed & updated!');
+            }}
+          />
+        )}
       </main>
     </div>
   );

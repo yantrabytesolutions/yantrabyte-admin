@@ -1,10 +1,11 @@
-import { FormEvent, useState, useRef } from 'react';
+import { FormEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { supabase } from '../lib/supabase';
 import { AlertCircle, ClipboardCheck, Loader2, MapPin, Phone, Send, Wrench, Laptop, Monitor, Printer, Video, Wifi, Fingerprint, Server, Package, UploadCloud, Film, X, ChevronRight, ChevronLeft, CheckCircle2 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import SignatureCanvas from 'react-signature-canvas';
+
+import { motion } from 'framer-motion';
 
 const DEVICE_CATEGORIES = [
   { id: 'Laptop with charger', label: 'Laptop (w/ charger)', icon: Laptop },
@@ -41,6 +42,7 @@ type RequestForm = {
   preferred_contact: 'whatsapp' | 'phone' | 'email';
   whatsapp_opt_in: boolean;
   pre_approved_budget: string;
+  pickup_date?: string;
 };
 
 const initialForm: RequestForm = {
@@ -68,7 +70,7 @@ export default function ServiceRequest() {
   const [attachment, setAttachment] = useState<File | null>(null);
   const [videoAttachment, setVideoAttachment] = useState<File | null>(null);
   const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
-  const sigCanvas = useRef<SignatureCanvas>(null);
+
   const [captchaA, _setCaptchaA] = useState(Math.floor(Math.random() * 10) + 1);
   const [captchaB, _setCaptchaB] = useState(Math.floor(Math.random() * 10) + 1);
   const [captchaInput, setCaptchaInput] = useState('');
@@ -181,11 +183,6 @@ export default function ServiceRequest() {
     setVideoPreviewUrl(null);
   };
 
-  const clearSignature = () => {
-    if (sigCanvas.current) {
-      sigCanvas.current.clear();
-    }
-  };
 
   const submitTicket = async (e: FormEvent) => {
     e.preventDefault();
@@ -201,10 +198,7 @@ export default function ServiceRequest() {
       return;
     }
 
-    if (!sigCanvas.current || sigCanvas.current.isEmpty()) {
-      setError('Please sign the document before submitting.');
-      return;
-    }
+
     
     const phoneRegex = /^[0-9]{10}$/;
     if (!phoneRegex.test(form.customer_phone.replace(/\D/g, ''))) {
@@ -217,11 +211,7 @@ export default function ServiceRequest() {
 
     try {
       let uploadedUrl = null;
-      let signatureBase64 = null;
 
-      if (sigCanvas.current && !sigCanvas.current.isEmpty()) {
-        signatureBase64 = sigCanvas.current.getCanvas().toDataURL('image/png');
-      }
 
       if (attachment) {
         const fileExt = attachment.name.split('.').pop();
@@ -261,79 +251,104 @@ export default function ServiceRequest() {
         uploadedVideoUrl = videoPublicUrl;
       }
 
-      const { data: ticketNumberFromRpc, error: rpcError } = await supabase
-        .rpc('get_next_service_ticket_number');
+      let ticketNumber = '';
+      let insertSuccess = false;
+      let insertError = null;
+      const maxRetries = 3;
+      let currentTry = 0;
 
-      let ticketNumber = ticketNumberFromRpc;
+      const finalDeviceType = form.device_type === 'Other' && otherDeviceType.trim() 
+        ? otherDeviceType.trim() 
+        : form.device_type;
+        
+      let ticketPayload: any = null;
 
-      // Fallback if RPC fails or doesn't exist yet
-      if (rpcError || !ticketNumber) {
-        console.warn('RPC get_next_service_ticket_number failed or returned empty:', rpcError);
-        const now = new Date();
-        const month = now.getMonth() + 1;
-        const fullYear = now.getFullYear();
+      while (!insertSuccess && currentTry < maxRetries) {
+        currentTry++;
         
-        let startYear = fullYear;
-        let endYear = fullYear + 1;
-        if (month < 4) {
-          startYear = fullYear - 1;
-          endYear = fullYear;
-        }
-        
-        const prefix = `YBS-${startYear}-${endYear}-`;
-        
-        let seq = 1;
-        try {
-          const { data: latestTickets, error: selectError } = await supabase
-            .from('service_tickets')
-            .select('ticket_number')
-            .like('ticket_number', `${prefix}%`)
-            .order('created_at', { ascending: false })
-            .limit(1);
-            
-          if (selectError) {
-            console.warn('Fallback select error:', selectError);
+        const { data: ticketNumberFromRpc, error: rpcError } = await supabase
+          .rpc('get_next_service_ticket_number');
+
+        ticketNumber = ticketNumberFromRpc;
+
+        // Fallback if RPC fails or doesn't exist yet
+        if (rpcError || !ticketNumber) {
+          console.warn('RPC get_next_service_ticket_number failed or returned empty:', rpcError);
+          const now = new Date();
+          const month = now.getMonth() + 1;
+          const fullYear = now.getFullYear();
+          
+          let startYear = fullYear;
+          let endYear = fullYear + 1;
+          if (month < 4) {
+            startYear = fullYear - 1;
+            endYear = fullYear;
           }
-            
-          if (latestTickets && latestTickets.length > 0 && latestTickets[0].ticket_number) {
-            const lastTicket = latestTickets[0].ticket_number;
-            const match = lastTicket.match(/-(\d+)$/);
-            if (match) {
-              seq = parseInt(match[1], 10) + 1;
+          
+          const prefix = `YBS-${startYear}-${endYear}-`;
+          
+          let seq = 1;
+          try {
+            const { data: latestTickets, error: selectError } = await supabase
+              .from('service_tickets')
+              .select('ticket_number')
+              .like('ticket_number', `${prefix}%`)
+              .order('created_at', { ascending: false })
+              .limit(1);
+              
+            if (selectError) {
+              console.warn('Fallback select error:', selectError);
             }
-          } else {
-             // If we can't find previous tickets, use a random sequence to avoid unique constraint violations
-             seq = Math.floor(Math.random() * 900) + 100;
+              
+            if (latestTickets && latestTickets.length > 0 && latestTickets[0].ticket_number) {
+              const lastTicket = latestTickets[0].ticket_number;
+              const match = lastTicket.match(/-(\d+)$/);
+              if (match) {
+                seq = parseInt(match[1], 10) + 1;
+              }
+            } else {
+               // If we can't find previous tickets, use a random sequence to avoid unique constraint violations
+               seq = Math.floor(Math.random() * 900) + 100;
+            }
+          } catch (err) {
+            console.warn('Failed to fetch latest ticket number, starting at random.', err);
+            seq = Math.floor(Math.random() * 900) + 100;
           }
-        } catch (err) {
-          console.warn('Failed to fetch latest ticket number, starting at random.', err);
-          seq = Math.floor(Math.random() * 900) + 100;
+
+          const paddedSeq = String(seq).padStart(3, '0');
+          ticketNumber = `${prefix}${paddedSeq}`;
         }
 
-      const paddedSeq = String(seq).padStart(3, '0');
-      ticketNumber = `${prefix}${paddedSeq}`;
-    }
-
-    const finalDeviceType = form.device_type === 'Other' && otherDeviceType.trim() 
-      ? otherDeviceType.trim() 
-      : form.device_type;
-
-    const ticketPayload = {
+    ticketPayload = {
       ticket_number: ticketNumber,
       ...form,
       device_type: finalDeviceType,
+      pickup_date: form.pickup_date || null,
       attachment_url: uploadedUrl,
       video_url: uploadedVideoUrl,
-      customer_signature: signatureBase64,
+      customer_signature: null,
       status: 'open'
     };
 
-      const { error: insertError } = await supabase
-        .from('service_tickets')
-        .insert([ticketPayload]);
+    const { error: err } = await supabase
+      .from('service_tickets')
+      .insert([ticketPayload]);
 
-      if (insertError) {
-        console.error('Insert Error:', insertError);
+    if (err) {
+      if (err.code === '23505' || String(err.message).includes('unique constraint') || String(err.message).includes('duplicate key')) {
+         console.warn(`Retry ${currentTry} due to unique constraint on ticket number:`, ticketNumber);
+         insertError = err;
+      } else {
+         throw err;
+      }
+    } else {
+      insertSuccess = true;
+      insertError = null;
+    }
+  }
+
+  if (!insertSuccess && insertError) {
+    console.error('Insert Error after retries:', insertError);
         throw insertError;
       }
 
@@ -400,7 +415,7 @@ export default function ServiceRequest() {
       setAttachment(null);
       setTermsAccepted(false);
       removeVideo();
-      if (sigCanvas.current) { sigCanvas.current.clear(); }
+
       setStep(1);
     } catch (err: any) {
       console.error('Submit Ticket Error:', err);
@@ -423,14 +438,23 @@ export default function ServiceRequest() {
       {/* Background Orbs */}
       <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-[#0EA5E9]/20 blur-[100px] pointer-events-none"></div>
       <div className="absolute top-40 -right-40 h-96 w-96 rounded-full bg-[#38BDF8]/10 blur-[100px] pointer-events-none"></div>
-        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.4fr]">
-          <div className="pt-4 text-white">
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, staggerChildren: 0.2 }} className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.4fr]">
+          <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, delay: 0.1 }} className="pt-4 text-white">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#0EA5E9]/30 bg-[#0EA5E9]/10 px-3 py-1 text-sm font-semibold text-[#7DD3FC]">
               <ClipboardCheck className="h-4 w-4" />
               Service Ticket
             </div>
             <h1 className="max-w-xl text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl text-gradient">
-              Create Your Repair or IT Support Ticket
+              {"Create Your Repair or IT Support Ticket".split(" ").map((word, i) => (
+                <motion.span 
+                  key={i} 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.4, delay: 0.3 + i * 0.15 }}
+                >
+                  {word}{" "}
+                </motion.span>
+              ))}
             </h1>
             <p className="mt-4 max-w-xl text-sm leading-7 text-[#CBD5E1] sm:text-base">
               Submit your device or service issue here. Your ticket number will be generated immediately and sent to our admin dashboard.
@@ -467,9 +491,13 @@ export default function ServiceRequest() {
                 className="w-full h-48 object-cover opacity-80 hover:opacity-100 transition-opacity"
               />
             </div>
-          </div>
+          </motion.div>
 
-          <div className="rounded-2xl glass-strong p-5 shadow-2xl sm:p-6 glow-blue-sm border-t border-l border-white/20">
+          <motion.div 
+            initial={{ opacity: 0, x: 30 }} 
+            animate={{ opacity: 1, x: 0 }} 
+            transition={{ duration: 0.6, delay: 0.2 }} 
+            className="rounded-2xl glass-strong p-5 shadow-2xl sm:p-6 glow-blue-sm border-t border-l border-white/20">
             {createdTicket ? (
               <div className="flex min-h-[520px] flex-col items-center justify-center text-center">
                 {/* Official Seal */}
@@ -554,7 +582,7 @@ export default function ServiceRequest() {
 
                 {/* STEP 1: Contact Information */}
                 {step === 1 && (
-                  <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.4 }} className="space-y-5">
                     <div>
                       <h2 className="text-xl font-bold text-white">Contact Information</h2>
                       <p className="mt-1 text-sm text-slate-400">How can we reach you?</p>
@@ -566,7 +594,7 @@ export default function ServiceRequest() {
                         <input
                           value={form.customer_name}
                           onChange={e => updateField('customer_name', e.target.value)}
-                          className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-black bg-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                           placeholder="Customer name"
                         />
                       </label>
@@ -575,7 +603,7 @@ export default function ServiceRequest() {
                         <input
                           value={form.customer_phone}
                           onChange={e => updateField('customer_phone', e.target.value)}
-                          className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-black bg-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                           placeholder="10-digit number"
                         />
                       </label>
@@ -588,7 +616,7 @@ export default function ServiceRequest() {
                           type="email"
                           value={form.customer_email}
                           onChange={e => updateField('customer_email', e.target.value)}
-                          className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-black bg-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                           placeholder="Email address"
                         />
                       </label>
@@ -597,7 +625,7 @@ export default function ServiceRequest() {
                         <select
                           value={form.preferred_contact}
                           onChange={e => updateField('preferred_contact', e.target.value)}
-                          className="mt-1 w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          className="mt-1 w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-black bg-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                         >
                           <option value="whatsapp">WhatsApp</option>
                           <option value="phone">Phone Call</option>
@@ -612,7 +640,7 @@ export default function ServiceRequest() {
                         rows={2}
                         value={form.customer_address}
                         onChange={e => updateField('customer_address', e.target.value)}
-                        className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 resize-none"
+                        className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-black bg-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20 resize-none"
                         placeholder="Full address for pickup or record"
                       />
                     </label>
@@ -637,12 +665,12 @@ export default function ServiceRequest() {
                     >
                       Next Step <ChevronRight className="h-4 w-4" />
                     </button>
-                  </div>
+                  </motion.div>
                 )}
 
                 {/* STEP 2: Device Details */}
                 {step === 2 && (
-                  <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.4 }} className="space-y-5">
                     <div>
                       <h2 className="text-xl font-bold text-white">Device & Issue</h2>
                       <p className="mt-1 text-sm text-slate-400">What needs to be fixed?</p>
@@ -679,7 +707,7 @@ export default function ServiceRequest() {
                         <input
                           value={otherDeviceType}
                           onChange={e => setOtherDeviceType(e.target.value)}
-                          className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-black bg-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                           placeholder="e.g. Projector, Scanner, etc."
                         />
                       </label>
@@ -705,7 +733,7 @@ export default function ServiceRequest() {
                         <input
                           value={form.device_make_model}
                           onChange={e => updateField('device_make_model', e.target.value)}
-                          className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-black bg-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                           placeholder="e.g., Dell XPS 15, HP LaserJet"
                         />
                       </label>
@@ -714,7 +742,7 @@ export default function ServiceRequest() {
                         <input
                           value={form.device_password}
                           onChange={e => updateField('device_password', e.target.value)}
-                          className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-black bg-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                           placeholder="Optional but recommended for testing"
                         />
                       </label>
@@ -726,7 +754,7 @@ export default function ServiceRequest() {
                         value={form.issue_description}
                         onChange={e => updateField('issue_description', e.target.value)}
                         rows={4}
-                        className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                        className="mt-1 w-full rounded-md border border-white/10 px-3 py-2 text-black bg-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                         placeholder="Describe the problem in detail..."
                       />
                     </label>
@@ -798,7 +826,7 @@ export default function ServiceRequest() {
                         <select
                           value={form.priority}
                           onChange={e => updateField('priority', e.target.value)}
-                          className="mt-1 w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          className="mt-1 w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-black bg-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                         >
                           {PRIORITY_OPTIONS.map(option => (
                             <option key={option.value} value={option.value}>{option.label}</option>
@@ -828,7 +856,7 @@ export default function ServiceRequest() {
                         <select
                           value={form.pre_approved_budget}
                           onChange={e => updateField('pre_approved_budget', e.target.value)}
-                          className="mt-1 w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          className="mt-1 w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-black bg-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                         >
                           <option value="No Pre-Approval">No Pre-Approval (Call me first)</option>
                           <option value="Up to ₹500">Up to ₹500 (Save time)</option>
@@ -854,12 +882,12 @@ export default function ServiceRequest() {
                         Next Step <ChevronRight className="h-4 w-4" />
                       </button>
                     </div>
-                  </div>
+                  </motion.div>
                 )}
 
                 {/* STEP 3: Terms & Signature */}
                 {step === 3 && (
-                  <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.4 }} className="space-y-5">
                     <div>
                       <h2 className="text-xl font-bold text-white">Verification & Submit</h2>
                       <p className="mt-1 text-sm text-slate-400">Please review terms and sign below.</p>
@@ -908,34 +936,13 @@ export default function ServiceRequest() {
                           type="number"
                           value={captchaInput}
                           onChange={e => setCaptchaInput(e.target.value)}
-                          className="w-24 rounded-md border border-white/10 px-3 py-2 text-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
+                          className="w-24 rounded-md border border-white/10 px-3 py-2 text-black bg-white outline-none focus:border-[#0EA5E9] focus:ring-2 focus:ring-[#0EA5E9]/20"
                           placeholder="?"
                         />
                       </div>
                     </div>
 
-                    <div className="block">
-                      <div className="flex justify-between items-end mb-2">
-                        <div>
-                          <span className="text-sm font-semibold text-slate-300">Digital Signature *</span>
-                          <p className="text-xs text-slate-400 mt-0.5">Please sign below to agree to the terms.</p>
-                        </div>
-                      </div>
-                      <div className="relative border-2 border-dashed border-[#0EA5E9]/50 bg-[#0EA5E9]/5 rounded-xl overflow-hidden touch-none group transition-colors hover:border-[#0EA5E9]">
-                        <button 
-                          type="button" 
-                          onClick={clearSignature} 
-                          className="absolute top-2 right-2 z-10 flex items-center gap-1 rounded bg-white/5/80 backdrop-blur border border-white/10 px-2 py-1 text-xs font-medium text-slate-400 shadow-sm transition hover:bg-red-50 hover:text-red-600"
-                        >
-                          <X className="h-3 w-3" /> Clear
-                        </button>
-                        <SignatureCanvas 
-                          ref={sigCanvas}
-                          canvasProps={{ className: 'w-full h-36 cursor-crosshair' }}
-                          penColor="#ffffff"
-                        />
-                      </div>
-                    </div>
+
 
                     <div className="mt-6 flex gap-3">
                       <button
@@ -955,12 +962,12 @@ export default function ServiceRequest() {
                         <span className="relative">Create Service Ticket</span>
                       </button>
                     </div>
-                  </div>
+                  </motion.div>
                 )}
               </form>
             )}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </section>
     </>
   );

@@ -48,13 +48,14 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ invoice, 
       <div style={{
         position: 'absolute',
         top: 0, left: 0, width: '100%', height: '100%',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        backgroundImage: 'url(/hardware_watermark.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
         pointerEvents: 'none',
         zIndex: 50,
-        overflow: 'hidden',
-        opacity: 0.1
+        opacity: 0.2
       }}>
-        <img src="/hardware_watermark.png" alt="Watermark" style={{ width: '100%', height: '100%', objectFit: 'cover' }} crossOrigin="anonymous" />
       </div>
 
       {/* Outer Border for main content */}
@@ -168,7 +169,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ invoice, 
             </div>
             <div className="flex justify-between p-1.5 px-3" style={{ borderBottom: '1px solid #000' }}>
               <span style={{ color: '#333333' }}>Advance Paid</span>
-              <span style={{ color: '#000000' }}>{((invoice as any).advance_paid || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
+              <span style={{ color: '#000000' }}>{(invoice.advance_paid || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
             </div>
             <div className="flex justify-between p-1.5 px-3 font-bold" style={{ backgroundColor: '#FFF2CC', color: '#B91C1C' }}>
               <span>Balance Due</span>
@@ -236,8 +237,8 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ invoice, 
                 <img src="/seal.png" alt="Seal" style={{ height: '75px', maxWidth: '100px', width: 'auto', objectFit: 'contain' }} crossOrigin="anonymous" />
               )}
             </div>
-            <div className="font-bold text-[10px]" style={{ color: '#000' }}>RAMESH A S</div>
-            <div className="text-[9px]" style={{ color: '#444444' }}>Authorized Signatory</div>
+            <div className="font-bold text-[10px]" style={{ color: '#000', padding: '0 100px' }}>&nbsp;</div>
+            <div className="text-[9px]" style={{ color: '#444444' }}>&nbsp;</div>
           </div>
         </div>
 

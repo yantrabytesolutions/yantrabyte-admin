@@ -13,9 +13,13 @@ import ServiceRequest from './pages/ServiceRequest';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import { TrackTicket } from './pages/TrackTicket';
+import { QuotationApproval } from './pages/QuotationApproval';
+import { CustomerHistory } from './pages/CustomerHistory';
 import AdminPanel from './admin/AdminPanel';
 import PortalLogin from './portal/PortalLogin';
 import PortalDashboard from './portal/PortalDashboard';
+import EstimateView from './pages/EstimateView';
+import WhatsAppConnectPage from './pages/WhatsAppConnectPage';
 
 const DomainGuard = ({ children }: { children: React.ReactNode }) => {
   const hostname = window.location.hostname;
@@ -45,12 +49,20 @@ const DomainGuard = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const RootRoute = () => {
+  const hostname = window.location.hostname;
+  if (hostname === 'yantrabyte.anantatechcare.com') {
+    return <ServiceRequest />;
+  }
+  return <Home />;
+};
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route element={<Layout />}>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<RootRoute />} />
           <Route path="/about" element={<About />} />
           <Route path="/services" element={<Services />} />
           <Route path="/services/:slug" element={<ServiceDetail />} />
@@ -62,12 +74,16 @@ function App() {
           <Route path="/service-request" element={<ServiceRequest />} />
           <Route path="/servicerequest" element={<ServiceRequest />} />
           <Route path="/track-ticket" element={<TrackTicket />} />
+          <Route path="/quotation/:id" element={<QuotationApproval />} />
+          <Route path="/my-invoices" element={<CustomerHistory />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
         </Route>
         <Route path="/admin" element={<DomainGuard><AdminPanel /></DomainGuard>} />
         <Route path="/portal" element={<PortalLogin />} />
         <Route path="/portal/dashboard" element={<PortalDashboard />} />
+        <Route path="/estimate/:id" element={<EstimateView />} />
+        <Route path="/whatsapp" element={<WhatsAppConnectPage />} />
       </Routes>
     </BrowserRouter>
   );

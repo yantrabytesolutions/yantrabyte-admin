@@ -178,6 +178,12 @@ export interface ServiceTicket {
   notes?: string;
   technician_notes?: string;
   warranty_months?: number;
+  customer_signature?: string;
+  delivery_date?: string;
+  device_brand?: string;
+  device_serial_no?: string;
+  parts_cost?: number;
+  labor_cost?: number;
   created_at: string;
   updated_at: string;
 }
@@ -185,6 +191,8 @@ export interface ServiceTicket {
 export interface InvoiceItem {
   product_id?: string;
   description: string;
+  serial_no?: string;
+  warranty?: string;
   qty: number;
   rate: number;
 }
@@ -215,6 +223,7 @@ export interface Invoice {
   due_date?: string | null;
   terms_conditions?: string;
   warranty_months?: number;
+  pdf_url?: string;
   created_at: string;
 }
 

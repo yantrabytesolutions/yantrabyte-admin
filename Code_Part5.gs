@@ -132,7 +132,7 @@ function createPrintableQuotationSheet_(ss, data) {
     sh.getRange(fr+1+i,1,1,5).merge().setValue('  ' + notes[i]).setFontSize(8).setFontColor('#444444');
   }
   sh.getRange(fr+notes.length+1,1,1,5).merge();
-  sh.getRange(fr+notes.length+2,4,2,2).merge().setValue('For YantraByte Solutions\nRAMESH A S (Authorized Signatory)')
+  sh.getRange(fr+notes.length+2,4,2,2).merge().setValue('For YantraByte Solutions')
     .setHorizontalAlignment('center').setVerticalAlignment('middle').setFontWeight('bold').setFontSize(8);
   
   sh.getRange(fr+notes.length+4,1,1,5).merge().setValue('Thank you for your business!')

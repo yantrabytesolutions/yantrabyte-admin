@@ -78,7 +78,7 @@ export default function CalendarView() {
         invoicesRes.data.forEach((i: Invoice) => {
           if (i.due_date) {
             newEvents.push({
-              title: `Due: ?${i.balance_due} - ${i.customer_name}`,
+              title: `Due: ₹${(i.balance_due || 0).toLocaleString('en-IN')} - ${i.customer_name}`,
               start: new Date(i.due_date),
               end: new Date(i.due_date),
               allDay: true,

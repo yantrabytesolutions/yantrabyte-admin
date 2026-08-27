@@ -5,17 +5,101 @@ import { Readable } from 'stream';
 import nodemailer from 'nodemailer';
 import { google } from 'googleapis';
 import { createClient } from '@supabase/supabase-js';
+import WebSocket from 'ws';
+global.WebSocket = WebSocket;
 import cron from 'node-cron';
+import pkg from 'whatsapp-web.js';
+const { Client, LocalAuth, MessageMedia } = pkg;
+import qrcodeTerminal from 'qrcode-terminal';
+import QRCode from 'qrcode';
+import fs from 'fs';
+import path from 'path';
 
 dotenv.config();
 
 const app = express();
 const port = Number(process.env.INVOICE_API_PORT || process.env.PORT || 4000);
-const maxPdfSize = process.env.INVOICE_MAX_JSON_SIZE || '50mb';
+const maxPdfSize = process.env.INVOICE_MAX_JSON_SIZE || '200mb';
 
+let isWhatsappReady = false;
+let latestQrCode = null;
+let latestQrDataUrl = null;
+
+const whatsappClient = new Client({
+  authStrategy: new LocalAuth({
+    dataPath: path.join(process.cwd(), '.wwebjs_auth')
+  }),
+  puppeteer: {
+    headless: true,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-accelerated-2d-canvas',
+      '--no-first-run',
+      '--no-zygote',
+      '--disable-gpu'
+    ]
+  }
+});
+
+whatsappClient.on('qr', async (qr) => {
+  console.log('========================================================');
+  console.log('SCAN THIS QR CODE WITH YOUR WHATSAPP BUSINESS APP:');
+  console.log('========================================================');
+  qrcodeTerminal.generate(qr, { small: true });
+  latestQrCode = qr;
+  
+  try {
+    latestQrDataUrl = await QRCode.toDataURL(qr);
+    const publicDir = path.join(process.cwd(), 'public');
+    if (!fs.existsSync(publicDir)) {
+      fs.mkdirSync(publicDir, { recursive: true });
+    }
+    const html = `<html><body style="display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh;background:#f0f2f5;font-family:sans-serif;text-align:center;">
+      <div>
+        <h2>Scan with WhatsApp Business</h2>
+        <img src="${latestQrDataUrl}" style="width:350px;height:350px;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+        <p style="margin-top:20px;color:#555;font-size:16px;">Scan this QR code from Linked Devices in WhatsApp.</p>
+      </div>
+    </body></html>`;
+    fs.writeFileSync(path.join(publicDir, 'whatsapp-qr.html'), html);
+    console.log('🌟 Open in browser to scan: https://yantrabyte.anantatechcare.com/api/whatsapp/qr');
+  } catch (err) {
+    console.error('Failed to generate HTML QR code', err);
+  }
+});
+
+whatsappClient.on('authenticated', () => {
+  console.log('🔐 WhatsApp Authenticated Successfully!');
+});
+
+whatsappClient.on('auth_failure', (msg) => {
+  console.error('❌ WhatsApp Auth failure:', msg);
+  isWhatsappReady = false;
+});
+
+whatsappClient.on('ready', () => {
+  console.log('✅ WhatsApp Client is ready! You can now send automated messages.');
+  isWhatsappReady = true;
+  latestQrCode = null;
+  latestQrDataUrl = null;
+});
+
+whatsappClient.on('disconnected', (reason) => {
+  console.log('⚠️ WhatsApp Disconnected:', reason);
+  isWhatsappReady = false;
+});
+
+whatsappClient.initialize();
+
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - content-length: ${req.headers['content-length']}`);
+  next();
+});
 app.use(cors());
-app.use(express.json({ limit: maxPdfSize, extended: true }));
-app.use(express.urlencoded({ limit: maxPdfSize, extended: true }));
+app.use(express.json({ limit: '500mb' }));
+app.use(express.urlencoded({ limit: '500mb', extended: true }));
 
 const requiredEnv = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'];
 const GMAIL_USER_DEFAULT = process.env.GMAIL_USER || 'yantrabyte.solutions@gmail.com';
@@ -250,6 +334,7 @@ async function requireSupabaseUser(req, res, next) {
 
   const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.VITE_SUPABASE_ANON_KEY, {
     auth: { persistSession: false },
+    realtime: { transport: WebSocket }
   });
   const { data, error } = await supabase.auth.getUser(token);
 
@@ -284,6 +369,83 @@ app.get('/api/sheets-health', (_req, res) => {
     ok: missing.length === 0,
     missing,
   });
+});
+
+app.get('/api/whatsapp/status', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.json({
+    ok: true,
+    ready: isWhatsappReady,
+    hasQr: !!latestQrDataUrl
+  });
+});
+
+app.get('/api/whatsapp/qr-data', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.json({
+    ok: true,
+    ready: isWhatsappReady,
+    qrDataUrl: latestQrDataUrl
+  });
+});
+
+app.get('/api/whatsapp/qr', (_req, res) => {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+
+  if (isWhatsappReady) {
+    return res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head><title>WhatsApp Status</title><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+      <body style="display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:100vh;background:#f0fdf4;font-family:sans-serif;text-align:center;margin:0;padding:20px;box-sizing:border-box;">
+        <div style="background:#fff;padding:40px;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.08);max-width:420px;width:100%;">
+          <div style="font-size:48px;margin-bottom:16px;">✅</div>
+          <h2 style="color:#15803d;margin:0 0 10px;">WhatsApp is Connected!</h2>
+          <p style="color:#4b5563;font-size:14px;line-height:1.5;">Your WhatsApp Business account is active and ready to send automated invoices, service ticket updates, and payment reminders.</p>
+        </div>
+      </body>
+      </html>
+    `);
+  }
+  if (!latestQrDataUrl) {
+    return res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head><title>WhatsApp QR</title><meta http-equiv="refresh" content="3"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+      <body style="display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:100vh;background:#f8fafc;font-family:sans-serif;text-align:center;margin:0;padding:20px;box-sizing:border-box;">
+        <div style="background:#fff;padding:40px;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.08);max-width:420px;width:100%;">
+          <div style="font-size:36px;margin-bottom:16px;">⏳</div>
+          <h2 style="color:#334155;margin:0 0 10px;">Generating WhatsApp QR...</h2>
+          <p style="color:#64748b;font-size:14px;">Please wait, refreshing in 3 seconds...</p>
+        </div>
+      </body>
+      </html>
+    `);
+  }
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Scan WhatsApp QR</title>
+      <meta http-equiv="refresh" content="20">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+    </head>
+    <body style="display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:100vh;background:#f0f2f5;font-family:sans-serif;text-align:center;margin:0;padding:20px;box-sizing:border-box;">
+      <div style="background:#fff;padding:32px;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.08);max-width:420px;width:100%;">
+        <div style="font-size:36px;margin-bottom:8px;">📱</div>
+        <h2 style="color:#111827;margin:0 0 8px;font-size:20px;">Link WhatsApp Business</h2>
+        <p style="color:#6b7280;font-size:13px;margin:0 0 20px;line-height:1.4;">Open WhatsApp on your phone ➔ <b>Linked Devices</b> ➔ <b>Link a Device</b> ➔ Scan this QR code.</p>
+        <div style="display:inline-block;padding:12px;background:#fff;border:2px solid #e5e7eb;border-radius:12px;">
+          <img src="${latestQrDataUrl}" style="width:260px;height:260px;display:block;" alt="WhatsApp QR Code">
+        </div>
+        <p style="color:#9ca3af;font-size:11px;margin:16px 0 0;">Auto-refreshes every 20 seconds. Once scanned, this page will update automatically.</p>
+      </div>
+    </body>
+    </html>
+  `);
 });
 
 app.post('/api/backups/sheet-row', requireSupabaseUser, async (req, res) => {
@@ -453,12 +615,14 @@ app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {
     documentType = 'Invoice',
     filename,
     pdfBase64,
+    pdfUrl,
+    customerPhone
   } = req.body || {};
 
   if (!isValidEmail(to)) {
     return res.status(400).json({ error: 'Customer email address is missing or invalid' });
   }
-  if (!pdfBase64) {
+  if (!pdfBase64 && !pdfUrl) {
     return res.status(400).json({ error: 'PDF attachment is missing' });
   }
 
@@ -466,7 +630,20 @@ app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {
   const cleanDocumentType = String(documentType || 'Invoice');
   const cleanCustomerName = String(customerName || 'Customer');
   const safeFilename = sanitizeFilename(filename || `${cleanInvoiceNumber}.pdf`);
-  const pdfBuffer = Buffer.from(pdfBase64, 'base64');
+  
+  let pdfBuffer;
+  if (pdfBase64) {
+    pdfBuffer = Buffer.from(pdfBase64, 'base64');
+  } else if (pdfUrl) {
+    try {
+      const pdfRes = await fetch(pdfUrl);
+      if (!pdfRes.ok) throw new Error(`Failed to download PDF: ${pdfRes.statusText}`);
+      const arrayBuffer = await pdfRes.arrayBuffer();
+      pdfBuffer = Buffer.from(arrayBuffer);
+    } catch (e) {
+      return res.status(500).json({ error: 'Failed to retrieve PDF from storage' });
+    }
+  }
 
   const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -511,16 +688,194 @@ app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {
     console.error('Invoice email failed:', getDeliveryErrorMessage(error));
   }
 
+  let driveResult = {
+    ok: false,
+    skipped: true,
+    error: 'Google Drive backup was not attempted because email delivery failed.',
+  };
+
   if (mailError) {
-    return res.status(422).json({
+    return res.status(502).json({
       error: `Gmail send failed: ${getDeliveryErrorMessage(mailError)}`,
       email: { ok: false },
+      drive: driveResult,
     });
+  }
+
+  try {
+    driveResult = await uploadPdfToDrive({
+      pdfBuffer,
+      filename: safeFilename,
+      customerName: cleanCustomerName,
+      invoiceNumber: cleanInvoiceNumber,
+      documentType: cleanDocumentType,
+    });
+    console.log(`[Success] Uploaded ${safeFilename} to Google Drive (ID: ${driveResult.file?.id})`);
+  } catch (error) {
+    driveResult = {
+      ok: false,
+      skipped: false,
+      error: getDeliveryErrorMessage(error),
+    };
+    console.error(`[Error] Google Drive invoice backup failed for ${safeFilename}:`, getDeliveryErrorMessage(error));
+  }
+
+  console.log(`[Success] Email sent to ${to} for ${cleanInvoiceNumber}`);
+  
+  let whatsappStatus = 'skipped';
+  if (isWhatsappReady && customerPhone) {
+    let cleanPhone = String(customerPhone).replace(/\D/g, '');
+    if (cleanPhone.length === 10) cleanPhone = '91' + cleanPhone;
+    if (cleanPhone.length >= 10) {
+      try {
+        const media = new MessageMedia('application/pdf', pdfBase64, safeFilename);
+        const caption = `Dear ${cleanCustomerName},\n\nPlease find attached your ${cleanDocumentType.toLowerCase()} *${cleanInvoiceNumber}*.\n\nRegards,\nYantraByte Solutions`;
+        await whatsappClient.sendMessage(`${cleanPhone}@c.us`, media, { caption });
+        whatsappStatus = 'sent';
+        console.log(`[Success] WhatsApp sent to ${customerPhone} for ${cleanInvoiceNumber}`);
+      } catch (err) {
+        console.error(`[Error] WhatsApp invoice send failed:`, err);
+        whatsappStatus = 'failed';
+      }
+    }
   }
 
   return res.json({
     ok: true,
     email: { ok: true, messageId: mailResult.messageId },
+    drive: driveResult,
+    whatsapp: whatsappStatus
+  });
+});
+
+app.post('/api/invoices/payment-receipt', async (req, res) => {
+  const {
+    customerName,
+    customerPhone,
+    customerEmail,
+    amount,
+    paymentDate,
+    paymentMode,
+    referenceNote,
+    balanceDue,
+    totalBilled,
+    totalPaid
+  } = req.body || {};
+
+  const cleanName = String(customerName || 'Customer');
+  const numAmount = Number(amount) || 0;
+  const numBalDue = Number(balanceDue) || 0;
+  const numTotalBilled = Number(totalBilled) || 0;
+  const numTotalPaid = Number(totalPaid) || 0;
+  const formattedDate = paymentDate || new Date().toLocaleDateString('en-GB');
+  const mode = String(paymentMode || 'UPI');
+  const ref = referenceNote ? String(referenceNote).trim() : '';
+
+  let whatsappStatus = 'skipped';
+  let emailStatus = 'skipped';
+
+  // 1. WhatsApp Receipt
+  if (isWhatsappReady && customerPhone) {
+    try {
+      let cleanPhone = String(customerPhone).replace(/\D/g, '');
+      if (cleanPhone.length === 10) cleanPhone = '91' + cleanPhone;
+      if (cleanPhone.length >= 10) {
+        let msg = `🧾 *PAYMENT RECEIPT - Yantrabyte Solutions*\n\n`;
+        msg += `Dear *${cleanName}*,\n\n`;
+        msg += `Thank you! We have received your payment of *₹${numAmount.toLocaleString('en-IN')}*.\n\n`;
+        msg += `*Payment Details:*\n`;
+        msg += `• *Date:* ${formattedDate}\n`;
+        msg += `• *Amount Received:* ₹${numAmount.toLocaleString('en-IN')}\n`;
+        msg += `• *Payment Mode:* ${mode}\n`;
+        if (ref) msg += `• *Reference / Note:* ${ref}\n`;
+        msg += `\n*Account Summary:*\n`;
+        if (numTotalBilled > 0) msg += `• *Total Billed:* ₹${numTotalBilled.toLocaleString('en-IN')}\n`;
+        if (numTotalPaid > 0) msg += `• *Total Paid:* ₹${numTotalPaid.toLocaleString('en-IN')}\n`;
+        msg += `• *Outstanding Balance:* ${numBalDue > 0 ? `*₹${numBalDue.toLocaleString('en-IN')}*` : '*₹0 (Fully Cleared 🎉)*'}\n\n`;
+        msg += `You can view your complete ledger & invoices here:\nhttps://yantrabyte.anantatechcare.com/my-invoices\n\n`;
+        msg += `Thank you for choosing YantraByte Solutions!\n*YantraByte Solutions*`;
+
+        await whatsappClient.sendMessage(`${cleanPhone}@c.us`, msg);
+        whatsappStatus = 'sent';
+        console.log(`[Success] Instant WhatsApp payment receipt sent to ${customerPhone} for ${cleanName}`);
+      }
+    } catch (err) {
+      console.error('[Error] WhatsApp receipt send failed:', err);
+      whatsappStatus = 'failed';
+    }
+  }
+
+  // 2. Email Receipt (if customerEmail is provided)
+  if (customerEmail && isValidEmail(customerEmail)) {
+    try {
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: GMAIL_USER_DEFAULT,
+          pass: GMAIL_PASS_DEFAULT,
+        },
+      });
+
+      await transporter.sendMail({
+        from: `"YantraByte Solutions" <${GMAIL_USER_DEFAULT}>`,
+        to: customerEmail,
+        subject: `Payment Receipt: ₹${numAmount.toLocaleString('en-IN')} received - YantraByte Solutions`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 12px; background-color: #ffffff;">
+            <div style="text-align: center; border-bottom: 2px solid #0B5394; padding-bottom: 16px; margin-bottom: 20px;">
+              <h2 style="color: #0B5394; margin: 0;">YantraByte Solutions</h2>
+              <p style="color: #6b7280; font-size: 13px; margin: 4px 0 0;">Official Payment Receipt</p>
+            </div>
+            
+            <p style="font-size: 15px; color: #111827;">Dear <strong>${cleanName}</strong>,</p>
+            <p style="font-size: 14px; color: #374151; line-height: 1.6;">
+              Thank you for your payment. We have successfully received and credited <strong>₹${numAmount.toLocaleString('en-IN')}</strong> to your account.
+            </p>
+
+            <table style="width: 100%; border-collapse: collapse; margin: 20px 0; background: #f9fafb; border-radius: 8px; overflow: hidden;">
+              <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 10px 16px; color: #6b7280; font-size: 13px;">Date:</td>
+                <td style="padding: 10px 16px; font-weight: bold; color: #111827; font-size: 13px;">${formattedDate}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 10px 16px; color: #6b7280; font-size: 13px;">Amount Received:</td>
+                <td style="padding: 10px 16px; font-weight: bold; color: #15803d; font-size: 15px;">₹${numAmount.toLocaleString('en-IN')}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 10px 16px; color: #6b7280; font-size: 13px;">Payment Mode:</td>
+                <td style="padding: 10px 16px; font-weight: bold; color: #111827; font-size: 13px;">${mode}</td>
+              </tr>
+              ${ref ? `
+              <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 10px 16px; color: #6b7280; font-size: 13px;">Reference / Note:</td>
+                <td style="padding: 10px 16px; color: #111827; font-size: 13px;">${ref}</td>
+              </tr>
+              ` : ''}
+              <tr>
+                <td style="padding: 10px 16px; color: #6b7280; font-size: 13px;">Outstanding Balance:</td>
+                <td style="padding: 10px 16px; font-weight: bold; color: ${numBalDue > 0 ? '#b91c1c' : '#15803d'}; font-size: 14px;">
+                  ${numBalDue > 0 ? `₹${numBalDue.toLocaleString('en-IN')}` : '₹0 (Fully Settled)'}
+                </td>
+              </tr>
+            </table>
+
+            <p style="font-size: 13px; color: #6b7280; text-align: center; margin-top: 24px;">
+              For any queries, please reach out to us at <a href="mailto:support@yantrabyte.com" style="color: #0B5394;">support@yantrabyte.com</a> or +91 99867 42525.
+            </p>
+          </div>
+        `
+      });
+      emailStatus = 'sent';
+    } catch (mailErr) {
+      console.error('[Error] Payment receipt email send failed:', mailErr);
+      emailStatus = 'failed';
+    }
+  }
+
+  res.json({
+    ok: true,
+    whatsapp: whatsappStatus,
+    email: emailStatus
   });
 });
 
@@ -586,7 +941,7 @@ app.post('/api/invoices/reminders', requireSupabaseUser, async (req, res) => {
 });
 
 app.post('/api/tickets/notify', requireSupabaseUser, async (req, res) => {
-  const { ticket_number, customer_name, customer_email, status, device_type } = req.body || {};
+  const { ticket_number, customer_name, customer_email, status, device_type, customer_phone } = req.body || {};
 
   if (!customer_email || !isValidEmail(customer_email)) {
     return res.status(400).json({ error: 'Valid customer_email is required' });
@@ -622,7 +977,24 @@ app.post('/api/tickets/notify', requireSupabaseUser, async (req, res) => {
         </div>
       `,
     });
-    return res.json({ ok: true, messageId: mailResult.messageId });
+    
+    let whatsappStatus = 'skipped';
+    if (isWhatsappReady && customer_phone) {
+      let cleanPhone = String(customer_phone).replace(/\D/g, '');
+      if (cleanPhone.length === 10) cleanPhone = '91' + cleanPhone;
+      if (cleanPhone.length >= 10) {
+        try {
+          const messageText = `*Service Ticket Update*\n\nDear ${customer_name || 'Customer'},\n\nYour service ticket *${ticket_number}* for your *${device_type || 'device'}* has been updated to: *${status.toUpperCase()}*.\n\nTrack your live status here: ${portalLink}\n\nRegards,\nYantraByte Solutions`;
+          await whatsappClient.sendMessage(`${cleanPhone}@c.us`, messageText);
+          whatsappStatus = 'sent';
+        } catch (err) {
+          console.error('WhatsApp ticket update failed:', err);
+          whatsappStatus = 'failed';
+        }
+      }
+    }
+    
+    return res.json({ ok: true, messageId: mailResult.messageId, whatsapp: whatsappStatus });
   } catch (error) {
     console.error(`Ticket update email failed for ${customer_email}:`, getDeliveryErrorMessage(error));
     return res.status(500).json({ error: getDeliveryErrorMessage(error) });
@@ -638,7 +1010,9 @@ app.get('/api/tickets/track/:ticket_number', async (req, res) => {
   }
 
   try {
-    const supabaseAdmin = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY);
+    const supabaseAdmin = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY, {
+      realtime: { transport: WebSocket }
+    });
     const { data, error } = await supabaseAdmin
       .from('service_tickets')
       .select('ticket_number, status, device_type, created_at, customer_name, issue_description, customer_phone')
@@ -674,10 +1048,134 @@ app.get('/api/tickets/track/:ticket_number', async (req, res) => {
   }
 });
 
+// --- QUOTATION APPROVAL ENDPOINTS ---
+app.get('/api/invoices/quotation/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const supabaseAdmin = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY, {
+      realtime: { transport: WebSocket }
+    });
+    
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    const filterColumn = isUUID ? 'id' : 'invoice_no';
+    
+    const { data, error } = await supabaseAdmin
+      .from('invoices')
+      .select('*')
+      .eq(filterColumn, id)
+      .eq('doc_type', 'Quotation')
+      .single();
+      
+    if (error || !data) return res.status(404).json({ error: 'Quotation not found' });
+    return res.json(data);
+  } catch (err) {
+    console.error('Error fetching quotation:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/invoices/quotation/:id/approve', async (req, res) => {
+  const { id } = req.params;
+  const { status, signature } = req.body;
+  
+  if (!['Approved', 'Rejected'].includes(status)) {
+    return res.status(400).json({ error: 'Invalid status' });
+  }
+  
+  try {
+    const supabaseAdmin = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY, {
+      realtime: { transport: WebSocket }
+    });
+    
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    const filterColumn = isUUID ? 'id' : 'invoice_no';
+    
+    const { data: inv, error: fetchErr } = await supabaseAdmin
+      .from('invoices')
+      .select('terms_conditions, customer_name, phone, grand_total, invoice_no')
+      .eq(filterColumn, id)
+      .single();
+      
+    if (fetchErr || !inv) return res.status(404).json({ error: 'Estimate not found' });
+    
+    const timestamp = new Date().toLocaleString('en-IN');
+    const signatureText = signature ? `\n\nDigital Signature: ${signature} on ${timestamp}` : `\n\n[System] Customer ${status} on ${timestamp}`;
+    const newTerms = (inv.terms_conditions || '') + signatureText;
+    
+    const { error: updateErr } = await supabaseAdmin
+      .from('invoices')
+      .update({
+        payment_status: status,
+        terms_conditions: newTerms.trim()
+      })
+      .eq(filterColumn, id);
+      
+    if (updateErr) throw updateErr;
+
+    // --- NEW: WhatsApp message on approval ---
+    if (status === 'Approved' && isWhatsappReady && inv.phone) {
+      try {
+        const cleanPhone = inv.phone.replace(/\D/g, '');
+        if (cleanPhone.length >= 10) {
+          const advanceAmount = (inv.grand_total * 0.8).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+          const messageText = `Hi ${inv.customer_name},\n\nThank you for approving the estimate #${inv.invoice_no}. \n\nTo proceed with the service, please make an advance payment of 80% (₹${advanceAmount}).\n\n*Bank & Payment Details:*\nBank: North East Small Finance Bank\nA/C Name: YantraByte Solutions\nA/C No: 033311501023226\nIFSC: NESF0000333\nUPI ID: s0424237152@slc\n\nThank you!`;
+          
+          const qrPath = path.join(process.cwd(), 'public', 'payment-qr.png');
+          if (fs.existsSync(qrPath)) {
+            const media = MessageMedia.fromFilePath(qrPath);
+            await whatsappClient.sendMessage(`${cleanPhone}@c.us`, media, { caption: messageText });
+          } else {
+            await whatsappClient.sendMessage(`${cleanPhone}@c.us`, messageText);
+          }
+          console.log(`[Success] Advance payment WhatsApp sent to ${inv.phone}`);
+        }
+      } catch (waErr) {
+        console.error('[Error] Failed to send WhatsApp advance payment request:', waErr);
+      }
+    }
+    // ------------------------------------------
+
+    // --- NEW: Email Notification on Quotation Approval ---
+    try {
+      if (GMAIL_USER_DEFAULT && GMAIL_PASS_DEFAULT) {
+        const transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: GMAIL_USER_DEFAULT,
+            pass: GMAIL_PASS_DEFAULT,
+          },
+        });
+
+        await transporter.sendMail({
+          from: `"YantraByte Solutions" <${GMAIL_USER_DEFAULT}>`,
+          to: 'yantrabyte.solutions@gmail.com',
+          subject: `Quotation ${inv.invoice_no} ${status} by ${inv.customer_name}`,
+          html: `
+            <h3>Quotation Update</h3>
+            <p><strong>Customer Name:</strong> ${inv.customer_name}</p>
+            <p><strong>Invoice Number:</strong> ${inv.invoice_no}</p>
+            <p><strong>Status:</strong> ${status}</p>
+            <p><strong>Grand Total:</strong> ₹${inv.grand_total}</p>
+            <p><strong>Timestamp:</strong> ${timestamp}</p>
+          `
+        });
+        console.log(`[Success] Owner email notification sent for ${inv.invoice_no}`);
+      }
+    } catch (emailErr) {
+      console.error('[Error] Failed to send owner email notification:', emailErr.message);
+    }
+    
+    return res.json({ success: true, status });
+  } catch (err) {
+    console.error('Error updating estimate:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // --- AUTOMATED CRON JOB ---
 // Runs daily at 10:00 AM (server time)
 cron.schedule('0 10 * * *', async () => {
-  console.log('Running automated email reminders job at 10:00 AM...');
+  console.log('Running automated email & whatsapp reminders job at 10:00 AM...');
   const missing = getMissingEnv();
   if (missing.length > 0) {
     console.error(`Skipping cron job. Missing env: ${missing.join(', ')}`);
@@ -687,99 +1185,408 @@ cron.schedule('0 10 * * *', async () => {
   try {
     const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.VITE_SUPABASE_ANON_KEY, {
       auth: { persistSession: false },
+      realtime: { transport: WebSocket }
     });
 
-    const today = new Date().toISOString().split('T')[0];
-    const { data: invoices, error } = await supabase
+    const now = new Date();
+    // Reset time to start of day for accurate day diff calculation
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: GMAIL_USER_DEFAULT, pass: GMAIL_PASS_DEFAULT },
+    });
+
+    let emailsSent = 0;
+    let whatsappSent = 0;
+
+    // 1. Process Pending Quotations (3 or 4 days old)
+    const { data: quotations, error: qErr } = await supabase
+      .from('invoices')
+      .select('*')
+      .eq('doc_type', 'Quotation');
+      
+    if (!qErr && quotations) {
+      const pendingQuotations = quotations.filter(q => q.payment_status !== 'Approved' && q.payment_status !== 'Rejected');
+      for (const q of pendingQuotations) {
+        if (!q.date) continue;
+        const qDate = new Date(q.date);
+        const qStart = new Date(qDate.getFullYear(), qDate.getMonth(), qDate.getDate());
+        const diffDays = Math.floor((todayStart.getTime() - qStart.getTime()) / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 3 || diffDays === 4) {
+          const qLink = `https://yantrabyte.anantatechcare.com/quotation/${q.invoice_no}`;
+          
+          // Send Email
+          if (q.customer_email && isValidEmail(q.customer_email)) {
+            try {
+              await transporter.sendMail({
+                from: `"YantraByte Solutions" <${GMAIL_USER_DEFAULT}>`,
+                to: q.customer_email,
+                replyTo: process.env.GMAIL_REPLY_TO || GMAIL_USER_DEFAULT,
+                subject: `Reminder: Action Required for Quotation #${q.invoice_no}`,
+                html: `
+                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+                    <p>Dear ${q.customer_name || 'Customer'},</p>
+                    <p>This is a gentle reminder that your quotation <strong>#${q.invoice_no}</strong> is awaiting your approval.</p>
+                    <div style="margin: 20px 0; padding: 15px; background-color: #f8fafc; border-left: 4px solid #0B5394;">
+                      <a href="${qLink}" style="display: inline-block; padding: 10px 15px; background-color: #0B5394; color: #fff; text-decoration: none; border-radius: 5px;">Review & Approve Quotation</a>
+                    </div>
+                    <p>If you have any questions or require modifications to this quotation, please let us know.</p>
+                    <p>Regards,<br/><strong>YantraByte Solutions</strong></p>
+                  </div>
+                `,
+              });
+              emailsSent++;
+            } catch (err) {
+              console.error(`Failed to send quotation reminder email to ${q.customer_email}:`, err.message);
+            }
+          }
+
+          // Send WhatsApp
+          if (isWhatsappReady && q.phone) {
+            try {
+              const cleanPhone = q.phone.replace(/\D/g, '');
+              if (cleanPhone.length >= 10) {
+                const messageText = `Hi ${q.customer_name || 'Customer'},\n\nThis is a gentle reminder regarding your quotation *#${q.invoice_no}* which is currently awaiting your approval.\n\nYou can review and approve it here:\n${qLink}\n\nPlease let us know if you have any questions!\n\nRegards,\nYantraByte Solutions`;
+                if (cleanPhone.length === 10) {
+                  await whatsappClient.sendMessage(`91${cleanPhone}@c.us`, messageText);
+                } else {
+                  await whatsappClient.sendMessage(`${cleanPhone}@c.us`, messageText);
+                }
+                whatsappSent++;
+              }
+            } catch (waErr) {
+              console.error(`[Error] Failed to send WhatsApp reminder for Quotation ${q.invoice_no}:`, waErr.message);
+            }
+          }
+        }
+      }
+    }
+
+    // 2. Process Unpaid Invoices (3 or 4 days overdue)
+    const { data: invoices, error: iErr } = await supabase
       .from('invoices')
       .select('*')
       .eq('doc_type', 'Invoice')
       .gt('balance_due', 0);
-      
-    if (error) throw error;
-    if (!invoices || invoices.length === 0) return;
-    
-    const clientsMap = {};
-    for (const inv of invoices) {
-      if (inv.due_date && inv.due_date < today && inv.customer_email && isValidEmail(inv.customer_email)) {
-        if (!clientsMap[inv.customer_email]) {
-          clientsMap[inv.customer_email] = {
-            customer_name: inv.customer_name,
-            customer_email: inv.customer_email,
-            invoices: [],
-            balance_due: 0,
-            ids: []
-          };
+
+    if (!iErr && invoices) {
+      for (const inv of invoices) {
+        if (!inv.due_date && !inv.date) continue;
+        const dueDate = new Date(inv.due_date || inv.date);
+        const dueStart = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+        const diffDays = Math.floor((todayStart.getTime() - dueStart.getTime()) / (1000 * 60 * 60 * 24));
+
+        // Overdue by 3 or 4 days
+        if (todayStart > dueStart && (diffDays === 3 || diffDays === 4)) {
+          const invLink = `https://yantrabyte.anantatechcare.com/portal/${inv.id}`;
+          
+          // Send Email
+          if (inv.customer_email && isValidEmail(inv.customer_email)) {
+            try {
+              await transporter.sendMail({
+                from: `"YantraByte Solutions" <${GMAIL_USER_DEFAULT}>`,
+                to: inv.customer_email,
+                replyTo: process.env.GMAIL_REPLY_TO || GMAIL_USER_DEFAULT,
+                subject: `Payment Reminder: Invoice #${inv.invoice_no}`,
+                html: `
+                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+                    <p>Dear ${inv.customer_name || 'Customer'},</p>
+                    <p>This is an automated reminder that you have an outstanding balance of <strong style="color: #e53e3e;">₹${(inv.balance_due || 0).toLocaleString('en-IN')}</strong> for Invoice <strong>#${inv.invoice_no}</strong>.</p>
+                    <div style="margin: 20px 0; padding: 15px; background-color: #f8fafc; border-left: 4px solid #0B5394;">
+                      <a href="${invLink}" style="display: inline-block; padding: 10px 15px; background-color: #0B5394; color: #fff; text-decoration: none; border-radius: 5px;">View & Download Invoice</a>
+                    </div>
+                    <p>Kindly clear the balance at your earliest convenience via our UPI ID: <strong>s0424237152@slc</strong> or our bank account details.</p>
+                    <p><em>If you have already made the payment, please ignore this email.</em></p>
+                    <p>Regards,<br/><strong>YantraByte Solutions</strong></p>
+                  </div>
+                `,
+              });
+              emailsSent++;
+            } catch (err) {
+              console.error(`Failed to send invoice reminder email to ${inv.customer_email}:`, err.message);
+            }
+          }
+
+          // Send WhatsApp
+          if (isWhatsappReady && inv.phone) {
+            try {
+              const cleanPhone = inv.phone.replace(/\D/g, '');
+              if (cleanPhone.length >= 10) {
+                const messageText = `Hi ${inv.customer_name || 'Customer'},\n\nThis is an automated reminder regarding your outstanding balance of *₹${(inv.balance_due || 0).toLocaleString('en-IN')}* for Invoice *#${inv.invoice_no}*.\n\nYou can view your invoice securely here:\n${invLink}\n\nKindly clear the balance via UPI: *s0424237152@slc* or our bank details at your earliest convenience.\n\n(If you have already paid, please ignore this message.)\n\nRegards,\nYantraByte Solutions`;
+                if (cleanPhone.length === 10) {
+                  await whatsappClient.sendMessage(`91${cleanPhone}@c.us`, messageText);
+                } else {
+                  await whatsappClient.sendMessage(`${cleanPhone}@c.us`, messageText);
+                }
+                whatsappSent++;
+              }
+            } catch (waErr) {
+              console.error(`[Error] Failed to send WhatsApp reminder for Invoice ${inv.invoice_no}:`, waErr.message);
+            }
+          }
         }
-        clientsMap[inv.customer_email].invoices.push(inv.invoice_no);
-        clientsMap[inv.customer_email].balance_due += (inv.balance_due || 0);
-        clientsMap[inv.customer_email].ids.push(inv.id);
       }
     }
-    
-    const clients = Object.values(clientsMap);
-    if (clients.length === 0) {
-      console.log('No overdue invoices require reminders today.');
-      return;
-    }
 
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: GMAIL_USER_DEFAULT,
-        pass: GMAIL_PASS_DEFAULT,
-      },
-    });
-
-    let sentCount = 0;
-    for (const client of clients) {
-      try {
-        const portalLinks = client.ids.map(id => `<a href="https://yantrabyte.com/portal/${id}">View Invoice ${client.invoices[client.ids.indexOf(id)]}</a>`).join('<br/>');
-        const textLinks = client.ids.map(id => `https://yantrabyte.com/portal/${id}`).join(', ');
-
-        await transporter.sendMail({
-          from: `"YantraByte Solutions" <${GMAIL_USER_DEFAULT}>`,
-          to: client.customer_email,
-          replyTo: process.env.GMAIL_REPLY_TO || GMAIL_USER_DEFAULT,
-          subject: `Automated Payment Reminder - YantraByte Solutions`,
-          text: [
-            `Dear ${client.customer_name || 'Customer'},`,
-            '',
-            `This is an automated reminder that you have an outstanding balance of ₹${(client.balance_due || 0).toLocaleString('en-IN')}.`,
-            `This balance is associated with the following invoice(s): ${client.invoices.join(', ')}.`,
-            `You can view and download your invoices securely here: ${textLinks}`,
-            '',
-            'Kindly clear the balance at your earliest convenience via our UPI ID: s0424237152@slc or our bank account details.',
-            '',
-            'If you have already made the payment, please ignore this email.',
-            '',
-            'Regards,',
-            'YantraByte Solutions',
-          ].join('\n'),
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-              <p>Dear ${client.customer_name || 'Customer'},</p>
-              <p>This is an automated reminder that you have an outstanding balance of <strong style="color: #e53e3e;">₹${(client.balance_due || 0).toLocaleString('en-IN')}</strong>.</p>
-              <p>This balance is associated with the following invoice(s): <strong>${client.invoices.join(', ')}</strong>.</p>
-              <div style="margin: 20px 0; padding: 15px; background-color: #f8fafc; border-left: 4px solid #0B5394;">
-                <p style="margin-top: 0;">You can view and download your invoices securely here:</p>
-                ${portalLinks}
-              </div>
-              <p>Kindly clear the balance at your earliest convenience via our UPI ID: <strong>s0424237152@slc</strong> or our bank account details.</p>
-              <p><em>If you have already made the payment, please ignore this email.</em></p>
-              <p>Regards,<br/><strong>YantraByte Solutions</strong></p>
-            </div>
-          `,
-        });
-        sentCount++;
-        console.log(`Successfully sent automated reminder to ${client.customer_email}`);
-      } catch (err) {
-        console.error(`Failed to send automated reminder to ${client.customer_email}:`, err.message);
-      }
-    }
-    console.log(`Automated reminder job completed. Sent ${sentCount} emails.`);
+    console.log(`Automated reminder job completed. Sent ${emailsSent} emails and ${whatsappSent} WhatsApp messages.`);
   } catch (error) {
     console.error('Error in automated reminder cron job:', error.message);
+  }
+});
+
+// --- QUOTATION EXPIRY CRON ---
+cron.schedule('0 0 * * *', async () => {
+  console.log('Running quotation expiry check...');
+  try {
+    const supabaseAdmin = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY, {
+      realtime: { transport: WebSocket }
+    });
+    
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const { data, error } = await supabaseAdmin
+      .from('invoices')
+      .update({ payment_status: 'Expired' })
+      .eq('doc_type', 'Quotation')
+      .eq('payment_status', 'Due')
+      .lt('created_at', sevenDaysAgo.toISOString());
+    
+    if (error) console.error('Expiry cron error:', error.message);
+    else console.log('Quotation expiry check completed.');
+  } catch (err) {
+    console.error('Quotation expiry cron failed:', err.message);
+  }
+});
+
+// --- LOW STOCK ALERTS CRON ---
+cron.schedule('0 9 * * *', async () => {
+  console.log('Running low stock alert check at 9:00 AM...');
+  try {
+    const supabaseAdmin = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY, {
+      realtime: { transport: WebSocket }
+    });
+    
+    // Find products with low stock (< 5)
+    const { data: lowStockProducts, error } = await supabaseAdmin
+      .from('products')
+      .select('name, stock_count')
+      .lt('stock_count', 5)
+      .eq('is_published', true);
+      
+    if (error) {
+      console.error('Low stock query error:', error.message);
+      return;
+    }
+    
+    if (lowStockProducts && lowStockProducts.length > 0) {
+      console.log(`Found ${lowStockProducts.length} low stock items. Sending alert...`);
+      
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: GMAIL_USER_DEFAULT,
+          pass: GMAIL_PASS_DEFAULT,
+        },
+      });
+      
+      const htmlBody = `
+        <div style="font-family: Arial, sans-serif;">
+          <h2 style="color: #d97706;">Low Stock Alert</h2>
+          <p>The following items are running low on stock (less than 5 remaining):</p>
+          <table style="width: 100%; max-width: 500px; border-collapse: collapse; margin-top: 10px;">
+            <tr style="background-color: #f3f4f6; text-align: left;">
+              <th style="padding: 10px; border: 1px solid #e5e7eb;">Product Name</th>
+              <th style="padding: 10px; border: 1px solid #e5e7eb; width: 100px;">Current Stock</th>
+            </tr>
+            ${lowStockProducts.map(p => `
+              <tr>
+                <td style="padding: 10px; border: 1px solid #e5e7eb;">${p.name}</td>
+                <td style="padding: 10px; border: 1px solid #e5e7eb; font-weight: bold; color: #dc2626;">${p.stock_count || 0}</td>
+              </tr>
+            `).join('')}
+          </table>
+          <p style="margin-top: 20px;">Please re-order these items to maintain inventory.</p>
+        </div>
+      `;
+      
+      await transporter.sendMail({
+        from: '"YantraByte System" <' + GMAIL_USER_DEFAULT + '>',
+        to: 'yantrabyte.solutions@gmail.com',
+        subject: `Low Stock Alert: ${lowStockProducts.length} items need re-ordering`,
+        html: htmlBody,
+      });
+      
+      console.log('Low stock alert email sent successfully.');
+    } else {
+      console.log('Inventory looks good, no low stock items.');
+    }
+  } catch (err) {
+    console.error('Low stock cron failed:', err.message);
+  }
+});
+
+// --- GOOGLE REVIEW AUTOMATION CRON ---
+cron.schedule('0 11 * * *', async () => {
+  console.log('Running Google Review automation check...');
+  try {
+    const supabaseAdmin = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY, {
+      realtime: { transport: WebSocket }
+    });
+    
+    // Find paid invoices created more than 48 hours ago, where review has not been requested
+    const twoDaysAgo = new Date();
+    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+    
+    const { data, error } = await supabaseAdmin
+      .from('invoices')
+      .select('id, invoice_no, doc_type, customer_name, phone, created_at')
+      .eq('payment_status', 'Paid')
+      .eq('doc_type', 'Invoice')
+      .eq('review_requested', false)
+      .lt('created_at', twoDaysAgo.toISOString())
+      .limit(20); // Process in batches
+      
+    if (error) {
+      console.error('Review cron db error:', error.message);
+      return;
+    }
+    
+    if (!data || data.length === 0) {
+      console.log('No new invoices eligible for review request today.');
+      return;
+    }
+    
+    console.log(`Found ${data.length} invoices eligible for review request.`);
+    
+    for (const inv of data) {
+      if (!inv.phone) continue;
+      
+      const GOOGLE_REVIEW_LINK = "https://g.page/r/CUCghqVAwGaXEBM/review";
+      
+      const cleanPhone = inv.phone.replace(/\D/g, '');
+      const waNumber = cleanPhone.length === 10 ? `91${cleanPhone}@c.us` : `${cleanPhone}@c.us`;
+      
+      const message = `Hi ${inv.customer_name},\n\nThis is YantraByte. We hope your device is working perfectly after our recent service! 💻✨\n\nIf you were satisfied with our work, it would mean the world to us if you could leave a quick 5-star review on Google. It helps our small business immensely!\n\nLeave a review here: ${GOOGLE_REVIEW_LINK}\n\nThank you for choosing Ananta Techcare (YantraByte)! 🙏`;
+      
+      if (whatsappClientReady) {
+        try {
+          await whatsappClient.sendMessage(waNumber, message);
+          console.log(`Sent review request for Invoice ${inv.invoice_no} to ${waNumber}`);
+          
+          // Mark as requested
+          await supabaseAdmin.from('invoices').update({ review_requested: true }).eq('id', inv.id);
+        } catch (msgErr) {
+          console.error(`Failed to send review request to ${waNumber}:`, msgErr.message);
+        }
+      } else {
+        console.warn('WhatsApp client not ready. Skipping review request sending.');
+      }
+    }
+  } catch (err) {
+    console.error('Google Review cron failed:', err.message);
+  }
+});
+
+
+// --- WHATSAPP PDF ATTACHMENT ENDPOINT ---
+app.post('/api/invoices/send-whatsapp-pdf', async (req, res) => {
+  const {
+    customerPhone,
+    customerName,
+    invoiceNumber,
+    documentType,
+    pdfBase64,
+    customCaption
+  } = req.body || {};
+
+  if (!customerPhone) {
+    return res.status(400).json({ ok: false, error: 'Customer phone number is required' });
+  }
+
+  if (!pdfBase64) {
+    return res.status(400).json({ ok: false, error: 'PDF data is missing' });
+  }
+
+  if (!isWhatsappReady) {
+    return res.status(503).json({
+      ok: false,
+      error: 'WhatsApp Business client is not connected. Please pair your device in WhatsApp Connect.'
+    });
+  }
+
+  let cleanPhone = String(customerPhone).replace(/\D/g, '');
+  if (cleanPhone.length === 10) cleanPhone = '91' + cleanPhone;
+
+  if (cleanPhone.length < 10) {
+    return res.status(400).json({ ok: false, error: 'Invalid phone number format' });
+  }
+
+  const cleanName = String(customerName || 'Customer');
+  const cleanInvNo = String(invoiceNumber || 'Invoice');
+  const cleanDocType = String(documentType || 'Invoice');
+  const safeFilename = sanitizeFilename(`${cleanDocType}_${cleanInvNo}.pdf`);
+
+  try {
+    const media = new MessageMedia('application/pdf', pdfBase64, safeFilename);
+    const caption = customCaption || `Dear *${cleanName}*,\n\nPlease find attached your official ${cleanDocType.toLowerCase()} *#${cleanInvNo}*.\n\nYou can also view / pay online securely here:\nhttps://yantrabyte.anantatechcare.com/my-invoices\n\nThank you for choosing *YantraByte Solutions*!`;
+    
+    await whatsappClient.sendMessage(`${cleanPhone}@c.us`, media, { caption });
+    console.log(`[Success] WhatsApp PDF invoice attachment sent to ${cleanPhone} for ${cleanInvNo}`);
+    
+    return res.json({ ok: true, message: `PDF ${cleanDocType} sent to WhatsApp successfully` });
+  } catch (err) {
+    console.error(`[Error] Failed to send WhatsApp PDF to ${cleanPhone}:`, err.message);
+    return res.status(500).json({ ok: false, error: `Failed to send WhatsApp PDF: ${err.message}` });
+  }
+});
+
+// --- CUSTOMER HISTORY & PORTAL ENDPOINT ---
+app.get('/api/invoices/customer/:phone', async (req, res) => {
+  const { phone } = req.params;
+  try {
+    const supabaseAdmin = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY, {
+      realtime: { transport: WebSocket }
+    });
+    
+    const cleanPhone = phone.replace(/\D/g, '');
+    if (cleanPhone.length < 10) return res.status(400).json({ error: 'Invalid phone number' });
+    
+    // Search with last 10 digits to handle various formats
+    const last10 = cleanPhone.slice(-10);
+    
+    const { data: invData, error: invError } = await supabaseAdmin
+      .from('invoices')
+      .select('*')
+      .ilike('phone', `%${last10}%`)
+      .order('created_at', { ascending: false })
+      .limit(50);
+    
+    if (invError) throw invError;
+
+    // Also fetch service tickets if any
+    let tickets = [];
+    try {
+      const { data: tData } = await supabaseAdmin
+        .from('service_tickets')
+        .select('*')
+        .ilike('customer_phone', `%${last10}%`)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (tData) tickets = tData;
+    } catch (tErr) {
+      console.warn('Could not fetch tickets for customer portal:', tErr.message);
+    }
+
+    return res.json({
+      invoices: invData || [],
+      tickets: tickets || []
+    });
+  } catch (err) {
+    console.error('Error fetching customer history:', err);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
 

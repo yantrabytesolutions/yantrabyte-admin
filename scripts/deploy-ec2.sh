@@ -89,12 +89,21 @@ fi
 
 install_prod_dependencies
 
+# --- WHATSAPP AUTH DIRECTORY ---
+echo "📱 Preparing WhatsApp auth directory..."
+sudo mkdir -p "${NEW_RELEASE_DIR}/.wwebjs_auth/session"
+sudo mkdir -p "${NEW_RELEASE_DIR}/.wwebjs_cache"
+
 # --- PERMISSIONS ENFORCEMENT ---
 echo "🔒 Correcting filesystem ownership and permissions..."
 sudo chown -R www-data:www-data "$NEW_RELEASE_DIR"
 sudo chown -h www-data:www-data "${NEW_RELEASE_DIR}/.env" 2>/dev/null || true
 sudo find "$NEW_RELEASE_DIR" -type d -exec chmod 755 {} \;
 sudo find "$NEW_RELEASE_DIR" -type f -exec chmod 644 {} \;
+
+# Fix WhatsApp auth ownership for PM2 (runs as ubuntu)
+sudo chown -R ubuntu:ubuntu "${NEW_RELEASE_DIR}/.wwebjs_auth"
+sudo chown -R ubuntu:ubuntu "${NEW_RELEASE_DIR}/.wwebjs_cache"
 
 # --- ATOMIC SWAP ---
 echo "🔄 Swapping active symbolic link..."
@@ -114,6 +123,14 @@ if command -v pm2 >/dev/null 2>&1; then
     pm2 save
 else
     echo "PM2 is not installed. Run: sudo npm install -g pm2"
+fi
+
+# --- SSL / CERTBOT AUTO-PROVISIONING ---
+if command -v certbot >/dev/null 2>&1; then
+    if ! sudo certbot certificates 2>/dev/null | grep -q "yantrabyte.anantatechcare.com"; then
+        echo "🔒 Provisioning SSL certificate for yantrabyte.anantatechcare.com..."
+        sudo certbot --nginx -d yantrabyte.anantatechcare.com --non-interactive --agree-tos -m yantrabyte.solutions@gmail.com --redirect || true
+    fi
 fi
 
 # --- SERVER RELOAD ---

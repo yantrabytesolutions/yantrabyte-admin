@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { X, Plus, Clock, CheckCircle, FileText, IndianRupee } from 'lucide-react';
+import { useState, useEffect, useCallback, FormEvent } from 'react';
+import { X, Plus, Clock, CheckCircle, FileText, IndianRupee, MessageSquare } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Invoice } from '../../types';
 
@@ -32,11 +32,18 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
   const [payments, setPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
+
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [payAmount, setPayAmount] = useState('');
+  const [payDate, setPayDate] = useState(new Date().toISOString().slice(0, 10));
   const [payMode, setPayMode] = useState('UPI');
   const [payRef, setPayRef] = useState('');
+  const [customPhone, setCustomPhone] = useState('');
+  const [sendWhatsApp, setSendWhatsApp] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [lastReceiptUrl, setLastReceiptUrl] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -46,7 +53,7 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
     
     const { data: invData } = await invQuery.order('date', { ascending: true });
     
-    // Fetch Payments (if table exists, otherwise it will just return empty or error which we catch)
+    // Fetch Payments
     let payData: any[] = [];
     try {
       let pQuery = supabase.from('customer_payments').select('*').eq('customer_name', customerName);
@@ -55,11 +62,20 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
       const { data: pResp, error } = await pQuery.order('payment_date', { ascending: true });
       if (!error && pResp) payData = pResp;
     } catch (e) {
-      console.warn('Could not fetch customer_payments, table might not exist yet.');
+      console.warn('Could not fetch customer_payments', e);
     }
 
-    setInvoices((invData || []).filter(i => i.doc_type === 'Invoice'));
+    const filteredInvoices = (invData || []).filter((i: Invoice) => i.doc_type === 'Invoice');
+    setInvoices(filteredInvoices);
     setPayments(payData || []);
+
+    // Detect phone & email
+    const foundPhone = filteredInvoices.find((i: Invoice) => i.phone)?.phone || '';
+    const foundEmail = filteredInvoices.find((i: Invoice) => i.email)?.email || '';
+    setCustomerPhone(foundPhone);
+    setCustomPhone(foundPhone);
+    setCustomerEmail(foundEmail);
+
     setLoading(false);
   }, [customerName, customerId]);
 
@@ -67,18 +83,58 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
     fetchData();
   }, [fetchData]);
 
-  const handleRecordPayment = async (e: React.FormEvent) => {
+  const generateReceiptText = (amount: number, dateStr: string, mode: string, refNote: string, finalBalance: number, totalBilledAmount: number, totalPaidAmount: number) => {
+    let msg = `🧾 *PAYMENT RECEIPT - Yantrabyte Solutions*\n\n`;
+    msg += `Dear *${customerName}*,\n\n`;
+    msg += `Thank you! We have received your payment of *₹${amount.toLocaleString('en-IN')}*.\n\n`;
+    msg += `*Payment Details:*\n`;
+    msg += `• *Date:* ${formatDateForUI(dateStr)}\n`;
+    msg += `• *Amount Received:* ₹${amount.toLocaleString('en-IN')}\n`;
+    msg += `• *Payment Mode:* ${mode}\n`;
+    if (refNote) msg += `• *Reference / Note:* ${refNote}\n`;
+    msg += `\n*Account Summary:*\n`;
+    if (totalBilledAmount > 0) msg += `• *Total Billed:* ₹${totalBilledAmount.toLocaleString('en-IN')}\n`;
+    if (totalPaidAmount > 0) msg += `• *Total Paid:* ₹${totalPaidAmount.toLocaleString('en-IN')}\n`;
+    msg += `• *Outstanding Balance:* ${finalBalance > 0 ? `*₹${finalBalance.toLocaleString('en-IN')}*` : '*₹0 (Fully Cleared 🎉)*'}\n\n`;
+    msg += `You can view your complete ledger & invoice history online here:\nhttps://yantrabyte.anantatechcare.com/my-invoices\n\n`;
+    msg += `Thank you for your business!\n*YantraByte Solutions*`;
+    return msg;
+  };
+
+  const handleSendWhatsAppReceipt = (amount: number, dateStr: string, mode: string, refNote: string, targetPhone?: string) => {
+    let phone = (targetPhone || customPhone || customerPhone || '').replace(/\D/g, '');
+    if (phone.length === 10) {
+      phone = '91' + phone;
+    }
+
+    const totalB = invoices.reduce((sum: number, inv: Invoice) => sum + (Number(inv.grand_total) || 0), 0);
+    const totalP = payments.reduce((sum: number, p: any) => sum + (Number(p.amount) || 0), 0) + amount;
+    const finalBal = Math.max(0, totalB - totalP);
+
+    const msg = generateReceiptText(amount, dateStr, mode, refNote, finalBal, totalB, totalP);
+
+    if (phone) {
+      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+    } else {
+      alert('No phone number found for this customer. Please enter a phone number.');
+    }
+  };
+
+  const handleRecordPayment = async (e: FormEvent) => {
     e.preventDefault();
     if (!payAmount || Number(payAmount) <= 0) return;
     setIsSubmitting(true);
+    setLastReceiptUrl(null);
+
+    const amountNum = Number(payAmount);
 
     try {
       // 1. Insert into customer_payments
       const paymentPayload = {
         customer_id: customerId || null,
         customer_name: customerName,
-        amount: Number(payAmount),
-        payment_date: new Date().toISOString().slice(0, 10),
+        amount: amountNum,
+        payment_date: payDate || new Date().toISOString().slice(0, 10),
         payment_mode: payMode,
         reference_note: payRef.trim() || null
       };
@@ -87,16 +143,16 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
       if (payErr) throw payErr;
 
       // 2. Distribute payment across unpaid invoices (FIFO)
-      let remainingAmount = Number(payAmount);
-      const unpaidInvoices = [...invoices].filter(i => (i.balance_due || 0) > 0).sort((a, b) => parseDateToTimestamp(a.date) - parseDateToTimestamp(b.date));
+      let remainingAmount = amountNum;
+      const unpaidInvoices = [...invoices].filter((i: Invoice) => (i.balance_due || 0) > 0).sort((a: Invoice, b: Invoice) => parseDateToTimestamp(a.date) - parseDateToTimestamp(b.date));
 
       for (const inv of unpaidInvoices) {
         if (remainingAmount <= 0) break;
-        const bal = inv.balance_due || 0;
+        const bal = (inv.balance_due !== undefined && inv.balance_due !== null) ? Number(inv.balance_due) : Math.max(0, (inv.grand_total || 0) - (inv.advance_paid || 0));
         const toApply = Math.min(bal, remainingAmount);
         
         const newAdvance = (inv.advance_paid || 0) + toApply;
-        const newBalance = (inv.grand_total || 0) - newAdvance;
+        const newBalance = Math.max(0, (inv.grand_total || 0) - newAdvance);
         
         const paymentStatus = newBalance <= 0 ? 'Paid' : 'Partial';
 
@@ -109,6 +165,42 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
         remainingAmount -= toApply;
       }
 
+      // Calculate totals for receipt
+      const totalBilled = invoices.reduce((sum: number, inv: Invoice) => sum + (Number(inv.grand_total) || 0), 0);
+      const totalPaid = payments.reduce((sum: number, p: any) => sum + (Number(p.amount) || 0), 0) + amountNum;
+      const finalBalance = Math.max(0, totalBilled - totalPaid);
+
+      // 3. Send Instant Receipt via Server API
+      const targetPhone = (customPhone || customerPhone || '').replace(/\D/g, '');
+      if (sendWhatsApp && targetPhone) {
+        try {
+          await fetch('/api/invoices/payment-receipt', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              customerName,
+              customerPhone: targetPhone,
+              customerEmail,
+              amount: amountNum,
+              paymentDate: payDate,
+              paymentMode: payMode,
+              referenceNote: payRef.trim(),
+              balanceDue: finalBalance,
+              totalBilled,
+              totalPaid
+            })
+          });
+        } catch (apiErr) {
+          console.warn('Server automated WhatsApp dispatch skipped:', apiErr);
+        }
+
+        // Prepare direct wa.me URL
+        let cleanP = targetPhone;
+        if (cleanP.length === 10) cleanP = '91' + cleanP;
+        const receiptMsg = generateReceiptText(amountNum, payDate, payMode, payRef.trim(), finalBalance, totalBilled, totalPaid);
+        setLastReceiptUrl(`https://wa.me/${cleanP}?text=${encodeURIComponent(receiptMsg)}`);
+      }
+
       setShowPaymentForm(false);
       setPayAmount('');
       setPayRef('');
@@ -116,7 +208,7 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
       onPaymentAdded();
     } catch (err) {
       console.error('Error saving payment:', err);
-      alert('Failed to save payment. Ensure customer_payments table exists.');
+      alert('Failed to save payment. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -124,8 +216,9 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
 
   // Build unified ledger timeline
   const ledgerLines: any[] = [];
-  
-  invoices.forEach(inv => {
+  const totalAdvancesOnInvoices = invoices.reduce((sum: number, inv: Invoice) => sum + (Number(inv.advance_paid) || 0), 0);
+
+  invoices.forEach((inv: Invoice) => {
     ledgerLines.push({
       id: `inv-${inv.id}`,
       date: parseDateToTimestamp(inv.date),
@@ -133,33 +226,44 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
       type: 'invoice',
       ref: inv.invoice_no,
       debit: inv.grand_total || 0,
-      credit: 0
+      credit: 0,
+      phone: inv.phone
     });
-    // If they made an initial advance payment on the invoice itself (before we had a payments table)
-    if (inv.advance_paid && inv.advance_paid > 0 && payments.length === 0) {
-      ledgerLines.push({
-        id: `inv-adv-${inv.id}`,
-        date: parseDateToTimestamp(inv.date) + 1000, // slightly after invoice
-        dateStr: inv.date,
-        type: 'initial_advance',
-        ref: `Advance for ${inv.invoice_no}`,
-        debit: 0,
-        credit: inv.advance_paid
-      });
-    }
   });
 
-  payments.forEach(p => {
-    ledgerLines.push({
-      id: `pay-${p.id}`,
-      date: parseDateToTimestamp(p.payment_date),
-      dateStr: p.payment_date,
-      type: 'payment',
-      ref: p.reference_note ? `Payment (${p.payment_mode}) - ${p.reference_note}` : `Payment (${p.payment_mode})`,
-      debit: 0,
-      credit: p.amount
+  if (payments.length > 0) {
+    payments.forEach((p: any) => {
+      ledgerLines.push({
+        id: `pay-${p.id}`,
+        date: parseDateToTimestamp(p.payment_date || p.created_at),
+        dateStr: p.payment_date || (p.created_at ? p.created_at.slice(0, 10) : ''),
+        type: 'payment',
+        ref: `Payment (${p.payment_mode || 'Cash'})${p.reference_note ? ` - ${p.reference_note}` : ''}`,
+        debit: 0,
+        credit: Number(p.amount) || 0,
+        amount: Number(p.amount) || 0,
+        mode: p.payment_mode || 'UPI',
+        note: p.reference_note || ''
+      });
     });
-  });
+  } else if (totalAdvancesOnInvoices > 0) {
+    invoices.forEach((inv: Invoice) => {
+      if ((inv.advance_paid || 0) > 0) {
+        ledgerLines.push({
+          id: `adv-${inv.id}`,
+          date: parseDateToTimestamp(inv.date),
+          dateStr: inv.date,
+          type: 'payment',
+          ref: `Advance/Payment for #${inv.invoice_no}`,
+          debit: 0,
+          credit: inv.advance_paid || 0,
+          amount: inv.advance_paid || 0,
+          mode: 'Advance',
+          note: `Invoice #${inv.invoice_no}`
+        });
+      }
+    });
+  }
 
   ledgerLines.sort((a, b) => a.date - b.date);
 
@@ -175,7 +279,11 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
               <FileText className="w-5 h-5 text-blue-400" />
               Customer Ledger
             </h2>
-            <p className="text-slate-400 text-sm">{customerName}</p>
+            <div className="flex items-center gap-3 text-slate-400 text-sm mt-0.5">
+              <span className="font-semibold text-white">{customerName}</span>
+              {customerPhone && <span>• 📱 {customerPhone}</span>}
+              {customerEmail && <span>• ✉️ {customerEmail}</span>}
+            </div>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-800 rounded-full transition-colors">
             <X className="w-5 h-5 text-slate-400 hover:text-white" />
@@ -191,54 +299,142 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
             </div>
           ) : (
             <>
+              {/* Last Receipt Action Banner */}
+              {lastReceiptUrl && (
+                <div className="mb-5 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between text-emerald-900 shadow-sm animate-in fade-in">
+                  <div className="flex items-center gap-2.5">
+                    <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
+                    <div>
+                      <span className="font-bold text-sm block">Payment Recorded Successfully!</span>
+                      <span className="text-xs text-emerald-700">Instant WhatsApp payment receipt drafted for {customerName}.</span>
+                    </div>
+                  </div>
+                  <a
+                    href={lastReceiptUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#25D366] hover:bg-[#128C7E] text-white text-xs font-bold rounded-lg shadow transition-colors"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    Send on WhatsApp
+                  </a>
+                </div>
+              )}
+
               {/* Payment Form */}
               {showPaymentForm ? (
-                <div className="bg-white p-5 rounded-lg shadow-sm border border-blue-100 mb-6 relative overflow-hidden">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
-                  <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                <div className="bg-white p-5 rounded-xl shadow-sm border border-blue-100 mb-6 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-600"></div>
+                  <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
                     <IndianRupee className="w-4 h-4 text-blue-600" />
-                    Record New Payment
+                    Record New Payment & Issue Receipt
                   </h3>
-                  <form onSubmit={handleRecordPayment} className="flex flex-wrap gap-4 items-end">
-                    <div className="flex-1 min-w-[150px]">
-                      <label className="block text-xs text-slate-500 mb-1">Amount (₹)</label>
-                      <input 
-                        type="text" 
-                        inputMode="decimal"
-                        required 
-                        value={payAmount} 
-                        onChange={e => {
-                          const val = e.target.value;
-                          if (val === '' || /^\d*\.?\d*$/.test(val)) {
-                            setPayAmount(val);
-                          }
-                        }} 
-                        className="w-full border-slate-300 rounded-md text-slate-900 focus:border-blue-500 focus:ring-blue-500" 
-                      />
+                  <form onSubmit={handleRecordPayment} className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">Amount (₹) *</label>
+                        <input 
+                          type="text" 
+                          inputMode="decimal"
+                          required 
+                          placeholder="e.g. 5000"
+                          value={payAmount} 
+                          onChange={e => {
+                            const val = e.target.value;
+                            if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                              setPayAmount(val);
+                            }
+                          }} 
+                          className="w-full border-slate-300 rounded-lg text-slate-900 text-sm font-semibold focus:border-blue-500 focus:ring-blue-500" 
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">Payment Date</label>
+                        <input
+                          type="date"
+                          value={payDate}
+                          onChange={e => setPayDate(e.target.value)}
+                          className="w-full border-slate-300 rounded-lg text-slate-900 text-sm focus:border-blue-500 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">Payment Mode</label>
+                        <select 
+                          value={payMode} 
+                          onChange={e => setPayMode(e.target.value)} 
+                          className="w-full border-slate-300 rounded-lg text-slate-900 text-sm focus:border-blue-500 focus:ring-blue-500"
+                        >
+                          <option value="UPI">UPI / GPay / PhonePe</option>
+                          <option value="Cash">Cash</option>
+                          <option value="Bank Transfer">Bank Transfer (NEFT/IMPS)</option>
+                          <option value="Card">Credit / Debit Card</option>
+                          <option value="Cheque">Cheque</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">WhatsApp Mobile #</label>
+                        <input
+                          type="text"
+                          placeholder="10-digit mobile"
+                          value={customPhone}
+                          onChange={e => setCustomPhone(e.target.value)}
+                          className="w-full border-slate-300 rounded-lg text-slate-900 text-sm focus:border-blue-500 focus:ring-blue-500"
+                        />
+                      </div>
                     </div>
-                    <div className="w-32">
-                      <label className="block text-xs text-slate-500 mb-1">Mode</label>
-                      <select value={payMode} onChange={e => setPayMode(e.target.value)} className="w-full border-slate-300 rounded-md text-slate-900 focus:border-blue-500 focus:ring-blue-500">
-                        <option>UPI</option>
-                        <option>Cash</option>
-                        <option>Bank Transfer</option>
-                      </select>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">Transaction Ref / Note</label>
+                        <input 
+                          type="text" 
+                          value={payRef} 
+                          onChange={e => setPayRef(e.target.value)} 
+                          placeholder="e.g. UTR # 4239847293 or Part payment" 
+                          className="w-full border-slate-300 rounded-lg text-slate-900 text-sm focus:border-blue-500 focus:ring-blue-500" 
+                        />
+                      </div>
+                      <div className="flex items-center gap-2 pt-4">
+                        <label className="flex items-center gap-2 text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-lg cursor-pointer hover:bg-emerald-100 transition-colors w-full">
+                          <input
+                            type="checkbox"
+                            checked={sendWhatsApp}
+                            onChange={e => setSendWhatsApp(e.target.checked)}
+                            className="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4"
+                          />
+                          <span>📱 Send Instant WhatsApp Payment Receipt</span>
+                        </label>
+                      </div>
                     </div>
-                    <div className="flex-2 min-w-[200px]">
-                      <label className="block text-xs text-slate-500 mb-1">Reference / Note</label>
-                      <input type="text" value={payRef} onChange={e => setPayRef(e.target.value)} placeholder="e.g. Cleared Inv-001" className="w-full border-slate-300 rounded-md text-slate-900 focus:border-blue-500 focus:ring-blue-500" />
-                    </div>
-                    <div className="flex gap-2">
-                      <button type="button" onClick={() => setShowPaymentForm(false)} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-md border border-slate-200 transition-colors">Cancel</button>
-                      <button type="submit" disabled={isSubmitting} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50">
-                        {isSubmitting ? 'Saving...' : 'Save Payment'}
+
+                    <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                      <button 
+                        type="button" 
+                        onClick={() => setShowPaymentForm(false)} 
+                        className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg border border-slate-200 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        type="submit" 
+                        disabled={isSubmitting} 
+                        className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50"
+                      >
+                        <IndianRupee className="w-3.5 h-3.5" />
+                        {isSubmitting ? 'Recording...' : 'Record Payment & Send Receipt'}
                       </button>
                     </div>
                   </form>
                 </div>
               ) : (
-                <div className="mb-6 flex justify-end">
-                  <button onClick={() => setShowPaymentForm(true)} className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-lg text-sm hover:bg-slate-800 transition-colors shadow-sm">
+                <div className="mb-6 flex justify-between items-center">
+                  <div className="text-xs text-slate-500">
+                    Lifetime statement of account and payment settlements.
+                  </div>
+                  <button 
+                    onClick={() => setShowPaymentForm(true)} 
+                    className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-800 transition-colors shadow-sm"
+                  >
                     <Plus className="w-4 h-4" /> Add Payment
                   </button>
                 </div>
@@ -254,6 +450,7 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
                       <th className="px-5 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Debit (Dr)</th>
                       <th className="px-5 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Credit (Cr)</th>
                       <th className="px-5 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Balance</th>
+                      <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">Receipt</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 bg-white text-sm">
@@ -266,23 +463,37 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
                             {line.type === 'invoice' ? (
                               <div className="font-semibold text-blue-700">Invoice #{line.ref}</div>
                             ) : (
-                              <div className="flex items-center gap-1.5 text-emerald-600">
+                              <div className="flex items-center gap-1.5 text-emerald-600 font-medium">
                                 <CheckCircle className="w-3.5 h-3.5" />
                                 <span>{line.ref}</span>
                               </div>
                             )}
                           </td>
                           <td className="px-5 py-3 text-right font-medium text-slate-900">{line.debit > 0 ? `₹${line.debit.toLocaleString('en-IN')}` : '-'}</td>
-                          <td className="px-5 py-3 text-right font-medium text-emerald-600">{line.credit > 0 ? `₹${line.credit.toLocaleString('en-IN')}` : '-'}</td>
-                          <td className="px-5 py-3 text-right font-bold text-rose-600">
+                          <td className="px-5 py-3 text-right font-bold text-emerald-600">{line.credit > 0 ? `₹${line.credit.toLocaleString('en-IN')}` : '-'}</td>
+                          <td className={`px-5 py-3 text-right font-bold ${runningBalance > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
                             ₹{runningBalance.toLocaleString('en-IN')}
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            {line.type === 'payment' && line.credit > 0 ? (
+                              <button
+                                onClick={() => handleSendWhatsAppReceipt(line.amount || line.credit, line.dateStr, line.mode || 'UPI', line.note || '', line.phone)}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-md text-xs font-semibold transition-colors"
+                                title="Send WhatsApp Payment Receipt"
+                              >
+                                <MessageSquare className="w-3 h-3 text-emerald-600" />
+                                Receipt
+                              </button>
+                            ) : (
+                              <span className="text-xs text-slate-400">—</span>
+                            )}
                           </td>
                         </tr>
                       );
                     })}
                     {ledgerLines.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="px-5 py-10 text-center text-slate-500">No transactions found for this customer.</td>
+                        <td colSpan={6} className="px-5 py-10 text-center text-slate-500">No transactions found for this customer.</td>
                       </tr>
                     )}
                   </tbody>
@@ -290,7 +501,10 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
                     <tfoot className="bg-slate-50 font-bold border-t-2 border-slate-200">
                       <tr>
                         <td colSpan={4} className="px-5 py-4 text-right text-slate-700">Total Outstanding Balance:</td>
-                        <td className="px-5 py-4 text-right text-rose-600 text-lg">₹{runningBalance.toLocaleString('en-IN')}</td>
+                        <td className={`px-5 py-4 text-right text-lg ${runningBalance > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                          ₹{runningBalance.toLocaleString('en-IN')}
+                        </td>
+                        <td></td>
                       </tr>
                     </tfoot>
                   )}

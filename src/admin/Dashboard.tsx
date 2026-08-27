@@ -55,12 +55,13 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       // 1. Fetch data for the last 6 months
       const sixMonthsAgo = startOfMonth(subMonths(new Date(), 5)).toISOString();
       
-      const [invoicesRes, purchasesRes, ticketsRes, productsRes, expensesRes] = await Promise.all([
+      const [invoicesRes, purchasesRes, ticketsRes, productsRes, expensesRes, paymentsRes] = await Promise.all([
         supabase.from('invoices').select('*').gte('created_at', sixMonthsAgo),
         supabase.from('purchases').select('*').gte('created_at', sixMonthsAgo),
         supabase.from('service_tickets').select('*'),
         supabase.from('products').select('*'),
-        supabase.from('expenses').select('*').gte('date', sixMonthsAgo)
+        supabase.from('expenses').select('*').gte('date', sixMonthsAgo),
+        supabase.from('customer_payments').select('*')
       ]);
 
       const invoices = (invoicesRes.data || []) as Invoice[];
@@ -68,6 +69,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       const tickets = (ticketsRes.data || []) as ServiceTicket[];
       const products = (productsRes.data || []);
       const expenses = (expensesRes.data || []) as Expense[];
+      const customerPayments = (paymentsRes.data || []) as any[];
       
       setLowStockProducts(products.filter(p => typeof p.stock_count === 'number' && p.stock_count < 5));
 
@@ -83,7 +85,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         }
       });
       setTotalRevenue(rev);
-      setTotalOutstanding(out);
       setTotalInvoices(invCount);
 
       let exp = 0;
@@ -98,33 +99,54 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       setActiveTickets(tickets.filter(t => t.status !== 'closed').length);
 
       // Get list of outstanding clients
-      const clients = invoices
-        .filter(inv => inv.doc_type === 'Invoice' && (inv.balance_due || 0) > 0)
-        .reduce((acc: OutstandingClient[], inv) => {
-          const name = String(inv.customer_name || 'Customer');
+      // Group invoices and reconcile with customer_payments so client balance is 100% exact
+      const clientsMap: Record<string, OutstandingClient> = {};
+
+      invoices
+        .filter(inv => inv.doc_type === 'Invoice')
+        .forEach(inv => {
+          const name = String(inv.customer_name || 'Customer').trim();
+          const lowerName = name.toLowerCase();
           const phone = String(inv.phone || '');
           const email = String(inv.email || '');
-          const due = inv.balance_due || 0;
-          
-          const existing = acc.find(c => c.customer_name?.toLowerCase() === name.toLowerCase());
-          if (existing) {
-            existing.balance_due += due;
-            if (!existing.invoices.includes(inv.invoice_no)) {
-              existing.invoices.push(inv.invoice_no);
-            }
-          } else {
-            acc.push({
+
+          if (!clientsMap[lowerName]) {
+            clientsMap[lowerName] = {
               customer_name: name,
               customer_phone: phone,
               customer_email: email,
-              balance_due: due,
-              invoices: [inv.invoice_no]
-            });
+              balance_due: 0,
+              invoices: []
+            };
           }
-          return acc;
-        }, [])
-        .sort((a, b) => b.balance_due - a.balance_due);
+
+          if (inv.invoice_no && !clientsMap[lowerName].invoices.includes(inv.invoice_no)) {
+            clientsMap[lowerName].invoices.push(inv.invoice_no);
+          }
+        });
+
+      const clients: OutstandingClient[] = [];
+
+      Object.entries(clientsMap).forEach(([lowerName, client]) => {
+        const custInvoices = invoices.filter(i => i.doc_type === 'Invoice' && String(i.customer_name || '').trim().toLowerCase() === lowerName);
+        const totalBilled = custInvoices.reduce((sum, i) => sum + (Number(i.grand_total) || 0), 0);
+        
+        const custPayments = customerPayments.filter(p => String(p.customer_name || '').trim().toLowerCase() === lowerName);
+        const totalPaymentsRecorded = custPayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+        const totalAdvancesOnInvoices = custInvoices.reduce((sum, i) => sum + (Number(i.advance_paid) || 0), 0);
+        const totalPaid = Math.max(totalPaymentsRecorded, totalAdvancesOnInvoices);
+
+        const trueDue = Math.max(0, totalBilled - totalPaid);
+
+        if (trueDue > 0) {
+          client.balance_due = trueDue;
+          clients.push(client);
+        }
+      });
+
+      clients.sort((a, b) => b.balance_due - a.balance_due);
       setOutstandingClients(clients);
+      setTotalOutstanding(clients.reduce((sum, c) => sum + c.balance_due, 0));
 
       // Get list of outstanding suppliers (Sundry Creditors)
       const suppliers = purchases
@@ -169,10 +191,20 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       });
 
       purchases.forEach(pur => {
-        if (!pur.created_at) return;
-        const monthLabel = format(parseISO(pur.created_at), 'MMM yyyy');
+        if (!pur.created_at && !pur.date) return;
+        const dateStr = pur.created_at || pur.date;
+        const monthLabel = format(parseISO(dateStr), 'MMM yyyy');
         if (monthlyData[monthLabel]) {
           monthlyData[monthLabel].expenses += Number(pur.grand_total) || 0;
+        }
+      });
+      
+      expenses.forEach(exp => {
+        if (!(exp as any).created_at && !exp.date) return;
+        const dateStr = (exp as any).created_at || exp.date;
+        const monthLabel = format(parseISO(dateStr), 'MMM yyyy');
+        if (monthlyData[monthLabel]) {
+          monthlyData[monthLabel].expenses += Number(exp.amount) || 0;
         }
       });
 
@@ -236,7 +268,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       
-      const res = await fetch('http://localhost:4000/api/invoices/reminders', {
+      const res = await fetch('/api/invoices/reminders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -266,7 +298,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4">
          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4">
            <div className="p-3 bg-emerald-100 text-emerald-600 rounded-lg"><IndianRupee className="w-6 h-6" /></div>
            <div>

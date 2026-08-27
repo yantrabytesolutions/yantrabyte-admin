@@ -1,0 +1,63 @@
+name: ☁️ AWS Infrastructure Provisioning (Terraform)
+
+on:
+  workflow_dispatch:
+    inputs:
+      terraform_action:
+        description: 'Terraform Action to execute'
+        required: true
+        default: 'apply'
+        type: choice
+        options:
+          - apply
+          - plan
+          - destroy
+
+jobs:
+  terraform:
+    name: 🏗️ Terraform ${{ inputs.terraform_action }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./terraform
+
+    steps:
+      - name: 📁 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🔑 Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+
+      - name: ⚙️ Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.15.8
+
+      - name: 🔄 Initialize Terraform Backend
+        run: terraform init -reconfigure
+
+      - name: 📋 Terraform Plan
+        if: ${{ inputs.terraform_action == 'plan' }}
+        run: terraform plan
+
+      - name: 🚀 Terraform Apply (Create Infrastructure)
+        if: ${{ inputs.terraform_action == 'apply' }}
+        run: |
+          terraform apply -auto-approve
+          STATIC_IP=$(terraform output -raw website_static_ip)
+          echo "=========================================================="
+          echo "🎉 SERVER CREATED SUCCESSFULLY!"
+          echo "🌐 ELASTIC STATIC IP: $STATIC_IP"
+          echo "=========================================================="
+          echo "### 🚀 Infrastructure Created Successfully! :tada:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Static Public IP:** \`$STATIC_IP\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Region:** \`ap-south-1 (Mumbai)\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Next Step:** Update \`EC2_HOST\` in GitHub Secrets with this IP: \`$STATIC_IP\`" >> $GITHUB_STEP_SUMMARY
+
+      - name: 💥 Terraform Destroy (Tear Down Infrastructure)
+        if: ${{ inputs.terraform_action == 'destroy' }}
+        run: terraform destroy -auto-approve
