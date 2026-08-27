@@ -1899,7 +1899,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             </div>
 
             <div className="mt-8 space-y-3">
-              <button disabled={isSaving} onClick={() => handleSave('save')} className="w-full flex items-center justify-center px-4 py-2.5 bg-gray-800 hover:bg-gray-900 text-white font-medium rounded-lg transition-colors">
+              <button disabled={isSaving} onClick={() => handleSave('save')} className="w-full flex items-center justify-center px-4 py-2.5 bg-gray-800 hover:bg-gray-900 text-white font-medium rounded-lg transition-colors shadow-sm">
                 {isSaving ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                 Save Only
               </button>
@@ -1909,6 +1909,21 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               <button disabled={isSaving} onClick={() => handleSave('email')} className="w-full flex items-center justify-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors shadow-sm shadow-blue-200">
                 {isSendingEmail ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Mail className="w-4 h-4 mr-2" />}
                 Save & Email PDF
+              </button>
+              <button 
+                type="button"
+                onClick={() => {
+                  const cleanPhone = phone ? phone.replace(/\D/g, '') : '';
+                  const phoneNum = cleanPhone.length === 10 ? cleanPhone : (cleanPhone.length > 10 ? cleanPhone.slice(-10) : '');
+                  const itemsSummary = items.map((it, idx) => `${idx + 1}. ${it.description} (Qty: ${it.qty}) - ₹${(it.qty * it.rate).toLocaleString('en-IN')}`).join('\n');
+                  const msg = `*YANTRABYTE SOLUTIONS* 🛠️\n*Invoice No:* ${printInvoiceNumber || (selectedInvoiceId ? (invoices.find(i=>i.id===selectedInvoiceId)?.invoice_no || 'INV-2026') : 'INV-2026')}\n*Date:* ${invoiceDate}\n*Customer:* ${customerName || 'Valued Customer'}\n\n*Billing Summary:*\n${itemsSummary}\n\n*Grand Total:* ₹${grandTotal.toLocaleString('en-IN')}\n*Advance Paid:* ₹${advancePaid.toLocaleString('en-IN')}\n*Balance Due:* ₹${balanceDue.toLocaleString('en-IN')}\n\n*Pay via UPI:* s0424237152@slc\n*Bank:* North East Small Finance Bank | A/C: 033311501023226 | IFSC: NESF0000333\n\nThank you for choosing YantraByte Solutions!`;
+                  const targetUrl = phoneNum ? `https://api.whatsapp.com/send?phone=91${phoneNum}&text=${encodeURIComponent(msg)}` : `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+                  window.open(targetUrl, '_blank');
+                }} 
+                className="w-full flex items-center justify-center px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors shadow-sm shadow-emerald-200"
+              >
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Share via WhatsApp
               </button>
             </div>
           </div>

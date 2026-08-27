@@ -426,6 +426,7 @@
         <button class="btn red" onclick="clearItems()">&#10005; Clear Items</button>
         <button class="btn amber" onclick="saveInvoice()">&#128190; Save Only</button>
         <button class="btn green" onclick="generateInvoice()">&#128196; Save &amp; Generate PDF</button>
+        <button class="btn emerald" onclick="shareWhatsApp()" style="background: linear-gradient(135deg, #059669, #10b981); color: #fff;">&#128172; Share via WhatsApp</button>
       </div>
 
       <!-- Items Table -->
@@ -1144,6 +1145,31 @@
         })
         .withFailureHandler(function(err) { setStatus('PDF generation error: ' + err.message, 'error'); })
         .generatePdf(data);
+    }
+
+    function shareWhatsApp() {
+      var data = getFormData();
+      if (!validateForm(data)) return;
+      var phoneNum = data.phone ? data.phone.replace(/\D/g, '') : '';
+      if (phoneNum.length > 10) phoneNum = phoneNum.slice(-10);
+
+      var itemsStr = data.items.map(function(it, i) {
+        return (i + 1) + '. ' + it.description + ' (Qty: ' + it.qty + ') - ' + fmtINR(it.qty * it.rate);
+      }).join('\n');
+
+      var msg = '*YANTRABYTE SOLUTIONS* 🛠️\n' +
+        '*Invoice No:* ' + (editInvoiceNo || 'INV-2026') + '\n' +
+        '*Customer:* ' + (data.customerName || 'Valued Customer') + '\n\n' +
+        '*Billing Summary:*\n' + itemsStr + '\n\n' +
+        '*Grand Total:* ' + fmtINR(data.grandTotal || 0) + '\n' +
+        '*Advance Paid:* ' + fmtINR(data.advancePaid || 0) + '\n' +
+        '*Balance Due:* ' + fmtINR(data.balanceDue || 0) + '\n\n' +
+        '*Pay via UPI:* s0424237152@slc\n' +
+        '*Bank:* North East Small Finance Bank | A/C: 033311501023226 | IFSC: NESF0000333\n\n' +
+        'Thank you for choosing YantraByte Solutions!';
+
+      var url = phoneNum ? 'https://api.whatsapp.com/send?phone=91' + phoneNum + '&text=' + encodeURIComponent(msg) : 'https://api.whatsapp.com/send?text=' + encodeURIComponent(msg);
+      window.open(url, '_blank');
     }
 
     // Enter key to add item (Sales)
