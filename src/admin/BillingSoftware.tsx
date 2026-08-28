@@ -1059,7 +1059,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob') as Blob;
             pdfUrl = await uploadPdfToSupabase(pdfBlob, payload.invoice_no);
             
-            uploadInvoiceToDrive(pdfBlob, payload.invoice_no, payload.date).then(res => {
+            uploadInvoiceToDrive(pdfBlob, payload.invoice_no, payload.date, (payload.doc_type as any) || 'INVOICE').then(res => {
               if (res.ok) console.log('Backed up to Drive:', res.fileId);
               else console.error('Drive Backup Failed:', res.error);
             });

@@ -13,7 +13,18 @@ export type DriveBackupResult = {
   fileId?: string;
 };
 
-export async function uploadInvoiceToDrive(blob: Blob, invoiceNo: string, dateStr: string): Promise<DriveBackupResult> {
+export const GOOGLE_DRIVE_FOLDERS = {
+  INVOICES: '1IjLBTnX7z-TJE6LHlDEgz4zyWku6V2nO',
+  QUOTATIONS: '1eegykuvfmehqa59LKCIM3YynwPZIQOyy',
+  TICKETS: '1aRy8gpeYrYXuyBJb_LxGNBgkSuc5ktGi',
+};
+
+export async function uploadInvoiceToDrive(
+  blob: Blob, 
+  invoiceNo: string, 
+  dateStr: string, 
+  docType: 'INVOICE' | 'QUOTATION' | 'ESTIMATE' | 'TICKET' = 'INVOICE'
+): Promise<DriveBackupResult> {
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
   if (!token) {
@@ -48,10 +59,14 @@ export async function uploadInvoiceToDrive(blob: Blob, invoiceNo: string, dateSt
     }
   }
 
+  const isQuote = docType === 'QUOTATION' || docType === 'ESTIMATE';
+  const parentFolderId = isQuote ? GOOGLE_DRIVE_FOLDERS.QUOTATIONS : GOOGLE_DRIVE_FOLDERS.INVOICES;
+  const filePrefix = isQuote ? 'Quotation' : 'Invoice';
+
   const payload: DriveBackupPayload = {
-    fileName: `Invoice_${invoiceNo}.pdf`,
+    fileName: `${filePrefix}_${invoiceNo}.pdf`,
     fileBase64,
-    parentFolderId: '1IjLBTnX7z-TJE6LHlDEgz4zyWku6V2nO',
+    parentFolderId,
     subFolder
   };
 

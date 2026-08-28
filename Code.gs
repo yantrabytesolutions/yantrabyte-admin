@@ -4,6 +4,7 @@ const APP = {
   PRINT_SHEET: 'Print_Invoice',
   PRINT_TICKET_SHEET: 'Print_Ticket',
   PDF_FOLDER_ID: '1IjLBTnX7z-TJE6LHlDEgz4zyWku6V2nO',
+  QUOTATION_FOLDER_ID: '1eegykuvfmehqa59LKCIM3YynwPZIQOyy',
   TICKET_FOLDER_ID: '1aRy8gpeYrYXuyBJb_LxGNBgkSuc5ktGi',
   LOGO_FILE_ID: '16R4HC_X6wlhVuIyb4aAgN6sFaseUMzLf',
   SEAL_FILE_ID: '1w4naEw7XOLmPju6GlALW5bHhrg3ij3bF', // Activated Seal ID
@@ -630,8 +631,8 @@ function numberToWords_(num) {
   return str.trim()+' Rupees';
 }
 
-function exportCurrentSheetToPdf_(spreadsheetId, gid, fileName) {
-  var folder = getTargetFolder_();
+function exportCurrentSheetToPdf_(spreadsheetId, gid, fileName, folderId) {
+  var folder = folderId ? DriveApp.getFolderById(folderId) : getTargetFolder_();
   var url = 'https://docs.google.com/spreadsheets/d/' + spreadsheetId + '/export?' + [
     'exportFormat=pdf','format=pdf','size=A4','portrait=true',
     'scale=4','fitw=true','sheetnames=false','printtitle=false',
@@ -872,7 +873,7 @@ function generateQuotationPdf(data) {
   SpreadsheetApp.flush();
   Utilities.sleep(6000); // FIXED: increased from 4000 for logo rendering
   var printSheet = ss.getSheetByName('Print_Quotation');
-  var pdfFile = exportCurrentSheetToPdf_(ss.getId(), printSheet.getSheetId(), quoteNo);
+  var pdfFile = exportCurrentSheetToPdf_(ss.getId(), printSheet.getSheetId(), quoteNo, APP.QUOTATION_FOLDER_ID);
   var rowData = buildQuoteRowData_(date, quoteNo, data, totals, 'Sent', pdfFile.getUrl());
   if (isUpdate) {
     var rowIdx = findQuoteRow_(logSheet, quoteNo);
