@@ -331,12 +331,11 @@ export default function PortalDashboard() {
       {/* Hidden Invoice Template for PDF Generation */}
       <div style={{ position: 'absolute', top: 0, left: 0, width: '794px', opacity: 0, pointerEvents: 'none', zIndex: -1000 }}>
         {activeInvoiceForPdf && (
-          <div ref={printRef} className="bg-white text-black" style={{ width: '794px', height: '1115px', position: 'relative' }}>
-            <InvoicePdfTemplate 
-              invoice={activeInvoiceForPdf} 
-              companySignature={companySignatureBase64 || undefined} 
-            />
-          </div>
+          <InvoicePdfTemplate 
+            ref={printRef}
+            invoice={activeInvoiceForPdf} 
+            companySignature={companySignatureBase64 || undefined} 
+          />
         )}
       </div>
     </div>

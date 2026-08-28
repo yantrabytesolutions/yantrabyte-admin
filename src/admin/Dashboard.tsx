@@ -447,34 +447,52 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           
           <div className="flex-1 overflow-y-auto space-y-3 pr-2">
             {outstandingClients.map((client, i) => (
-              <div key={i} className="flex flex-col p-3 rounded-lg bg-gray-50 border border-gray-100">
+              <div 
+                key={i} 
+                onClick={() => setLedgerCustomerName(client.customer_name)}
+                className="flex flex-col p-3.5 rounded-lg bg-gray-50 hover:bg-blue-50/50 border border-gray-100 hover:border-blue-200 transition-all cursor-pointer group shadow-xs hover:shadow-sm"
+              >
                 <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <div className="font-semibold text-gray-900 text-sm">{client.customer_name}</div>
-                    <div className="text-[10px] text-gray-500 mt-0.5">Invoices: {client.invoices.join(', ')}</div>
-                    {client.customer_email && <div className="text-[10px] text-gray-400">{client.customer_email}</div>}
+                  <div className="flex-1 pr-2">
+                    <div className="font-bold text-gray-900 text-sm group-hover:text-blue-600 transition-colors flex items-center gap-1.5">
+                      {client.customer_name}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1 mt-1">
+                      <span className="text-[10px] text-gray-500 font-medium">Invoices:</span>
+                      {client.invoices.map((invNo, idx) => (
+                        <span key={idx} className="text-[10px] bg-white border border-gray-200 text-gray-700 px-1.5 py-0.5 rounded font-mono font-medium">
+                          {invNo}
+                        </span>
+                      ))}
+                    </div>
+                    {client.customer_email && <div className="text-[10px] text-gray-400 mt-0.5">{client.customer_email}</div>}
                   </div>
                   <div 
-                    className="font-bold text-rose-500 font-mono text-sm cursor-pointer hover:bg-rose-50 px-2 py-1 rounded"
-                    onClick={() => setLedgerCustomerName(client.customer_name)}
+                    className="font-bold text-rose-500 font-mono text-sm bg-rose-50/80 px-2 py-1 rounded border border-rose-100 flex-shrink-0"
                   >
                     ₹{client.balance_due.toLocaleString('en-IN')}
                   </div>
                 </div>
-                <div className="flex justify-end mt-2 gap-2">
+                <div className="flex justify-end mt-1 gap-2 pt-1 border-t border-gray-100/80">
                   <button
-                    onClick={() => setLedgerCustomerName(client.customer_name)}
-                    className="p-1.5 rounded bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors flex items-center text-xs font-semibold gap-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setLedgerCustomerName(client.customer_name);
+                    }}
+                    className="p-1.5 px-2.5 rounded bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors flex items-center text-xs font-semibold gap-1"
                     title="View Customer Ledger"
                   >
                     <FileText className="w-3.5 h-3.5" /> Ledger
                   </button>
                   <button
-                    onClick={() => sendDuesReminder(client)}
-                    className="p-1.5 rounded bg-green-50 text-green-600 hover:bg-green-100 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      sendDuesReminder(client);
+                    }}
+                    className="p-1.5 px-2 rounded bg-green-50 text-green-600 hover:bg-green-100 transition-colors flex items-center text-xs font-semibold gap-1"
                     title="Send WhatsApp Reminder"
                   >
-                    <MessageSquare className="w-4 h-4" />
+                    <MessageSquare className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
@@ -499,14 +517,25 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           
           <div className="flex-1 overflow-y-auto space-y-3 pr-2">
             {outstandingSuppliers.map((supplier, i) => (
-              <div key={i} className="flex flex-col p-3 rounded-lg bg-gray-50 border border-gray-100">
+              <div 
+                key={i} 
+                onClick={() => onNavigate && onNavigate('purchases')}
+                className="flex flex-col p-3.5 rounded-lg bg-gray-50 hover:bg-amber-50/50 border border-gray-100 hover:border-amber-200 transition-all cursor-pointer group shadow-xs hover:shadow-sm"
+              >
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <div className="font-semibold text-gray-900 text-sm">{supplier.supplier_name}</div>
-                    <div className="text-[10px] text-gray-500 mt-0.5">Purchases: {supplier.purchases.join(', ')}</div>
+                    <div className="font-bold text-gray-900 text-sm group-hover:text-amber-700 transition-colors">{supplier.supplier_name}</div>
+                    <div className="flex flex-wrap items-center gap-1 mt-1">
+                      <span className="text-[10px] text-gray-500 font-medium">Purchases:</span>
+                      {supplier.purchases.map((purNo, pIdx) => (
+                        <span key={pIdx} className="text-[10px] bg-white border border-gray-200 text-gray-700 px-1.5 py-0.5 rounded font-mono font-medium">
+                          {purNo}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                   <div 
-                    className="font-bold text-amber-600 font-mono text-sm cursor-pointer hover:bg-amber-50 px-2 py-1 rounded"
+                    className="font-bold text-amber-600 font-mono text-sm bg-amber-50 px-2 py-1 rounded border border-amber-100"
                   >
                     ₹{supplier.balance_due.toLocaleString('en-IN')}
                   </div>

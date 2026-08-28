@@ -5,7 +5,6 @@ import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, U
 import { sendTelegramNotification } from '../utils/telegram';
 import html2pdf from 'html2pdf.js';
 
-import { QRCodeSVG } from 'qrcode.react';
 import SignatureCanvas from 'react-signature-canvas';
 import { PRESET_ITEMS } from './presetItems';
 import { downloadExcelWorkbook } from '../utils/spreadsheetXml';
@@ -13,39 +12,7 @@ import { appendBackupRow } from '../utils/googleSheetBackup';
 import { uploadInvoiceToDrive } from '../utils/googleDriveBackup';
 import { ERPUtils } from '../utils/erp';
 import CustomerLedgerModal from './components/CustomerLedgerModal';
-
-
-// --- Utility Functions ---
-function numberToWords(num: number): string {
-  num = Math.round(Number(num || 0));
-  if (num === 0) return 'Zero Rupees';
-
-  const a = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
-    'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
-  const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
-
-  function two(n: number): string {
-    if (n < 20) return a[n];
-    return b[Math.floor(n / 10)] + (n % 10 ? ' ' + a[n % 10] : '');
-  }
-  function three(n: number): string {
-    if (n < 100) return two(n);
-    return a[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' ' + two(n % 100) : '');
-  }
-
-  let str = '';
-  const crore = Math.floor(num / 10000000); num %= 10000000;
-  const lakh = Math.floor(num / 100000); num %= 100000;
-  const thousand = Math.floor(num / 1000); num %= 1000;
-  const rest = num;
-
-  if (crore) str += three(crore) + ' Crore ';
-  if (lakh) str += three(lakh) + ' Lakh ';
-  if (thousand) str += three(thousand) + ' Thousand ';
-  if (rest) str += three(rest) + ' ';
-
-  return str.trim() + ' Rupees';
-}
+import { InvoicePdfTemplate } from '../components/InvoicePdfTemplate';
 
 interface BillingSoftwareProps {
   initialAutofillTicket?: ServiceTicket | null;
@@ -2402,223 +2369,38 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
       {/* --- HIDDEN PRINT TEMPLATE --- */}
       <div style={{ position: 'absolute', top: 0, left: 0, width: '794px', opacity: 0, pointerEvents: 'none', zIndex: -1000 }}>
-        <div ref={printRef} className="bg-white p-[24px] text-black flex flex-col" style={{ 
-          width: '794px', 
-          height: '1115px',
-          boxSizing: 'border-box',
-          overflow: 'hidden',
-          maxWidth: 'none', 
-          fontFamily: 'Arial, sans-serif',
-          position: 'relative'
-        }}>
-          {/* Watermark Overlay */}
-          <div style={{
-            position: 'absolute',
-            top: 0, left: 0, width: '100%', height: '100%',
-            backgroundImage: 'url(/hardware_watermark.png)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            pointerEvents: 'none',
-            zIndex: 50,
-            opacity: 0.2
-          }}>
-          </div>
-          
-          {docType === 'Cancelled' && (
-            <div style={{
-              position: 'absolute',
-              top: '50%', left: '50%',
-              transform: 'translate(-50%, -50%) rotate(-45deg)',
-              color: 'rgba(220, 38, 38, 0.4)',
-              fontSize: '90px',
-              fontWeight: 'bold',
-              textTransform: 'uppercase',
-              pointerEvents: 'none',
-              zIndex: 60,
-              whiteSpace: 'nowrap'
-            }}>
-              CANCELLED
-            </div>
-          )}
-
-          {/* Outer Border for main content */}
-          <div className="flex flex-col relative z-10" style={{ border: '1.5px solid #000' }}>
-            
-            {/* Header */}
-            <div className="flex items-center justify-between p-3 pb-1" style={{ borderBottom: '1px solid #000' }}>
-              <div className="flex items-center justify-start ml-1">
-                <img src="/logo6.png" alt="YantraByte Solutions" style={{ height: '110px', width: 'auto' }} crossOrigin="anonymous" />
-              </div>
-              <div className="text-right">
-                <h1 className="text-xl font-bold tracking-wide" style={{ color: '#0B5394' }}>YANTRABYTE SOLUTIONS</h1>
-                <p className="text-xs mt-1" style={{ color: '#333333' }}>47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br/>Chikkabettahalli, Bengaluru - 560097</p>
-                <p className="text-xs mt-1" style={{ color: '#333333' }}><span style={{ fontSize: "14px" }}>📱</span> Phone: 09986742525 | <span style={{ fontSize: "14px" }}>✉️</span> Email: yantrabyte.solutions@gmail.com</p>
-              </div>
-            </div>
-
-            {/* INVOICE Title */}
-            <div className="font-bold text-center py-1.5 text-base tracking-widest uppercase text-white" style={{ backgroundColor: docType === 'Cancelled' ? '#DC2626' : '#0B5394', borderBottom: '1px solid #000' }}>
-              {docType === 'Cancelled' ? 'CANCELLED INVOICE' : (docType === 'Quotation' ? 'QUOTATION' : 'INVOICE')}
-            </div>
-
-            {/* Invoice No and Date */}
-            <div className="flex justify-between" style={{ borderBottom: '1px solid #000' }}>
-              <div className="w-1/2 p-2 font-bold text-base" style={{ borderRight: '1.5px solid #000', color: '#DC2626' }}>
-                {docType === 'Quotation' ? 'Quotation No: ' : (docType === 'Cancelled' ? 'Cancelled No: ' : 'Invoice No: ')} {printInvoiceNumber || (selectedInvoiceId ? (invoices.find(i=>i.id===selectedInvoiceId)?.invoice_no || 'DRAFT') : 'DRAFT')}
-              </div>
-              <div className="w-1/2 p-2 text-right font-bold text-base" style={{ color: '#333333' }}>
-                Date: {invoiceDate.split('-').reverse().join('/')}
-              </div>
-            </div>
-
-            {/* Bill To */}
-            <div style={{ borderBottom: '1px solid #000' }}>
-              <div className="p-1 px-2 font-bold text-sm" style={{ backgroundColor: '#D9EAF7', color: '#7E22CE', borderBottom: '1px solid #000' }}>
-                Bill To:
-              </div>
-              <div className="p-2 text-sm leading-tight" style={{ color: '#000000' }}>
-                <div className="font-bold text-base mb-1">{customerName || '—'}</div>
-                <div>Phone: {phone || '—'} &nbsp;&nbsp;&nbsp; Email: {email || '—'}</div>
-                <div>Address: {address || '—'}</div>
-              </div>
-            </div>
-
-            {/* Items Table */}
-            <div className="relative mt-2">
-              <table className="w-full text-sm text-left relative z-0" style={{ borderCollapse: 'collapse', borderBottom: '1px solid #000', borderTop: '1px solid #000' }}>
-              <thead>
-                <tr className="text-white" style={{ backgroundColor: '#0B5394' }}>
-                  <th className="p-2 w-12 text-center" style={{ borderBottom: '1px solid #000', borderRight: '1px solid #000' }}>Sl<br/>No.</th>
-                  <th className="p-2 text-left" style={{ borderBottom: '1px solid #000', borderRight: '1px solid #000' }}>Description</th>
-                  <th className="p-2 w-16 text-center" style={{ borderBottom: '1px solid #000', borderRight: '1px solid #000' }}>Qty</th>
-                  <th className="p-2 w-24 text-right" style={{ borderBottom: '1px solid #000', borderRight: '1px solid #000' }}>Rate</th>
-                  <th className="p-2 w-28 text-right" style={{ borderBottom: '1px solid #000' }}>Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((it: any, idx: number) => (
-                  <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? 'transparent' : 'rgba(248, 250, 252, 0.6)' }}>
-                    <td className="p-2 text-center" style={{ borderRight: '1px solid #000', color: '#000' }}>{idx + 1}</td>
-                    <td className="p-2 font-medium" style={{ borderRight: '1px solid #000', color: '#000' }}>
-                      <div>{it.description || it.item || it.name || it.item_name || ''}</div>
-                      {it.serial_no && (
-                        <div style={{ fontSize: '11px', color: '#475569', marginTop: '2px', fontWeight: 'bold' }}>
-                          S/N: {it.serial_no}
-                        </div>
-                      )}
-                    </td>
-                    <td className="p-2 text-center" style={{ borderRight: '1px solid #000', color: '#000' }}>{it.qty || 1}</td>
-                    <td className="p-2 text-right" style={{ borderRight: '1px solid #000', color: '#000' }}>{Number(it.rate || it.price || it.amount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                    <td className="p-2 text-right font-bold" style={{ color: '#000' }}>{(Number(it.qty || 1) * Number(it.rate || it.price || it.amount || 0)).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                  </tr>
-                ))}
-                {/* Padding rows to fill table space like the screenshot */}
-                {[...Array(Math.max(0, 6 - items.length))].map((_, idx) => (
-                  <tr key={`empty-${idx}`} style={{ backgroundColor: 'transparent' }}>
-                    <td className="p-2 text-transparent" style={{ borderRight: '1px solid #000' }}>.</td>
-                    <td className="p-2 text-transparent" style={{ borderRight: '1px solid #000' }}>.</td>
-                    <td className="p-2 text-transparent" style={{ borderRight: '1px solid #000' }}>.</td>
-                    <td className="p-2 text-transparent" style={{ borderRight: '1px solid #000' }}>.</td>
-                    <td className="p-2 text-transparent">.</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            </div>
-
-            {/* Totals Box */}
-            <div className="flex text-sm">
-              <div className="w-3/5 p-3 flex flex-col justify-start" style={{ borderRight: '1px solid #000' }}>
-                <div className="font-bold inline-block px-2 py-0.5 mb-2" style={{ backgroundColor: '#D9EAF7', color: '#B45309', alignSelf: 'flex-start' }}>Amount in Words:</div>
-                <div className="italic text-gray-800">{numberToWords(grandTotal)}</div>
-              </div>
-              <div className="w-2/5 flex flex-col">
-                <div className="flex justify-between p-1.5 px-3" style={{ borderBottom: '1px solid #000' }}>
-                  <span style={{ color: '#333333' }}>Subtotal</span>
-                  <span style={{ color: '#000000' }}>{subtotal.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
-                </div>
-                {discount > 0 && (
-                  <div className="flex justify-between p-1.5 px-3" style={{ borderBottom: '1px solid #000' }}>
-                    <span style={{ color: '#333333' }}>Discount</span>
-                    <span style={{ color: '#000000' }}>{discount.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
-                  </div>
-                )}
-                {roundOff !== 0 && (
-                  <div className="flex justify-between p-1.5 px-3" style={{ borderBottom: '1px solid #000' }}>
-                    <span style={{ color: '#333333' }}>Round Off</span>
-                    <span style={{ color: '#000000' }}>{roundOff.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
-                  </div>
-                )}
-                <div className="flex justify-between p-1.5 px-3 font-bold" style={{ backgroundColor: '#FFF2CC', borderBottom: '1px solid #000', color: '#15803D' }}>
-                  <span>Grand Total</span>
-                  <span className="text-base">{grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
-                </div>
-                <div className="flex justify-between p-1.5 px-3" style={{ borderBottom: '1px solid #000' }}>
-                  <span style={{ color: '#333333' }}>Advance Paid</span>
-                  <span style={{ color: '#000000' }}>{advancePaid.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
-                </div>
-                <div className="flex justify-between p-1.5 px-3 font-bold" style={{ backgroundColor: '#FFF2CC', color: '#B91C1C' }}>
-                  <span>Balance Due</span>
-                  <span className="text-base">{balanceDue.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Footer Two Boxes */}
-          <div className="flex mt-auto space-x-3">
-            
-            {/* Terms Box */}
-            <div className="w-3/5 flex flex-col" style={{ border: '1px solid #000' }}>
-              <div className="font-bold text-center p-1 text-white text-sm" style={{ backgroundColor: '#0B5394' }}>Terms & Conditions</div>
-              <div className="p-3 space-y-1 whitespace-pre-wrap text-[13px]" style={{ color: '#444444' }}>
-                {termsConditions || (docType === 'Quotation' ? (
-                  `1. Estimate valid for ${quoteValidityDays} days.\n2. Advance payment of ${quoteAdvancePercent}% required and remaining against Delivery.\n3. Final amount may vary if hidden faults are found.`
-                ) : (
-                  "1. Service warranty is valid for 30 days only.\n2. No warranty for Windows installation/software issues.\n3. YantraByte Solutions is not responsible for any data loss.\n4. Customer should take backup of all important files prior.\n5. Physical, liquid or burnt damages void warranty.\n6. No warranty for swollen batteries or electrical faults."
-                ))}
-              </div>
-            </div>
-
-            {/* Bank & Payment Details Box */}
-            <div className="w-2/5 flex flex-col" style={{ border: '1px solid #000' }}>
-              <div className="font-bold text-center p-1 text-white text-sm" style={{ backgroundColor: '#0B5394' }}>Bank & Payment Details</div>
-              
-              <div className="p-2 flex justify-between">
-                <div className="text-[12px] leading-relaxed" style={{ color: '#000' }}>
-                  <span className="font-bold">Bank:</span> North East Small Finance Bank<br/>
-                  <span className="font-bold">A/C Name:</span> YantraByte Solutions<br/>
-                  <span className="font-bold">A/C No:</span> 033311501023226<br/>
-                  <span className="font-bold">IFSC:</span> NESF0000333<br/>
-                  <span className="font-bold">UPI:</span> s0424237152@slc
-                </div>
-                <div className="w-16 h-16 ml-2 flex-shrink-0 flex justify-center items-center bg-white">
-                  <QRCodeSVG 
-                    value={`upi://pay?pa=s0424237152@slc&pn=${encodeURIComponent('YantraByte Solutions')}&am=${balanceDue > 0 ? balanceDue : grandTotal}&cu=INR`} 
-                    size={60} 
-                  />
-                </div>
-              </div>
-              
-              <div className="text-center mt-auto flex flex-col justify-end pb-2">
-                <div className="font-bold text-[12px]" style={{ color: '#000' }}>For YantraByte Solutions</div>
-                <div className="flex justify-center my-1" style={{ overflow: 'hidden' }}>
-                  {companySignatureBase64 ? (
-                    <img src={companySignatureBase64} alt="Company Signature" style={{ height: '75px', maxWidth: '150px', width: 'auto', objectFit: 'contain' }} crossOrigin="anonymous" />
-                  ) : (
-                    <img src="/seal.png" alt="Seal" style={{ height: '75px', maxWidth: '100px', width: 'auto', objectFit: 'contain' }} crossOrigin="anonymous" />
-                  )}
-                </div>
-                <div className="font-bold text-[10px]" style={{ color: '#000', padding: '0 100px' }}>&nbsp;</div>
-                <div className="text-[9px]" style={{ color: '#444444' }}>&nbsp;</div>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
+        <InvoicePdfTemplate
+          ref={printRef}
+          invoice={{
+            id: selectedInvoiceId || '',
+            invoice_no: printInvoiceNumber || (selectedInvoiceId ? (invoices.find(i => i.id === selectedInvoiceId)?.invoice_no || 'DRAFT') : 'DRAFT'),
+            doc_type: docType,
+            date: invoiceDate,
+            customer_name: customerName,
+            phone: phone,
+            email: email,
+            address: address,
+            items: items.map((it: any) => ({
+              description: it.description || it.item || it.name || '',
+              serial_no: it.serial_no,
+              qty: Number(it.qty || 1),
+              rate: Number(it.rate || 0),
+              amount: Number(it.qty || 1) * Number(it.rate || 0)
+            })),
+            subtotal: subtotal,
+            discount: discount,
+            tax: tax,
+            round_off: roundOff,
+            grand_total: grandTotal,
+            advance_paid: advancePaid,
+            balance_due: balanceDue,
+            terms_conditions: termsConditions,
+            created_at: new Date().toISOString()
+          } as Invoice}
+          companySignature={companySignatureBase64 || undefined}
+          quoteValidityDays={Number(quoteValidityDays) || 7}
+          quoteAdvancePercent={Number(quoteAdvancePercent) || 85}
+        />
       </div>
 
       {/* --- CUSTOMER HISTORY DRAWER --- */}
