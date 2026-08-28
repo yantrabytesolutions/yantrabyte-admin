@@ -298,7 +298,7 @@ export default function Footer() {
         <div className="pb-8">
           <div className="text-center mb-6">
             <span className="text-xs font-bold uppercase tracking-widest text-[#0EA5E9] bg-[#0EA5E9]/10 border border-[#0EA5E9]/20 px-3 py-1 rounded-full inline-block mb-2">
-              Multi-Brand Hardware & Enterprise Support
+              Service & Multi-Brand Hardware Support
             </span>
             <h4 className="text-sm font-semibold text-white">
               We Repair, Supply & Maintain Leading IT Hardware & Enterprise Brands
