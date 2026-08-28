@@ -361,6 +361,17 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
 
   let runningBalance = 0;
 
+  // Escape key handler to close invoice viewer
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && selectedInvoice) {
+        setSelectedInvoice(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedInvoice]);
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
@@ -377,7 +388,7 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
               {customerEmail && <span>• ✉️ {customerEmail}</span>}
             </div>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-slate-800 rounded-full transition-colors">
+          <button onClick={onClose} className="p-2 hover:bg-slate-800 rounded-full transition-colors" title="Close Customer Ledger">
             <X className="w-5 h-5 text-slate-400 hover:text-white" />
           </button>
         </div>
@@ -630,7 +641,12 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
 
       {/* Invoice Viewer Overlay Modal */}
       {selectedInvoice && (
-        <div className="fixed inset-0 bg-black/75 backdrop-blur-md z-[60] flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+        <div 
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedInvoice(null);
+          }}
+          className="fixed inset-0 bg-black/75 backdrop-blur-md z-[60] flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-150"
+        >
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[96vh] flex flex-col overflow-hidden border border-slate-200">
             {/* Top Toolbar */}
             <div className="bg-slate-900 text-white px-5 py-3.5 flex flex-wrap justify-between items-center gap-3 shrink-0">
@@ -680,10 +696,10 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
                 <button
                   type="button"
                   onClick={() => setSelectedInvoice(null)}
-                  className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-white rounded-full transition-colors ml-1"
-                  title="Close Preview"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-800 hover:bg-rose-600 text-slate-200 hover:text-white rounded-lg text-xs font-bold transition-all ml-1 border border-slate-700 hover:border-rose-500"
+                  title="Close Invoice (Return to Ledger)"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" /> Close
                 </button>
               </div>
             </div>
@@ -698,6 +714,20 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
                   />
                 </div>
               </div>
+            </div>
+
+            {/* Bottom Return Bar */}
+            <div className="bg-slate-100 px-5 py-2.5 border-t border-slate-200 flex justify-between items-center shrink-0">
+              <span className="text-xs text-slate-500">
+                Viewing Invoice preview for <strong className="text-slate-700">{selectedInvoice.customer_name}</strong>
+              </span>
+              <button
+                type="button"
+                onClick={() => setSelectedInvoice(null)}
+                className="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold text-slate-700 bg-white hover:bg-slate-200 border border-slate-300 rounded-md transition-colors shadow-2xs"
+              >
+                ← Back to Customer Ledger
+              </button>
             </div>
           </div>
         </div>
