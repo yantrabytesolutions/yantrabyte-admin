@@ -11,7 +11,7 @@ import {
   Users, Briefcase, Building2, HelpCircle, Image, Award, Mail, Settings,
   LogOut, Plus, Pencil, Trash2, X, Eye, EyeOff, ChevronDown, Save,
   Loader2, AlertCircle, CheckCircle, Search, RefreshCw, Menu, Ticket, Receipt, CreditCard, MessageSquare,
-  Truck, ExternalLink, FileSpreadsheet, Activity, Send, UserCircle, IndianRupee, Shield, Sun, Moon, Calendar, FileCheck, HardDrive, CloudUpload
+  Truck, ExternalLink, FileSpreadsheet, Activity, Send, UserCircle, IndianRupee, Shield, Sun, Moon, Calendar, FileCheck, HardDrive, CloudUpload, Star, Sparkles
 } from 'lucide-react';
 import { sendTelegramNotification } from '../utils/telegram';
 import BillingSoftware from './BillingSoftware';
@@ -1005,6 +1005,29 @@ export default function AdminPanel() {
     const url = `https://wa.me/${phone}?text=${encodedText}`;
     window.open(url, '_blank');
     showToast('Opening WhatsApp chat...');
+  };
+
+  const sendReviewRequestWhatsApp = async (item: Record<string, unknown>) => {
+    const name = String(item.customer_name || 'Customer');
+    let phone = String(item.customer_phone || '').replace(/\D/g, '');
+    if (phone.length === 10) phone = '91' + phone;
+    if (!phone) {
+      showToast('No customer phone number available', 'error');
+      return;
+    }
+
+    let reviewLink = 'https://maps.google.com/?q=Yantrabyte+Solutions+47A+1st+Cross+Sainagar+Vidyaranyapura+Bengaluru';
+    try {
+      const { data } = await supabase.from('site_settings').select('value').eq('key', 'google_review_link').maybeSingle();
+      if (data?.value) reviewLink = data.value;
+    } catch (e) {}
+
+    const device = String(item.device_type || 'Device');
+    const issue = String(item.issue_description || 'repair');
+    const text = `Hi ${name}, thank you for choosing YantraByte Solutions! 🛠️\n\nIf you're happy with your ${device} (${issue}) repair, please take 10 seconds to share your 5-star experience on Google:\n👉 ${reviewLink}\n\nYour review helps our local workshop grow in Vidyaranyapura & North Bangalore. Thank you! ⭐⭐⭐⭐⭐`;
+
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
+    showToast('Opening Google review request on WhatsApp...');
   };
 
   const sendTelegramAlert = (item: Record<string, unknown>) => {
@@ -2039,6 +2062,13 @@ export default function AdminPanel() {
                                 >
                                   <FileCheck className="w-4 h-4" />
                                 </button>
+                                <button
+                                  onClick={() => sendReviewRequestWhatsApp(item)}
+                                  className="p-1.5 rounded-lg hover:bg-amber-500/10 text-amber-400 hover:text-amber-300 transition-all"
+                                  title="⭐ Send 5-Star Google Review Request on WhatsApp"
+                                >
+                                  <Star className="w-4 h-4" />
+                                </button>
                                 {item.status !== 'completed' && item.status !== 'closed' && (
                                   <button
                                     onClick={() => markTicketCompleted(item)}
@@ -2109,6 +2139,29 @@ export default function AdminPanel() {
             {formSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             Save All
           </button>
+        </div>
+
+        {/* Google My Business & Review Reply Tool */}
+        <div className="mb-6 p-5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-sm text-amber-100">
+          <h3 className="font-bold mb-2 text-amber-400 flex items-center gap-2 text-base">
+            <Star className="w-5 h-5 fill-amber-400 text-amber-400" /> Google Review Acceleration & Keyword-Rich Reply Tool
+          </h3>
+          <p className="mb-3 text-amber-200">
+            <strong>Ranking Secret:</strong> Replying to every Google review with service keywords (e.g. <em>laptop motherboard repair, CCTV camera installation</em>) and location (<em>Vidyaranyapura, Yelahanka, Bangalore</em>) pushes your Google Maps ranking to #1!
+          </p>
+          <div className="bg-black/30 p-3 rounded-lg border border-amber-500/30 mb-3 space-y-2">
+            <p className="font-semibold text-white">⭐ Quick Reply Template for Laptop Repairs:</p>
+            <p className="text-xs text-amber-200 font-mono bg-black/40 p-2 rounded select-all cursor-pointer" title="Click to copy">
+              "Thank you for choosing YantraByte Solutions! Glad we could solve your laptop issue with same-day chip-level motherboard service at our Vidyaranyapura workshop. Always happy to assist you in Bangalore North!"
+            </p>
+            <p className="font-semibold text-white mt-2">⭐ Quick Reply Template for CCTV & Networking:</p>
+            <p className="text-xs text-amber-200 font-mono bg-black/40 p-2 rounded select-all cursor-pointer" title="Click to copy">
+              "Thank you for your 5-star rating! We are pleased to provide quality 4K CCTV camera and networking setup for your premises. Looking forward to supporting you with long-term maintenance in Bangalore!"
+            </p>
+          </div>
+          <p className="text-xs text-amber-300">
+            Make sure <code>google_review_link</code> is set in the settings list below so customer WhatsApp alerts include your review link automatically.
+          </p>
         </div>
 
         {/* Telegram Integration Help */}
