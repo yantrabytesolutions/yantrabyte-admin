@@ -1722,44 +1722,114 @@ function createPrintableTicketSheet_(ss, t) {
   let sh = ss.getSheetByName(APP.PRINT_TICKET_SHEET);
   if (!sh) sh = ss.insertSheet(APP.PRINT_TICKET_SHEET);
   sh.clear();
+  sh.setGridlines(false);
   
-  // Setup dimensions
-  sh.setColumnWidth(1, 150);
-  sh.setColumnWidth(2, 450);
+  // Setup standard proportional dimensions for A4
+  sh.setColumnWidth(1, 160);
+  sh.setColumnWidth(2, 480);
   
-  // Header with logo
-  sh.setRowHeight(1, 50);
+  // Header with logo and Title Banner
+  sh.setRowHeight(1, 55);
   insertLogo_(sh);
-  SpreadsheetApp.flush(); // FIXED: flush logo before further rendering
-  sh.getRange('B1').setValue('YantraByte Solutions - Service Ticket')
-    .setBackground('#0B5394').setFontColor('#FFFFFF').setFontWeight('bold').setHorizontalAlignment('center').setFontSize(16);
-  sh.getRange('A1').setBackground('#0B5394');
+  SpreadsheetApp.flush();
+  
+  sh.getRange('A1:B1').merge()
+    .setValue('YANTRABYTE SOLUTIONS - SERVICE TICKET')
+    .setBackground('#0B5394')
+    .setFontColor('#FFFFFF')
+    .setFontWeight('bold')
+    .setHorizontalAlignment('center')
+    .setVerticalAlignment('middle')
+    .setFontSize(15);
   
   const data = [
-    ['Ticket ID', t.ticketId],
-    ['Date', t.openedAt || t.timestamp],
-    ['Customer Name', t.customerName],
-    ['Phone', t.phone],
-    ['Email', t.email],
-    ['Address', t.address],
-    ['Device', t.device],
-    ['Device Type', t.deviceType],
-    ['Issue Reported', t.issue],
-    ['Status', t.status]
+    ['Ticket ID', t.ticketId || t.ticket_number || '—'],
+    ['Date & Time', t.openedAt || t.timestamp || t.created_at || '—'],
+    ['Customer Name', t.customerName || t.customer_name || '—'],
+    ['Phone Number', t.phone || t.customer_phone || '—'],
+    ['Email Address', t.email || t.customer_email || '—'],
+    ['Customer Address', t.address || t.customer_address || '—'],
+    ['Device Category', t.device || t.device_type || '—'],
+    ['Device Make / Model', t.deviceType || t.device_make_model || '—'],
+    ['Reported Problem', t.issue || t.issue_description || '—'],
+    ['Current Status', t.status || 'Received']
   ];
   
+  // Fill Data Rows
   sh.getRange(2, 1, data.length, 2).setValues(data);
-  sh.getRange(2, 1, data.length, 1).setBackground('#F3F3F3').setFontWeight('bold');
-  sh.getRange(2, 1, data.length, 2).setBorder(true, true, true, true, true, true);
+  sh.getRange(2, 1, data.length, 1)
+    .setBackground('#D9EAF7')
+    .setFontWeight('bold')
+    .setFontColor('#0B5394')
+    .setFontSize(10.5)
+    .setVerticalAlignment('middle');
+    
+  sh.getRange(2, 2, data.length, 1)
+    .setFontSize(10.5)
+    .setFontColor('#111827')
+    .setVerticalAlignment('middle')
+    .setWrap(true);
+    
+  for (var r = 2; r <= data.length + 1; r++) {
+    sh.setRowHeight(r, 26);
+  }
   
-  sh.getRange(data.length + 3, 1, 1, 2).merge().setValue('For YantraByte Solutions:')
-    .setFontWeight('bold').setHorizontalAlignment('right');
+  sh.getRange(2, 1, data.length, 2).setBorder(true, true, true, true, true, true, '#000000', SpreadsheetApp.BorderStyle.SOLID);
   
-  // Insert Seal
-  insertSeal_(sh, data.length + 3, 2, 5);
+  var nextRow = data.length + 3;
   
-  sh.getRange(data.length + 4, 1, 1, 2).merge().setValue('Thank you for choosing YantraByte Solutions!')
-    .setFontStyle('italic').setHorizontalAlignment('center');
+  // Terms & Conditions Box
+  sh.setRowHeight(nextRow, 22);
+  sh.getRange(nextRow, 1, 1, 2).merge()
+    .setValue('TERMS & CONDITIONS:')
+    .setBackground('#0B5394')
+    .setFontColor('#FFFFFF')
+    .setFontWeight('bold')
+    .setFontSize(10)
+    .setVerticalAlignment('middle');
+  
+  const terms = [
+    '1. Customer must collect working or non-working materials within 2 months from date given for service. After 2 months, YantraByte Solutions is not responsible for items.',
+    '2. Diagnostic charges are applicable for all inspected devices even if repair estimate is rejected.',
+    '3. Customer is advised to backup all data prior to service. We are not liable for any data loss.',
+    '4. Physical, liquid, or burnt component damage voids all repair warranties.',
+    '5. Hardware replacement carries OEM manufacturer warranty.'
+  ];
+  
+  for (var i = 0; i < terms.length; i++) {
+    var tr = nextRow + 1 + i;
+    sh.setRowHeight(tr, 20);
+    var termCell = sh.getRange(tr, 1, 1, 2).merge().setValue(terms[i]);
+    if (i === 0) {
+      termCell.setFontColor('#B91C1C').setFontWeight('bold').setFontSize(9).setVerticalAlignment('middle');
+    } else {
+      termCell.setFontColor('#4B5563').setFontSize(8.5).setVerticalAlignment('middle');
+    }
+  }
+  
+  var sigRow = nextRow + terms.length + 2;
+  sh.setRowHeight(sigRow, 24);
+  sh.getRange(sigRow, 1).setValue('Customer Signature: __________________').setFontSize(10).setFontWeight('bold').setVerticalAlignment('bottom');
+  sh.getRange(sigRow, 2).setValue('For YantraByte Solutions:').setFontSize(10).setFontWeight('bold').setHorizontalAlignment('right').setVerticalAlignment('bottom');
+  
+  // Dedicated Seal Row without overlap
+  var sealRow = sigRow + 1;
+  sh.setRowHeight(sealRow, 60);
+  insertSeal_(sh, sealRow, 2, 0);
+  
+  var authRow = sealRow + 1;
+  sh.setRowHeight(authRow, 18);
+  sh.getRange(authRow, 2).setValue('Authorized Workshop Signatory').setFontSize(8.5).setFontColor('#6B7280').setHorizontalAlignment('right').setVerticalAlignment('top');
+  
+  var footerRow = authRow + 2;
+  sh.setRowHeight(footerRow, 24);
+  sh.getRange(footerRow, 1, 1, 2).merge()
+    .setValue('Thank you for choosing YantraByte Solutions! | Contact: 09986742525')
+    .setFontStyle('italic')
+    .setFontSize(9.5)
+    .setFontColor('#0B5394')
+    .setHorizontalAlignment('center')
+    .setVerticalAlignment('middle');
 }
 
 function getWebAppUrl() {
