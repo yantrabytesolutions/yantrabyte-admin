@@ -142,11 +142,11 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
     setIsDownloadingPdf(true);
     try {
       const opt = {
-        margin: [0, 0, 0, 0],
-        filename: `Invoice-${inv.invoice_no || 'Document'}.pdf`,
+        margin: 0,
+        filename: `YBS-${inv.invoice_no || 'Document'}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        html2canvas: { scale: 2, useCORS: true, windowWidth: 794, scrollY: 0, x: 0, y: 0 },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
       };
       await (html2pdf as any)().set(opt).from(invoicePrintRef.current).save();
     } catch (err) {

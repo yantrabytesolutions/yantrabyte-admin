@@ -60,6 +60,36 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
   const roundOff = Number(invoice.round_off || 0);
   const advancePaid = Number(invoice.advance_paid || 0);
   const balanceDue = Number(invoice.balance_due || 0);
+  const calcRows: { label: string; value: string; isHighlight?: boolean; isDue?: boolean }[] = [
+    { label: 'Subtotal', value: subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 }) }
+  ];
+
+  if (discount > 0) {
+    calcRows.push({ label: 'Discount', value: discount.toLocaleString('en-IN', { minimumFractionDigits: 2 }) });
+  }
+  if (tax > 0) {
+    calcRows.push({ label: 'Tax', value: tax.toLocaleString('en-IN', { minimumFractionDigits: 2 }) });
+  }
+  if (roundOff !== 0) {
+    calcRows.push({ label: 'Round Off', value: roundOff.toLocaleString('en-IN', { minimumFractionDigits: 2 }) });
+  }
+
+  calcRows.push({
+    label: 'Grand Total',
+    value: grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 }),
+    isHighlight: true
+  });
+
+  calcRows.push({
+    label: 'Advance Paid',
+    value: advancePaid.toLocaleString('en-IN', { minimumFractionDigits: 2 })
+  });
+
+  calcRows.push({
+    label: 'Balance Due',
+    value: balanceDue.toLocaleString('en-IN', { minimumFractionDigits: 2 }),
+    isDue: true
+  });
 
   return (
     <div 
@@ -67,7 +97,6 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
       style={{ 
         width: '794px', 
         minHeight: '1120px',
-        height: '1120px', 
         boxSizing: 'border-box', 
         padding: '24px', 
         backgroundColor: '#ffffff', 
@@ -262,87 +291,75 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
             </tbody>
           </table>
 
-          {/* Totals Section */}
+          {/* Totals Section (Flat rowSpan Table - Prevents PDF Overlap) */}
           <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', fontSize: '13px' }}>
             <tbody>
-              <tr>
-                {/* Left: Amount in Words */}
-                <td style={{ width: '58%', verticalAlign: 'top', padding: '10px 12px', borderRight: '1px solid #000000' }}>
-                  <div style={{ backgroundColor: '#D9EAF7', color: '#B45309', fontWeight: 'bold', fontSize: '12px', padding: '2px 8px', display: 'inline-block', marginBottom: '6px' }}>
-                    Amount in Words:
-                  </div>
-                  <div style={{ fontStyle: 'italic', fontSize: '13px', color: '#1f2937', lineHeight: '1.4' }}>
-                    {numberToWords(grandTotal)}
-                  </div>
-                </td>
+              {calcRows.map((row, idx) => (
+                <tr 
+                  key={row.label}
+                  style={{ 
+                    backgroundColor: (row.isHighlight || row.isDue) ? '#FFF2CC' : 'transparent',
+                    height: '24px'
+                  }}
+                >
+                  {/* First row renders the Left: Amount in Words with rowSpan */}
+                  {idx === 0 && (
+                    <td 
+                      rowSpan={calcRows.length} 
+                      style={{ 
+                        width: '58%', 
+                        verticalAlign: 'top', 
+                        padding: '8px 12px', 
+                        borderRight: '1px solid #000000',
+                        backgroundColor: '#ffffff'
+                      }}
+                    >
+                      <div style={{ backgroundColor: '#D9EAF7', color: '#B45309', fontWeight: 'bold', fontSize: '12px', padding: '2px 8px', display: 'inline-block', marginBottom: '6px' }}>
+                        Amount in Words:
+                      </div>
+                      <div style={{ fontStyle: 'italic', fontSize: '13px', color: '#1f2937', lineHeight: '1.4' }}>
+                        {numberToWords(grandTotal)}
+                      </div>
+                    </td>
+                  )}
 
-                {/* Right: Calculations Breakdown */}
-                <td style={{ width: '42%', verticalAlign: 'top', padding: 0 }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                    <tbody>
-                      <tr>
-                        <td style={{ padding: '4px 10px', color: '#333333', borderBottom: '1px solid #000000' }}>Subtotal</td>
-                        <td style={{ padding: '4px 10px', textAlign: 'right', color: '#000000', borderBottom: '1px solid #000000' }}>
-                          {subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                        </td>
-                      </tr>
-                      {discount > 0 && (
-                        <tr>
-                          <td style={{ padding: '4px 10px', color: '#333333', borderBottom: '1px solid #000000' }}>Discount</td>
-                          <td style={{ padding: '4px 10px', textAlign: 'right', color: '#000000', borderBottom: '1px solid #000000' }}>
-                            {discount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                          </td>
-                        </tr>
-                      )}
-                      {tax > 0 && (
-                        <tr>
-                          <td style={{ padding: '4px 10px', color: '#333333', borderBottom: '1px solid #000000' }}>Tax</td>
-                          <td style={{ padding: '4px 10px', textAlign: 'right', color: '#000000', borderBottom: '1px solid #000000' }}>
-                            {tax.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                          </td>
-                        </tr>
-                      )}
-                      {roundOff !== 0 && (
-                        <tr>
-                          <td style={{ padding: '4px 10px', color: '#333333', borderBottom: '1px solid #000000' }}>Round Off</td>
-                          <td style={{ padding: '4px 10px', textAlign: 'right', color: '#000000', borderBottom: '1px solid #000000' }}>
-                            {roundOff.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                          </td>
-                        </tr>
-                      )}
-                      <tr style={{ backgroundColor: '#FFF2CC' }}>
-                        <td style={{ padding: '5px 10px', fontWeight: 'bold', color: '#15803D', borderBottom: '1px solid #000000', fontSize: '13.5px' }}>
-                          Grand Total
-                        </td>
-                        <td style={{ padding: '5px 10px', textAlign: 'right', fontWeight: 'bold', color: '#15803D', borderBottom: '1px solid #000000', fontSize: '14.5px' }}>
-                          {grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style={{ padding: '4px 10px', color: '#333333', borderBottom: '1px solid #000000' }}>Advance Paid</td>
-                        <td style={{ padding: '4px 10px', textAlign: 'right', color: '#000000', borderBottom: '1px solid #000000' }}>
-                          {advancePaid.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                        </td>
-                      </tr>
-                      <tr style={{ backgroundColor: '#FFF2CC' }}>
-                        <td style={{ padding: '5px 10px', fontWeight: 'bold', color: '#B91C1C', fontSize: '13.5px' }}>
-                          Balance Due
-                        </td>
-                        <td style={{ padding: '5px 10px', textAlign: 'right', fontWeight: 'bold', color: '#B91C1C', fontSize: '14.5px' }}>
-                          {balanceDue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </td>
-              </tr>
+                  {/* Right: Label */}
+                  <td 
+                    style={{ 
+                      width: '22%', 
+                      padding: '4px 10px', 
+                      color: row.isHighlight ? '#15803D' : (row.isDue ? '#B91C1C' : '#333333'), 
+                      fontWeight: (row.isHighlight || row.isDue) ? 'bold' : 'normal',
+                      fontSize: (row.isHighlight || row.isDue) ? '13px' : '12.5px',
+                      borderBottom: idx === calcRows.length - 1 ? 'none' : '1px solid #000000'
+                    }}
+                  >
+                    {row.label}
+                  </td>
+
+                  {/* Right: Value */}
+                  <td 
+                    style={{ 
+                      width: '20%', 
+                      padding: '4px 10px', 
+                      textAlign: 'right', 
+                      color: row.isHighlight ? '#15803D' : (row.isDue ? '#B91C1C' : '#000000'), 
+                      fontWeight: (row.isHighlight || row.isDue) ? 'bold' : 'normal',
+                      fontSize: (row.isHighlight || row.isDue) ? '13.5px' : '12.5px',
+                      borderBottom: idx === calcRows.length - 1 ? 'none' : '1px solid #000000'
+                    }}
+                  >
+                    {row.value}
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
 
         </div>
 
         {/* Bottom Section: Terms & Conditions + Bank & Payment Details */}
-        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '10px 0', marginTop: '10px', tableLayout: 'fixed' }}>
+        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '10px 0', marginTop: '12px', tableLayout: 'fixed' }}>
           <tbody>
             <tr>
               {/* Terms & Conditions Box */}
