@@ -249,9 +249,9 @@ CREATE POLICY "Admin full access client_logos" ON client_logos FOR ALL TO authen
 INSERT INTO site_settings (key, value) VALUES
   ('company_name', 'Yantrabyte Solutions'),
   ('tagline', 'Smart Technology. Secure Future.'),
-  ('phone', '+91-9876543210'),
-  ('email', 'info@yantrabyte.com'),
-  ('whatsapp', '919876543210'),
+  ('phone', '+91-9986742525'),
+  ('email', 'yantrabyte.solutions@gmail.com'),
+  ('whatsapp', '919986742525'),
   ('address', 'Bangalore, Karnataka, India'),
   ('google_maps_embed', ''),
   ('facebook', ''),
