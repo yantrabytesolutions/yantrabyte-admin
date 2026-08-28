@@ -3,7 +3,7 @@ const APP = {
   INVOICE_SHEET: 'Invoices',
   PRINT_SHEET: 'Print_Invoice',
   PRINT_TICKET_SHEET: 'Print_Ticket',
-  PDF_FOLDER_ID: '1aRy8gpeYrYXuyBJb_LxGNBgkSuc5ktGi',
+  PDF_FOLDER_ID: '1IjLBTnX7z-TJE6LHlDEgz4zyWku6V2nO',
   TICKET_FOLDER_ID: '1aRy8gpeYrYXuyBJb_LxGNBgkSuc5ktGi',
   LOGO_FILE_ID: '16R4HC_X6wlhVuIyb4aAgN6sFaseUMzLf',
   SEAL_FILE_ID: '1w4naEw7XOLmPju6GlALW5bHhrg3ij3bF', // Activated Seal ID

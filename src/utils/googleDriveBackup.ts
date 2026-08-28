@@ -51,7 +51,7 @@ export async function uploadInvoiceToDrive(blob: Blob, invoiceNo: string, dateSt
   const payload: DriveBackupPayload = {
     fileName: `Invoice_${invoiceNo}.pdf`,
     fileBase64,
-    parentFolderId: '14exaOf5G6IcTFxq2tsdHz7qVRLxP0bxX',
+    parentFolderId: '1IjLBTnX7z-TJE6LHlDEgz4zyWku6V2nO',
     subFolder
   };
 
