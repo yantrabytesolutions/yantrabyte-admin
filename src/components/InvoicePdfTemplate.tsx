@@ -119,7 +119,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         backgroundRepeat: 'no-repeat',
         pointerEvents: 'none',
         zIndex: 1,
-        opacity: 0.08
+        opacity: 0.18
       }} />
 
       {/* Cancelled Stamp */}
