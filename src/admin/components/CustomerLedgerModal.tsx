@@ -141,9 +141,16 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
     if (!invoicePrintRef.current) return;
     setIsDownloadingPdf(true);
     try {
+      const cleanInv = (inv.invoice_no || 'Document').replace(/[^\w-]/g, '_');
+      const cleanName = (inv.customer_name || '')
+        .trim()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '_');
+      const filename = cleanName ? `${cleanInv}_${cleanName}.pdf` : `${cleanInv}.pdf`;
+
       const opt = {
         margin: 0,
-        filename: `YBS-${inv.invoice_no || 'Document'}.pdf`,
+        filename: filename,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, windowWidth: 794, scrollY: 0, x: 0, y: 0 },
         jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }

@@ -1054,7 +1054,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         }
         const element = await preparePdfElement(payload.invoice_no);
         if (element) {
-          const opt = getPdfOptions(payload.invoice_no);
+          const opt = getPdfOptions(payload.invoice_no, payload.customer_name);
           try {
             pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob') as Blob;
             pdfUrl = await uploadPdfToSupabase(pdfBlob, payload.invoice_no);
@@ -1213,9 +1213,18 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     }
   };
 
-  const getPdfOptions = (invoiceNumber: string) => ({
+  const formatInvoiceFilename = (invoiceNumber: string, customerName?: string) => {
+    const cleanInv = (invoiceNumber || 'DRAFT').replace(/[^\w-]/g, '_');
+    const cleanName = (customerName || '')
+      .trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, '_');
+    return cleanName ? `${cleanInv}_${cleanName}.pdf` : `${cleanInv}.pdf`;
+  };
+
+  const getPdfOptions = (invoiceNumber: string, customerName?: string) => ({
       margin: 0,
-      filename: `YBS-${invoiceNumber}.pdf`,
+      filename: formatInvoiceFilename(invoiceNumber, customerName),
       image: { type: 'jpeg' as const, quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, windowWidth: 794, scrollY: 0, x: 0, y: 0 },
       jsPDF: { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const }
@@ -1269,7 +1278,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         return;
       }
       
-      const opt = getPdfOptions(inv.invoice_no);
+      const opt = getPdfOptions(inv.invoice_no, inv.customer_name);
       try {
         const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
         const url = URL.createObjectURL(pdfBlob);

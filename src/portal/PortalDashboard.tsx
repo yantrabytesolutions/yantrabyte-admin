@@ -88,10 +88,16 @@ export default function PortalDashboard() {
     await new Promise(resolve => setTimeout(resolve, 100));
 
     try {
+      const cleanInv = (invoice.invoice_no || 'Document').replace(/[^\w-]/g, '_');
+      const cleanName = (invoice.customer_name || '')
+        .trim()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '_');
+      const filename = cleanName ? `${cleanInv}_${cleanName}.pdf` : `${cleanInv}.pdf`;
       
       const opt = {
         margin: 0,
-        filename: `YBS-${invoice.invoice_no}.pdf`,
+        filename: filename,
         image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, windowWidth: 794, scrollY: 0, x: 0, y: 0 },
         jsPDF: { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const }
