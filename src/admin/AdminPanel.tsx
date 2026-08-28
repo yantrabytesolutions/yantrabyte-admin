@@ -985,8 +985,8 @@ export default function AdminPanel() {
     try {
       const { data } = await supabase.from('site_settings').select('value').eq('key', 'google_review_link').maybeSingle();
       if (data?.value) reviewLink = data.value;
-    } catch (e) {
-      // fallback to default
+    } catch (_err) {
+      console.warn('Failed to load review link', _err);
     }
 
     if (status === 'open') {
@@ -1020,8 +1020,8 @@ export default function AdminPanel() {
     try {
       const { data } = await supabase.from('site_settings').select('value').eq('key', 'google_review_link').maybeSingle();
       if (data?.value) reviewLink = data.value;
-    } catch (e) {
-      // fallback to default
+    } catch (_err) {
+      console.warn('Failed to load review link', _err);
     }
 
     const device = String(item.device_type || 'Device');
