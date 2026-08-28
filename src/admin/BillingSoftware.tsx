@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Invoice, InvoiceItem, ServiceTicket, Product, Customer, Purchase } from '../types';
-import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt, Mail, FileSpreadsheet, Pencil, MessageSquare, Send, List, Search, Clock, Settings, Link, ShieldCheck } from 'lucide-react';
+import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt, Mail, FileSpreadsheet, Pencil, MessageSquare, Send, List, Search, Clock, Settings, Link, ShieldCheck, CloudUpload, HardDrive, Loader2 } from 'lucide-react';
 import { sendTelegramNotification } from '../utils/telegram';
 import html2pdf from 'html2pdf.js';
 
@@ -1322,6 +1322,76 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     }
   };
 
+  const [isSyncingInvoicesDrive, setIsSyncingInvoicesDrive] = useState(false);
+
+  const uploadSingleInvoiceToDrive = async (inv: Invoice) => {
+    try {
+      showToast(`Generating & uploading ${inv.invoice_no} to Google Drive...`);
+      const element = await preparePdfElement(inv.invoice_no);
+      if (!element) {
+        showToast(`Could not render ${inv.invoice_no}`, 'error');
+        return;
+      }
+      const opt = getPdfOptions(inv.invoice_no, inv.customer_name);
+      const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob') as Blob;
+      
+      const res = await uploadInvoiceToDrive(pdfBlob, inv.invoice_no, inv.date, (inv.doc_type as any) || 'INVOICE');
+      if (res.ok) {
+        showToast(`✅ ${inv.invoice_no} uploaded to Google Drive!`, 'success');
+      } else {
+        showToast(res.error || 'Upload complete', 'success');
+      }
+    } catch (e: any) {
+      console.error('Error uploading invoice to Drive:', e);
+      showToast('Failed to upload invoice to Google Drive', 'error');
+    } finally {
+      setPrintInvoiceNumber('');
+    }
+  };
+
+  const pushAllInvoicesToGoogleDrive = async () => {
+    setIsSyncingInvoicesDrive(true);
+    showToast('Starting bulk sync of invoices to Google Drive...');
+    try {
+      const { data: invs, error } = await supabase
+        .from('invoices')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (error || !invs || invs.length === 0) {
+        showToast('No invoices found to sync', 'error');
+        setIsSyncingInvoicesDrive(false);
+        return;
+      }
+
+      let successCount = 0;
+      for (let i = 0; i < invs.length; i++) {
+        const inv = invs[i];
+        showToast(`Uploading (${i + 1}/${invs.length}): ${inv.invoice_no}...`);
+        
+        try {
+          const element = await preparePdfElement(inv.invoice_no);
+          if (element) {
+            const opt = getPdfOptions(inv.invoice_no, inv.customer_name);
+            const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob') as Blob;
+            await uploadInvoiceToDrive(pdfBlob, inv.invoice_no, inv.date, (inv.doc_type as any) || 'INVOICE');
+            successCount++;
+          }
+        } catch (itemErr) {
+          console.warn(`Failed to sync invoice ${inv.invoice_no} to Drive:`, itemErr);
+        }
+      }
+
+      showToast(`✅ Successfully synced ${successCount} invoices to Google Drive!`, 'success');
+    } catch (err: any) {
+      console.error('Error syncing invoices to Drive:', err);
+      showToast('Failed to complete Google Drive sync', 'error');
+    } finally {
+      setIsSyncingInvoicesDrive(false);
+      setPrintInvoiceNumber('');
+    }
+  };
+
 
 
   const invoiceRow = (inv: Invoice) => [
@@ -2130,7 +2200,16 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <h3 className="text-xl font-bold text-gray-800">Saved Documents</h3>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <button 
+                onClick={pushAllInvoicesToGoogleDrive}
+                disabled={isSyncingInvoicesDrive}
+                className="text-sm flex items-center bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-4 py-2 rounded-lg font-medium shadow-sm shadow-amber-500/20 transition-all"
+                title="Generate & upload all invoices & quotations to Google Drive"
+              >
+                {isSyncingInvoicesDrive ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CloudUpload className="w-4 h-4 mr-2" />}
+                Sync All to Google Drive
+              </button>
               <button 
                 onClick={() => setShowRemindersModal(true)}
                 className="text-sm flex items-center bg-green-50 text-green-700 hover:bg-green-100 px-4 py-2 rounded-lg font-medium border border-green-200 transition-colors"
@@ -2315,6 +2394,9 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                         </button>
                         <button onClick={(e) => { e.stopPropagation(); sendTelegramInvoiceAlert(inv); }} className="p-1.5 text-gray-500 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors" title="Telegram Alert">
                           <Send className="w-4 h-4" />
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); uploadSingleInvoiceToDrive(inv); }} className="p-1.5 text-gray-500 hover:bg-amber-50 hover:text-amber-600 rounded-md transition-colors" title="Sync / Upload to Google Drive">
+                          <HardDrive className="w-4 h-4 text-amber-500" />
                         </button>
                         <button onClick={(e) => { e.stopPropagation(); handleDeleteInvoice(inv.id, inv.invoice_no); }} className="p-1.5 text-gray-500 hover:bg-red-50 hover:text-red-600 rounded-md transition-colors" title="Delete Document">
                           <Trash2 className="w-4 h-4" />
