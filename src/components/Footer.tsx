@@ -255,11 +255,50 @@ export default function Footer() {
           </motion.div>
         </motion.div>
 
+        {/* Scrolling Sales & Service Ticker */}
+        <div className="border-t border-white/10 py-3.5 overflow-hidden bg-[#070D19] -mx-4 sm:-mx-6 lg:-mx-8 px-4 border-b border-white/5 select-none mb-8">
+          <div className="flex whitespace-nowrap animate-marquee">
+            {[1, 2, 3, 4].map((idx) => (
+              <div key={idx} className="flex items-center gap-6 mx-4 text-xs font-semibold tracking-wide shrink-0 text-slate-300">
+                <span className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[#0EA5E9] animate-pulse" />
+                  <span className="text-[#38BDF8] uppercase tracking-wider font-extrabold text-[11px] bg-[#0EA5E9]/10 px-2 py-0.5 rounded border border-[#0EA5E9]/20">
+                    Sales & Service
+                  </span>
+                  <span className="font-bold text-white text-sm">
+                    Desktop • Laptop • Printer
+                  </span>
+                </span>
+                <span className="text-slate-600 font-bold">|</span>
+                <span className="text-slate-200">
+                  CCTV Camera Sales, Installation & AMC
+                </span>
+                <span className="text-slate-600 font-bold">|</span>
+                <span className="text-slate-200">
+                  Motherboard Chip-Level Repair & Screen Replacement
+                </span>
+                <span className="text-slate-600 font-bold">|</span>
+                <span className="text-emerald-400 font-bold">
+                  RAM, SSD & NVMe Upgrades (Same-Day)
+                </span>
+                <span className="text-slate-600 font-bold">|</span>
+                <span className="text-slate-200">
+                  Laser & InkTank Printer Servicing & Cartridges
+                </span>
+                <span className="text-slate-600 font-bold">|</span>
+                <span className="text-[#38BDF8] font-bold">
+                  ⚡ Doorstep & Onsite Support Across Bangalore
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* IT Hardware Brands Showcase */}
-        <div className="border-t border-white/10 pt-10 pb-8">
+        <div className="pb-8">
           <div className="text-center mb-6">
             <span className="text-xs font-bold uppercase tracking-widest text-[#0EA5E9] bg-[#0EA5E9]/10 border border-[#0EA5E9]/20 px-3 py-1 rounded-full inline-block mb-2">
-              Authorized Service & Multi-Brand Hardware Support
+              Multi-Brand Hardware & Enterprise Support
             </span>
             <h4 className="text-sm font-semibold text-white">
               We Repair, Supply & Maintain Leading IT Hardware & Enterprise Brands
@@ -277,7 +316,7 @@ export default function Footer() {
               { name: "Intel", category: "Core & Xeon CPUs", color: "#0071C5", tag: "Partner" },
               { name: "AMD", category: "Ryzen & Radeon", color: "#ED1C24", tag: "Partner" },
               { name: "Hikvision", category: "CCTV & Security", color: "#E60012", tag: "Enterprise" },
-              { name: "CP PLUS", category: "Surveillance & NVR", color: "#E31E24", tag: "Authorized" },
+              { name: "CP PLUS", category: "Surveillance & NVR", color: "#E31E24", tag: "Security" },
               { name: "Dahua", category: "IP Cameras & DVR", color: "#ED1B24", tag: "Security" },
               { name: "Cisco", category: "Switches & Routers", color: "#1BA0D7", tag: "Networking" },
               { name: "TP-Link", category: "Wi-Fi & Routers", color: "#00A2E8", tag: "Networking" },

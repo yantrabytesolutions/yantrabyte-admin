@@ -738,7 +738,7 @@ function WhyChooseUsSection() {
     { icon: Zap, title: 'Same Day Service', description: 'Get your issues resolved the same day you call. Our rapid response team ensures minimal downtime.' },
     { icon: BadgePercent, title: 'Affordable Pricing', description: 'Competitive pricing without compromising quality. Transparent quotes with no hidden charges.' },
     { icon: Users, title: 'Expert Engineers', description: 'Certified professionals with years of experience in IT infrastructure and security systems.' },
-    { icon: CheckCircle, title: 'Genuine Products', description: 'We use only genuine, branded products from authorized distributors with full manufacturer warranty.' },
+    { icon: CheckCircle, title: 'Genuine Products', description: 'We use only genuine, branded components from trusted certified distributors with manufacturer warranty.' },
     { icon: Clock, title: 'Fast Response', description: 'Average response time under 2 hours for emergency calls. Priority support for AMC clients.' },
     { icon: Settings, title: 'Custom Business Solutions', description: 'Tailored IT and security solutions designed specifically for your business requirements and budget.' },
   ];
@@ -1671,10 +1671,49 @@ function EmergencyBanner() {
 // ─── 16. Repair Videos ────────────────────────────────────────────────────────
 
 function RepairVideosSection() {
-  const videos = [
-    { id: 'Mh5M3032_X4', title: 'Laptop Motherboard Chip-Level Repair', tag: 'Laptop Repair' },
-    { id: 'dQw4w9WgXcQ', title: 'Desktop Motherboard Diagnostics', tag: 'Desktop Repair' }, // Placeholder ID
-    { id: 'EwX4pA8p3x8', title: 'Professional Printer Servicing', tag: 'Printer Repair' }, // Placeholder ID
+  const processes = [
+    {
+      title: 'Laptop Motherboard Chip-Level Repair',
+      tag: 'Chip-Level Micro-Soldering',
+      badge: '99.2% Success Rate',
+      icon: Laptop,
+      color: '#0EA5E9',
+      image: '/images/laptop_repair.png',
+      highlights: [
+        'BGA Chip Re-balling & GPU Rework Station',
+        'Power-Rail Short Circuit & MOSFET Diagnostics',
+        'Ultrasonic Liquid Damage Chemical Bath',
+        'Display Panel & Backlight IC Replacement',
+      ],
+    },
+    {
+      title: 'Desktop & Workstation Diagnostics',
+      tag: 'Diagnostics & Upgrades',
+      badge: 'Same-Day Service',
+      icon: Monitor,
+      color: '#38BDF8',
+      image: '/images/tech_repair_bg.png',
+      highlights: [
+        'CPU/GPU Thermal Re-pasting & Heat Sink Tuning',
+        'High-Speed Gen4 NVMe & DDR5 RAM Upgrades',
+        'Corrupted BIOS Chip Flashing & Board Recovery',
+        'Power Supply (SMPS) Load & Ripple Testing',
+      ],
+    },
+    {
+      title: 'Laser & InkTank Printer Servicing',
+      tag: 'Mechanical Restoration',
+      badge: 'Genuine Spares',
+      icon: Printer,
+      color: '#10B981',
+      image: '/work-laptop.png',
+      highlights: [
+        'Pick-up Roller & Gear Assembly Replacement',
+        'Thermal Printhead Ultrasonic Unclogging',
+        'Teflon Sleeve & Fuser Unit Overhaul',
+        'Laser Scanner Sensor & Logic Board Calibration',
+      ],
+    },
   ];
 
   return (
@@ -1683,31 +1722,72 @@ function RepairVideosSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div variants={fadeInUp} className="text-center mb-12">
           <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#0EA5E9]/10 border border-[#0EA5E9]/30 text-[#0EA5E9] text-sm font-medium mb-4">
-            Our Process
+            Workshop & Lab Process
           </span>
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Watch Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0EA5E9] to-[#38BDF8]">Expertise in Action</span>
+            Our Precision <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0EA5E9] to-[#38BDF8]">Hardware Lab in Action</span>
           </h2>
           <p className="text-[#94A3B8] text-lg max-w-2xl mx-auto">
-            See how our certified technicians perform precision chip-level repairs on complex hardware.
+            See how our skilled engineers execute component-level repairs with laboratory-grade diagnostic instruments and genuine parts.
           </p>
         </motion.div>
 
         <motion.div variants={staggerContainer} className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {videos.map((vid, i) => (
-            <motion.div key={i} variants={staggerItem} whileHover={{ y: -8 }} className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-black group transition-all duration-300 hover:border-[#0EA5E9]/50 hover:shadow-[#0EA5E9]/20">
-              <div className="aspect-video relative bg-white/5">
-                <iframe
-                  src={`https://www.youtube.com/embed/${vid.id}?rel=0&modestbranding=1`}
-                  title={vid.title}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="w-full h-full border-0 absolute inset-0"
-                />
+          {processes.map((proc, i) => (
+            <motion.div
+              key={i}
+              variants={staggerItem}
+              whileHover={{ y: -6 }}
+              className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-gradient-to-b from-white/[0.06] to-white/[0.02] backdrop-blur-xl group transition-all duration-300 hover:border-[#0EA5E9]/50 hover:shadow-[#0EA5E9]/20 flex flex-col justify-between"
+            >
+              <div>
+                {/* Visual Header Image Container */}
+                <div className="h-48 relative overflow-hidden bg-slate-900 border-b border-white/10">
+                  <img 
+                    src={proc.image} 
+                    alt={proc.title} 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-75 group-hover:opacity-90"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0B1120] via-transparent to-black/40" />
+                  
+                  <div className="absolute top-3 left-3 flex items-center gap-2">
+                    <span className="px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-[#38BDF8] text-xs font-bold border border-white/10 flex items-center gap-1.5">
+                      <proc.icon className="w-3.5 h-3.5 text-[#0EA5E9]" />
+                      {proc.tag}
+                    </span>
+                  </div>
+
+                  <div className="absolute top-3 right-3">
+                    <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 backdrop-blur-md text-emerald-300 text-xs font-extrabold border border-emerald-500/30">
+                      {proc.badge}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-6">
+                  <h3 className="text-white font-bold text-lg mb-4 group-hover:text-[#38BDF8] transition-colors">
+                    {proc.title}
+                  </h3>
+
+                  <ul className="space-y-2.5 mb-6">
+                    {proc.highlights.map((h, hIdx) => (
+                      <li key={hIdx} className="flex items-start gap-2 text-xs text-slate-300 leading-relaxed">
+                        <CheckCircle className="w-4 h-4 text-[#0EA5E9] shrink-0 mt-0.5" />
+                        <span>{h}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
-              <div className="p-5 bg-gradient-to-b from-white/5 to-transparent backdrop-blur-md">
-                <span className="inline-block px-3 py-1 rounded-full bg-[#0EA5E9]/20 text-[#38BDF8] text-xs font-bold mb-3">{vid.tag}</span>
-                <h3 className="text-white font-semibold text-base leading-snug">{vid.title}</h3>
+
+              <div className="p-6 pt-0">
+                <a
+                  href="/service-request"
+                  className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-white/5 hover:bg-[#0EA5E9] text-slate-200 hover:text-white border border-white/10 hover:border-[#0EA5E9] text-xs font-bold transition-all duration-300"
+                >
+                  <Wrench className="w-3.5 h-3.5" /> Book Diagnostic / Repair
+                </a>
               </div>
             </motion.div>
           ))}

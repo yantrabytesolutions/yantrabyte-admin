@@ -58,9 +58,43 @@ export default function Header() {
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
           ? "bg-[#0B1120]/95 backdrop-blur-xl shadow-lg shadow-black/20"
-          : "bg-[#0B1120]/60 backdrop-blur-md"
+          : "bg-[#0B1120]/90 backdrop-blur-md"
       }`}
     >
+      {/* Top Scrolling Sales & Service Ticker */}
+      <div className="bg-gradient-to-r from-[#0369A1] via-[#0EA5E9] to-[#0284C7] text-white overflow-hidden py-1 border-b border-white/10 text-xs font-semibold select-none">
+        <div className="flex whitespace-nowrap animate-marquee">
+          {[1, 2, 3, 4].map((idx) => (
+            <div key={idx} className="flex items-center gap-6 mx-4 tracking-wide shrink-0">
+              <span className="flex items-center gap-1.5">
+                <span className="bg-white text-[#0369A1] px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider">
+                  Sales & Service
+                </span>
+                <span className="text-white font-bold">
+                  Desktop • Laptop • Printer
+                </span>
+              </span>
+              <span className="text-white/60">★</span>
+              <span className="text-white/90">
+                CCTV Camera Installation & DVR Setup
+              </span>
+              <span className="text-white/60">★</span>
+              <span className="text-white/90">
+                Networking & Wi-Fi Solutions
+              </span>
+              <span className="text-white/60">★</span>
+              <span className="text-amber-200 font-bold">
+                Same-Day Onsite Service in Bangalore
+              </span>
+              <span className="text-white/60">★</span>
+              <span className="text-white/95">
+                📞 Call: +91 99867 42525
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between lg:h-20">
           {/* Logo */}
