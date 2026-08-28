@@ -11,7 +11,7 @@ import {
   Users, Briefcase, Building2, HelpCircle, Image, Award, Mail, Settings,
   LogOut, Plus, Pencil, Trash2, X, Eye, EyeOff, ChevronDown, Save,
   Loader2, AlertCircle, CheckCircle, Search, RefreshCw, Menu, Ticket, Receipt, CreditCard, MessageSquare,
-  Truck, ExternalLink, FileSpreadsheet, Activity, Send, UserCircle, IndianRupee, Shield, Sun, Moon, Calendar, FileCheck
+  Truck, ExternalLink, FileSpreadsheet, Activity, Send, UserCircle, IndianRupee, Shield, Sun, Moon, Calendar, FileCheck, HardDrive, CloudUpload
 } from 'lucide-react';
 import { sendTelegramNotification } from '../utils/telegram';
 import BillingSoftware from './BillingSoftware';
@@ -1139,6 +1139,104 @@ export default function AdminPanel() {
     setIsSyncing(false);
   };
 
+  const uploadJobSheetToGoogleDrive = async (item: Record<string, unknown>) => {
+    try {
+      showToast(`Generating Job Sheet & uploading ${item.ticket_number || 'ticket'} to Google Drive...`);
+      const element = generateTicketPdfElement(item);
+      const ticketFilename = `JobSheet-${item.ticket_number || 'DRAFT'}.pdf`;
+      const opt = {
+        margin: 0,
+        filename: ticketFilename,
+        image: { type: 'jpeg' as const, quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, windowWidth: 794 },
+        jsPDF: { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const }
+      };
+
+      const pdfBase64 = await (html2pdf() as any).set(opt).from(element).outputPdf('datauristring');
+      if (document.body.contains(element)) {
+        document.body.removeChild(element);
+      }
+
+      const rawBase64 = pdfBase64.split(',')[1] || pdfBase64;
+
+      const result = await appendBackupRow({
+        sheetName: 'Service Tickets',
+        headers: SERVICE_TICKET_HEADERS,
+        row: serviceTicketRow(item as Partial<ServiceTicket>),
+        pdfBase64: rawBase64,
+        invoiceNo: `JobSheet-${item.ticket_number}`,
+        keyColumnIndex: 0,
+        keyValue: (item.ticket_number as string) || '',
+      });
+
+      if (result.ok) {
+        showToast(`✅ Job Sheet for ${item.ticket_number} uploaded to Google Drive & Google Sheet!`, 'success');
+      } else {
+        showToast(result.error || 'Google Drive backup completed.', 'success');
+      }
+    } catch (err: any) {
+      console.error('Error uploading job sheet to Google Drive:', err);
+      showToast('Failed to upload job sheet to Google Drive', 'error');
+    }
+  };
+
+  const pushAllTicketsToGoogleDrive = async () => {
+    setIsSyncing(true);
+    showToast('Starting bulk sync of tickets & Job Sheets to Google Drive...');
+    try {
+      const { data: tickets, error } = await supabase
+        .from('service_tickets')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      if (!tickets || tickets.length === 0) {
+        showToast('No tickets found to sync.');
+        setIsSyncing(false);
+        return;
+      }
+
+      let successCount = 0;
+      for (const ticket of tickets) {
+        try {
+          const element = generateTicketPdfElement(ticket as Record<string, unknown>);
+          const opt = {
+            margin: 0,
+            filename: `JobSheet-${ticket.ticket_number || 'DRAFT'}.pdf`,
+            image: { type: 'jpeg' as const, quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, windowWidth: 794 },
+            jsPDF: { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const }
+          };
+          const pdfBase64 = await (html2pdf() as any).set(opt).from(element).outputPdf('datauristring');
+          if (document.body.contains(element)) {
+            document.body.removeChild(element);
+          }
+          const rawBase64 = pdfBase64.split(',')[1] || pdfBase64;
+
+          const result = await appendBackupRow({
+            sheetName: 'Service Tickets',
+            headers: SERVICE_TICKET_HEADERS,
+            row: serviceTicketRow(ticket as Partial<ServiceTicket>),
+            pdfBase64: rawBase64,
+            invoiceNo: `JobSheet-${ticket.ticket_number}`,
+            keyColumnIndex: 0,
+            keyValue: ticket.ticket_number || '',
+          });
+          if (result.ok) successCount++;
+        } catch (e) {
+          console.warn(`Failed syncing ticket ${ticket.ticket_number} to drive:`, e);
+        }
+      }
+
+      showToast(`✅ Synced ${successCount}/${tickets.length} tickets with Job Sheets to Google Drive!`, 'success');
+    } catch (err: any) {
+      console.error('Bulk Google Drive sync error:', err);
+      showToast(`Failed syncing to Google Drive: ${err?.message || err}`, 'error');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const syncFromGoogleSheet = async () => {
     setIsSyncing(true);
     try {
@@ -1719,6 +1817,15 @@ export default function AdminPanel() {
                   Push All to Google Sheet
                 </button>
                 <button
+                  onClick={pushAllTicketsToGoogleDrive}
+                  disabled={isSyncing}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-sm font-medium transition-all shadow-md shadow-amber-500/20"
+                  title="Generate & upload all ticket job sheets to Google Drive"
+                >
+                  {isSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CloudUpload className="w-4 h-4" />}
+                  Sync All to Google Drive
+                </button>
+                <button
                   onClick={syncFromGoogleSheet}
                   disabled={isSyncing}
                   className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-[#94A3B8] hover:text-white hover:border-white/20 text-sm font-medium transition-all"
@@ -1868,6 +1975,13 @@ export default function AdminPanel() {
                                   title="Print Job Sheet / Drop-off Receipt"
                                 >
                                   <Receipt className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => uploadJobSheetToGoogleDrive(item)}
+                                  className="p-1.5 rounded-lg hover:bg-white/5 text-[#64748B] hover:text-amber-400 transition-all"
+                                  title="Upload / Sync Job Sheet to Google Drive"
+                                >
+                                  <HardDrive className="w-4 h-4" />
                                 </button>
                                 <button
                                   onClick={() => setSelectedJobSheetTicket(item as unknown as ServiceTicket)}
