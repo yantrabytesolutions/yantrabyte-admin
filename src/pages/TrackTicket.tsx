@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search, PackageSearch, AlertCircle, Clock, CheckCircle2, MonitorPlay } from 'lucide-react';
+import { Search, PackageSearch, AlertCircle, Clock, CheckCircle2, MonitorPlay, Download, Loader2 } from 'lucide-react';
 import type { ServiceTicket } from '../types';
 import SEO from '../components/SEO';
+import html2pdf from 'html2pdf.js';
+import { ServiceTicketPdfTemplate } from '../components/ServiceTicketPdfTemplate';
 
 export function TrackTicket() {
   const [searchParams] = useSearchParams();
@@ -11,6 +13,8 @@ export function TrackTicket() {
   const [loading, setLoading] = useState(false);
   const [ticket, setTicket] = useState<ServiceTicket | null>(null);
   const [error, setError] = useState('');
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const ticketPdfRef = useRef<HTMLDivElement>(null);
 
   const handleTrack = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -177,13 +181,52 @@ export function TrackTicket() {
                 </div>
               )}
               
-              <div className="pt-4 border-t border-white/10 flex justify-between items-center text-xs text-slate-400">
+              <div className="pt-4 border-t border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs text-slate-400">
                 <span>Received: {new Date(ticket.created_at || '').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                {ticket.status === 'closed' && <span>Completed</span>}
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!ticketPdfRef.current || !ticket) return;
+                    setIsDownloadingPdf(true);
+                    try {
+                      const cleanTicket = (ticket.ticket_number || 'TICKET').replace(/[^\w-]/g, '_');
+                      const cleanName = (ticket.customer_name || '').trim().replace(/[^\w\s-]/g, '').replace(/\s+/g, '_');
+                      const filename = cleanName ? `JobSheet-${cleanTicket}_${cleanName}.pdf` : `JobSheet-${cleanTicket}.pdf`;
+
+                      const opt = {
+                        margin: 0,
+                        filename,
+                        image: { type: 'jpeg' as const, quality: 0.98 },
+                        html2canvas: { scale: 2, useCORS: true, windowWidth: 794, scrollY: 0, x: 0, y: 0 },
+                        jsPDF: { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const }
+                      };
+                      await (html2pdf as any)().set(opt).from(ticketPdfRef.current).save();
+                    } catch (e) {
+                      console.error('PDF error:', e);
+                    } finally {
+                      setIsDownloadingPdf(false);
+                    }
+                  }}
+                  disabled={isDownloadingPdf}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 text-xs font-semibold transition-all"
+                >
+                  {isDownloadingPdf ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                  Download Job Sheet PDF
+                </button>
               </div>
             </div>
           </div>
         )}
+
+        {/* Hidden template for PDF generation */}
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '794px', opacity: 0, pointerEvents: 'none', zIndex: -1000 }}>
+          {ticket && (
+            <ServiceTicketPdfTemplate
+              ref={ticketPdfRef}
+              ticket={ticket}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

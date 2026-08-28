@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { renderToString } from 'react-dom/server';
 import { QRCodeSVG } from 'qrcode.react';
 import { supabase } from '../lib/supabase';
@@ -29,6 +29,7 @@ import InventoryMovement from './InventoryMovement';
 import FinancialReports from './FinancialReports';
 import { WhatsAppConnectModal } from './components/WhatsAppConnectModal';
 import DigitalJobSheetModal from './components/DigitalJobSheetModal';
+import { ServiceTicketPdfTemplate } from '../components/ServiceTicketPdfTemplate';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
@@ -483,6 +484,8 @@ export default function AdminPanel() {
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [isWhatsAppOnline, setIsWhatsAppOnline] = useState(false);
   const [selectedJobSheetTicket, setSelectedJobSheetTicket] = useState<ServiceTicket | null>(null);
+  const [activeTicketForPdf, setActiveTicketForPdf] = useState<ServiceTicket | null>(null);
+  const ticketPrintRef = useRef<HTMLDivElement>(null);
   
   const [isDarkMode, setIsDarkMode] = useState(() => {
     return localStorage.getItem('theme') === 'dark' || 
@@ -775,21 +778,35 @@ export default function AdminPanel() {
     return element;
   };
 
+  const formatTicketFilename = (ticketNo: string, customerName?: string) => {
+    const cleanTicket = (ticketNo || 'TICKET').replace(/[^\w-]/g, '_');
+    const cleanName = (customerName || '')
+      .trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, '_');
+    return cleanName ? `JobSheet-${cleanTicket}_${cleanName}.pdf` : `JobSheet-${cleanTicket}.pdf`;
+  };
+
   const printJobSheet = async (item: Record<string, unknown>) => {
     try {
-      const element = generateTicketPdfElement(item);
       const ticketNumber = (item.ticket_number as string) || 'DRAFT';
-      const ticketFilename = `JobSheet-${ticketNumber}.pdf`;
+      const customerName = (item.customer_name as string) || '';
+      const ticketFilename = formatTicketFilename(ticketNumber, customerName);
+
+      setActiveTicketForPdf(item as unknown as ServiceTicket);
+      await new Promise(resolve => setTimeout(resolve, 80));
+
+      const element = ticketPrintRef.current || generateTicketPdfElement(item);
       const opt = {
         margin: 0,
         filename: ticketFilename,
         image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, windowWidth: 794 },
+        html2canvas: { scale: 2, useCORS: true, windowWidth: 794, scrollY: 0, x: 0, y: 0 },
         jsPDF: { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const }
       };
 
       const pdfBlob = await (html2pdf() as any).set(opt).from(element).outputPdf('blob');
-      if (document.body.contains(element)) {
+      if (element !== ticketPrintRef.current && document.body.contains(element)) {
         document.body.removeChild(element);
       }
 
@@ -814,10 +831,12 @@ export default function AdminPanel() {
       // Sync to Google Sheet in background
       backupTicketToGoogleSheet(item as Partial<ServiceTicket>);
 
-      showToast(`✅ Job sheet ${ticketNumber} downloaded & synced!`, 'success');
+      showToast(`✅ Job sheet ${ticketNumber} downloaded!`, 'success');
     } catch (err: any) {
       console.error('Error generating job sheet:', err);
       showToast('Failed to generate job sheet', 'error');
+    } finally {
+      setActiveTicketForPdf(null);
     }
   };
 
@@ -2514,6 +2533,16 @@ export default function AdminPanel() {
             }}
           />
         )}
+
+        {/* Hidden Container for Service Ticket PDF Generation */}
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '794px', opacity: 0, pointerEvents: 'none', zIndex: -1000 }}>
+          {activeTicketForPdf && (
+            <ServiceTicketPdfTemplate
+              ref={ticketPrintRef}
+              ticket={activeTicketForPdf}
+            />
+          )}
+        </div>
       </main>
     </div>
   );

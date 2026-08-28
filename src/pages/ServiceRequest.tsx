@@ -1,9 +1,11 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { supabase } from '../lib/supabase';
-import { AlertCircle, ClipboardCheck, Loader2, MapPin, Phone, Send, Wrench, Laptop, Monitor, Printer, Video, Wifi, Fingerprint, Server, Package, UploadCloud, Film, X, ChevronRight, ChevronLeft, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, ClipboardCheck, Loader2, MapPin, Phone, Send, Wrench, Laptop, Monitor, Printer, Video, Wifi, Fingerprint, Server, Package, UploadCloud, Film, X, ChevronRight, ChevronLeft, CheckCircle2, Download } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import html2pdf from 'html2pdf.js';
+import { ServiceTicketPdfTemplate } from '../components/ServiceTicketPdfTemplate';
 
 import { motion } from 'framer-motion';
 
@@ -67,6 +69,9 @@ export default function ServiceRequest() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [createdTicket, setCreatedTicket] = useState('');
+  const [lastSubmittedTicketData, setLastSubmittedTicketData] = useState<any | null>(null);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const ticketPdfPrintRef = useRef<HTMLDivElement>(null);
   const [attachment, setAttachment] = useState<File | null>(null);
   const [videoAttachment, setVideoAttachment] = useState<File | null>(null);
   const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
@@ -79,6 +84,30 @@ export default function ServiceRequest() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [dragActivePhoto, setDragActivePhoto] = useState(false);
   const [dragActiveVideo, setDragActiveVideo] = useState(false);
+
+  const downloadTicketReceiptPdf = async () => {
+    if (!ticketPdfPrintRef.current || !lastSubmittedTicketData) return;
+    setIsDownloadingPdf(true);
+    try {
+      const cleanTicket = (lastSubmittedTicketData.ticket_number || 'TICKET').replace(/[^\w-]/g, '_');
+      const cleanName = (lastSubmittedTicketData.customer_name || '').trim().replace(/[^\w\s-]/g, '').replace(/\s+/g, '_');
+      const filename = cleanName ? `JobSheet-${cleanTicket}_${cleanName}.pdf` : `JobSheet-${cleanTicket}.pdf`;
+
+      const opt = {
+        margin: 0,
+        filename,
+        image: { type: 'jpeg' as const, quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, windowWidth: 794, scrollY: 0, x: 0, y: 0 },
+        jsPDF: { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const }
+      };
+
+      await (html2pdf as any)().set(opt).from(ticketPdfPrintRef.current).save();
+    } catch (err) {
+      console.error('Error downloading ticket PDF:', err);
+    } finally {
+      setIsDownloadingPdf(false);
+    }
+  };
 
   const nextStep = () => {
     setError('');
@@ -409,6 +438,11 @@ export default function ServiceRequest() {
         console.warn('Network error triggering Google Sheet backup:', backupError);
       }
 
+      setLastSubmittedTicketData({
+        ticket_number: ticketNumber,
+        ...ticketPayload,
+        created_at: new Date().toISOString()
+      });
       setCreatedTicket(ticketNumber);
       setForm(initialForm);
       setOtherDeviceType('');
@@ -536,6 +570,15 @@ export default function ServiceRequest() {
                 </div>
 
                 <div className="mt-5 flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
+                  <button
+                    type="button"
+                    onClick={downloadTicketReceiptPdf}
+                    disabled={isDownloadingPdf}
+                    className="flex items-center justify-center gap-2 rounded-md bg-emerald-600 hover:bg-emerald-700 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-600/20 transition"
+                  >
+                    {isDownloadingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                    Download Job Sheet (PDF)
+                  </button>
                   <Link
                     to={`/track-ticket?t=${createdTicket}`}
                     className="flex items-center justify-center gap-2 rounded-md bg-[#0EA5E9] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[#0EA5E9]/20 transition hover:bg-[#0284C7]"
@@ -549,6 +592,16 @@ export default function ServiceRequest() {
                   >
                     Create Another
                   </button>
+                </div>
+
+                {/* Hidden container for rendering official Service Ticket PDF */}
+                <div style={{ position: 'absolute', top: 0, left: 0, width: '794px', opacity: 0, pointerEvents: 'none', zIndex: -1000 }}>
+                  {lastSubmittedTicketData && (
+                    <ServiceTicketPdfTemplate
+                      ref={ticketPdfPrintRef}
+                      ticket={lastSubmittedTicketData}
+                    />
+                  )}
                 </div>
               </div>
 
