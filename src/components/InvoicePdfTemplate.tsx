@@ -119,7 +119,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         backgroundRepeat: 'no-repeat',
         pointerEvents: 'none',
         zIndex: 1,
-        opacity: 0.18
+        opacity: 0.08
       }} />
 
       {/* Cancelled Stamp */}
@@ -291,69 +291,57 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
             </tbody>
           </table>
 
-          {/* Totals Section (Flat rowSpan Table - Prevents PDF Overlap) */}
-          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', fontSize: '13px' }}>
+          {/* Totals Section */}
+          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', fontSize: '13px', backgroundColor: '#ffffff' }}>
             <tbody>
-              {calcRows.map((row, idx) => (
-                <tr 
-                  key={row.label}
-                  style={{ 
-                    backgroundColor: (row.isHighlight || row.isDue) ? '#FFF2CC' : 'transparent',
-                    height: '24px'
-                  }}
-                >
-                  {/* First row renders the Left: Amount in Words with rowSpan */}
-                  {idx === 0 && (
-                    <td 
-                      rowSpan={calcRows.length} 
-                      style={{ 
-                        width: '58%', 
-                        verticalAlign: 'top', 
-                        padding: '8px 12px', 
-                        borderRight: '1px solid #000000',
-                        backgroundColor: '#ffffff'
-                      }}
-                    >
-                      <div style={{ backgroundColor: '#D9EAF7', color: '#B45309', fontWeight: 'bold', fontSize: '12px', padding: '2px 8px', display: 'inline-block', marginBottom: '6px' }}>
-                        Amount in Words:
-                      </div>
-                      <div style={{ fontStyle: 'italic', fontSize: '13px', color: '#1f2937', lineHeight: '1.4' }}>
-                        {numberToWords(grandTotal)}
-                      </div>
-                    </td>
-                  )}
+              <tr>
+                {/* Left: Amount in Words */}
+                <td style={{ width: '58%', verticalAlign: 'top', padding: '10px 12px', borderRight: '1px solid #000000' }}>
+                  <div style={{ backgroundColor: '#D9EAF7', color: '#B45309', fontWeight: 'bold', fontSize: '12px', padding: '3px 8px', display: 'inline-block', marginBottom: '8px', borderRadius: '3px' }}>
+                    Amount in Words:
+                  </div>
+                  <div style={{ fontStyle: 'italic', fontWeight: 'bold', fontSize: '13px', color: '#000000', lineHeight: '1.5' }}>
+                    {numberToWords(grandTotal)}
+                  </div>
+                </td>
 
-                  {/* Right: Label */}
-                  <td 
-                    style={{ 
-                      width: '22%', 
-                      padding: '4px 10px', 
-                      color: row.isHighlight ? '#15803D' : (row.isDue ? '#B91C1C' : '#333333'), 
-                      fontWeight: (row.isHighlight || row.isDue) ? 'bold' : 'normal',
-                      fontSize: (row.isHighlight || row.isDue) ? '13px' : '12.5px',
-                      borderBottom: idx === calcRows.length - 1 ? 'none' : '1px solid #000000',
-                      borderLeft: '1px solid #000000'
-                    }}
-                  >
-                    {row.label}
-                  </td>
-
-                  {/* Right: Value */}
-                  <td 
-                    style={{ 
-                      width: '20%', 
-                      padding: '4px 10px', 
-                      textAlign: 'right', 
-                      color: row.isHighlight ? '#15803D' : (row.isDue ? '#B91C1C' : '#000000'), 
-                      fontWeight: (row.isHighlight || row.isDue) ? 'bold' : 'normal',
-                      fontSize: (row.isHighlight || row.isDue) ? '13.5px' : '12.5px',
-                      borderBottom: idx === calcRows.length - 1 ? 'none' : '1px solid #000000'
-                    }}
-                  >
-                    {row.value}
-                  </td>
-                </tr>
-              ))}
+                {/* Right: Calculations Breakdown */}
+                <td style={{ width: '42%', verticalAlign: 'top', padding: 0 }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                    <tbody>
+                      {calcRows.map((row, idx) => (
+                        <tr 
+                          key={row.label}
+                          style={{ 
+                            backgroundColor: (row.isHighlight || row.isDue) ? '#FFF2CC' : 'transparent',
+                            height: '26px'
+                          }}
+                        >
+                          <td style={{ 
+                            padding: '5px 10px', 
+                            color: row.isHighlight ? '#15803D' : (row.isDue ? '#B91C1C' : '#333333'), 
+                            fontWeight: (row.isHighlight || row.isDue) ? 'bold' : 'normal',
+                            fontSize: (row.isHighlight || row.isDue) ? '13px' : '12.5px',
+                            borderBottom: idx === calcRows.length - 1 ? 'none' : '1px solid #000000'
+                          }}>
+                            {row.label}
+                          </td>
+                          <td style={{ 
+                            padding: '5px 10px', 
+                            textAlign: 'right', 
+                            color: row.isHighlight ? '#15803D' : (row.isDue ? '#B91C1C' : '#000000'), 
+                            fontWeight: (row.isHighlight || row.isDue) ? 'bold' : 'normal',
+                            fontSize: (row.isHighlight || row.isDue) ? '13.5px' : '12.5px',
+                            borderBottom: idx === calcRows.length - 1 ? 'none' : '1px solid #000000'
+                          }}>
+                            {row.value}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </td>
+              </tr>
             </tbody>
           </table>
 
