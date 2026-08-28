@@ -445,21 +445,35 @@ function HeroSection() {
             </motion.p>
 
             <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.8 }}
-              className="flex flex-wrap justify-center lg:justify-start gap-3 sm:gap-4">
-              <a href="/service-request" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg bg-gradient-to-r from-[#0D9488] to-[#0EA5E9] hover:from-[#0F766E] hover:to-[#0284C7] text-white font-bold tracking-wider uppercase transition-all duration-300 shadow-lg shadow-[#0EA5E9]/25 hover:shadow-[#0EA5E9]/40">
-                Service Request
+              className="flex flex-wrap justify-center lg:justify-start items-center gap-3 sm:gap-4 pt-2">
+              <a 
+                href="/service-request" 
+                className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#0EA5E9] to-[#0284C7] hover:from-[#0284C7] hover:to-[#0369A1] text-white font-bold text-sm tracking-wide shadow-lg shadow-[#0EA5E9]/30 hover:shadow-[#0EA5E9]/50 hover:-translate-y-0.5 transition-all duration-300 active:scale-95"
+              >
+                <Wrench className="w-4 h-4" /> Book Repair / Service
               </a>
-              <a href="#contact" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg border-2 border-white/30 text-white font-semibold hover:bg-white/10 transition-all duration-300">
-                Get Free Consultation <ArrowRight className="w-4 h-4" />
+              <a 
+                href="/track-ticket" 
+                className="inline-flex items-center gap-2 px-5 py-3.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-white font-semibold text-sm backdrop-blur-md hover:-translate-y-0.5 transition-all duration-300"
+              >
+                <Search className="w-4 h-4 text-[#38BDF8]" /> Track Ticket
               </a>
-              <a href="https://wa.me/919986742525" target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg bg-[#25D366] hover:bg-[#1EB755] text-white font-semibold transition-all duration-300 shadow-lg shadow-[#25D366]/25">
-                <MessageCircle className="w-4 h-4" /> WhatsApp Now
-              </a>
-              <a href="tel:+919986742525"
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg border-2 border-white/30 text-white font-semibold hover:bg-white/10 transition-all duration-300">
-                <Phone className="w-4 h-4" /> Call Now
-              </a>
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-center">
+                <a 
+                  href="https://wa.me/919986742525" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-4 py-3 rounded-xl bg-[#25D366]/90 hover:bg-[#25D366] text-white font-semibold text-xs transition-all shadow-md shadow-[#25D366]/20"
+                >
+                  <MessageCircle className="w-4 h-4" /> WhatsApp
+                </a>
+                <a 
+                  href="tel:+919986742525"
+                  className="inline-flex items-center gap-1.5 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 text-xs font-semibold transition-all"
+                >
+                  <Phone className="w-4 h-4 text-[#38BDF8]" /> +91 99867 42525
+                </a>
+              </div>
             </motion.div>
           </div>
 

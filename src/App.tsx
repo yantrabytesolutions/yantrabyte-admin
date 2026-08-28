@@ -50,10 +50,6 @@ const DomainGuard = ({ children }: { children: React.ReactNode }) => {
 };
 
 const RootRoute = () => {
-  const hostname = window.location.hostname;
-  if (hostname === 'yantrabyte.anantatechcare.com') {
-    return <ServiceRequest />;
-  }
   return <Home />;
 };
 
