@@ -1020,7 +1020,9 @@ export default function AdminPanel() {
     try {
       const { data } = await supabase.from('site_settings').select('value').eq('key', 'google_review_link').maybeSingle();
       if (data?.value) reviewLink = data.value;
-    } catch (e) {}
+    } catch (e) {
+      // fallback to default
+    }
 
     const device = String(item.device_type || 'Device');
     const issue = String(item.issue_description || 'repair');
