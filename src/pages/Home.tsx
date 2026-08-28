@@ -412,16 +412,6 @@ function HeroSection() {
         backgroundSize: '60px 60px',
       }} />
 
-      {/* Side Hardware Watermarks */}
-      <div 
-        className="absolute -left-24 top-1/4 w-96 h-96 opacity-20 pointer-events-none bg-contain bg-no-repeat bg-center blur-[1px]"
-        style={{ backgroundImage: `url(/hardware_watermark.png)` }}
-      />
-      <div 
-        className="absolute -right-24 top-1/3 w-96 h-96 opacity-20 pointer-events-none bg-contain bg-no-repeat bg-center transform scale-x-[-1] blur-[1px]"
-        style={{ backgroundImage: `url(/hardware_watermark.png)` }}
-      />
-
       <div className="absolute inset-0 overflow-hidden">
         {Array.from({ length: 40 }).map((_, i) => (
           <div key={i} className="absolute rounded-full bg-[#0EA5E9] animate-pulse"
@@ -435,68 +425,6 @@ function HeroSection() {
         ))}
       </div>
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#0EA5E9]/5 rounded-full blur-[120px]" />
-
-      {/* Left Flank Floating Hardware Badges (Wide Screens) */}
-      <div className="hidden 2xl:flex flex-col gap-5 absolute left-6 top-1/2 -translate-y-1/2 z-20 pointer-events-none">
-        {/* Laptop & Chip Card */}
-        <motion.div
-          animate={{ y: [0, -12, 0] }}
-          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-          className="w-60 bg-slate-900/90 backdrop-blur-xl border border-white/15 p-3 rounded-2xl shadow-2xl flex items-center gap-3 glow-blue-sm"
-        >
-          <img src="/images/laptop_repair.png" alt="Laptop Chip-Level Repair" className="w-12 h-12 rounded-xl object-cover border border-[#0EA5E9]/50 shadow-md shrink-0" />
-          <div className="overflow-hidden">
-            <span className="text-[10px] font-black uppercase text-[#38BDF8] tracking-wider block">Diagnostics Lab</span>
-            <span className="text-xs font-bold text-white block truncate">Laptop & Motherboard</span>
-            <span className="text-[10px] text-slate-400 font-medium">BGA & Chip-Level Rework</span>
-          </div>
-        </motion.div>
-
-        {/* 4K CCTV Camera Card */}
-        <motion.div
-          animate={{ y: [0, 12, 0] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          className="w-60 bg-slate-900/90 backdrop-blur-xl border border-white/15 p-3 rounded-2xl shadow-2xl flex items-center gap-3"
-        >
-          <img src="/images/cctv_camera.png" alt="CCTV Camera Surveillance" className="w-12 h-12 rounded-xl object-cover border border-emerald-500/50 shadow-md shrink-0" />
-          <div className="overflow-hidden">
-            <span className="text-[10px] font-black uppercase text-emerald-400 tracking-wider block">Security Systems</span>
-            <span className="text-xs font-bold text-white block truncate">4K CCTV & IP NVR</span>
-            <span className="text-[10px] text-slate-400 font-medium">Mobile Live View & Setup</span>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Right Flank Floating Hardware Badges (Wide Screens) */}
-      <div className="hidden 2xl:flex flex-col gap-5 absolute right-6 top-1/2 -translate-y-1/2 z-20 pointer-events-none">
-        {/* Enterprise Server Rack Card */}
-        <motion.div
-          animate={{ y: [0, -10, 0] }}
-          transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-          className="w-60 bg-slate-900/90 backdrop-blur-xl border border-white/15 p-3 rounded-2xl shadow-2xl flex items-center gap-3 glow-blue-sm"
-        >
-          <img src="/images/server_room_bg.png" alt="Enterprise Server Solutions" className="w-12 h-12 rounded-xl object-cover border border-cyan-500/50 shadow-md shrink-0" />
-          <div className="overflow-hidden">
-            <span className="text-[10px] font-black uppercase text-cyan-400 tracking-wider block">IT Infrastructure</span>
-            <span className="text-xs font-bold text-white block truncate">Server Racks & Cloud</span>
-            <span className="text-[10px] text-slate-400 font-medium">AMC & Maintenance SLA</span>
-          </div>
-        </motion.div>
-
-        {/* Networking & Wi-Fi Card */}
-        <motion.div
-          animate={{ y: [0, 10, 0] }}
-          transition={{ duration: 6.5, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
-          className="w-60 bg-slate-900/90 backdrop-blur-xl border border-white/15 p-3 rounded-2xl shadow-2xl flex items-center gap-3"
-        >
-          <img src="/work-networking.png" alt="Wi-Fi & Networking" className="w-12 h-12 rounded-xl object-cover border border-amber-500/50 shadow-md shrink-0" />
-          <div className="overflow-hidden">
-            <span className="text-[10px] font-black uppercase text-amber-400 tracking-wider block">Mesh Networking</span>
-            <span className="text-xs font-bold text-white block truncate">Wi-Fi 6 & Switches</span>
-            <span className="text-[10px] text-slate-400 font-medium">Gigabit LAN & Firewall</span>
-          </div>
-        </motion.div>
-      </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-20 md:py-28">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
@@ -727,9 +655,41 @@ function TrustStatsSection() {
     { value: 5, suffix: '-Star', label: 'Customer Support' },
   ];
 
+  const hardwareHighlights = [
+    {
+      title: 'Laptop & Chip Rework Lab',
+      tag: 'Diagnostics',
+      desc: 'BGA Reballing & Motherboard Short Tracing',
+      image: '/images/laptop_repair.png',
+      color: '#0EA5E9',
+    },
+    {
+      title: '4K CCTV & IP NVR Setup',
+      tag: 'Surveillance',
+      desc: 'Night Vision & Mobile Phone Live Feed',
+      image: '/images/cctv_camera.png',
+      color: '#10B981',
+    },
+    {
+      title: 'Enterprise Server Racks',
+      tag: 'Infrastructure',
+      desc: 'Cloud Migration & AMC Maintenance SLA',
+      image: '/images/server_room_bg.png',
+      color: '#06B6D4',
+    },
+    {
+      title: 'Wi-Fi 6 & Mesh Network',
+      tag: 'Networking',
+      desc: 'Gigabit LAN, Managed Switches & Firewalls',
+      image: '/work-networking.png',
+      color: '#F59E0B',
+    },
+  ];
+
   return (
     <Section className="relative -mt-8 md:-mt-12 z-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Top Stats Counters */}
         <motion.div variants={staggerContainer} className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {stats.map((stat, i) => (
             <motion.div key={i} variants={staggerItem}
@@ -738,6 +698,38 @@ function TrustStatsSection() {
                 <AnimatedCounter target={stat.value} suffix={stat.suffix} />
               </div>
               <div className="text-sm md:text-base text-[#94A3B8] font-medium">{stat.label}</div>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        {/* Hardware & Engineering Showcase Row */}
+        <motion.div variants={staggerContainer} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 mt-6">
+          {hardwareHighlights.map((item, idx) => (
+            <motion.div
+              key={idx}
+              variants={staggerItem}
+              whileHover={{ y: -4 }}
+              className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-white/[0.07] to-white/[0.02] border border-white/10 hover:border-[#0EA5E9]/50 p-4 transition-all duration-300 shadow-xl group flex items-center gap-3.5"
+            >
+              <img
+                src={item.image}
+                alt={item.title}
+                className="w-14 h-14 rounded-xl object-cover border border-white/10 shadow-md group-hover:scale-105 transition-transform duration-500 shrink-0"
+              />
+              <div className="overflow-hidden">
+                <span
+                  className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded inline-block mb-1"
+                  style={{ backgroundColor: `${item.color}20`, color: item.color }}
+                >
+                  {item.tag}
+                </span>
+                <h4 className="text-xs font-bold text-white group-hover:text-[#38BDF8] transition-colors truncate">
+                  {item.title}
+                </h4>
+                <p className="text-[11px] text-slate-400 font-medium truncate mt-0.5">
+                  {item.desc}
+                </p>
+              </div>
             </motion.div>
           ))}
         </motion.div>
