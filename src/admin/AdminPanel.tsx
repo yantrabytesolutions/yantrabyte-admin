@@ -11,7 +11,7 @@ import {
   Users, Briefcase, Building2, HelpCircle, Image, Award, Mail, Settings,
   LogOut, Plus, Pencil, Trash2, X, Eye, EyeOff, ChevronDown, Save,
   Loader2, AlertCircle, CheckCircle, Search, RefreshCw, Menu, Ticket, Receipt, CreditCard, MessageSquare,
-  Truck, ExternalLink, FileSpreadsheet, Activity, Send, UserCircle, IndianRupee, Shield, Sun, Moon, Calendar, FileCheck, HardDrive, CloudUpload, Star, Sparkles
+  Truck, ExternalLink, FileSpreadsheet, Activity, Send, UserCircle, IndianRupee, Shield, Sun, Moon, Calendar, FileCheck, HardDrive, CloudUpload, Star
 } from 'lucide-react';
 import { sendTelegramNotification } from '../utils/telegram';
 import BillingSoftware from './BillingSoftware';
