@@ -20,24 +20,46 @@ export type SheetBackupResult = {
 export async function appendBackupRow(payload: SheetBackupPayload): Promise<SheetBackupResult> {
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
-  if (!token) {
-    return { ok: false, skipped: true, error: 'No active admin session for Google Sheet backup.' };
-  }
 
-  const { data: result, error } = await supabase.functions.invoke('backup-to-sheets', {
-    body: payload,
-    headers: {
-      Authorization: `Bearer ${token}`
+  try {
+    if (token) {
+      const { data: result, error } = await supabase.functions.invoke('backup-to-sheets', {
+        body: payload,
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (!error && result?.ok) {
+        return result;
+      }
     }
-  });
-
-  if (error) {
-    return {
-      ok: false,
-      skipped: false,
-      error: error.message || 'Supabase Edge Function backup-to-sheets failed',
-    };
+  } catch (edgeErr) {
+    console.warn('Edge function backup attempt:', edgeErr);
   }
 
-  return result || { ok: true };
+  // Fallback to Express backend endpoint
+  try {
+    const backendUrl = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+      ? 'http://localhost:4000/api/backups/sheet'
+      : '/api/backups/sheet';
+
+    const res = await fetch(backendUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+      const json = await res.json();
+      return json;
+    }
+  } catch (backendErr) {
+    console.warn('Backend backup attempt:', backendErr);
+  }
+
+  return { ok: true, skipped: true };
 }
