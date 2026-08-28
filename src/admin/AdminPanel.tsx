@@ -776,18 +776,49 @@ export default function AdminPanel() {
   };
 
   const printJobSheet = async (item: Record<string, unknown>) => {
-    const element = generateTicketPdfElement(item);
-    const ticketFilename = `JobSheet-${item.ticket_number || 'DRAFT'}.pdf`;
-    const opt = {
-      margin: 0,
-      filename: ticketFilename,
-      image: { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, windowWidth: 794 },
-      jsPDF: { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const }
-    };
-    await html2pdf().set(opt).from(element).save();
-    document.body.removeChild(element);
-    showToast('Job sheet drop-off receipt downloaded!');
+    try {
+      const element = generateTicketPdfElement(item);
+      const ticketNumber = (item.ticket_number as string) || 'DRAFT';
+      const ticketFilename = `JobSheet-${ticketNumber}.pdf`;
+      const opt = {
+        margin: 0,
+        filename: ticketFilename,
+        image: { type: 'jpeg' as const, quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, windowWidth: 794 },
+        jsPDF: { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const }
+      };
+
+      const pdfBlob = await (html2pdf() as any).set(opt).from(element).outputPdf('blob');
+      if (document.body.contains(element)) {
+        document.body.removeChild(element);
+      }
+
+      // Download file to user
+      const downloadUrl = URL.createObjectURL(pdfBlob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = ticketFilename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(downloadUrl);
+
+      // Cloud storage backup in background
+      try {
+        const filePath = `tickets/${ticketFilename}`;
+        await supabase.storage.from('invoices').upload(filePath, pdfBlob, { upsert: true });
+      } catch (storageErr) {
+        console.warn('Cloud storage backup note:', storageErr);
+      }
+
+      // Sync to Google Sheet in background
+      backupTicketToGoogleSheet(item as Partial<ServiceTicket>);
+
+      showToast(`✅ Job sheet ${ticketNumber} downloaded & synced!`, 'success');
+    } catch (err: any) {
+      console.error('Error generating job sheet:', err);
+      showToast('Failed to generate job sheet', 'error');
+    }
   };
 
   const printDeviceLabel = (item: Record<string, unknown>) => {
