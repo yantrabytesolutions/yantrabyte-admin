@@ -1,7 +1,9 @@
-import { useState, useEffect, useCallback, FormEvent } from 'react';
-import { X, Plus, Clock, CheckCircle, FileText, IndianRupee, MessageSquare } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef, FormEvent } from 'react';
+import { X, Plus, Clock, CheckCircle, FileText, IndianRupee, MessageSquare, Eye, ExternalLink, Download, Printer, Loader2 } from 'lucide-react';
+import html2pdf from 'html2pdf.js';
 import { supabase } from '../../lib/supabase';
 import { Invoice } from '../../types';
+import { InvoicePdfTemplate } from '../../components/InvoicePdfTemplate';
 
 const parseDateToTimestamp = (dateStr: string): number => {
   if (!dateStr) return 0;
@@ -34,6 +36,7 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
 
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
+  const [companySignature, setCompanySignature] = useState<string>('');
 
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [payAmount, setPayAmount] = useState('');
@@ -44,6 +47,11 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
   const [sendWhatsApp, setSendWhatsApp] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lastReceiptUrl, setLastReceiptUrl] = useState<string | null>(null);
+
+  // Invoice viewer modal state
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const invoicePrintRef = useRef<HTMLDivElement>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -63,6 +71,16 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
       if (!error && pResp) payData = pResp;
     } catch (e) {
       console.warn('Could not fetch customer_payments', e);
+    }
+
+    // Fetch site settings for company signature
+    try {
+      const { data: setRes } = await supabase.from('site_settings').select('*').limit(1).maybeSingle();
+      if (setRes) {
+        setCompanySignature(setRes.signature_url || setRes.company_signature || '');
+      }
+    } catch (err) {
+      console.warn('Could not fetch company signature', err);
     }
 
     const filteredInvoices = (invData || []).filter((i: Invoice) => i.doc_type === 'Invoice');
@@ -110,13 +128,86 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
     const totalB = invoices.reduce((sum: number, inv: Invoice) => sum + (Number(inv.grand_total) || 0), 0);
     const totalP = payments.reduce((sum: number, p: any) => sum + (Number(p.amount) || 0), 0) + amount;
     const finalBal = Math.max(0, totalB - totalP);
-
     const msg = generateReceiptText(amount, dateStr, mode, refNote, finalBal, totalB, totalP);
 
     if (phone) {
       window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
     } else {
       alert('No phone number found for this customer. Please enter a phone number.');
+    }
+  };
+
+  const handleDownloadPdf = async (inv: Invoice) => {
+    if (!invoicePrintRef.current) return;
+    setIsDownloadingPdf(true);
+    try {
+      const opt = {
+        margin: [0, 0, 0, 0],
+        filename: `Invoice-${inv.invoice_no || 'Document'}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      await (html2pdf as any)().set(opt).from(invoicePrintRef.current).save();
+    } catch (err) {
+      console.error('Error generating PDF:', err);
+      alert('Failed to generate PDF. Please try again.');
+    } finally {
+      setIsDownloadingPdf(false);
+    }
+  };
+
+  const handlePrintInvoice = () => {
+    if (!invoicePrintRef.current) return;
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      window.print();
+      return;
+    }
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Invoice - ${selectedInvoice?.invoice_no || 'Print'}</title>
+          <style>
+            @page { size: A4; margin: 0; }
+            body { margin: 0; padding: 0; font-family: sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          </style>
+        </head>
+        <body>
+          ${invoicePrintRef.current.innerHTML}
+          <script>
+            window.onload = function() {
+              window.focus();
+              window.print();
+              window.close();
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
+  const handleShareInvoiceWhatsApp = (inv: Invoice) => {
+    let phone = (inv.phone || customPhone || customerPhone || '').replace(/\D/g, '');
+    if (phone.length === 10) phone = '91' + phone;
+    const grandTotal = Number(inv.grand_total || 0);
+    const balance = Number(inv.balance_due || 0);
+    const msg = `🧾 *INVOICE - YantraByte Solutions*\n\n` +
+      `Dear *${inv.customer_name || customerName}*,\n\n` +
+      `Please find your invoice details below:\n` +
+      `• *Invoice No:* ${inv.invoice_no}\n` +
+      `• *Date:* ${formatDateForUI(inv.date)}\n` +
+      `• *Total Amount:* ₹${grandTotal.toLocaleString('en-IN')}\n` +
+      `• *Balance Due:* ${balance > 0 ? `*₹${balance.toLocaleString('en-IN')}*` : '*Paid in Full 🎉*'}\n\n` +
+      `You can view and download your invoice anytime at:\n` +
+      `https://yantrabyte.anantatechcare.com/my-invoices\n\n` +
+      `Thank you for choosing *YantraByte Solutions*!`;
+    if (phone) {
+      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+    } else {
+      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
     }
   };
 
@@ -227,7 +318,8 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
       ref: inv.invoice_no,
       debit: inv.grand_total || 0,
       credit: 0,
-      phone: inv.phone
+      phone: inv.phone,
+      invoice: inv
     });
   });
 
@@ -450,7 +542,7 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
                       <th className="px-5 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Debit (Dr)</th>
                       <th className="px-5 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Credit (Cr)</th>
                       <th className="px-5 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Balance</th>
-                      <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">Receipt</th>
+                      <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">Receipt / Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 bg-white text-sm">
@@ -461,7 +553,18 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
                           <td className="px-5 py-3 whitespace-nowrap text-slate-700 font-medium">{formatDateForUI(line.dateStr)}</td>
                           <td className="px-5 py-3 text-slate-700">
                             {line.type === 'invoice' ? (
-                              <div className="font-semibold text-blue-700">Invoice #{line.ref}</div>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedInvoice(line.invoice)}
+                                className="group font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1.5 cursor-pointer text-left transition-colors"
+                                title="Click to open and view invoice"
+                              >
+                                <FileText className="w-4 h-4 text-blue-500 group-hover:scale-110 transition-transform flex-shrink-0" />
+                                <span className="underline decoration-blue-200 group-hover:decoration-blue-600 underline-offset-2">
+                                  Invoice #{line.ref}
+                                </span>
+                                <ExternalLink className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-blue-600 transition-opacity" />
+                              </button>
                             ) : (
                               <div className="flex items-center gap-1.5 text-emerald-600 font-medium">
                                 <CheckCircle className="w-3.5 h-3.5" />
@@ -475,7 +578,17 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
                             ₹{runningBalance.toLocaleString('en-IN')}
                           </td>
                           <td className="px-4 py-3 text-center">
-                            {line.type === 'payment' && line.credit > 0 ? (
+                            {line.type === 'invoice' ? (
+                              <button
+                                type="button"
+                                onClick={() => setSelectedInvoice(line.invoice)}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-md text-xs font-semibold transition-colors shadow-xs"
+                                title="Open & View Invoice"
+                              >
+                                <Eye className="w-3.5 h-3.5 text-blue-600" />
+                                View
+                              </button>
+                            ) : line.type === 'payment' && line.credit > 0 ? (
                               <button
                                 onClick={() => handleSendWhatsAppReceipt(line.amount || line.credit, line.dateStr, line.mode || 'UPI', line.note || '', line.phone)}
                                 className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-md text-xs font-semibold transition-colors"
@@ -514,6 +627,81 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
           )}
         </div>
       </div>
+
+      {/* Invoice Viewer Overlay Modal */}
+      {selectedInvoice && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-md z-[60] flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[96vh] flex flex-col overflow-hidden border border-slate-200">
+            {/* Top Toolbar */}
+            <div className="bg-slate-900 text-white px-5 py-3.5 flex flex-wrap justify-between items-center gap-3 shrink-0">
+              <div className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-blue-400" />
+                <span className="font-bold text-base">Invoice #{selectedInvoice.invoice_no}</span>
+                <span className="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">
+                  {selectedInvoice.customer_name}
+                </span>
+                <span className={`text-xs px-2 py-0.5 rounded font-bold ${
+                  (selectedInvoice.balance_due || 0) <= 0 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                }`}>
+                  {(selectedInvoice.balance_due || 0) <= 0 ? 'PAID' : `DUE: ₹${(selectedInvoice.balance_due || 0).toLocaleString('en-IN')}`}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handlePrintInvoice}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold transition-colors border border-slate-700"
+                  title="Print Invoice"
+                >
+                  <Printer className="w-3.5 h-3.5 text-blue-400" /> Print
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleDownloadPdf(selectedInvoice)}
+                  disabled={isDownloadingPdf}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-colors shadow-sm disabled:opacity-50"
+                  title="Download PDF"
+                >
+                  {isDownloadingPdf ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                  {isDownloadingPdf ? 'Generating...' : 'Download PDF'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleShareInvoiceWhatsApp(selectedInvoice)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition-colors shadow-sm"
+                  title="Share on WhatsApp"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" /> WhatsApp
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedInvoice(null)}
+                  className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-white rounded-full transition-colors ml-1"
+                  title="Close Preview"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Body Preview */}
+            <div className="flex-1 overflow-y-auto bg-slate-200/80 p-4 sm:p-6 flex justify-center">
+              <div className="shadow-xl rounded-sm overflow-hidden bg-white max-w-[800px] w-full">
+                <div ref={invoicePrintRef} className="bg-white">
+                  <InvoicePdfTemplate 
+                    invoice={selectedInvoice}
+                    companySignature={companySignature || undefined}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
