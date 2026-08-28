@@ -321,8 +321,6 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
             </tbody>
           </table>
 
-        </div>
-
         {/* Bottom Section: Terms & Conditions + Bank & Payment Details */}
         <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '10px 0', marginTop: '16px', tableLayout: 'fixed' }}>
           <tbody>
