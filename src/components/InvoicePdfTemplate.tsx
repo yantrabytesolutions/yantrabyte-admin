@@ -278,9 +278,9 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                 );
               })}
 
-              {/* Padding rows to maintain consistent height */}
-              {[...Array(Math.max(0, 5 - items.length))].map((_, idx) => (
-                <tr key={`empty-${idx}`} style={{ backgroundColor: 'transparent', height: '24px' }}>
+              {/* Padding rows to fill full A4 height without empty gap */}
+              {[...Array(Math.max(0, 10 - items.length))].map((_, idx) => (
+                <tr key={`empty-${idx}`} style={{ backgroundColor: 'transparent', height: '28px' }}>
                   <td style={{ borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '4px', color: 'transparent' }}>.</td>
                   <td style={{ borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '4px', color: 'transparent' }}>.</td>
                   <td style={{ borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '4px', color: 'transparent' }}>.</td>
