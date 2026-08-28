@@ -981,23 +981,22 @@ export default function AdminPanel() {
     let text = '';
     const trackUrl = `https://yantrabyte.anantatechcare.com/track-ticket?t=${ticketNo}`;
     
+    let reviewLink = 'https://maps.google.com/?q=Yantrabyte+Solutions+47A+1st+Cross+Sainagar+Vidyaranyapura+Bengaluru';
+    try {
+      const { data } = await supabase.from('site_settings').select('value').eq('key', 'google_review_link').maybeSingle();
+      if (data?.value) reviewLink = data.value;
+    } catch (e) {
+      // fallback to default
+    }
+
     if (status === 'open') {
       text = `Hi ${name}, this is Yantrabyte Solutions. We have successfully registered your repair request (Ticket: ${ticketNo}) for your ${device}. Our technician will diagnose it shortly. Track status here: ${trackUrl}`;
     } else if (status === 'in-progress') {
       text = `Hi ${name}, this is Yantrabyte Solutions. Your ${device} (Ticket: ${ticketNo}) is currently under active diagnostics/repair. Track status here: ${trackUrl}`;
     } else if (status === 'completed') {
-      text = `Hi ${name}, great news! Your ${device} (Ticket: ${ticketNo}) has been fully repaired and tested. It is ready for pickup at our workshop. Thank you for choosing Yantrabyte Solutions!`;
+      text = `Hi ${name}, great news! 🛠️ Your ${device} (Ticket: ${ticketNo}) has been fully repaired, serviced, and tested. It is ready for pickup at our workshop.\n\n⭐ If you are happy with our repair service, please support us with a quick 5-star review on Google: ${reviewLink}\n\nThank you for choosing YantraByte Solutions!`;
     } else if (status === 'closed') {
-      text = `Hi ${name}, this is Yantrabyte Solutions. Your repair ticket ${ticketNo} for ${device} has been marked as delivered and closed. Please reach out if you have any questions!`;
-      
-      try {
-        const { data } = await supabase.from('site_settings').select('value').eq('key', 'google_review_link').single();
-        if (data && data.value) {
-          text += `\n\nIf you loved our service, please leave us a 5-star review here: ${data.value}`;
-        }
-      } catch (e) {
-        // ignore
-      }
+      text = `Hi ${name}, thank you for visiting Yantrabyte Solutions! Your repair ticket ${ticketNo} for ${device} is delivered & closed.\n\n⭐ If you loved our service, please leave us a 5-star review here: ${reviewLink}`;
     } else {
       text = `Hi ${name}, this is Yantrabyte Solutions. Update regarding your repair ticket ${ticketNo} (${device}). Status: ${status.toUpperCase()}. Track status here: ${trackUrl}`;
     }
