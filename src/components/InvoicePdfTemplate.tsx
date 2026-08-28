@@ -331,7 +331,8 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                       color: row.isHighlight ? '#15803D' : (row.isDue ? '#B91C1C' : '#333333'), 
                       fontWeight: (row.isHighlight || row.isDue) ? 'bold' : 'normal',
                       fontSize: (row.isHighlight || row.isDue) ? '13px' : '12.5px',
-                      borderBottom: idx === calcRows.length - 1 ? 'none' : '1px solid #000000'
+                      borderBottom: idx === calcRows.length - 1 ? 'none' : '1px solid #000000',
+                      borderLeft: '1px solid #000000'
                     }}
                   >
                     {row.label}
@@ -359,7 +360,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         </div>
 
         {/* Bottom Section: Terms & Conditions + Bank & Payment Details */}
-        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '10px 0', marginTop: '12px', tableLayout: 'fixed' }}>
+        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '10px 0', marginTop: '16px', tableLayout: 'fixed' }}>
           <tbody>
             <tr>
               {/* Terms & Conditions Box */}

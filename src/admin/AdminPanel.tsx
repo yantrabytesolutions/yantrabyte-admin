@@ -760,7 +760,7 @@ export default function AdminPanel() {
                   </div>
                   <div style="width: 220px; border-bottom: 1px solid #555555; margin-bottom: 8px;"></div>
                   <div style="font-size: 11px; font-weight: bold; color: #0B5394;">For Yantrabyte Solutions</div>
-                  <div style="font-size: 9px; color: #777777; margin-top: 2px;">Authorized Workshop Executive</div>
+                  <div style="font-size: 9px; color: #777777; margin-top: 2px;">Technical Service Executive</div>
                 </div>
               </td>
             </tr>
