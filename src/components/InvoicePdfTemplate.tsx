@@ -145,85 +145,61 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
       )}
 
       {/* Main Container Content */}
-      <div style={{ position: 'relative', zIndex: 10 }}>
-        
-        {/* Main Box Outer Border */}
-        <div style={{ border: '1.5px solid #000000', backgroundColor: 'transparent' }}>
-          
-          {/* Header Table */}
-          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', borderBottom: '1px solid #000000' }}>
-            <tbody>
-              <tr>
-                <td style={{ width: '130px', padding: '10px 12px', verticalAlign: 'middle' }}>
-                  <img 
-                    src="/logo6.png" 
-                    alt="YantraByte Solutions" 
-                    style={{ height: '95px', width: 'auto', display: 'block' }} 
-                    crossOrigin="anonymous" 
-                  />
-                </td>
-                <td style={{ textAlign: 'right', padding: '10px 16px', verticalAlign: 'middle' }}>
-                  <div style={{ fontSize: '20px', fontWeight: 'bold', letterSpacing: '0.5px', color: '#0B5394', textTransform: 'uppercase' }}>
-                    YANTRABYTE SOLUTIONS
-                  </div>
-                  <div style={{ fontSize: '12px', color: '#333333', marginTop: '4px', lineHeight: '1.4' }}>
-                    47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br />
-                    Chikkabettahalli, Bengaluru - 560097
-                  </div>
-                  <div style={{ fontSize: '12px', color: '#333333', marginTop: '4px' }}>
-                    📱 Phone: 09986742525 &nbsp;|&nbsp; ✉️ Email: yantrabyte.solutions@gmail.com
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-
-          {/* Document Title Banner */}
-          <div style={{
-            backgroundColor: isCancelled ? '#DC2626' : '#0B5394',
-            color: '#ffffff',
-            fontWeight: 'bold',
-            textAlign: 'center',
-            padding: '5px 0',
-            fontSize: '15px',
-            letterSpacing: '2px',
-            textTransform: 'uppercase',
-            borderBottom: '1px solid #000000'
-          }}>
-            {isCancelled ? 'CANCELLED INVOICE' : (isQuotation ? 'QUOTATION' : 'INVOICE')}
-          </div>
-
-          {/* Doc Number and Date Row */}
-          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', borderBottom: '1px solid #000000' }}>
-            <tbody>
-              <tr>
-                <td style={{ width: '50%', padding: '7px 12px', borderRight: '1px solid #000000', fontWeight: 'bold', fontSize: '14px', color: '#DC2626' }}>
-                  {isQuotation ? 'Quotation No: ' : (isCancelled ? 'Cancelled No: ' : 'Invoice No: ')} {invoice.invoice_no || 'DRAFT'}
-                </td>
-                <td style={{ width: '50%', padding: '7px 12px', textAlign: 'right', fontWeight: 'bold', fontSize: '14px', color: '#333333' }}>
-                  Date: {formattedDate}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-
-          {/* Bill To Section */}
-          <div style={{ borderBottom: '1px solid #000000' }}>
-            <div style={{ backgroundColor: '#D9EAF7', color: '#7E22CE', padding: '4px 12px', fontWeight: 'bold', fontSize: '13px', borderBottom: '1px solid #000000' }}>
-              Bill To:
-            </div>
-            <div style={{ padding: '8px 12px', fontSize: '13px', lineHeight: '1.4', color: '#000000' }}>
-              <div style={{ fontWeight: 'bold', fontSize: '15px', marginBottom: '2px', color: '#000000' }}>
-                {invoice.customer_name || '—'}
-              </div>
-              <div style={{ color: '#111827' }}>
-                Phone: {invoice.phone || '—'} &nbsp;&nbsp;&nbsp;&nbsp; Email: {invoice.email || '—'}
-              </div>
-              <div style={{ color: '#111827' }}>
-                Address: {invoice.address || '—'}
+      <div style={{
+        position: 'relative',
+        zIndex: 10,
+        border: '2px solid #0B5394',
+        borderRadius: '12px',
+        padding: '24px',
+        backgroundColor: '#ffffff',
+        boxSizing: 'border-box'
+      }}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #0B5394', paddingBottom: '12px', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <img 
+              src="/logo6.png" 
+              alt="YantraByte Solutions" 
+              style={{ height: '85px', width: 'auto', display: 'block' }} 
+              crossOrigin="anonymous" 
+            />
+            <div>
+              <h1 style={{ color: '#0B5394', fontSize: '22px', fontWeight: '800', margin: 0 }}>YANTRABYTE SOLUTIONS</h1>
+              <div style={{ fontSize: '11px', color: '#555555', marginTop: '4px', lineHeight: '1.4' }}>
+                47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br />
+                Chikkabettahalli, Bengaluru - 560097<br />
+                📱 09986742525 | ✉️ yantrabyte.solutions@gmail.com
               </div>
             </div>
           </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontWeight: '700', color: isCancelled ? '#DC2626' : '#0B5394', fontSize: '18px', textTransform: 'uppercase' }}>
+              {isCancelled ? 'CANCELLED INVOICE' : (isQuotation ? 'QUOTATION' : 'INVOICE')}
+            </div>
+            <div style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>
+              {isQuotation ? 'Quote No: ' : (isCancelled ? 'Cancelled No: ' : 'Invoice No: ')} <strong>{invoice.invoice_no || 'DRAFT'}</strong>
+            </div>
+            <div style={{ fontSize: '13px', color: '#64748b' }}>
+              Date: <strong>{formattedDate}</strong>
+            </div>
+          </div>
+        </div>
+
+        {/* Customer & Service Provider Details Grid */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', backgroundColor: '#f8fafc', padding: '12px 15px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+          <div style={{ fontSize: '12px', lineHeight: '1.5' }}>
+            <span style={{ color: '#64748b', fontSize: '11px', textTransform: 'uppercase', fontWeight: '700' }}>Bill To (Customer Details)</span><br />
+            <strong style={{ color: '#0B5394', fontSize: '14px' }}>{invoice.customer_name || '—'}</strong><br />
+            Phone: {invoice.phone || '—'} &nbsp;|&nbsp; Email: {invoice.email || '—'}<br />
+            Address: {invoice.address || '—'}
+          </div>
+          <div style={{ fontSize: '12px', lineHeight: '1.5', textAlign: 'right' }}>
+            <span style={{ color: '#64748b', fontSize: '11px', textTransform: 'uppercase', fontWeight: '700' }}>Service Provider</span><br />
+            <strong style={{ color: '#0B5394', fontSize: '14px' }}>YantraByte Solutions</strong><br />
+            Authorized Tech: Ramesh A S<br />
+            Status: {invoice.balance_due && invoice.balance_due <= 0 ? 'PAID IN FULL' : 'PAYMENT DUE'}
+          </div>
+        </div>
 
           {/* Items Table */}
           <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', borderBottom: '1px solid #000000', fontSize: '13px' }}>
