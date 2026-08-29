@@ -361,8 +361,8 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
             <tbody>
               <tr>
                 {/* Terms & Conditions Box */}
-                <td style={{ width: '58%', verticalAlign: 'top', border: '1px solid #000000', padding: 0, boxSizing: 'border-box' }}>
-                  <div style={{ backgroundColor: '#0B5394', color: '#ffffff', fontWeight: 'bold', fontSize: '11px', textAlign: 'center', padding: '3px 0' }}>
+                <td style={{ width: '48%', verticalAlign: 'top', border: '1px solid #000000', padding: 0, boxSizing: 'border-box' }}>
+                  <div style={{ backgroundColor: '#0B5394', color: '#ffffff', fontWeight: 'bold', fontSize: '11.5px', textAlign: 'center', padding: '4px 0' }}>
                     Terms & Conditions
                   </div>
                   <div style={{ padding: '6px 8px', fontSize: '10px', color: '#333333', lineHeight: '1.4' }}>
@@ -370,8 +370,8 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                       <div style={{ whiteSpace: 'pre-wrap' }}>{invoice.terms_conditions}</div>
                     ) : isQuotation ? (
                       <>
-                        <div style={{ marginBottom: '1px' }}>1. Estimate valid for {quoteValidityDays} days.</div>
-                        <div style={{ marginBottom: '1px' }}>2. Advance payment of {quoteAdvancePercent}% required and remaining against Delivery.</div>
+                        <div style={{ marginBottom: '2px' }}>1. Estimate valid for {quoteValidityDays} days.</div>
+                        <div style={{ marginBottom: '2px' }}>2. Advance payment of {quoteAdvancePercent}% required and remaining against Delivery.</div>
                         <div>3. Final amount may vary if hidden faults are found.</div>
                       </>
                     ) : (
@@ -388,24 +388,27 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                 </td>
 
                 {/* Bank & Payment Details Box */}
-                <td style={{ width: '42%', verticalAlign: 'top', border: '1px solid #000000', padding: 0, boxSizing: 'border-box' }}>
-                  <div style={{ backgroundColor: '#0B5394', color: '#ffffff', fontWeight: 'bold', fontSize: '11px', textAlign: 'center', padding: '3px 0' }}>
+                <td style={{ width: '52%', verticalAlign: 'top', border: '1px solid #000000', padding: 0, boxSizing: 'border-box' }}>
+                  <div style={{ backgroundColor: '#0B5394', color: '#ffffff', fontWeight: 'bold', fontSize: '11.5px', textAlign: 'center', padding: '4px 0' }}>
                     Bank & Payment Details
                   </div>
-                  <div style={{ padding: '5px 7px' }}>
+                  <div style={{ padding: '6px 8px' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                       <tbody>
                         <tr>
-                          <td style={{ verticalAlign: 'top', fontSize: '9.5px', lineHeight: '1.35', color: '#000000' }}>
-                            <div><span style={{ fontWeight: 'bold' }}>Bank:</span> North East Small Finance Bank</div>
-                            <div><span style={{ fontWeight: 'bold' }}>A/C Name:</span> YantraByte Solutions</div>
-                            <div><span style={{ fontWeight: 'bold' }}>A/C No:</span> 033311501023226</div>
-                            <div><span style={{ fontWeight: 'bold' }}>IFSC:</span> NESF0000333</div>
-                            <div><span style={{ fontWeight: 'bold' }}>UPI:</span> s0424237152@slc</div>
+                          <td style={{ verticalAlign: 'middle', fontSize: '11px', lineHeight: '1.45', color: '#0f172a' }}>
+                            <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>Bank:</span> North East Small Finance Bank</div>
+                            <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>A/C Name:</span> YantraByte Solutions</div>
+                            <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>A/C No:</span> <strong style={{ color: '#000000', fontSize: '11.5px' }}>033311501023226</strong></div>
+                            <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>IFSC:</span> <strong style={{ color: '#000000', fontSize: '11.5px' }}>NESF0000333</strong></div>
+                            <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>UPI ID:</span> <strong style={{ color: '#047857', fontSize: '11px' }}>s0424237152@slc</strong></div>
                           </td>
-                          <td style={{ width: '54px', verticalAlign: 'middle', textAlign: 'right', paddingLeft: '4px' }}>
-                            <div style={{ background: '#ffffff', padding: '2px', display: 'inline-block', border: '1px solid #cbd5e1', borderRadius: '4px' }}>
-                              <QrCodeSvg value={upiUrl} size={48} />
+                          <td style={{ width: '84px', verticalAlign: 'middle', textAlign: 'center', paddingLeft: '6px' }}>
+                            <div style={{ fontSize: '8.5px', fontWeight: 'bold', color: '#0B5394', marginBottom: '2px', letterSpacing: '0.5px' }}>
+                              SCAN TO PAY
+                            </div>
+                            <div style={{ background: '#ffffff', padding: '2px', display: 'inline-block', border: '1.5px solid #0B5394', borderRadius: '4px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                              <QrCodeSvg value={upiUrl} size={76} level="M" />
                             </div>
                           </td>
                         </tr>

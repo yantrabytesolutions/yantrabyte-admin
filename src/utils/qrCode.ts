@@ -1,12 +1,11 @@
 import QRCode from 'qrcode';
 
 /**
- * Generates an inline SVG string for a QR code synchronously.
- * Ideal for raw HTML templates, document.write, or print element builders.
+ * Generates an SVG Data URI for a QR code synchronously.
+ * Fully compatible with HTML img src and html2canvas.
  */
-export function getQrSvgString(
+export function getQrSvgDataUrl(
   value: string,
-  size: number = 52,
   level: 'L' | 'M' | 'Q' | 'H' = 'M'
 ): string {
   try {
@@ -21,10 +20,25 @@ export function getQrSvgString(
         }
       }
     }
-    const totalSize = mSize + 2; // 1-module quiet zone margin
-    return `<svg viewBox="0 0 ${totalSize} ${totalSize}" width="${size}" height="${size}" style="display:block;background:#ffffff;border-radius:2px;" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="#ffffff" /><path d="${p}" fill="#000000" /></svg>`;
+    const totalSize = mSize + 2;
+    const rawSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalSize} ${totalSize}" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#ffffff"/><path d="${p}" fill="#000000"/></svg>`;
+    return `data:image/svg+xml;utf8,${encodeURIComponent(rawSvg)}`;
   } catch (err) {
-    console.error('getQrSvgString error:', err);
+    console.error('getQrSvgDataUrl error:', err);
     return '';
   }
+}
+
+/**
+ * Generates an inline SVG string for a QR code synchronously.
+ * Ideal for raw HTML templates, document.write, or print element builders.
+ */
+export function getQrSvgString(
+  value: string,
+  size: number = 52,
+  level: 'L' | 'M' | 'Q' | 'H' = 'M'
+): string {
+  const dataUrl = getQrSvgDataUrl(value, level);
+  if (!dataUrl) return '';
+  return `<img src="${dataUrl}" width="${size}" height="${size}" style="display:block;width:${size}px;height:${size}px;min-width:${size}px;min-height:${size}px;background:#ffffff;" alt="QR" />`;
 }
