@@ -45,7 +45,30 @@ export const ServiceTicketPdfTemplate = forwardRef<HTMLDivElement, Props>(({
         overflow: 'hidden' 
       }}
     >
-      {/* Subtle Hardware Circuit Watermark */}
+      {/* Centered Brand Watermark Emblem */}
+      <div style={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '460px',
+        height: '460px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        pointerEvents: 'none',
+        zIndex: 2,
+        opacity: 0.20
+      }}>
+        <img 
+          src="/logo6.png" 
+          alt="Watermark" 
+          style={{ width: '420px', height: 'auto', objectFit: 'contain', display: 'block' }} 
+          crossOrigin="anonymous" 
+        />
+      </div>
+
+      {/* Hardware Circuit Watermark */}
       <div style={{
         position: 'absolute',
         top: 0, 
@@ -58,7 +81,7 @@ export const ServiceTicketPdfTemplate = forwardRef<HTMLDivElement, Props>(({
         backgroundRepeat: 'no-repeat',
         pointerEvents: 'none',
         zIndex: 1,
-        opacity: 0.08
+        opacity: 0.15
       }} />
 
       {/* Main Container Content */}

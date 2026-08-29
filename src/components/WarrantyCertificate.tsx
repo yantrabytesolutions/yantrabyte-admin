@@ -90,7 +90,7 @@ export const generateWarrantyCertificate = async (invoice: Invoice, businessProf
       <HardwareBrandsBanner compact={true} />
       
       {/* Watermark */}
-      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(-45deg)', fontSize: '120px', color: 'rgba(3, 105, 161, 0.05)', whiteSpace: 'nowrap', pointerEvents: 'none', fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(-45deg)', fontSize: '120px', color: 'rgba(3, 105, 161, 0.14)', whiteSpace: 'nowrap', pointerEvents: 'none', fontWeight: 'bold' }}>
         WARRANTY
       </div>
     </div>

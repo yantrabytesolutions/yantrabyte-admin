@@ -113,19 +113,19 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         top: '52%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
-        width: '460px',
-        height: '460px',
+        width: '480px',
+        height: '480px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         pointerEvents: 'none',
         zIndex: 5,
-        opacity: 0.10
+        opacity: 0.22
       }}>
         <img 
           src="/logo6.png" 
           alt="Watermark" 
-          style={{ width: '420px', height: 'auto', objectFit: 'contain', display: 'block' }} 
+          style={{ width: '440px', height: 'auto', objectFit: 'contain', display: 'block' }} 
           crossOrigin="anonymous" 
         />
       </div>
@@ -143,7 +143,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         backgroundRepeat: 'no-repeat',
         pointerEvents: 'none',
         zIndex: 4,
-        opacity: 0.05
+        opacity: 0.15
       }} />
 
       {/* Cancelled Stamp */}
