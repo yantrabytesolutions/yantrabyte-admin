@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { getQrSvgString } from '../components/QrCodeSvg';
+import { getQrSvgString } from '../utils/qrCode';
 import { supabase } from '../lib/supabase';
 import type {
   SiteSetting,

@@ -21,7 +21,7 @@ declare module 'qrcode' {
     version?: number;
     errorCorrectionLevel?: 'low' | 'medium' | 'quartile' | 'high' | 'L' | 'M' | 'Q' | 'H';
     maskPattern?: number;
-    toSJISFunc?: Function;
+    toSJISFunc?: (...args: unknown[]) => unknown;
   }
 
   export interface QRCodeToDataURLOptions extends QRCodeOptions {
