@@ -439,15 +439,18 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     // We make it temporarily visible for printing
     element.style.display = 'block';
 
-    const getPdfOptions = (invoiceNumber: string) => ({
-      margin: 0,
-      filename: `YBS-${invoiceNumber}.pdf`,
-      image: { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, windowWidth: 794, scrollY: 0, x: 0, y: 0 },
-      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-    });
+    const getPdfOptions = (invoiceNumber: string, customerName?: string) => {
+      const cleanCustomerName = customerName ? customerName.trim().replace(/[/\\?%*:|"<>]/g, '-') : '';
+      return {
+        margin: 0,
+        filename: cleanCustomerName ? `${cleanCustomerName}.pdf` : `YBS-${invoiceNumber}.pdf`,
+        image: { type: 'jpeg' as const, quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, windowWidth: 794, scrollY: 0, x: 0, y: 0 },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+      };
+    };
 
-    html2pdf().set(getPdfOptions(invoiceNumber)).from(element).save().then(() => {
+    html2pdf().set(getPdfOptions(invoiceNumber, customerName)).from(element).save().then(() => {
       element.style.display = 'none';
       showToast('PDF Generated successfully!');
     });

@@ -439,9 +439,10 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     // We make it temporarily visible for printing
     element.style.display = 'block';
 
+    const cleanCustomerName = customerName ? customerName.trim().replace(/[/\\?%*:|"<>]/g, '-') : '';
     const opt = {
       margin: 0,
-      filename: `YBS-${invoiceNumber}.pdf`,
+      filename: cleanCustomerName ? `${cleanCustomerName}.pdf` : `YBS-${invoiceNumber}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, windowWidth: 950 },
       jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }

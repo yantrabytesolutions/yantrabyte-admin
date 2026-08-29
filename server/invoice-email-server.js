@@ -629,7 +629,10 @@ app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {
   const cleanInvoiceNumber = String(invoiceNumber || 'invoice');
   const cleanDocumentType = String(documentType || 'Invoice');
   const cleanCustomerName = String(customerName || 'Customer');
-  const safeFilename = sanitizeFilename(filename || `${cleanInvoiceNumber}.pdf`);
+  const defaultFilename = (cleanCustomerName && cleanCustomerName !== 'Customer') 
+    ? `${cleanCustomerName}.pdf` 
+    : `${cleanInvoiceNumber}.pdf`;
+  const safeFilename = sanitizeFilename(filename || defaultFilename);
   
   let pdfBuffer;
   if (pdfBase64) {
@@ -1527,7 +1530,10 @@ app.post('/api/invoices/send-whatsapp-pdf', async (req, res) => {
   const cleanName = String(customerName || 'Customer');
   const cleanInvNo = String(invoiceNumber || 'Invoice');
   const cleanDocType = String(documentType || 'Invoice');
-  const safeFilename = sanitizeFilename(`${cleanDocType}_${cleanInvNo}.pdf`);
+  const defaultFilename = (cleanName && cleanName !== 'Customer') 
+    ? `${cleanName}.pdf` 
+    : `${cleanDocType}_${cleanInvNo}.pdf`;
+  const safeFilename = sanitizeFilename(req.body.filename || defaultFilename);
 
   try {
     const media = new MessageMedia('application/pdf', pdfBase64, safeFilename);

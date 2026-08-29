@@ -23,7 +23,8 @@ export async function uploadInvoiceToDrive(
   blob: Blob, 
   invoiceNo: string, 
   dateStr: string, 
-  docType: 'INVOICE' | 'QUOTATION' | 'ESTIMATE' | 'TICKET' = 'INVOICE'
+  docType: 'INVOICE' | 'QUOTATION' | 'ESTIMATE' | 'TICKET' = 'INVOICE',
+  customerName?: string
 ): Promise<DriveBackupResult> {
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
@@ -62,9 +63,11 @@ export async function uploadInvoiceToDrive(
   const isQuote = docType === 'QUOTATION' || docType === 'ESTIMATE';
   const parentFolderId = isQuote ? GOOGLE_DRIVE_FOLDERS.QUOTATIONS : GOOGLE_DRIVE_FOLDERS.INVOICES;
   const filePrefix = isQuote ? 'Quotation' : 'Invoice';
+  const safeCustomer = customerName ? customerName.trim().replace(/[/\\?%*:|"<>]/g, '-') : '';
+  const fileName = safeCustomer ? `${safeCustomer}.pdf` : `${filePrefix}_${invoiceNo}.pdf`;
 
   const payload: DriveBackupPayload = {
-    fileName: `${filePrefix}_${invoiceNo}.pdf`,
+    fileName,
     fileBase64,
     parentFolderId,
     subFolder

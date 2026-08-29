@@ -196,6 +196,29 @@ export default function EstimateView() {
     );
   }
 
+  const handleDownloadPdf = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!estimate?.pdf_url) return;
+    const safeCustomer = estimate.customer_name?.trim().replace(/[/\\?%*:|"<>]/g, '-') || `YBS-${estimate.invoice_no}`;
+    const filename = `${safeCustomer}.pdf`;
+    try {
+      const res = await fetch(estimate.pdf_url);
+      if (!res.ok) throw new Error('Failed to fetch PDF');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.warn('Direct blob download failed, opening in new window:', err);
+      window.open(estimate.pdf_url, '_blank');
+    }
+  };
+
   const items: InvoiceItem[] = estimate.items || [];
   const isQuotation = estimate.doc_type === 'Quotation';
   const docLabel = isQuotation ? 'Quotation' : 'Invoice';
@@ -231,19 +254,19 @@ export default function EstimateView() {
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {estimate.pdf_url && (
-            <a
-              href={estimate.pdf_url}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={handleDownloadPdf}
               style={{
                 padding: '8px 18px', background: 'rgba(255,255,255,0.2)',
                 color: '#fff', borderRadius: 8, textDecoration: 'none',
                 fontWeight: 600, fontSize: 13, border: '1px solid rgba(255,255,255,0.3)',
-                transition: 'background 0.2s'
+                cursor: 'pointer',
+                transition: 'background 0.2s',
+                fontFamily: "'Inter', Arial, sans-serif"
               }}
             >
               📥 Download PDF
-            </a>
+            </button>
           )}
           <button
             onClick={() => window.print()}

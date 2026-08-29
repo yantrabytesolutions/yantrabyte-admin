@@ -1057,16 +1057,16 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
           const opt = getPdfOptions(payload.invoice_no, payload.customer_name, payload.doc_type);
           try {
             pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob') as Blob;
-            pdfUrl = await uploadPdfToSupabase(pdfBlob, payload.invoice_no);
+            pdfUrl = await uploadPdfToSupabase(pdfBlob, payload.invoice_no, payload.customer_name);
             
-            uploadInvoiceToDrive(pdfBlob, payload.invoice_no, payload.date, (payload.doc_type as any) || 'INVOICE').then(res => {
+            uploadInvoiceToDrive(pdfBlob, payload.invoice_no, payload.date, (payload.doc_type as any) || 'INVOICE', payload.customer_name).then(res => {
               if (res.ok) console.log('Backed up to Drive:', res.fileId);
               else console.error('Drive Backup Failed:', res.error);
             });
 
             if (action === 'download') {
               await html2pdf().set(opt).from(element).save();
-              showToast('PDF Generated successfully!');
+              showToast(`PDF Generated successfully: ${opt.filename}`);
             }
           } catch (e) {
             console.error('Failed to generate/upload PDF', e);
@@ -1144,7 +1144,9 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               customerPhone: phone,
               invoiceNumber: payload.invoice_no,
               documentType: docType,
-              filename: `YBS-${payload.invoice_no}.pdf`,
+              filename: (payload.customer_name && payload.customer_name.trim())
+                ? `${payload.customer_name.trim().replace(/[/\\?%*:|"<>]/g, '-')}.pdf`
+                : `YBS-${payload.invoice_no}.pdf`,
               pdfUrl: pdfUrl,
             }),
           });
@@ -1214,14 +1216,12 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   };
 
   const formatInvoiceFilename = (invoiceNumber: string, customerName?: string, docType?: string) => {
+    const cleanCustomer = (customerName || '').trim().replace(/[/\\?%*:|"<>]/g, '-');
+    if (cleanCustomer) return `${cleanCustomer}.pdf`;
     const cleanInv = (invoiceNumber || 'DRAFT').replace(/[^\w-]/g, '_');
-    const cleanName = (customerName || '')
-      .trim()
-      .replace(/[^\w\s-]/g, '')
-      .replace(/\s+/g, '_');
     const isQuote = docType === 'Quotation' || docType === 'Estimate' || cleanInv.startsWith('YBQ');
     const prefix = isQuote ? 'Quotation' : 'Invoice';
-    return cleanName ? `${prefix}_${cleanInv}_${cleanName}.pdf` : `${prefix}_${cleanInv}.pdf`;
+    return `${prefix}_${cleanInv}.pdf`;
   };
 
   const getPdfOptions = (invoiceNumber: string, customerName?: string, docType?: string) => ({
@@ -1249,20 +1249,44 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     reader.readAsDataURL(blob);
   });
 
+  const handleDownloadInvoice = async (inv: Invoice) => {
+    loadInvoice(inv.id);
+    showToast(`Generating PDF for ${inv.customer_name || inv.invoice_no}...`);
+    setTimeout(async () => {
+      const element = await preparePdfElement(inv.invoice_no);
+      if (!element) {
+        showToast('Failed to prepare PDF element', 'error');
+        return;
+      }
+      const opt = getPdfOptions(inv.invoice_no, inv.customer_name);
+      try {
+        await html2pdf().set(opt).from(element).save();
+        showToast(`✅ Downloaded: ${opt.filename}`);
+      } catch (err) {
+        console.error('Error downloading PDF:', err);
+        showToast('Failed to generate PDF for download', 'error');
+      } finally {
+        setPrintInvoiceNumber('');
+      }
+    }, 500);
+  };
+
   const handleViewPdf = async (id: string) => {
     const inv = invoices.find(i => i.id === id);
     if (!inv) return;
+
+    const safeTitle = inv.customer_name?.trim().replace(/[/\\?%*:|"<>]/g, '-') || `YBS-${inv.invoice_no}`;
 
     // Open window synchronously to bypass popup blocker
     const newWindow = window.open('', '_blank');
     if (newWindow) {
       newWindow.document.write(`
         <html>
-          <head><title>Loading ${inv.invoice_no}...</title></head>
+          <head><title>${safeTitle}</title></head>
           <body style="display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;background:#f3f4f6;color:#374151;margin:0;">
             <div style="text-align:center;">
               <svg style="animation: spin 1s linear infinite; margin: 0 auto 1rem; height: 2rem; width: 2rem; color: #0EA5E9;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-              <h2>Generating PDF... Please wait.</h2>
+              <h2>Generating PDF for ${safeTitle}... Please wait.</h2>
               <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
             </div>
           </body>
@@ -1286,6 +1310,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         const url = URL.createObjectURL(pdfBlob);
         if (newWindow) {
           newWindow.location.href = url;
+          newWindow.document.title = `${safeTitle}.pdf`;
         } else {
           window.open(url, '_blank');
         }
@@ -1299,10 +1324,11 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     }, 500);
   };
 
-  const uploadPdfToSupabase = async (blob: Blob, invoiceNo: string): Promise<string | null> => {
+  const uploadPdfToSupabase = async (blob: Blob, invoiceNo: string, customerName?: string): Promise<string | null> => {
     try {
+      const safeCustomer = customerName ? customerName.trim().replace(/[/\\?%*:|"<>]/g, '-') : invoiceNo;
       const fileName = `pdfs/${invoiceNo}.pdf`;
-      const file = new File([blob], `${invoiceNo}.pdf`, { type: 'application/pdf' });
+      const file = new File([blob], `${safeCustomer}.pdf`, { type: 'application/pdf' });
       
       const { error } = await supabase.storage
         .from('invoices')
@@ -1566,62 +1592,62 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      <div className="flex justify-between items-center bg-white p-6 rounded-lg shadow-sm">
+    <div className="w-full space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">YantraByte <span className="text-blue-600">Billing System</span></h2>
-          <p className="text-sm text-gray-500">Create, edit, and generate PDF invoices and quotations natively.</p>
+          <p className="text-sm text-gray-500 mt-0.5">Create, edit, and generate PDF invoices and quotations natively.</p>
         </div>
-        <div className="flex space-x-3">
+        <div className="flex items-center flex-wrap gap-2.5">
           <button
             onClick={handleExportExcelLedger}
             disabled={isExportingExcel}
-            className="flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors text-sm font-medium shadow-sm"
           >
             {isExportingExcel ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <FileSpreadsheet className="w-4 h-4 mr-2" />}
             Export Excel
           </button>
           <button 
             onClick={() => setShowRecurringModal(true)} 
-            className="flex items-center px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
+            className="flex items-center px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-sm font-medium"
           >
             <RefreshCw className="w-4 h-4 mr-2" /> Recurring AMCs
           </button>
-          <button onClick={clearForm} className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+          <button onClick={clearForm} className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
             <Plus className="w-4 h-4 mr-2" /> New Document
           </button>
         </div>
       </div>
 
       {/* Financial Statistics Dashboard Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex flex-col justify-between">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
           <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Billed</span>
           <div className="flex items-baseline space-x-1 mt-2">
             <span className="text-2xl font-bold text-gray-900">₹{totalBilled.toLocaleString('en-IN')}</span>
           </div>
-          <span className="text-[10px] text-green-600 mt-1 font-medium">From finalized invoices</span>
+          <span className="text-[11px] text-green-600 mt-1 font-medium">From finalized invoices</span>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex flex-col justify-between">
+        <div className="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
           <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Outstanding Dues</span>
           <div className="flex items-baseline space-x-1 mt-2">
             <span className="text-2xl font-bold text-amber-600">₹{totalOutstanding.toLocaleString('en-IN')}</span>
           </div>
-          <span className="text-[10px] text-amber-600 mt-1 font-medium">To be collected</span>
+          <span className="text-[11px] text-amber-600 mt-1 font-medium">To be collected</span>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex flex-col justify-between">
+        <div className="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
           <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Invoices</span>
           <div className="flex items-baseline space-x-1 mt-2">
             <span className="text-2xl font-bold text-blue-600">{invoiceCount}</span>
           </div>
-          <span className="text-[10px] text-gray-400 mt-1">Generated bills</span>
+          <span className="text-[11px] text-gray-400 mt-1">Generated bills</span>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex flex-col justify-between">
+        <div className="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
           <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Quotations</span>
           <div className="flex items-baseline space-x-1 mt-2">
             <span className="text-2xl font-bold text-purple-600">{quoteCount}</span>
           </div>
-          <span className="text-[10px] text-gray-400 mt-1">Estimates & Quotes</span>
+          <span className="text-[11px] text-gray-400 mt-1">Estimates & Quotes</span>
         </div>
       </div>
 
@@ -1681,40 +1707,64 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       )}
 
       {/* Tabs */}
-      <div className="flex space-x-1 border-b border-gray-200 mb-6 overflow-x-auto">
+      <div className="bg-white p-1.5 rounded-xl border border-gray-200 shadow-sm flex items-center gap-1.5 overflow-x-auto mb-6">
         <button
           onClick={() => setActiveTab('editor')}
-          className={`py-3 px-6 text-sm font-medium border-b-2 transition-colors flex items-center whitespace-nowrap ${activeTab === 'editor' ? 'border-blue-600 text-blue-600 bg-blue-50/50 rounded-t-lg' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+          className={`py-2.5 px-4 text-xs sm:text-sm font-semibold rounded-lg transition-all flex items-center whitespace-nowrap ${
+            activeTab === 'editor'
+              ? 'bg-blue-600 text-white shadow-sm'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+          }`}
         >
           <Pencil className="w-4 h-4 mr-2" /> Document Editor
         </button>
         <button
           onClick={() => setActiveTab('history')}
-          className={`py-3 px-6 text-sm font-medium border-b-2 transition-colors flex items-center whitespace-nowrap ${activeTab === 'history' ? 'border-blue-600 text-blue-600 bg-blue-50/50 rounded-t-lg' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+          className={`py-2.5 px-4 text-xs sm:text-sm font-semibold rounded-lg transition-all flex items-center whitespace-nowrap ${
+            activeTab === 'history'
+              ? 'bg-blue-600 text-white shadow-sm'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+          }`}
         >
           <List className="w-4 h-4 mr-2" /> All Saved Documents
         </button>
         <button
           onClick={() => setActiveTab('quotations')}
-          className={`py-3 px-6 text-sm font-medium border-b-2 transition-colors flex items-center whitespace-nowrap ${activeTab === 'quotations' ? 'border-purple-600 text-purple-600 bg-purple-50/50 rounded-t-lg' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+          className={`py-2.5 px-4 text-xs sm:text-sm font-semibold rounded-lg transition-all flex items-center whitespace-nowrap ${
+            activeTab === 'quotations'
+              ? 'bg-purple-600 text-white shadow-sm'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+          }`}
         >
           <FileText className="w-4 h-4 mr-2" /> Quotations
         </button>
         <button
           onClick={() => setActiveTab('pending')}
-          className={`py-3 px-6 text-sm font-medium border-b-2 transition-colors flex items-center whitespace-nowrap ${activeTab === 'pending' ? 'border-amber-600 text-amber-600 bg-amber-50/50 rounded-t-lg' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+          className={`py-2.5 px-4 text-xs sm:text-sm font-semibold rounded-lg transition-all flex items-center whitespace-nowrap ${
+            activeTab === 'pending'
+              ? 'bg-amber-600 text-white shadow-sm'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+          }`}
         >
           <Clock className="w-4 h-4 mr-2" /> Pending Payments
         </button>
         <button
           onClick={() => setActiveTab('renewals')}
-          className={`py-3 px-6 text-sm font-medium border-b-2 transition-colors flex items-center whitespace-nowrap ${activeTab === 'renewals' ? 'border-emerald-600 text-emerald-600 bg-emerald-50/50 rounded-t-lg' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+          className={`py-2.5 px-4 text-xs sm:text-sm font-semibold rounded-lg transition-all flex items-center whitespace-nowrap ${
+            activeTab === 'renewals'
+              ? 'bg-emerald-600 text-white shadow-sm'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+          }`}
         >
           <ShieldCheck className="w-4 h-4 mr-2" /> AMC & Renewals
         </button>
         <button 
           onClick={() => setActiveTab('settings')}
-          className={`py-3 px-6 text-sm font-medium border-b-2 transition-colors flex items-center whitespace-nowrap ${activeTab === 'settings' ? 'border-gray-800 text-gray-800 bg-gray-100 rounded-t-lg' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+          className={`py-2.5 px-4 text-xs sm:text-sm font-semibold rounded-lg transition-all flex items-center whitespace-nowrap ${
+            activeTab === 'settings'
+              ? 'bg-slate-800 text-white shadow-sm'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+          }`}
         >
           <Settings className="w-4 h-4 mr-2" /> Settings
         </button>
@@ -1727,12 +1777,12 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         {/* Left Form Panel */}
         <div className="lg:col-span-2 space-y-6">
           
-          <div className="bg-white p-6 rounded-lg shadow-sm space-y-4">
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-4 gap-4">
               <h3 className="text-lg font-semibold text-gray-800">Document Details</h3>
-              <div className="flex flex-col sm:flex-row items-center gap-4">
+              <div className="flex flex-wrap items-center gap-3">
                 {docType === 'Invoice' && (
-                  <div className="flex items-center gap-3 bg-blue-50/50 px-3 py-1.5 rounded-lg border border-blue-100">
+                  <div className="flex items-center gap-3 bg-blue-50/70 px-3 py-1.5 rounded-lg border border-blue-100">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input 
                         type="checkbox" 
@@ -1740,13 +1790,13 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                         onChange={(e) => setIsRecurring(e.target.checked)}
                         className="rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
                       />
-                      <span className="text-sm font-medium text-blue-800">Recurring (AMC)</span>
+                      <span className="text-xs font-semibold text-blue-800">Recurring (AMC)</span>
                     </label>
                     {isRecurring && (
                       <select 
                         value={recurringInterval} 
                         onChange={(e) => setRecurringInterval(e.target.value)}
-                        className="text-xs border-gray-300 rounded-md text-blue-800 bg-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        className="text-xs border-gray-300 rounded-md text-blue-800 bg-white shadow-sm focus:border-blue-500 focus:ring-blue-500 py-1"
                       >
                         <option value="monthly">Monthly</option>
                         <option value="yearly">Yearly</option>
@@ -1756,16 +1806,16 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                 )}
                 <div className="flex bg-gray-100 p-1 rounded-lg flex-wrap gap-1">
                   <button 
-                    className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${docType === 'Invoice' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600'}`}
+                    className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-colors ${docType === 'Invoice' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
                     onClick={() => setDocType('Invoice')}
                   >Invoice</button>
                   <button 
-                    className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${docType === 'Quotation' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600'}`}
+                    className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-colors ${docType === 'Quotation' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
                     onClick={() => setDocType('Quotation')}
                   >Quotation</button>
                   {!!selectedInvoiceId && (
                     <button 
-                      className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${docType === 'Cancelled' ? 'bg-red-500 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-200 hover:text-red-700'}`}
+                      className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-colors ${docType === 'Cancelled' ? 'bg-red-500 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-200 hover:text-red-700'}`}
                       onClick={() => {
                         if (window.confirm('Are you sure you want to CANCEL this invoice? This will mark it as void.')) {
                           setDocType('Cancelled');
@@ -1777,51 +1827,61 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 pt-2">
-              <div className="col-span-2 flex space-x-4">
-                <div className="flex-[0.5]">
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Date</label>
-                  <input type="date" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} className="w-full text-xs border rounded-md px-2 py-[5px] text-gray-700 bg-gray-50 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer" />
-                </div>
-                <div className="flex-1">
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Customer Master</label>
-                  <select value={selectedCustomerId} onChange={handleSelectCustomer} className="w-full text-xs border rounded-md px-2 py-1.5 text-gray-700 bg-gray-50 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
-                    {customersList.length === 0 ? (
-                      <option value="">No customers found...</option>
-                    ) : (
-                      <>
-                        <option value="">Select saved customer...</option>
-                        {customersList.map((c, i) => (
-                          <option key={`${c.id}-${i}`} value={c.id}>
-                            {c.name}{c.phone ? ` - ${c.phone}` : ''}
-                          </option>
-                        ))}
-                      </>
-                    )}
-                  </select>
-                </div>
-                <div className="flex-1">
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Link Active Service Ticket</label>
-                  <select onChange={handleSelectServiceTicket} className="w-full text-xs border rounded-md px-2 py-1.5 text-gray-700 bg-gray-50 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
-                    {serviceTicketsList.length === 0 ? (
-                      <option value="">No tickets found...</option>
-                    ) : (
-                      <>
-                        <option value="">Select Service Ticket...</option>
-                        {serviceTicketsList.map((t, i) => (
-                          <option key={i} value={t.ticket_number}>
-                            {t.ticket_number} - {t.customer_name} ({t.device_type})
-                          </option>
-                        ))}
-                      </>
-                    )}
-                  </select>
-                </div>
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
+              <div className="sm:col-span-3">
+                <label className="block text-xs font-medium text-gray-600 mb-1">Date</label>
+                <input 
+                  type="date" 
+                  value={invoiceDate} 
+                  onChange={e => setInvoiceDate(e.target.value)} 
+                  className="w-full h-10 bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors cursor-pointer" 
+                />
+              </div>
+              <div className="sm:col-span-4">
+                <label className="block text-xs font-medium text-gray-600 mb-1">Customer Master</label>
+                <select 
+                  value={selectedCustomerId} 
+                  onChange={handleSelectCustomer} 
+                  className="w-full h-10 bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors cursor-pointer truncate"
+                >
+                  {customersList.length === 0 ? (
+                    <option value="">No customers found...</option>
+                  ) : (
+                    <>
+                      <option value="">Select saved customer...</option>
+                      {customersList.map((c, i) => (
+                        <option key={`${c.id}-${i}`} value={c.id}>
+                          {c.name}{c.phone ? ` - ${c.phone}` : ''}
+                        </option>
+                      ))}
+                    </>
+                  )}
+                </select>
+              </div>
+              <div className="sm:col-span-5">
+                <label className="block text-xs font-medium text-gray-600 mb-1">Link Active Service Ticket</label>
+                <select 
+                  onChange={handleSelectServiceTicket} 
+                  className="w-full h-10 bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors cursor-pointer truncate"
+                >
+                  {serviceTicketsList.length === 0 ? (
+                    <option value="">No tickets found...</option>
+                  ) : (
+                    <>
+                      <option value="">Select Service Ticket...</option>
+                      {serviceTicketsList.map((t, i) => (
+                        <option key={i} value={t.ticket_number}>
+                          {t.ticket_number} - {t.customer_name} ({t.device_type})
+                        </option>
+                      ))}
+                    </>
+                  )}
+                </select>
               </div>
 
-              <div className="col-span-2">
+              <div className="sm:col-span-12">
                 <div className="flex justify-between items-center mb-1">
-                  <label className="block text-sm font-medium text-gray-700">Customer Name</label>
+                  <label className="block text-xs font-medium text-gray-600">Customer Name</label>
                   {customerName.trim() && (
                     <div className="flex space-x-3">
                       <button
@@ -1859,7 +1919,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                       setSelectedCustomerId(customer.id);
                     }
                   }} 
-                  className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500" 
+                  className="w-full h-10 bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
                   placeholder="Enter full name or search..." 
                 />
                 <datalist id="billing-customers-name-list">
@@ -1870,8 +1930,9 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                   ))}
                 </datalist>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+
+              <div className="sm:col-span-6">
+                <label className="block text-xs font-medium text-gray-600 mb-1">Phone</label>
                 <input 
                   type="text" 
                   list="billing-customers-phone-list"
@@ -1887,7 +1948,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                       setSelectedCustomerId(customer.id);
                     }
                   }} 
-                  className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500" 
+                  className="w-full h-10 bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
                   placeholder="Phone number" 
                 />
                 <datalist id="billing-customers-phone-list">
@@ -1898,46 +1959,60 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                   ))}
                 </datalist>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Email address" />
+
+              <div className="sm:col-span-6">
+                <label className="block text-xs font-medium text-gray-600 mb-1">Email</label>
+                <input 
+                  type="email" 
+                  value={email} 
+                  onChange={e => setEmail(e.target.value)} 
+                  className="w-full h-10 bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                  placeholder="Email address" 
+                />
               </div>
-              <div className="col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                <textarea value={address} onChange={e => setAddress(e.target.value)} rows={2} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Full address"></textarea>
+
+              <div className="sm:col-span-12">
+                <label className="block text-xs font-medium text-gray-600 mb-1">Address</label>
+                <textarea 
+                  value={address} 
+                  onChange={e => setAddress(e.target.value)} 
+                  rows={2} 
+                  className="w-full bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                  placeholder="Full address"
+                ></textarea>
               </div>
             </div>
             
             <div className="mt-6 border-t pt-4">
-              <div className="flex justify-between items-center mb-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
                 <label className="block text-xs font-medium text-gray-600">Terms & Conditions</label>
-                <div className="flex space-x-2">
-                  <button onClick={() => setTermsConditions("1. Goods once sold will not be taken back.\n2. Warranty as per manufacturer terms.\n3. Subject to local jurisdiction.")} className="text-[10px] bg-gray-100 px-2 py-1 rounded hover:bg-gray-200">General</button>
-                  <button onClick={() => setTermsConditions("1. We are not responsible for any data loss during repair. Please backup your data.\n2. 30 days warranty on repaired parts only.\n3. Physical or liquid damage voids warranty.")} className="text-[10px] bg-gray-100 px-2 py-1 rounded hover:bg-gray-200">Service</button>
-                  <button onClick={() => setTermsConditions("1. AMC covers standard service visits as per contract.\n2. Spare parts are charged extra unless specified.\n3. Contract is non-transferable.")} className="text-[10px] bg-gray-100 px-2 py-1 rounded hover:bg-gray-200">AMC</button>
-                  <button onClick={() => setTermsConditions(`1. Estimate valid for ${quoteValidityDays} days.\n2. Advance payment of ${quoteAdvancePercent}% required and remaining against Delivery.\n3. Final amount may vary if hidden faults are found.`)} className="text-[10px] bg-purple-50 text-purple-600 px-2 py-1 rounded border border-purple-200 hover:bg-purple-100">Quotation</button>
-                  <button onClick={() => setTermsConditions("")} className="text-[10px] text-red-600 bg-red-50 px-2 py-1 rounded hover:bg-red-100">Clear</button>
+                <div className="flex flex-wrap gap-1.5">
+                  <button onClick={() => setTermsConditions("1. Goods once sold will not be taken back.\n2. Warranty as per manufacturer terms.\n3. Subject to local jurisdiction.")} className="text-[10px] font-medium bg-gray-100 px-2.5 py-1 rounded-md hover:bg-gray-200 text-gray-700 transition-colors">General</button>
+                  <button onClick={() => setTermsConditions("1. We are not responsible for any data loss during repair. Please backup your data.\n2. 30 days warranty on repaired parts only.\n3. Physical or liquid damage voids warranty.")} className="text-[10px] font-medium bg-gray-100 px-2.5 py-1 rounded-md hover:bg-gray-200 text-gray-700 transition-colors">Service</button>
+                  <button onClick={() => setTermsConditions("1. AMC covers standard service visits as per contract.\n2. Spare parts are charged extra unless specified.\n3. Contract is non-transferable.")} className="text-[10px] font-medium bg-gray-100 px-2.5 py-1 rounded-md hover:bg-gray-200 text-gray-700 transition-colors">AMC</button>
+                  <button onClick={() => setTermsConditions(`1. Estimate valid for ${quoteValidityDays} days.\n2. Advance payment of ${quoteAdvancePercent}% required and remaining against Delivery.\n3. Final amount may vary if hidden faults are found.`)} className="text-[10px] font-medium bg-purple-50 text-purple-700 px-2.5 py-1 rounded-md border border-purple-200 hover:bg-purple-100 transition-colors">Quotation</button>
+                  <button onClick={() => setTermsConditions("")} className="text-[10px] font-medium text-red-600 bg-red-50 px-2.5 py-1 rounded-md hover:bg-red-100 transition-colors">Clear</button>
                 </div>
               </div>
               <textarea 
                 value={termsConditions} 
                 onChange={e => setTermsConditions(e.target.value)}
-                className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500 h-20" 
+                className="w-full bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-20" 
                 placeholder="Enter terms and conditions for this invoice..."
               ></textarea>
               {docType === 'Quotation' && (
-                <div className="mt-2 flex gap-3 items-end">
+                <div className="mt-3 flex flex-wrap gap-3 items-end">
                   <div>
-                    <label className="block text-[10px] text-gray-500 mb-0.5">Validity (Days)</label>
-                    <input type="number" value={quoteValidityDays} onChange={e => setQuoteValidityDays(e.target.value)} className="w-20 text-xs p-1.5 border border-gray-200 rounded" />
+                    <label className="block text-[11px] font-medium text-gray-500 mb-1">Validity (Days)</label>
+                    <input type="number" value={quoteValidityDays} onChange={e => setQuoteValidityDays(e.target.value)} className="w-24 h-9 text-xs px-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
                   </div>
                   <div>
-                    <label className="block text-[10px] text-gray-500 mb-0.5">Advance (%)</label>
-                    <input type="number" value={quoteAdvancePercent} onChange={e => setQuoteAdvancePercent(e.target.value)} className="w-20 text-xs p-1.5 border border-gray-200 rounded" />
+                    <label className="block text-[11px] font-medium text-gray-500 mb-1">Advance (%)</label>
+                    <input type="number" value={quoteAdvancePercent} onChange={e => setQuoteAdvancePercent(e.target.value)} className="w-24 h-9 text-xs px-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
                   </div>
                   <button 
                     onClick={() => setTermsConditions(`1. Estimate valid for ${quoteValidityDays} days.\n2. Advance payment of ${quoteAdvancePercent}% required and remaining against Delivery.\n3. Final amount may vary if hidden faults are found.`)}
-                    className="text-[11px] bg-blue-50 text-blue-600 px-3 py-1.5 rounded border border-blue-200 hover:bg-blue-100 font-medium"
+                    className="h-9 text-xs bg-blue-50 text-blue-600 px-3.5 rounded-lg border border-blue-200 hover:bg-blue-100 font-semibold transition-colors flex items-center"
                   >
                     Apply to Terms
                   </button>
@@ -1946,11 +2021,11 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm space-y-4">
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-4 gap-3">
               <h3 className="text-lg font-semibold text-gray-800">Items & Billing</h3>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs text-gray-500 font-medium hidden md:inline">Quick Presets:</span>
+                <span className="text-xs text-gray-500 font-medium hidden sm:inline">Quick Presets:</span>
                 <select 
                   onChange={(e) => {
                     const selectedVal = e.target.value;
@@ -1964,7 +2039,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                     }
                   }}
                   value=""
-                  className="text-xs border border-gray-300 rounded-md px-2.5 py-1.5 text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer shadow-sm font-medium"
+                  className="text-xs border border-gray-300 rounded-lg px-2.5 py-1.5 text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-sm font-medium"
                 >
                   <option value="">⚡ Quick Service...</option>
                   {PRESET_ITEMS.map((item, idx) => (
@@ -1987,7 +2062,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                     }
                   }}
                   value={itemProductId}
-                  className="text-xs border border-gray-300 rounded-md px-2.5 py-1.5 text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer shadow-sm font-medium max-w-[180px]"
+                  className="text-xs border border-gray-300 rounded-lg px-2.5 py-1.5 text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-sm font-medium max-w-[180px]"
                 >
                   <option value="">📦 Quick Product...</option>
                   {productsList.map((prod) => (
@@ -2000,7 +2075,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
             </div>
             
             <div className="grid grid-cols-12 gap-3 items-end">
-              <div className="col-span-12 sm:col-span-6 md:col-span-4">
+              <div className="col-span-12 sm:col-span-6 lg:col-span-4">
                 <label className="block text-xs font-medium text-gray-600 mb-1">Item Description</label>
                 <input 
                   type="text" 
@@ -2015,11 +2090,11 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                     }
                   }} 
                   onKeyDown={e => e.key === 'Enter' && handleAddItem()} 
-                  className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" 
+                  className="w-full h-10 bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500" 
                   placeholder="e.g. Service or Product name" 
                 />
               </div>
-              <div className="col-span-12 sm:col-span-6 md:col-span-3">
+              <div className="col-span-12 sm:col-span-6 lg:col-span-3">
                 <label className="block text-xs font-medium text-gray-600 mb-1 truncate" title="Serial No. / IMEI (Optional)">
                   Serial No. / IMEI (Optional)
                 </label>
@@ -2028,116 +2103,159 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                   value={itemSerialNo} 
                   onChange={e => setItemSerialNo(e.target.value)} 
                   onKeyDown={e => e.key === 'Enter' && handleAddItem()} 
-                  className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500 font-mono text-xs" 
+                  className="w-full h-10 bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 font-mono text-xs" 
                   placeholder="e.g. S/N: HIK928402" 
                 />
               </div>
-              <div className="col-span-4 sm:col-span-3 md:col-span-1">
-                <label className="block text-xs font-medium text-gray-600 mb-1">Qty</label>
+              <div className="col-span-4 sm:col-span-3 lg:col-span-1">
+                <label className="block text-xs font-medium text-gray-600 mb-1 text-center">Qty</label>
                 <input 
                   type="number" 
                   value={itemQty} 
                   onChange={e => setItemQty(Number(e.target.value))} 
                   min="1" 
-                  className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500 text-center" 
+                  className="w-full h-10 bg-white text-gray-900 border border-gray-300 rounded-lg px-2 py-2 text-sm focus:ring-2 focus:ring-blue-500 text-center" 
                 />
               </div>
-              <div className="col-span-8 sm:col-span-4 md:col-span-2">
+              <div className="col-span-8 sm:col-span-4 lg:col-span-2">
                 <label className="block text-xs font-medium text-gray-600 mb-1">Rate (₹)</label>
                 <input 
                   type="number" 
                   value={itemRate || ''} 
                   onChange={e => setItemRate(Number(e.target.value))} 
                   onKeyDown={e => e.key === 'Enter' && handleAddItem()} 
-                  className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" 
+                  className="w-full h-10 bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500" 
                   placeholder="0" 
                 />
               </div>
-              <div className="col-span-12 sm:col-span-5 md:col-span-2">
+              <div className="col-span-12 sm:col-span-5 lg:col-span-2">
                 <button 
                   type="button"
                   onClick={handleAddItem} 
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-3 rounded-md transition-colors text-sm flex justify-center items-center shadow-sm"
+                  className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white font-medium px-3 rounded-lg transition-colors text-sm flex justify-center items-center shadow-sm"
                 >
                   <Plus className="w-4 h-4 mr-1.5 shrink-0" /> Add Item
                 </button>
               </div>
             </div>
 
-            <div className="mt-4 border rounded-md overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-gray-50 border-b text-gray-600">
-                  <tr>
-                    <th className="px-4 py-2 font-medium w-12">#</th>
-                    <th className="px-4 py-2 font-medium">Description & Serial No.</th>
-                    <th className="px-4 py-2 font-medium text-center w-16">Qty</th>
-                    <th className="px-4 py-2 font-medium text-right w-24">Rate</th>
-                    <th className="px-4 py-2 font-medium text-right w-24">Amount</th>
-                    <th className="px-4 py-2 font-medium text-center w-12"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {items.length === 0 ? (
-                    <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">No items added yet.</td></tr>
-                  ) : items.map((it, idx) => (
-                    <tr key={idx} className="hover:bg-gray-50">
-                      <td className="px-4 py-2 text-gray-500">{idx + 1}</td>
-                      <td className="px-4 py-2 font-medium text-gray-800">
-                        <div>{it.description}</div>
-                        {it.serial_no && (
-                          <div className="text-[11px] font-mono text-slate-500 mt-0.5 font-semibold">
-                            S/N: {it.serial_no}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-4 py-2 text-center text-gray-600">{it.qty}</td>
-                      <td className="px-4 py-2 text-right text-gray-600">₹{it.rate.toLocaleString('en-IN')}</td>
-                      <td className="px-4 py-2 text-right font-medium text-gray-800">₹{(it.qty * it.rate).toLocaleString('en-IN')}</td>
-                      <td className="px-4 py-2 text-center flex items-center justify-center space-x-2">
-                        <button onClick={() => handleEditItem(idx)} className="text-gray-400 hover:text-blue-500 transition-colors" title="Edit Item"><Pencil className="w-4 h-4" /></button>
-                        <button onClick={() => removeItem(idx)} className="text-red-400 hover:text-red-600 transition-colors" title="Remove Item"><Trash2 className="w-4 h-4" /></button>
-                      </td>
+            <div className="mt-4 border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-gray-50 border-b border-gray-200 text-gray-600">
+                    <tr>
+                      <th className="px-4 py-3 font-semibold text-center w-12">#</th>
+                      <th className="px-4 py-3 font-semibold">Description & Serial No.</th>
+                      <th className="px-4 py-3 font-semibold text-center w-16">Qty</th>
+                      <th className="px-4 py-3 font-semibold text-right w-28">Rate</th>
+                      <th className="px-4 py-3 font-semibold text-right w-28">Amount</th>
+                      <th className="px-4 py-3 font-semibold text-center w-20">Action</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {items.length === 0 ? (
+                      <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400 font-medium">No items added yet. Use the inputs above to add invoice items.</td></tr>
+                    ) : items.map((it, idx) => (
+                      <tr key={idx} className="hover:bg-gray-50/75 transition-colors">
+                        <td className="px-4 py-3 text-center text-gray-500 font-medium">{idx + 1}</td>
+                        <td className="px-4 py-3 font-medium text-gray-800">
+                          <div>{it.description}</div>
+                          {it.serial_no && (
+                            <div className="text-[11px] font-mono text-slate-500 mt-0.5 font-semibold">
+                              S/N: {it.serial_no}
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-center text-gray-600 font-medium">{it.qty}</td>
+                        <td className="px-4 py-3 text-right text-gray-600 font-mono">₹{it.rate.toLocaleString('en-IN')}</td>
+                        <td className="px-4 py-3 text-right font-semibold text-gray-900 font-mono">₹{(it.qty * it.rate).toLocaleString('en-IN')}</td>
+                        <td className="px-4 py-3 text-center">
+                          <div className="flex items-center justify-center space-x-1">
+                            <button onClick={() => handleEditItem(idx)} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Edit Item"><Pencil className="w-4 h-4" /></button>
+                            <button onClick={() => removeItem(idx)} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="Remove Item"><Trash2 className="w-4 h-4" /></button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t mt-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-4 border-t mt-6">
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Discount (₹)</label>
-                <input type="number" value={discount || ''} onChange={e => setDiscount(Number(e.target.value))} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" placeholder="0" />
+                <div className="h-5 flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-medium text-gray-600">Discount (₹)</label>
+                </div>
+                <input 
+                  type="number" 
+                  value={discount || ''} 
+                  onChange={e => setDiscount(Number(e.target.value))} 
+                  className="w-full h-10 bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 font-mono" 
+                  placeholder="0" 
+                />
               </div>
               <div>
-                <label className="flex justify-between items-center text-xs font-medium text-gray-600 mb-1">
-                  <span>Advance Paid (₹)</span>
+                <div className="h-5 flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-medium text-gray-600">Advance Paid (₹)</label>
                   {grandTotal > 0 && advancePaid < grandTotal && (
                     <button type="button" onClick={() => { setAdvancePaid(grandTotal); setPaymentMode('UPI'); }} className="text-[#0EA5E9] hover:underline text-[10px] font-bold">
                       Mark Fully Paid
                     </button>
                   )}
-                </label>
-                <input type="number" value={advancePaid || ''} onChange={e => setAdvancePaid(Number(e.target.value))} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" placeholder="0" />
+                </div>
+                <input 
+                  type="number" 
+                  value={advancePaid || ''} 
+                  onChange={e => setAdvancePaid(Number(e.target.value))} 
+                  className="w-full h-10 bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 font-mono" 
+                  placeholder="0" 
+                />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Payment Mode</label>
-                <select value={paymentMode} onChange={e => setPaymentMode(e.target.value)} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500">
+                <div className="h-5 flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-medium text-gray-600">Payment Mode</label>
+                </div>
+                <select 
+                  value={paymentMode} 
+                  onChange={e => setPaymentMode(e.target.value)} 
+                  className="w-full h-10 bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                >
                   {PAYMENT_MODES.map(mode => (
                     <option key={mode} value={mode}>{mode}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Due Date</label>
-                <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" />
+                <div className="h-5 flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-medium text-gray-600">Due Date</label>
+                </div>
+                <input 
+                  type="date" 
+                  value={dueDate} 
+                  onChange={e => setDueDate(e.target.value)} 
+                  className="w-full h-10 bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 cursor-pointer" 
+                />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Warranty (Months)</label>
-                <input type="number" min="0" step="1" value={warrantyMonths} onChange={e => setWarrantyMonths(e.target.value === '' ? '' : Number(e.target.value))} className="w-full bg-white text-gray-900 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500" placeholder="e.g. 12" />
+                <div className="h-5 flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-medium text-gray-600">Warranty (Months)</label>
+                </div>
+                <input 
+                  type="number" 
+                  min="0" 
+                  step="1" 
+                  value={warrantyMonths} 
+                  onChange={e => setWarrantyMonths(e.target.value === '' ? '' : Number(e.target.value))} 
+                  className="w-full h-10 bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500" 
+                  placeholder="e.g. 12" 
+                />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Payment Status</label>
-                <div className={`w-full border rounded-md px-3 py-2 text-sm font-semibold ${
+                <div className="h-5 flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-medium text-gray-600">Payment Status</label>
+                </div>
+                <div className={`w-full h-10 border rounded-lg px-3 py-2 text-sm font-semibold flex items-center ${
                   paymentStatus === 'Paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
                   paymentStatus === 'Partial' ? 'bg-amber-50 text-amber-700 border-amber-200' :
                   paymentStatus === 'Estimate' ? 'bg-purple-50 text-purple-700 border-purple-200' :
@@ -2152,16 +2270,16 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
         {/* Right Sidebar */}
         <div className="space-y-6">
-          <div className="bg-gray-50 border border-gray-200 p-6 rounded-lg shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Invoice Summary</h3>
+          <div className="bg-gray-50 border border-gray-200 p-6 rounded-xl shadow-sm lg:sticky lg:top-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-3 border-b border-gray-200">Invoice Summary</h3>
             <div className="space-y-3 text-sm">
-              <div className="flex justify-between text-gray-600"><span>Subtotal:</span> <span className="font-medium">₹{subtotal.toLocaleString('en-IN')}</span></div>
-              {discount > 0 && <div className="flex justify-between text-gray-600"><span>Discount:</span> <span className="font-medium text-green-600">- ₹{discount.toLocaleString('en-IN')}</span></div>}
-              <div className="flex justify-between text-gray-600"><span>Round Off:</span> <span className="font-medium">₹{roundOff.toLocaleString('en-IN')}</span></div>
+              <div className="flex justify-between text-gray-600"><span>Subtotal:</span> <span className="font-medium font-mono">₹{subtotal.toLocaleString('en-IN')}</span></div>
+              {discount > 0 && <div className="flex justify-between text-gray-600"><span>Discount:</span> <span className="font-medium font-mono text-green-600">- ₹{discount.toLocaleString('en-IN')}</span></div>}
+              <div className="flex justify-between text-gray-600"><span>Round Off:</span> <span className="font-medium font-mono">₹{roundOff.toLocaleString('en-IN')}</span></div>
               <div className="h-px bg-gray-200 my-2"></div>
-              <div className="flex justify-between text-lg font-bold text-gray-900"><span>Grand Total:</span> <span>₹{grandTotal.toLocaleString('en-IN')}</span></div>
-              <div className="flex justify-between text-gray-600 pt-2 border-t"><span>Advance Paid:</span> <span className="font-medium">₹{advancePaid.toLocaleString('en-IN')}</span></div>
-              <div className="flex justify-between font-bold text-blue-700"><span>Balance Due:</span> <span>₹{balanceDue.toLocaleString('en-IN')}</span></div>
+              <div className="flex justify-between text-lg font-bold text-gray-900"><span>Grand Total:</span> <span className="font-mono">₹{grandTotal.toLocaleString('en-IN')}</span></div>
+              <div className="flex justify-between text-gray-600 pt-2 border-t"><span>Advance Paid:</span> <span className="font-medium font-mono">₹{advancePaid.toLocaleString('en-IN')}</span></div>
+              <div className="flex justify-between font-bold text-blue-700"><span>Balance Due:</span> <span className="font-mono">₹{balanceDue.toLocaleString('en-IN')}</span></div>
               <div className="flex justify-between text-gray-600 pt-2 border-t"><span>Status:</span> <span className="font-semibold">{paymentStatus}</span></div>
               <div className="flex justify-between text-gray-600"><span>Mode:</span> <span className="font-medium">{paymentMode}</span></div>
               {dueDate && <div className="flex justify-between text-gray-600"><span>Due Date:</span> <span className="font-medium">{dueDate}</span></div>}
@@ -2214,24 +2332,24 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               </button>
               <button 
                 onClick={() => setShowRemindersModal(true)}
-                className="text-sm flex items-center bg-green-50 text-green-700 hover:bg-green-100 px-4 py-2 rounded-lg font-medium border border-green-200 transition-colors"
+                className="text-sm flex items-center justify-center bg-green-50 text-green-700 hover:bg-green-100 px-4 py-2 rounded-lg font-medium border border-green-200 transition-colors shadow-sm"
               >
                 <MessageSquare className="w-4 h-4 mr-2" /> WhatsApp Reminders
               </button>
-              <div className="relative max-w-md w-full md:w-80">
+              <div className="relative max-w-md w-full sm:w-80">
                 <input 
                   type="text" 
                   placeholder="Search invoice, customer..." 
                   value={historySearchTerm}
                   onChange={(e) => setHistorySearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
                 />
-                <Search className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
+                <Search className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
               </div>
             </div>
           </div>
           
-          <div className="overflow-x-auto rounded-lg border border-gray-200">
+          <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
             <table className="w-full text-left text-sm whitespace-nowrap">
               <thead className="bg-gray-50 border-b border-gray-200 text-gray-600 font-medium">
                 <tr>
@@ -2277,7 +2395,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                   <tr 
                     key={inv.id} 
                     onClick={() => { loadInvoice(inv.id); setActiveTab('editor'); }}
-                    className={`hover:bg-gray-50 transition-colors cursor-pointer ${selectedInvoiceId === inv.id ? 'bg-blue-50' : 'bg-white'}`}
+                    className={`group hover:bg-gray-50 transition-colors cursor-pointer ${selectedInvoiceId === inv.id ? 'bg-blue-50' : 'bg-white'}`}
                   >
                     <td className="px-4 py-4">
                       <div className="font-semibold text-gray-900">{inv.invoice_no}</div>
@@ -2339,13 +2457,16 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-4 text-right sticky right-0 bg-inherit z-10 border-l border-gray-100 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)]">
+                    <td className="px-4 py-4 text-right sticky right-0 bg-white group-hover:bg-gray-50 z-10 border-l border-gray-100 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)]">
                       <div className="flex justify-end items-center space-x-2">
                         <button onClick={(e) => { e.stopPropagation(); loadInvoice(inv.id); setActiveTab('editor'); }} className="p-1.5 text-gray-500 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors" title="Edit / Load">
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button onClick={(e) => { e.stopPropagation(); handleViewPdf(inv.id); }} className="p-1.5 text-gray-500 hover:bg-indigo-50 hover:text-indigo-600 rounded-md transition-colors" title="View PDF">
                           <FileText className="w-4 h-4" />
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); handleDownloadInvoice(inv); }} className="p-1.5 text-gray-500 hover:bg-emerald-50 hover:text-emerald-600 rounded-md transition-colors" title="Download PDF">
+                          <Download className="w-4 h-4" />
                         </button>
                         {(inv.warranty_months || 0) > 0 && (
                           <button onClick={async (e) => { 
@@ -2602,6 +2723,20 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                                   title="View PDF"
                                 >
                                   <FileText className="w-4 h-4" />
+                                </button>
+                                <button 
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleDownloadInvoice(inv);
+                                  }} 
+                                  onPointerDown={(e) => e.stopPropagation()}
+                                  onTouchStart={(e) => e.stopPropagation()}
+                                  className="text-[#94A3B8] hover:text-emerald-400 transition-colors p-1"
+                                  title="Download PDF"
+                                >
+                                  <Download className="w-4 h-4" />
                                 </button>
                                 {inv.doc_type === 'Invoice' && (inv.balance_due || 0) > 0 && (
                                   <button 

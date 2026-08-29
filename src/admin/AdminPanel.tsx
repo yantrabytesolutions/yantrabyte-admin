@@ -488,8 +488,7 @@ export default function AdminPanel() {
   const ticketPrintRef = useRef<HTMLDivElement>(null);
   
   const [isDarkMode, setIsDarkMode] = useState(() => {
-    return localStorage.getItem('theme') === 'dark' || 
-      (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    return localStorage.getItem('theme') === 'dark';
   });
 
   useEffect(() => {
@@ -779,12 +778,8 @@ export default function AdminPanel() {
   };
 
   const formatTicketFilename = (ticketNo: string, customerName?: string) => {
-    const cleanTicket = (ticketNo || 'TICKET').replace(/[^\w-]/g, '_');
-    const cleanName = (customerName || '')
-      .trim()
-      .replace(/[^\w\s-]/g, '')
-      .replace(/\s+/g, '_');
-    return cleanName ? `JobSheet-${cleanTicket}_${cleanName}.pdf` : `JobSheet-${cleanTicket}.pdf`;
+    const cleanCustomer = (customerName || '').trim().replace(/[/\\?%*:|"<>]/g, '-');
+    return cleanCustomer ? `${cleanCustomer}.pdf` : `JobSheet-${(ticketNo || 'DRAFT').replace(/[^\w-]/g, '_')}.pdf`;
   };
 
   const printJobSheet = async (item: Record<string, unknown>) => {
@@ -831,7 +826,7 @@ export default function AdminPanel() {
       // Sync to Google Sheet in background
       backupTicketToGoogleSheet(item as Partial<ServiceTicket>);
 
-      showToast(`✅ Job sheet ${ticketNumber} downloaded!`, 'success');
+      showToast(`✅ Job sheet ${ticketFilename} downloaded!`, 'success');
     } catch (err: any) {
       console.error('Error generating job sheet:', err);
       showToast('Failed to generate job sheet', 'error');
@@ -903,7 +898,10 @@ export default function AdminPanel() {
   const uploadTicketPdfToSupabase = async (item: Record<string, unknown>): Promise<string | null> => {
     try {
       const element = generateTicketPdfElement(item);
-      const ticketFilename = `JobSheet-${item.ticket_number || 'DRAFT'}.pdf`;
+      const safeCustomer = typeof item.customer_name === 'string' && item.customer_name.trim() 
+        ? item.customer_name.trim().replace(/[/\\?%*:|"<>]/g, '-') 
+        : '';
+      const ticketFilename = safeCustomer ? `${safeCustomer}.pdf` : `JobSheet-${item.ticket_number || 'DRAFT'}.pdf`;
       const opt = {
         margin: 0,
         filename: ticketFilename,
@@ -2442,7 +2440,7 @@ export default function AdminPanel() {
 
   // --- Main Layout ---
   return (
-    <div className="min-h-screen bg-[#0B1120] flex">
+    <div className={`min-h-screen flex transition-colors duration-200 ${isDarkMode ? 'bg-[#0B1120] text-white' : 'bg-slate-100 text-slate-900'}`}>
       {/* Toast */}
       {toast && (
         <div className={`fixed top-4 right-4 z-[100] flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium shadow-lg transition-all ${
@@ -2459,16 +2457,18 @@ export default function AdminPanel() {
       {renderFormModal()}
 
       {/* Sidebar */}
-      <aside className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-[#0F172A] border-r border-white/10 flex flex-col transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0 lg:w-16'}`}>
+      <aside className={`fixed lg:static inset-y-0 left-0 z-40 w-64 border-r flex flex-col transition-all duration-300 ${
+        isDarkMode ? 'bg-[#0F172A] border-white/10' : 'bg-white border-slate-200 shadow-sm'
+      } ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0 lg:w-16'}`}>
         {/* Logo */}
-        <div className="px-4 py-5 border-b border-white/10 flex items-center gap-3">
+        <div className={`px-4 py-5 border-b flex items-center gap-3 ${isDarkMode ? 'border-white/10' : 'border-slate-200'}`}>
           <div className="w-9 h-9 rounded-lg bg-[#0EA5E9]/10 flex items-center justify-center shrink-0">
             <LayoutDashboard className="w-5 h-5 text-[#0EA5E9]" />
           </div>
           {sidebarOpen && (
             <div className="min-w-0">
-              <h1 className="text-white font-bold text-sm truncate">Yantrabyte</h1>
-              <p className="text-[#64748B] text-xs truncate">Admin Panel</p>
+              <h1 className={`font-bold text-sm truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Yantrabyte</h1>
+              <p className={`text-xs truncate ${isDarkMode ? 'text-[#64748B]' : 'text-slate-500'}`}>Admin Panel</p>
             </div>
           )}
         </div>
@@ -2484,8 +2484,12 @@ export default function AdminPanel() {
                 onClick={() => { setActiveSection(item.section); setSearchQuery(''); setShowForm(false); setSidebarOpen(false); }}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   isActive
-                    ? 'bg-[#0EA5E9]/10 text-[#0EA5E9] border border-[#0EA5E9]/20'
-                    : 'text-[#94A3B8] hover:bg-white/5 hover:text-white border border-transparent'
+                    ? isDarkMode
+                      ? 'bg-[#0EA5E9]/10 text-[#0EA5E9] border border-[#0EA5E9]/20 font-semibold'
+                      : 'bg-blue-50 text-blue-600 border border-blue-200 font-semibold shadow-sm'
+                    : isDarkMode
+                      ? 'text-[#94A3B8] hover:bg-white/5 hover:text-white border border-transparent'
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-transparent'
                 }`}
               >
                 <Icon className="w-4.5 h-4.5 shrink-0" />
@@ -2496,10 +2500,14 @@ export default function AdminPanel() {
         </nav>
 
         {/* Logout */}
-        <div className="px-2 py-3 border-t border-white/10">
+        <div className={`px-2 py-3 border-t ${isDarkMode ? 'border-white/10' : 'border-slate-200'}`}>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#94A3B8] hover:bg-red-500/10 hover:text-red-400 transition-all"
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+              isDarkMode
+                ? 'text-[#94A3B8] hover:bg-red-500/10 hover:text-red-400'
+                : 'text-slate-600 hover:bg-red-50 hover:text-red-600'
+            }`}
           >
             <LogOut className="w-4.5 h-4.5 shrink-0" />
             {sidebarOpen && <span>Sign Out</span>}
@@ -2518,19 +2526,23 @@ export default function AdminPanel() {
       {/* Main Content */}
       <main className="flex-1 min-w-0">
         {/* Top Bar */}
-        <header className="sticky top-0 z-20 bg-[#0B1120]/80 backdrop-blur-xl border-b border-white/10 px-4 lg:px-6 py-3 flex items-center justify-between">
+        <header className={`sticky top-0 z-20 backdrop-blur-xl border-b px-4 lg:px-6 py-3 flex items-center justify-between transition-colors ${
+          isDarkMode ? 'bg-[#0B1120]/80 border-white/10' : 'bg-white/90 border-slate-200 shadow-sm'
+        }`}>
           <div className="flex items-center gap-3">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 rounded-lg hover:bg-white/5 text-[#94A3B8] hover:text-white transition-all lg:hidden"
+              className={`p-2 rounded-lg transition-all lg:hidden ${
+                isDarkMode ? 'hover:bg-white/5 text-[#94A3B8] hover:text-white' : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900'
+              }`}
             >
               <Menu className="w-5 h-5" />
             </button>
             <div>
-              <h2 className="text-white font-semibold text-lg">
+              <h2 className={`font-semibold text-lg ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                 {SECTION_CONFIG[activeSection]?.label || 'Dashboard'}
               </h2>
-              <p className="text-[#64748B] text-xs">{SECTION_CONFIG[activeSection]?.subtitle || 'Manage your website content'}</p>
+              <p className={`text-xs ${isDarkMode ? 'text-[#64748B]' : 'text-slate-500'}`}>{SECTION_CONFIG[activeSection]?.subtitle || 'Manage your website content'}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -2538,26 +2550,30 @@ export default function AdminPanel() {
               onClick={() => setShowWhatsAppModal(true)}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
                 isWhatsAppOnline
-                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
-                  : 'bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20'
+                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+                  : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/20'
               }`}
               title={isWhatsAppOnline ? 'WhatsApp Automation Online' : 'Click to Link WhatsApp'}
             >
               <MessageSquare className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">WhatsApp:</span>
               <span>{isWhatsAppOnline ? 'Connected' : 'Link App'}</span>
-              <span className={`w-2 h-2 rounded-full ${isWhatsAppOnline ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+              <span className={`w-2 h-2 rounded-full ${isWhatsAppOnline ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
             </button>
             <button
               onClick={() => setIsDarkMode(!isDarkMode)}
-              className="p-2 rounded-lg hover:bg-white/5 text-[#94A3B8] hover:text-white transition-all"
+              className={`p-2 rounded-lg transition-all ${
+                isDarkMode ? 'hover:bg-white/5 text-[#94A3B8] hover:text-white' : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900'
+              }`}
               title="Toggle Dark Mode"
             >
               {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
             <button
               onClick={handleLogout}
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-[#94A3B8] hover:text-red-400 hover:bg-red-500/10 transition-all"
+              className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${
+                isDarkMode ? 'text-[#94A3B8] hover:text-red-400 hover:bg-red-500/10' : 'text-slate-600 hover:text-red-600 hover:bg-red-50'
+              }`}
             >
               <LogOut className="w-4 h-4" />
               <span className="hidden sm:inline">Sign Out</span>

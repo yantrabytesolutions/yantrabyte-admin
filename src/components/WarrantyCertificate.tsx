@@ -97,9 +97,10 @@ export const generateWarrantyCertificate = async (invoice: Invoice, businessProf
   const element = document.createElement('div');
   element.innerHTML = htmlString;
   
+  const safeCustomer = invoice.customer_name?.trim().replace(/[/\\?%*:|"<>]/g, '-');
   const opt = {
     margin: 0.5,
-    filename: `Warranty-${invoice.invoice_no}.pdf`,
+    filename: safeCustomer ? `Warranty-${safeCustomer}.pdf` : `Warranty-${invoice.invoice_no}.pdf`,
     image: { type: 'jpeg' as const, quality: 0.98 },
     html2canvas: { scale: 2, useCORS: true },
     jsPDF: { unit: 'in' as const, format: 'a4', orientation: 'portrait' as const }
