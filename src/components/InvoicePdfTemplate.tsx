@@ -2,6 +2,7 @@ import { forwardRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import type { Invoice, InvoiceItem } from '../types';
 import { HardwareBrandsBanner } from './HardwareBrandsBanner';
+import { YANTRABYTE_LOGO_BASE64, HARDWARE_WATERMARK_BASE64 } from '../assets/invoiceAssets';
 
 function numberToWords(num: number): string {
   num = Math.round(Number(num || 0));
@@ -113,20 +114,19 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         top: '52%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
-        width: '500px',
-        height: '500px',
+        width: '520px',
+        height: '520px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         pointerEvents: 'none',
         zIndex: 5,
-        opacity: 0.38
+        opacity: 0.45
       }}>
         <img 
-          src="/logo6.png" 
+          src={YANTRABYTE_LOGO_BASE64} 
           alt="Watermark" 
-          style={{ width: '460px', height: 'auto', objectFit: 'contain', display: 'block', filter: 'contrast(1.1) brightness(0.95)' }} 
-          crossOrigin="anonymous" 
+          style={{ width: '480px', height: 'auto', objectFit: 'contain', display: 'block', filter: 'contrast(1.15) brightness(0.92)' }} 
         />
       </div>
 
@@ -137,13 +137,13 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         left: 0, 
         width: '100%', 
         height: '100%',
-        backgroundImage: 'url(/hardware_watermark.png)',
+        backgroundImage: `url(${HARDWARE_WATERMARK_BASE64})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
         pointerEvents: 'none',
         zIndex: 4,
-        opacity: 0.25
+        opacity: 0.30
       }} />
 
       {/* Cancelled Stamp */}
@@ -182,10 +182,9 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #0B5394', paddingBottom: '12px', marginBottom: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
             <img 
-              src="/logo6.png" 
+              src={YANTRABYTE_LOGO_BASE64} 
               alt="YantraByte Solutions" 
               style={{ height: '85px', width: 'auto', display: 'block' }} 
-              crossOrigin="anonymous" 
             />
             <div>
               <h1 style={{ color: '#0B5394', fontSize: '22px', fontWeight: '800', margin: 0 }}>YANTRABYTE SOLUTIONS</h1>
@@ -397,12 +396,6 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                       </tr>
                     </tbody>
                   </table>
-
-                  <div style={{ textAlign: 'center', marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #cbd5e1' }}>
-                    <div style={{ fontSize: '10px', fontWeight: '900', color: '#000000', letterSpacing: '0.4px', textTransform: 'uppercase', lineHeight: '1.3' }}>
-                      THIS IS A SYSTEM GENERATED DOCUMENT, NO SIGNATURE REQUIRED
-                    </div>
-                  </div>
                 </div>
               </td>
             </tr>

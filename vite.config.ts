@@ -12,7 +12,7 @@ export default defineConfig({
       workbox: {
         skipWaiting: true,
         clientsClaim: true,
-        maximumFileSizeToCacheInBytes: 5000000 // 5 MB to accommodate the large React app bundle
+        maximumFileSizeToCacheInBytes: 15000000 // 15 MB to accommodate the React app bundle
       },
       manifest: {
         name: 'YantraByte Billing Software',

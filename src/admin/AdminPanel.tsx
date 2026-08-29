@@ -28,6 +28,7 @@ import AccountingKhata from './AccountingKhata';
 import InventoryMovement from './InventoryMovement';
 import FinancialReports from './FinancialReports';
 import { WhatsAppConnectModal } from './components/WhatsAppConnectModal';
+import { YANTRABYTE_LOGO_BASE64, HARDWARE_WATERMARK_BASE64 } from '../assets/invoiceAssets';
 import DigitalJobSheetModal from './components/DigitalJobSheetModal';
 import { ServiceTicketPdfTemplate } from '../components/ServiceTicketPdfTemplate';
 import ReactQuill from 'react-quill';
@@ -587,7 +588,10 @@ export default function AdminPanel() {
     element.innerHTML = `
       <div style="width: 794px; height: 1080px; padding: 28px; box-sizing: border-box; overflow: hidden; background-color: #ffffff; position: relative;">
         <!-- Watermark -->
-        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url(/hardware_watermark.png); background-size: cover; background-position: center; background-repeat: no-repeat; pointer-events: none; z-index: 50; opacity: 0.2;">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 500px; height: 500px; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 5; opacity: 0.45;">
+          <img src="${YANTRABYTE_LOGO_BASE64}" style="width: 460px; height: auto; object-fit: contain; display: block; filter: contrast(1.15) brightness(0.92);" />
+        </div>
+        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url(${HARDWARE_WATERMARK_BASE64}); background-size: cover; background-position: center; background-repeat: no-repeat; pointer-events: none; z-index: 4; opacity: 0.30;">
         </div>
         <div style="border: 2px solid #000000; padding: 18px; min-height: 1020px; box-sizing: border-box; position: relative; z-index: 10;">
         <!-- Header -->

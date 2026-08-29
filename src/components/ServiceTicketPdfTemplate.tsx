@@ -2,6 +2,7 @@ import { forwardRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import type { ServiceTicket } from '../types';
 import { HardwareBrandsBanner } from './HardwareBrandsBanner';
+import { YANTRABYTE_LOGO_BASE64, HARDWARE_WATERMARK_BASE64 } from '../assets/invoiceAssets';
 
 interface Props {
   ticket: Partial<ServiceTicket & {
@@ -51,20 +52,19 @@ export const ServiceTicketPdfTemplate = forwardRef<HTMLDivElement, Props>(({
         top: '50%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
-        width: '480px',
-        height: '480px',
+        width: '520px',
+        height: '520px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         pointerEvents: 'none',
         zIndex: 2,
-        opacity: 0.38
+        opacity: 0.45
       }}>
         <img 
-          src="/logo6.png" 
+          src={YANTRABYTE_LOGO_BASE64} 
           alt="Watermark" 
-          style={{ width: '440px', height: 'auto', objectFit: 'contain', display: 'block', filter: 'contrast(1.1) brightness(0.95)' }} 
-          crossOrigin="anonymous" 
+          style={{ width: '480px', height: 'auto', objectFit: 'contain', display: 'block', filter: 'contrast(1.15) brightness(0.92)' }} 
         />
       </div>
 
@@ -75,13 +75,13 @@ export const ServiceTicketPdfTemplate = forwardRef<HTMLDivElement, Props>(({
         left: 0, 
         width: '100%', 
         height: '100%',
-        backgroundImage: 'url(/hardware_watermark.png)',
+        backgroundImage: `url(${HARDWARE_WATERMARK_BASE64})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
         pointerEvents: 'none',
         zIndex: 1,
-        opacity: 0.25
+        opacity: 0.30
       }} />
 
       {/* Main Container Content */}
@@ -96,10 +96,9 @@ export const ServiceTicketPdfTemplate = forwardRef<HTMLDivElement, Props>(({
               <tr>
                 <td style={{ width: '130px', padding: '10px 12px', verticalAlign: 'middle' }}>
                   <img 
-                    src="/logo6.png" 
+                    src={YANTRABYTE_LOGO_BASE64} 
                     alt="YantraByte Solutions" 
                     style={{ height: '95px', width: 'auto', display: 'block' }} 
-                    crossOrigin="anonymous" 
                   />
                 </td>
                 <td style={{ textAlign: 'right', padding: '10px 16px', verticalAlign: 'middle' }}>
@@ -286,12 +285,6 @@ export const ServiceTicketPdfTemplate = forwardRef<HTMLDivElement, Props>(({
                       </tr>
                     </tbody>
                   </table>
-
-                  <div style={{ textAlign: 'center', marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #cbd5e1' }}>
-                    <div style={{ fontSize: '10px', fontWeight: '900', color: '#000000', letterSpacing: '0.4px', textTransform: 'uppercase', lineHeight: '1.3' }}>
-                      THIS IS A SYSTEM GENERATED DOCUMENT, NO SIGNATURE REQUIRED
-                    </div>
-                  </div>
                 </div>
               </td>
             </tr>
