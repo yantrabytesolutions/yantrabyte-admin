@@ -769,7 +769,7 @@ export default function AdminPanel() {
         <!-- Hardware Brands Footer Banner -->
         <div style="margin-top: 12px; border: 1px solid #0B5394; border-radius: 6px; overflow: hidden; background-color: #ffffff;">
           <div style="background-color: #0B5394; color: #ffffff; font-size: 9px; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase; text-align: center; padding: 2.5px 6px;">
-            ★ MULTI-BRAND SALES & AUTHORIZED IT HARDWARE SERVICE SUPPORT ★
+            ★ MULTI-BRAND SALES & IT HARDWARE SERVICE SUPPORT ★
           </div>
           <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-around; padding: 5px 8px; background-color: #f8fafc; gap: 6px; font-family: Arial, sans-serif; font-size: 10.5px; font-weight: bold;">
             <span style="color: #007DB8;">DELL</span>

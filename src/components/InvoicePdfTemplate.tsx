@@ -113,19 +113,19 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         top: '52%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
-        width: '480px',
-        height: '480px',
+        width: '500px',
+        height: '500px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         pointerEvents: 'none',
         zIndex: 5,
-        opacity: 0.22
+        opacity: 0.38
       }}>
         <img 
           src="/logo6.png" 
           alt="Watermark" 
-          style={{ width: '440px', height: 'auto', objectFit: 'contain', display: 'block' }} 
+          style={{ width: '460px', height: 'auto', objectFit: 'contain', display: 'block', filter: 'contrast(1.1) brightness(0.95)' }} 
           crossOrigin="anonymous" 
         />
       </div>
@@ -143,7 +143,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         backgroundRepeat: 'no-repeat',
         pointerEvents: 'none',
         zIndex: 4,
-        opacity: 0.15
+        opacity: 0.25
       }} />
 
       {/* Cancelled Stamp */}
@@ -273,8 +273,8 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
               })}
 
               {/* Padding rows to fill full A4 height without empty gap */}
-              {[...Array(Math.max(0, 8 - items.length))].map((_, idx) => (
-                <tr key={`empty-${idx}`} style={{ backgroundColor: 'transparent', height: '28px' }}>
+              {[...Array(Math.max(0, 7 - items.length))].map((_, idx) => (
+                <tr key={`empty-${idx}`} style={{ backgroundColor: 'transparent', height: '24px' }}>
                   <td style={{ borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '4px', color: 'transparent' }}>.</td>
                   <td style={{ borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '4px', color: 'transparent' }}>.</td>
                   <td style={{ borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '4px', color: 'transparent' }}>.</td>
@@ -398,8 +398,8 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                     </tbody>
                   </table>
 
-                  <div style={{ textAlign: 'center', marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #e2e8f0' }}>
-                    <div style={{ fontSize: '10.5px', fontWeight: '900', color: '#0F172A', letterSpacing: '0.4px', textTransform: 'uppercase', lineHeight: '1.4' }}>
+                  <div style={{ textAlign: 'center', marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #cbd5e1' }}>
+                    <div style={{ fontSize: '10px', fontWeight: '900', color: '#000000', letterSpacing: '0.4px', textTransform: 'uppercase', lineHeight: '1.3' }}>
                       THIS IS A SYSTEM GENERATED DOCUMENT, NO SIGNATURE REQUIRED
                     </div>
                   </div>
@@ -408,6 +408,27 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
             </tr>
           </tbody>
         </table>
+
+        {/* Full-width System Generated Document Notice Bar */}
+        <div style={{
+          textAlign: 'center',
+          marginTop: '6px',
+          padding: '4px 8px',
+          backgroundColor: '#F1F5F9',
+          border: '1.2px solid #0B5394',
+          borderRadius: '4px',
+          boxSizing: 'border-box'
+        }}>
+          <div style={{
+            fontSize: '11px',
+            fontWeight: '900',
+            color: '#000000',
+            letterSpacing: '0.5px',
+            textTransform: 'uppercase'
+          }}>
+            THIS IS A SYSTEM GENERATED DOCUMENT, NO SIGNATURE REQUIRED
+          </div>
+        </div>
 
         {/* Bottom Top Hardware Brands Logo Banner */}
         <HardwareBrandsBanner />

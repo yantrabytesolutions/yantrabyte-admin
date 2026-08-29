@@ -8,7 +8,7 @@ export interface HardwareBrandsBannerProps {
 
 export const HardwareBrandsBanner: React.FC<HardwareBrandsBannerProps> = ({
   compact = false,
-  title = 'MULTI-BRAND SALES & AUTHORIZED IT HARDWARE SERVICE SUPPORT',
+  title = 'MULTI-BRAND SALES & IT HARDWARE SERVICE SUPPORT',
   theme = 'bordered'
 }) => {
   return (

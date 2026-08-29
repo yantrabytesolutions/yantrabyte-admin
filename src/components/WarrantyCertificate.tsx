@@ -87,10 +87,16 @@ export const generateWarrantyCertificate = async (invoice: Invoice, businessProf
         <p>Physical damage, liquid damage, or unauthorized tampering voids this warranty.</p>
       </div>
 
+      <div style={{ textAlign: 'center', margin: '14px 0 8px 0', padding: '4px 8px', backgroundColor: '#F1F5F9', border: '1px solid #0B5394', borderRadius: '4px' }}>
+        <p style={{ margin: 0, fontSize: '11px', fontWeight: '900', color: '#000000', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          THIS IS A SYSTEM GENERATED DOCUMENT, NO SIGNATURE REQUIRED
+        </p>
+      </div>
+
       <HardwareBrandsBanner compact={true} />
       
       {/* Watermark */}
-      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(-45deg)', fontSize: '120px', color: 'rgba(3, 105, 161, 0.14)', whiteSpace: 'nowrap', pointerEvents: 'none', fontWeight: 'bold' }}>
+      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(-45deg)', fontSize: '120px', color: 'rgba(3, 105, 161, 0.30)', whiteSpace: 'nowrap', pointerEvents: 'none', fontWeight: '900' }}>
         WARRANTY
       </div>
     </div>

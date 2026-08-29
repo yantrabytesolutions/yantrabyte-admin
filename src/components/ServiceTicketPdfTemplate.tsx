@@ -51,19 +51,19 @@ export const ServiceTicketPdfTemplate = forwardRef<HTMLDivElement, Props>(({
         top: '50%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
-        width: '460px',
-        height: '460px',
+        width: '480px',
+        height: '480px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         pointerEvents: 'none',
         zIndex: 2,
-        opacity: 0.20
+        opacity: 0.38
       }}>
         <img 
           src="/logo6.png" 
           alt="Watermark" 
-          style={{ width: '420px', height: 'auto', objectFit: 'contain', display: 'block' }} 
+          style={{ width: '440px', height: 'auto', objectFit: 'contain', display: 'block', filter: 'contrast(1.1) brightness(0.95)' }} 
           crossOrigin="anonymous" 
         />
       </div>
@@ -81,7 +81,7 @@ export const ServiceTicketPdfTemplate = forwardRef<HTMLDivElement, Props>(({
         backgroundRepeat: 'no-repeat',
         pointerEvents: 'none',
         zIndex: 1,
-        opacity: 0.15
+        opacity: 0.25
       }} />
 
       {/* Main Container Content */}
@@ -287,8 +287,8 @@ export const ServiceTicketPdfTemplate = forwardRef<HTMLDivElement, Props>(({
                     </tbody>
                   </table>
 
-                  <div style={{ textAlign: 'center', marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #e2e8f0' }}>
-                    <div style={{ fontSize: '10px', fontWeight: '900', color: '#0F172A', letterSpacing: '0.4px', textTransform: 'uppercase', lineHeight: '1.4' }}>
+                  <div style={{ textAlign: 'center', marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #cbd5e1' }}>
+                    <div style={{ fontSize: '10px', fontWeight: '900', color: '#000000', letterSpacing: '0.4px', textTransform: 'uppercase', lineHeight: '1.3' }}>
                       THIS IS A SYSTEM GENERATED DOCUMENT, NO SIGNATURE REQUIRED
                     </div>
                   </div>
@@ -297,6 +297,27 @@ export const ServiceTicketPdfTemplate = forwardRef<HTMLDivElement, Props>(({
             </tr>
           </tbody>
         </table>
+
+        {/* Full-width System Generated Document Notice Bar */}
+        <div style={{
+          textAlign: 'center',
+          marginTop: '6px',
+          padding: '4px 8px',
+          backgroundColor: '#F1F5F9',
+          border: '1.2px solid #0B5394',
+          borderRadius: '4px',
+          boxSizing: 'border-box'
+        }}>
+          <div style={{
+            fontSize: '11px',
+            fontWeight: '900',
+            color: '#000000',
+            letterSpacing: '0.5px',
+            textTransform: 'uppercase'
+          }}>
+            THIS IS A SYSTEM GENERATED DOCUMENT, NO SIGNATURE REQUIRED
+          </div>
+        </div>
 
         {/* Bottom Top Hardware Brands Logo Banner */}
         <HardwareBrandsBanner />

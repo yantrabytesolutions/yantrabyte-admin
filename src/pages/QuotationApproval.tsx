@@ -5,6 +5,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import html2pdf from 'html2pdf.js';
 import type { Invoice } from '../types';
 import SEO from '../components/SEO';
+import { HardwareBrandsBanner } from '../components/HardwareBrandsBanner';
 
 export function QuotationApproval() {
   const { id } = useParams<{ id: string }>();
@@ -258,6 +259,16 @@ export function QuotationApproval() {
                   <span className="text-blue-400">₹{quotation.grand_total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                 </div>
               </div>
+            </div>
+
+            {/* System Generated Document Notice & Hardware Brands Banner */}
+            <div className="mb-8">
+              <div className="text-center py-2.5 px-4 mb-4 bg-white/10 rounded-lg border border-white/20">
+                <p className="text-xs md:text-sm font-black text-white uppercase tracking-wider">
+                  THIS IS A SYSTEM GENERATED DOCUMENT, NO SIGNATURE REQUIRED
+                </p>
+              </div>
+              <HardwareBrandsBanner compact={true} />
             </div>
 
             {error && (

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { QRCodeSVG } from 'qrcode.react';
+import { HardwareBrandsBanner } from '../components/HardwareBrandsBanner';
 
 interface InvoiceItem {
   description: string;
@@ -551,6 +552,11 @@ export default function EstimateView() {
           </div>
         </div>
 
+        {/* Brands Banner */}
+        <div style={{ padding: '0 16px 8px 16px' }}>
+          <HardwareBrandsBanner compact={true} />
+        </div>
+
         {/* Footer */}
         <div style={{
           borderTop: '2px solid #e8f0fe',
@@ -558,10 +564,10 @@ export default function EstimateView() {
           textAlign: 'center',
           background: '#fafbfc'
         }}>
-          <p style={{ fontSize: 12, color: '#9ca3af', fontStyle: 'italic', margin: 0 }}>
-            This is a computer-generated {docLabel.toLowerCase()}. No signature is required.
+          <p style={{ fontSize: 12, color: '#000000', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.5px', margin: 0 }}>
+            THIS IS A SYSTEM GENERATED DOCUMENT, NO SIGNATURE REQUIRED
           </p>
-          <p style={{ fontSize: 11, color: '#d1d5db', marginTop: 6 }}>
+          <p style={{ fontSize: 11, color: '#64748b', marginTop: 6, fontWeight: 500 }}>
             © {new Date().getFullYear()} YantraByte Solutions • yantrabyte.anantatechcare.com
           </p>
         </div>
