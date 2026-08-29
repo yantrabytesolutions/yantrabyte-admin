@@ -118,8 +118,8 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
         pointerEvents: 'none',
-        zIndex: 1,
-        opacity: 0.18
+        zIndex: 50,
+        opacity: 0.16
       }} />
 
       {/* Cancelled Stamp */}
@@ -134,7 +134,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
           fontWeight: 'bold',
           textTransform: 'uppercase',
           pointerEvents: 'none',
-          zIndex: 30,
+          zIndex: 60,
           border: '6px dashed rgba(220, 38, 38, 0.4)',
           padding: '8px 36px',
           borderRadius: '12px',
@@ -185,19 +185,13 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
           </div>
         </div>
 
-        {/* Customer & Service Provider Details Grid */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', backgroundColor: '#f8fafc', padding: '12px 15px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+        {/* Customer Details */}
+        <div style={{ marginBottom: '16px', backgroundColor: '#f8fafc', padding: '12px 15px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
           <div style={{ fontSize: '12px', lineHeight: '1.5' }}>
             <span style={{ color: '#64748b', fontSize: '11px', textTransform: 'uppercase', fontWeight: '700' }}>Bill To (Customer Details)</span><br />
             <strong style={{ color: '#0B5394', fontSize: '14px' }}>{invoice.customer_name || '—'}</strong><br />
             Phone: {invoice.phone || '—'} &nbsp;|&nbsp; Email: {invoice.email || '—'}<br />
             Address: {invoice.address || '—'}
-          </div>
-          <div style={{ fontSize: '12px', lineHeight: '1.5', textAlign: 'right' }}>
-            <span style={{ color: '#64748b', fontSize: '11px', textTransform: 'uppercase', fontWeight: '700' }}>Service Provider</span><br />
-            <strong style={{ color: '#0B5394', fontSize: '14px' }}>YantraByte Solutions</strong><br />
-            Authorized Tech: Ramesh A S<br />
-            Status: {invoice.balance_due && invoice.balance_due <= 0 ? 'PAID IN FULL' : 'PAYMENT DUE'}
           </div>
         </div>
 
