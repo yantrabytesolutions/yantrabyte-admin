@@ -916,12 +916,10 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
                     <img src="/qr.jpg" alt="Payment QR" style={{ height: '100%', width: '100%', objectFit: 'contain' }} crossOrigin="anonymous" />
                   </div>
                 </div>
-              </div>
-              <div style={{ textAlign: 'center', marginTop: '12px', paddingTop: '4px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                <p style={{ fontWeight: 'bold', marginBottom: '4px', color: '#000000', fontSize: '12px', margin: 0 }}>For YantraByte Solutions</p>
-                <div style={{ height: '80px', width: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', margin: '2px 0' }}>
-                  <img src="/seal.png" alt="Seal" style={{ maxHeight: '95%', maxWidth: '95%', objectFit: 'contain' }} crossOrigin="anonymous" />
-                </div>
+              <div style={{ textAlign: 'center', marginTop: '12px', paddingTop: '8px', borderTop: '1px solid #cbd5e1' }}>
+                <p style={{ fontWeight: '800', color: '#0F172A', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.4px', margin: 0 }}>
+                  THIS IS A SYSTEM GENERATED DOCUMENT, NO SIGNATURE REQUIRED
+                </p>
               </div>
             </div>
           </div>

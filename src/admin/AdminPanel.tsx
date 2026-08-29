@@ -754,15 +754,12 @@ export default function AdminPanel() {
                 <div style="font-size: 13px; font-weight: bold; color: #333333;">Customer Drop-off Signature</div>
                 <div style="font-size: 12px; color: #777777; margin-top: 2px;">I agree to the service repair terms above.</div>
               </td>
-              <!-- Yantrabyte Sign -->
+              <!-- Yantrabyte Sign / System Generated Notice -->
               <td style="width: 50%; text-align: right; vertical-align: bottom; padding-left: 16px;">
-                <div style="display: inline-block; text-align: left;">
-                  <div style="height: 72px; text-align: center; margin-bottom: 4px;">
-                    <img src="/seal.png" style="max-width: 100px; max-height: 75px; object-fit: contain; opacity: 0.9;" crossOrigin="anonymous" />
+                <div style="display: inline-block; text-align: center; border-top: 1px solid #cbd5e1; padding-top: 10px; width: 100%;">
+                  <div style="font-size: 10.5px; font-weight: 800; color: #0F172A; letter-spacing: 0.4px; text-transform: uppercase;">
+                    THIS IS A SYSTEM GENERATED DOCUMENT, NO SIGNATURE REQUIRED
                   </div>
-                  <div style="width: 220px; border-bottom: 1px solid #555555; margin-bottom: 8px;"></div>
-                  <div style="font-size: 11px; font-weight: bold; color: #0B5394;">For Yantrabyte Solutions</div>
-                  <div style="font-size: 9px; color: #777777; margin-top: 2px;">Technical Service Executive</div>
                 </div>
               </td>
             </tr>

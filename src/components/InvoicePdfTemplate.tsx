@@ -43,7 +43,7 @@ interface Props {
 
 export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ 
   invoice, 
-  companySignature,
+  companySignature: _companySignature,
   quoteValidityDays = 7,
   quoteAdvancePercent = 85
 }, ref) => {
@@ -398,26 +398,9 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                     </tbody>
                   </table>
 
-                  <div style={{ textAlign: 'center', marginTop: '4px', paddingTop: '4px', borderTop: '1px solid #e2e8f0' }}>
-                    <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#000000' }}>
-                      For YantraByte Solutions
-                    </div>
-                    <div style={{ height: '58px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '2px' }}>
-                      {companySignature ? (
-                        <img 
-                          src={companySignature} 
-                          alt="Company Signature" 
-                          style={{ maxHeight: '56px', maxWidth: '130px', width: 'auto', objectFit: 'contain', display: 'block', margin: '0 auto' }} 
-                          crossOrigin="anonymous" 
-                        />
-                      ) : (
-                        <img 
-                          src="/seal.png" 
-                          alt="Seal" 
-                          style={{ maxHeight: '56px', maxWidth: '85px', width: 'auto', objectFit: 'contain', display: 'block', margin: '0 auto' }} 
-                          crossOrigin="anonymous" 
-                        />
-                      )}
+                  <div style={{ textAlign: 'center', marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #e2e8f0' }}>
+                    <div style={{ fontSize: '10.5px', fontWeight: '900', color: '#0F172A', letterSpacing: '0.4px', textTransform: 'uppercase', lineHeight: '1.4' }}>
+                      THIS IS A SYSTEM GENERATED DOCUMENT, NO SIGNATURE REQUIRED
                     </div>
                   </div>
                 </div>
