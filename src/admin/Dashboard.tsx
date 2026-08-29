@@ -418,7 +418,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
               <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Active Accounts</p>
               <p className="text-sm font-bold text-emerald-400 flex items-center gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                {nextcloudStatus.activeUsers || 7} Users
+                {nextcloudStatus.activeUsers !== undefined ? nextcloudStatus.activeUsers : 2} Users
               </p>
             </div>
 
