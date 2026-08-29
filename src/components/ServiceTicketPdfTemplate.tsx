@@ -36,24 +36,27 @@ export const ServiceTicketPdfTemplate = forwardRef<HTMLDivElement, Props>(({
       ref={ref} 
       style={{ 
         width: '794px', 
-        minHeight: '1120px',
+        height: '1122px',
+        maxHeight: '1122px',
         boxSizing: 'border-box', 
-        padding: '24px', 
+        padding: '16px', 
         backgroundColor: '#ffffff', 
         color: '#000000', 
         fontFamily: 'Arial, sans-serif', 
         position: 'relative', 
-        overflow: 'hidden' 
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column'
       }}
     >
       {/* Centered Brand Watermark Emblem */}
       <div style={{
         position: 'absolute',
-        top: '50%',
+        top: '48%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
-        width: '520px',
-        height: '520px',
+        width: '500px',
+        height: '500px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -64,7 +67,7 @@ export const ServiceTicketPdfTemplate = forwardRef<HTMLDivElement, Props>(({
         <img 
           src={YANTRABYTE_LOGO_BASE64} 
           alt="Watermark" 
-          style={{ width: '480px', height: 'auto', objectFit: 'contain', display: 'block', filter: 'contrast(1.15) brightness(0.92)' }} 
+          style={{ width: '460px', height: 'auto', objectFit: 'contain', display: 'block', filter: 'contrast(1.15) brightness(0.92)' }} 
         />
       </div>
 
@@ -85,7 +88,14 @@ export const ServiceTicketPdfTemplate = forwardRef<HTMLDivElement, Props>(({
       }} />
 
       {/* Main Container Content */}
-      <div style={{ position: 'relative', zIndex: 10 }}>
+      <div style={{
+        position: 'relative',
+        zIndex: 10,
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between'
+      }}>
         
         {/* Main Box Outer Border */}
         <div style={{ border: '1.5px solid #000000', backgroundColor: 'transparent' }}>
@@ -313,7 +323,7 @@ export const ServiceTicketPdfTemplate = forwardRef<HTMLDivElement, Props>(({
         </div>
 
         {/* Bottom Top Hardware Brands Logo Banner */}
-        <HardwareBrandsBanner />
+        <HardwareBrandsBanner compact={true} />
 
       </div>
     </div>

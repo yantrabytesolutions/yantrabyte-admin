@@ -93,29 +93,36 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
     isDue: true
   });
 
+  // Target 11 rows total so single/multi-item invoices fill the standard A4 height cleanly
+  const targetTotalRows = 11;
+  const fillerCount = Math.max(0, targetTotalRows - items.length);
+
   return (
     <div 
       ref={ref} 
       style={{ 
         width: '794px', 
-        minHeight: '1120px',
+        height: '1122px',
+        maxHeight: '1122px',
         boxSizing: 'border-box', 
-        padding: '24px', 
+        padding: '16px', 
         backgroundColor: '#ffffff', 
         color: '#000000', 
         fontFamily: 'Arial, sans-serif', 
         position: 'relative', 
-        overflow: 'hidden' 
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column'
       }}
     >
       {/* Centered Brand Watermark Emblem */}
       <div style={{
         position: 'absolute',
-        top: '52%',
+        top: '48%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
-        width: '520px',
-        height: '520px',
+        width: '500px',
+        height: '500px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -126,7 +133,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         <img 
           src={YANTRABYTE_LOGO_BASE64} 
           alt="Watermark" 
-          style={{ width: '480px', height: 'auto', objectFit: 'contain', display: 'block', filter: 'contrast(1.15) brightness(0.92)' }} 
+          style={{ width: '460px', height: 'auto', objectFit: 'contain', display: 'block', filter: 'contrast(1.15) brightness(0.92)' }} 
         />
       </div>
 
@@ -173,68 +180,74 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         position: 'relative',
         zIndex: 10,
         border: '2px solid #0B5394',
-        borderRadius: '12px',
-        padding: '24px',
+        borderRadius: '10px',
+        padding: '16px 18px',
         backgroundColor: 'transparent',
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between'
       }}>
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #0B5394', paddingBottom: '12px', marginBottom: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            <img 
-              src={YANTRABYTE_LOGO_BASE64} 
-              alt="YantraByte Solutions" 
-              style={{ height: '85px', width: 'auto', display: 'block' }} 
-            />
-            <div>
-              <h1 style={{ color: '#0B5394', fontSize: '22px', fontWeight: '800', margin: 0 }}>YANTRABYTE SOLUTIONS</h1>
-              <div style={{ fontSize: '11px', color: '#555555', marginTop: '4px', lineHeight: '1.4' }}>
-                47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br />
-                Chikkabettahalli, Bengaluru - 560097<br />
-                📱 09986742525 | ✉️ yantrabyte.solutions@gmail.com
+        {/* Top Section (Header, Customer Box, Table, Totals) */}
+        <div>
+          {/* Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #0B5394', paddingBottom: '10px', marginBottom: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <img 
+                src={YANTRABYTE_LOGO_BASE64} 
+                alt="YantraByte Solutions" 
+                style={{ height: '80px', width: 'auto', display: 'block' }} 
+              />
+              <div>
+                <h1 style={{ color: '#0B5394', fontSize: '21px', fontWeight: '800', margin: 0, letterSpacing: '0.3px' }}>YANTRABYTE SOLUTIONS</h1>
+                <div style={{ fontSize: '10.5px', color: '#555555', marginTop: '3px', lineHeight: '1.35' }}>
+                  47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br />
+                  Chikkabettahalli, Bengaluru - 560097<br />
+                  📱 09986742525 | ✉️ yantrabyte.solutions@gmail.com
+                </div>
+              </div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontWeight: '700', color: isCancelled ? '#DC2626' : '#0B5394', fontSize: '18px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                {isCancelled ? 'CANCELLED INVOICE' : (isQuotation ? 'QUOTATION' : 'INVOICE')}
+              </div>
+              <div style={{ fontSize: '12.5px', color: '#64748b', marginTop: '3px' }}>
+                {isQuotation ? 'Quote No: ' : (isCancelled ? 'Cancelled No: ' : 'Invoice No: ')} <strong>{invoice.invoice_no || 'DRAFT'}</strong>
+              </div>
+              <div style={{ fontSize: '12.5px', color: '#64748b' }}>
+                Date: <strong>{formattedDate}</strong>
               </div>
             </div>
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontWeight: '700', color: isCancelled ? '#DC2626' : '#0B5394', fontSize: '18px', textTransform: 'uppercase' }}>
-              {isCancelled ? 'CANCELLED INVOICE' : (isQuotation ? 'QUOTATION' : 'INVOICE')}
-            </div>
-            <div style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>
-              {isQuotation ? 'Quote No: ' : (isCancelled ? 'Cancelled No: ' : 'Invoice No: ')} <strong>{invoice.invoice_no || 'DRAFT'}</strong>
-            </div>
-            <div style={{ fontSize: '13px', color: '#64748b' }}>
-              Date: <strong>{formattedDate}</strong>
-            </div>
-          </div>
-        </div>
 
-        {/* Customer Details */}
-        <div style={{ marginBottom: '16px', backgroundColor: '#f8fafc', padding: '12px 15px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-          <div style={{ fontSize: '12px', lineHeight: '1.5' }}>
-            <span style={{ color: '#64748b', fontSize: '11px', textTransform: 'uppercase', fontWeight: '700' }}>Bill To (Customer Details)</span><br />
-            <strong style={{ color: '#0B5394', fontSize: '14px' }}>{invoice.customer_name || '—'}</strong><br />
-            Phone: {invoice.phone || '—'} &nbsp;|&nbsp; Email: {invoice.email || '—'}<br />
-            Address: {invoice.address || '—'}
+          {/* Customer Details */}
+          <div style={{ marginBottom: '10px', backgroundColor: '#f8fafc', padding: '8px 12px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+            <div style={{ fontSize: '11.5px', lineHeight: '1.45' }}>
+              <span style={{ color: '#64748b', fontSize: '10px', textTransform: 'uppercase', fontWeight: '700' }}>Bill To (Customer Details)</span><br />
+              <strong style={{ color: '#0B5394', fontSize: '13.5px' }}>{invoice.customer_name || '—'}</strong><br />
+              Phone: {invoice.phone || '—'} &nbsp;|&nbsp; Email: {invoice.email || '—'}<br />
+              Address: {invoice.address || '—'}
+            </div>
           </div>
-        </div>
 
           {/* Items Table */}
-          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', borderBottom: '1px solid #000000', fontSize: '13px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', borderBottom: '1px solid #000000', fontSize: '12.5px' }}>
             <thead>
-              <tr style={{ backgroundColor: '#0B5394', color: '#ffffff', height: '32px' }}>
-                <th style={{ width: '45px', textAlign: 'center', borderRight: '1px solid #000000', borderBottom: '1px solid #000000', padding: '6px 4px', fontWeight: 'bold' }}>
+              <tr style={{ backgroundColor: '#0B5394', color: '#ffffff', height: '30px' }}>
+                <th style={{ width: '42px', textAlign: 'center', borderRight: '1px solid #000000', borderBottom: '1px solid #000000', padding: '5px 4px', fontWeight: 'bold' }}>
                   Sl<br />No.
                 </th>
-                <th style={{ textAlign: 'left', borderRight: '1px solid #000000', borderBottom: '1px solid #000000', padding: '6px 8px', fontWeight: 'bold' }}>
+                <th style={{ textAlign: 'left', borderRight: '1px solid #000000', borderBottom: '1px solid #000000', padding: '5px 8px', fontWeight: 'bold' }}>
                   Description
                 </th>
-                <th style={{ width: '55px', textAlign: 'center', borderRight: '1px solid #000000', borderBottom: '1px solid #000000', padding: '6px 4px', fontWeight: 'bold' }}>
+                <th style={{ width: '50px', textAlign: 'center', borderRight: '1px solid #000000', borderBottom: '1px solid #000000', padding: '5px 4px', fontWeight: 'bold' }}>
                   Qty
                 </th>
-                <th style={{ width: '95px', textAlign: 'right', borderRight: '1px solid #000000', borderBottom: '1px solid #000000', padding: '6px 8px', fontWeight: 'bold' }}>
+                <th style={{ width: '95px', textAlign: 'right', borderRight: '1px solid #000000', borderBottom: '1px solid #000000', padding: '5px 8px', fontWeight: 'bold' }}>
                   Rate (₹)
                 </th>
-                <th style={{ width: '110px', textAlign: 'right', borderBottom: '1px solid #000000', padding: '6px 8px', fontWeight: 'bold' }}>
+                <th style={{ width: '105px', textAlign: 'right', borderBottom: '1px solid #000000', padding: '5px 8px', fontWeight: 'bold' }}>
                   Amount (₹)
                 </th>
               </tr>
@@ -246,25 +259,25 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                 const rate = Number(it.rate || it.price || it.amount || 0);
                 const amount = qty * rate;
                 return (
-                  <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? 'transparent' : 'rgba(248, 250, 252, 0.7)' }}>
-                    <td style={{ textAlign: 'center', borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '6px 4px', color: '#000000' }}>
+                  <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? 'transparent' : 'rgba(248, 250, 252, 0.7)', minHeight: '30px' }}>
+                    <td style={{ textAlign: 'center', borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '5px 4px', color: '#000000' }}>
                       {idx + 1}
                     </td>
-                    <td style={{ textAlign: 'left', borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '6px 8px', color: '#000000', wordBreak: 'break-word' }}>
-                      <div style={{ fontWeight: '500' }}>{desc}</div>
+                    <td style={{ textAlign: 'left', borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '5px 8px', color: '#000000', wordBreak: 'break-word' }}>
+                      <div style={{ fontWeight: '600' }}>{desc}</div>
                       {it.serial_no && (
-                        <div style={{ fontSize: '11px', color: '#475569', marginTop: '2px', fontWeight: 'bold' }}>
+                        <div style={{ fontSize: '10.5px', color: '#475569', marginTop: '2px', fontWeight: 'bold' }}>
                           S/N: {it.serial_no}
                         </div>
                       )}
                     </td>
-                    <td style={{ textAlign: 'center', borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '6px 4px', color: '#000000' }}>
+                    <td style={{ textAlign: 'center', borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '5px 4px', color: '#000000' }}>
                       {qty}
                     </td>
-                    <td style={{ textAlign: 'right', borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '6px 8px', color: '#000000' }}>
+                    <td style={{ textAlign: 'right', borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '5px 8px', color: '#000000' }}>
                       {rate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </td>
-                    <td style={{ textAlign: 'right', borderBottom: '1px solid #e2e8f0', padding: '6px 8px', fontWeight: 'bold', color: '#000000' }}>
+                    <td style={{ textAlign: 'right', borderBottom: '1px solid #e2e8f0', padding: '5px 8px', fontWeight: 'bold', color: '#000000' }}>
                       {amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </td>
                   </tr>
@@ -272,59 +285,59 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
               })}
 
               {/* Padding rows to fill full A4 height without empty gap */}
-              {[...Array(Math.max(0, 7 - items.length))].map((_, idx) => (
-                <tr key={`empty-${idx}`} style={{ backgroundColor: 'transparent', height: '24px' }}>
-                  <td style={{ borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '4px', color: 'transparent' }}>.</td>
-                  <td style={{ borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '4px', color: 'transparent' }}>.</td>
-                  <td style={{ borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '4px', color: 'transparent' }}>.</td>
-                  <td style={{ borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '4px', color: 'transparent' }}>.</td>
-                  <td style={{ borderBottom: '1px solid #e2e8f0', padding: '4px', color: 'transparent' }}>.</td>
+              {[...Array(fillerCount)].map((_, idx) => (
+                <tr key={`empty-${idx}`} style={{ backgroundColor: (items.length + idx) % 2 === 0 ? 'transparent' : 'rgba(248, 250, 252, 0.7)', height: '26px' }}>
+                  <td style={{ borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '3px 4px', color: 'transparent' }}>.</td>
+                  <td style={{ borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '3px 8px', color: 'transparent' }}>.</td>
+                  <td style={{ borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '3px 4px', color: 'transparent' }}>.</td>
+                  <td style={{ borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '3px 8px', color: 'transparent' }}>.</td>
+                  <td style={{ borderBottom: '1px solid #e2e8f0', padding: '3px 8px', color: 'transparent' }}>.</td>
                 </tr>
               ))}
             </tbody>
           </table>
 
           {/* Totals Section */}
-          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', fontSize: '13px', backgroundColor: '#ffffff' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', fontSize: '12.5px', backgroundColor: '#ffffff' }}>
             <tbody>
               <tr>
                 {/* Left: Amount in Words */}
-                <td style={{ width: '58%', verticalAlign: 'top', padding: '10px 12px', borderRight: '1px solid #000000' }}>
-                  <div style={{ backgroundColor: '#D9EAF7', color: '#B45309', fontWeight: 'bold', fontSize: '12px', padding: '3px 8px', display: 'inline-block', marginBottom: '8px', borderRadius: '3px' }}>
+                <td style={{ width: '58%', verticalAlign: 'top', padding: '8px 10px', borderRight: '1px solid #000000' }}>
+                  <div style={{ backgroundColor: '#D9EAF7', color: '#B45309', fontWeight: 'bold', fontSize: '11px', padding: '2px 6px', display: 'inline-block', marginBottom: '6px', borderRadius: '3px' }}>
                     Amount in Words:
                   </div>
-                  <div style={{ fontStyle: 'italic', fontWeight: 'bold', fontSize: '13px', color: '#000000', lineHeight: '1.5' }}>
+                  <div style={{ fontStyle: 'italic', fontWeight: 'bold', fontSize: '12.5px', color: '#000000', lineHeight: '1.4' }}>
                     {numberToWords(grandTotal)}
                   </div>
                 </td>
 
                 {/* Right: Calculations Breakdown */}
                 <td style={{ width: '42%', verticalAlign: 'top', padding: 0 }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
                     <tbody>
                       {calcRows.map((row, idx) => (
                         <tr 
                           key={row.label}
                           style={{ 
                             backgroundColor: (row.isHighlight || row.isDue) ? '#FFF2CC' : 'transparent',
-                            height: '26px'
+                            height: '24px'
                           }}
                         >
                           <td style={{ 
-                            padding: '5px 10px', 
+                            padding: '4px 8px', 
                             color: row.isHighlight ? '#15803D' : (row.isDue ? '#B91C1C' : '#333333'), 
                             fontWeight: (row.isHighlight || row.isDue) ? 'bold' : 'normal',
-                            fontSize: (row.isHighlight || row.isDue) ? '13px' : '12.5px',
+                            fontSize: (row.isHighlight || row.isDue) ? '12.5px' : '12px',
                             borderBottom: idx === calcRows.length - 1 ? 'none' : '1px solid #000000'
                           }}>
                             {row.label}
                           </td>
                           <td style={{ 
-                            padding: '5px 10px', 
+                            padding: '4px 8px', 
                             textAlign: 'right', 
                             color: row.isHighlight ? '#15803D' : (row.isDue ? '#B91C1C' : '#000000'), 
                             fontWeight: (row.isHighlight || row.isDue) ? 'bold' : 'normal',
-                            fontSize: (row.isHighlight || row.isDue) ? '13.5px' : '12.5px',
+                            fontSize: (row.isHighlight || row.isDue) ? '13px' : '12px',
                             borderBottom: idx === calcRows.length - 1 ? 'none' : '1px solid #000000'
                           }}>
                             {row.value}
@@ -337,95 +350,97 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
               </tr>
             </tbody>
           </table>
-
-        {/* Bottom Section: Terms & Conditions + Bank & Payment Details */}
-        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '10px 0', marginTop: '16px', tableLayout: 'fixed' }}>
-          <tbody>
-            <tr>
-              {/* Terms & Conditions Box */}
-              <td style={{ width: '58%', verticalAlign: 'top', border: '1px solid #000000', padding: 0, boxSizing: 'border-box' }}>
-                <div style={{ backgroundColor: '#0B5394', color: '#ffffff', fontWeight: 'bold', fontSize: '12px', textAlign: 'center', padding: '4px 0' }}>
-                  Terms & Conditions
-                </div>
-                <div style={{ padding: '8px 10px', fontSize: '11px', color: '#333333', lineHeight: '1.45' }}>
-                  {invoice.terms_conditions ? (
-                    <div style={{ whiteSpace: 'pre-wrap' }}>{invoice.terms_conditions}</div>
-                  ) : isQuotation ? (
-                    <>
-                      <div style={{ marginBottom: '2px' }}>1. Estimate valid for {quoteValidityDays} days.</div>
-                      <div style={{ marginBottom: '2px' }}>2. Advance payment of {quoteAdvancePercent}% required and remaining against Delivery.</div>
-                      <div>3. Final amount may vary if hidden faults are found.</div>
-                    </>
-                  ) : (
-                    <>
-                      <div style={{ marginBottom: '2px' }}>1. Service warranty is valid for 30 days only.</div>
-                      <div style={{ marginBottom: '2px' }}>2. No warranty for Windows installation/software issues.</div>
-                      <div style={{ marginBottom: '2px' }}>3. YantraByte Solutions is not responsible for any data loss.</div>
-                      <div style={{ marginBottom: '2px' }}>4. Customer should take backup of all important files prior.</div>
-                      <div style={{ marginBottom: '2px' }}>5. Physical, liquid or burnt damages void warranty.</div>
-                      <div>6. No warranty for swollen batteries or electrical faults.</div>
-                    </>
-                  )}
-                </div>
-              </td>
-
-              {/* Bank & Payment Details Box */}
-              <td style={{ width: '42%', verticalAlign: 'top', border: '1px solid #000000', padding: 0, boxSizing: 'border-box' }}>
-                <div style={{ backgroundColor: '#0B5394', color: '#ffffff', fontWeight: 'bold', fontSize: '12px', textAlign: 'center', padding: '4px 0' }}>
-                  Bank & Payment Details
-                </div>
-                <div style={{ padding: '6px 8px' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <tbody>
-                      <tr>
-                        <td style={{ verticalAlign: 'top', fontSize: '10.5px', lineHeight: '1.4', color: '#000000' }}>
-                          <div><span style={{ fontWeight: 'bold' }}>Bank:</span> North East Small Finance Bank</div>
-                          <div><span style={{ fontWeight: 'bold' }}>A/C Name:</span> YantraByte Solutions</div>
-                          <div><span style={{ fontWeight: 'bold' }}>A/C No:</span> 033311501023226</div>
-                          <div><span style={{ fontWeight: 'bold' }}>IFSC:</span> NESF0000333</div>
-                          <div><span style={{ fontWeight: 'bold' }}>UPI:</span> s0424237152@slc</div>
-                        </td>
-                        <td style={{ width: '56px', verticalAlign: 'middle', textAlign: 'right', paddingLeft: '4px' }}>
-                          <div style={{ background: '#ffffff', padding: '2px', display: 'inline-block' }}>
-                            <QRCodeSVG 
-                              value={`upi://pay?pa=s0424237152@slc&pn=${encodeURIComponent('YantraByte Solutions')}&am=${balanceDue > 0 ? balanceDue : grandTotal}&cu=INR`} 
-                              size={52} 
-                            />
-                          </div>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        {/* Full-width System Generated Document Notice Bar */}
-        <div style={{
-          textAlign: 'center',
-          marginTop: '6px',
-          padding: '4px 8px',
-          backgroundColor: '#F1F5F9',
-          border: '1.2px solid #0B5394',
-          borderRadius: '4px',
-          boxSizing: 'border-box'
-        }}>
-          <div style={{
-            fontSize: '11px',
-            fontWeight: '900',
-            color: '#000000',
-            letterSpacing: '0.5px',
-            textTransform: 'uppercase'
-          }}>
-            THIS IS A SYSTEM GENERATED DOCUMENT, NO SIGNATURE REQUIRED
-          </div>
         </div>
 
-        {/* Bottom Top Hardware Brands Logo Banner */}
-        <HardwareBrandsBanner />
+        {/* Bottom Anchored Section: Terms, Bank Details, System Notice, Hardware Brands */}
+        <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          {/* Terms & Conditions + Bank & Payment Details */}
+          <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '8px 0', tableLayout: 'fixed' }}>
+            <tbody>
+              <tr>
+                {/* Terms & Conditions Box */}
+                <td style={{ width: '58%', verticalAlign: 'top', border: '1px solid #000000', padding: 0, boxSizing: 'border-box' }}>
+                  <div style={{ backgroundColor: '#0B5394', color: '#ffffff', fontWeight: 'bold', fontSize: '11px', textAlign: 'center', padding: '3px 0' }}>
+                    Terms & Conditions
+                  </div>
+                  <div style={{ padding: '6px 8px', fontSize: '10px', color: '#333333', lineHeight: '1.4' }}>
+                    {invoice.terms_conditions ? (
+                      <div style={{ whiteSpace: 'pre-wrap' }}>{invoice.terms_conditions}</div>
+                    ) : isQuotation ? (
+                      <>
+                        <div style={{ marginBottom: '1px' }}>1. Estimate valid for {quoteValidityDays} days.</div>
+                        <div style={{ marginBottom: '1px' }}>2. Advance payment of {quoteAdvancePercent}% required and remaining against Delivery.</div>
+                        <div>3. Final amount may vary if hidden faults are found.</div>
+                      </>
+                    ) : (
+                      <>
+                        <div style={{ marginBottom: '1px' }}>1. Service warranty is valid for 30 days only.</div>
+                        <div style={{ marginBottom: '1px' }}>2. No warranty for Windows installation/software issues.</div>
+                        <div style={{ marginBottom: '1px' }}>3. YantraByte Solutions is not responsible for any data loss.</div>
+                        <div style={{ marginBottom: '1px' }}>4. Customer should take backup of all important files prior.</div>
+                        <div style={{ marginBottom: '1px' }}>5. Physical, liquid or burnt damages void warranty.</div>
+                        <div>6. No warranty for swollen batteries or electrical faults.</div>
+                      </>
+                    )}
+                  </div>
+                </td>
 
+                {/* Bank & Payment Details Box */}
+                <td style={{ width: '42%', verticalAlign: 'top', border: '1px solid #000000', padding: 0, boxSizing: 'border-box' }}>
+                  <div style={{ backgroundColor: '#0B5394', color: '#ffffff', fontWeight: 'bold', fontSize: '11px', textAlign: 'center', padding: '3px 0' }}>
+                    Bank & Payment Details
+                  </div>
+                  <div style={{ padding: '5px 7px' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <tbody>
+                        <tr>
+                          <td style={{ verticalAlign: 'top', fontSize: '9.5px', lineHeight: '1.35', color: '#000000' }}>
+                            <div><span style={{ fontWeight: 'bold' }}>Bank:</span> North East Small Finance Bank</div>
+                            <div><span style={{ fontWeight: 'bold' }}>A/C Name:</span> YantraByte Solutions</div>
+                            <div><span style={{ fontWeight: 'bold' }}>A/C No:</span> 033311501023226</div>
+                            <div><span style={{ fontWeight: 'bold' }}>IFSC:</span> NESF0000333</div>
+                            <div><span style={{ fontWeight: 'bold' }}>UPI:</span> s0424237152@slc</div>
+                          </td>
+                          <td style={{ width: '50px', verticalAlign: 'middle', textAlign: 'right', paddingLeft: '4px' }}>
+                            <div style={{ background: '#ffffff', padding: '2px', display: 'inline-block', border: '1px solid #e2e8f0', borderRadius: '4px' }}>
+                              <QRCodeSVG 
+                                value={`upi://pay?pa=s0424237152@slc&pn=${encodeURIComponent('YantraByte Solutions')}&am=${balanceDue > 0 ? balanceDue : grandTotal}&cu=INR`} 
+                                size={46} 
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          {/* Full-width System Generated Document Notice Bar */}
+          <div style={{
+            textAlign: 'center',
+            padding: '4px 8px',
+            backgroundColor: '#F1F5F9',
+            border: '1.2px solid #0B5394',
+            borderRadius: '4px',
+            boxSizing: 'border-box'
+          }}>
+            <div style={{
+              fontSize: '10.5px',
+              fontWeight: '900',
+              color: '#000000',
+              letterSpacing: '0.5px',
+              textTransform: 'uppercase'
+            }}>
+              THIS IS A SYSTEM GENERATED DOCUMENT, NO SIGNATURE REQUIRED
+            </div>
+          </div>
+
+          {/* Bottom Top Hardware Brands Logo Banner */}
+          <HardwareBrandsBanner compact={true} />
+        </div>
       </div>
     </div>
   );
