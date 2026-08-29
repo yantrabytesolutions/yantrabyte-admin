@@ -2,6 +2,7 @@
 import { renderToString } from 'react-dom/server';
 import html2pdf from 'html2pdf.js';
 import { Invoice } from '../types';
+import { HardwareBrandsBanner } from './HardwareBrandsBanner';
 
 export const generateWarrantyCertificate = async (invoice: Invoice, businessProfile: any) => {
   if (!invoice.warranty_months || invoice.warranty_months <= 0) {
@@ -85,6 +86,8 @@ export const generateWarrantyCertificate = async (invoice: Invoice, businessProf
         <p>This certificate guarantees the products/services listed above against defects in material and workmanship under normal use during the warranty period.</p>
         <p>Physical damage, liquid damage, or unauthorized tampering voids this warranty.</p>
       </div>
+
+      <HardwareBrandsBanner compact={true} />
       
       {/* Watermark */}
       <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(-45deg)', fontSize: '120px', color: 'rgba(3, 105, 161, 0.05)', whiteSpace: 'nowrap', pointerEvents: 'none', fontWeight: 'bold' }}>

@@ -768,6 +768,33 @@ export default function AdminPanel() {
             </tr>
           </table>
         </div>
+
+        <!-- Hardware Brands Footer Banner -->
+        <div style="margin-top: 12px; border: 1px solid #0B5394; border-radius: 6px; overflow: hidden; background-color: #ffffff;">
+          <div style="background-color: #0B5394; color: #ffffff; font-size: 9px; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase; text-align: center; padding: 2.5px 6px;">
+            ★ MULTI-BRAND SALES & AUTHORIZED IT HARDWARE SERVICE SUPPORT ★
+          </div>
+          <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-around; padding: 5px 8px; background-color: #f8fafc; gap: 6px; font-family: Arial, sans-serif; font-size: 10.5px; font-weight: bold;">
+            <span style="color: #007DB8;">DELL</span>
+            <span style="color: #0096D6;">HP</span>
+            <span style="color: #ffffff; background: #E2231A; padding: 1px 4px; border-radius: 2px;">Lenovo</span>
+            <span style="color: #334155;">Apple</span>
+            <span style="color: #00539B;">ASUS</span>
+            <span style="color: #83B81A;">acer</span>
+            <span style="color: #0071C5; border: 1px solid #0071C5; padding: 0 3px; border-radius: 2px;">intel</span>
+            <span style="color: #ED1C24;">AMD</span>
+            <span style="color: #1428A0;">SAMSUNG</span>
+            <span style="color: #005B94;">WD</span>
+            <span style="color: #74BB14;">SEAGATE</span>
+            <span style="color: #1BA0D7;">CISCO</span>
+            <span style="color: #00A2E8;">tp-link</span>
+            <span style="color: #E60012;">HIKVISION</span>
+            <span style="color: #ffffff; background: #E31E24; padding: 1px 3px; border-radius: 2px;">CP PLUS</span>
+            <span style="color: #CC0000;">Canon</span>
+            <span style="color: #003399;">EPSON</span>
+            <span style="color: #2B2D42;">brother</span>
+          </div>
+        </div>
       </div>
       </div>
     `;

@@ -1,6 +1,7 @@
 import { forwardRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import type { ServiceTicket } from '../types';
+import { HardwareBrandsBanner } from './HardwareBrandsBanner';
 
 interface Props {
   ticket: Partial<ServiceTicket & {
@@ -290,6 +291,9 @@ export const ServiceTicketPdfTemplate = forwardRef<HTMLDivElement, Props>(({
             </tr>
           </tbody>
         </table>
+
+        {/* Bottom Top Hardware Brands Logo Banner */}
+        <HardwareBrandsBanner />
 
       </div>
     </div>

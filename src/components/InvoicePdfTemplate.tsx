@@ -1,6 +1,7 @@
 import { forwardRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import type { Invoice, InvoiceItem } from '../types';
+import { HardwareBrandsBanner } from './HardwareBrandsBanner';
 
 function numberToWords(num: number): string {
   num = Math.round(Number(num || 0));
@@ -272,7 +273,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
               })}
 
               {/* Padding rows to fill full A4 height without empty gap */}
-              {[...Array(Math.max(0, 10 - items.length))].map((_, idx) => (
+              {[...Array(Math.max(0, 8 - items.length))].map((_, idx) => (
                 <tr key={`empty-${idx}`} style={{ backgroundColor: 'transparent', height: '28px' }}>
                   <td style={{ borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '4px', color: 'transparent' }}>.</td>
                   <td style={{ borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '4px', color: 'transparent' }}>.</td>
@@ -424,6 +425,9 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
             </tr>
           </tbody>
         </table>
+
+        {/* Bottom Top Hardware Brands Logo Banner */}
+        <HardwareBrandsBanner />
 
       </div>
     </div>
