@@ -4,7 +4,7 @@ import {
   IndianRupee, ShieldCheck, ExternalLink, Wrench, 
   MessageCircle, Phone, Sparkles, ArrowRight, X, QrCode 
 } from 'lucide-react';
-import { QRCodeSVG } from 'qrcode.react';
+import { QrCodeSvg } from '../components/QrCodeSvg';
 import SEO from '../components/SEO';
 import { supabase } from '../lib/supabase';
 
@@ -560,7 +560,7 @@ export function CustomerHistory() {
             <p className="text-xs text-slate-400 mt-1">Scan QR code using any UPI app (GPay, PhonePe, Paytm)</p>
 
             <div className="bg-white p-4 rounded-2xl inline-block my-5 shadow-inner">
-              <QRCodeSVG
+              <QrCodeSvg
                 value={`upi://pay?pa=s0424237152@slc&pn=${encodeURIComponent('YantraByte Solutions')}&am=${payingInvoice.balance_due || payingInvoice.grand_total}&cu=INR`}
                 size={180}
               />

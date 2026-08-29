@@ -1,9 +1,8 @@
-import { forwardRef, useState, useEffect } from 'react';
-import QRCode from 'qrcode';
-import { QRCodeCanvas } from 'qrcode.react';
+import { forwardRef } from 'react';
 import type { Invoice, InvoiceItem } from '../types';
 import { HardwareBrandsBanner } from './HardwareBrandsBanner';
 import { YANTRABYTE_LOGO_BASE64, HARDWARE_WATERMARK_BASE64 } from '../assets/invoiceAssets';
+import { QrCodeSvg } from './QrCodeSvg';
 
 function numberToWords(num: number): string {
   num = Math.round(Number(num || 0));
@@ -94,19 +93,11 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
     isDue: true
   });
 
-  // Target 11 rows total so single/multi-item invoices fill the standard A4 height cleanly
   const targetTotalRows = 11;
   const fillerCount = Math.max(0, targetTotalRows - items.length);
 
-  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
-  const payableAmount = (balanceDue > 0 ? balanceDue : grandTotal).toFixed(2);
-  const upiUrl = `upi://pay?pa=s0424237152@slc&pn=${encodeURIComponent('YantraByte Solutions')}&am=${payableAmount}&cu=INR`;
-
-  useEffect(() => {
-    QRCode.toDataURL(upiUrl, { width: 180, margin: 1 })
-      .then((url: string) => setQrCodeDataUrl(url))
-      .catch((err: any) => console.error('Failed to generate invoice QR code:', err));
-  }, [upiUrl]);
+  const safePayable = Math.max(0, Number(balanceDue > 0 ? balanceDue : grandTotal) || 0).toFixed(2);
+  const upiUrl = `upi://pay?pa=s0424237152@slc&pn=${encodeURIComponent('YantraByte Solutions')}&am=${safePayable}&cu=INR`;
 
   return (
     <div 
@@ -414,19 +405,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                           </td>
                           <td style={{ width: '54px', verticalAlign: 'middle', textAlign: 'right', paddingLeft: '4px' }}>
                             <div style={{ background: '#ffffff', padding: '2px', display: 'inline-block', border: '1px solid #cbd5e1', borderRadius: '4px' }}>
-                              {qrCodeDataUrl ? (
-                                <img 
-                                  src={qrCodeDataUrl} 
-                                  alt="UPI QR Code" 
-                                  style={{ width: '48px', height: '48px', display: 'block' }} 
-                                />
-                              ) : (
-                                <QRCodeCanvas 
-                                  value={upiUrl} 
-                                  size={48} 
-                                  marginSize={1}
-                                />
-                              )}
+                              <QrCodeSvg value={upiUrl} size={48} />
                             </div>
                           </td>
                         </tr>

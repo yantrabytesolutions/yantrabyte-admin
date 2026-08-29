@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { supabase } from '../lib/supabase';
 import { AlertCircle, ClipboardCheck, Loader2, MapPin, Phone, Send, Wrench, Laptop, Monitor, Printer, Video, Wifi, Fingerprint, Server, Package, UploadCloud, Film, X, ChevronRight, ChevronLeft, CheckCircle2, Download } from 'lucide-react';
-import { QRCodeSVG } from 'qrcode.react';
+import { QrCodeSvg } from '../components/QrCodeSvg';
 import html2pdf from 'html2pdf.js';
 import { ServiceTicketPdfTemplate } from '../components/ServiceTicketPdfTemplate';
 
@@ -549,11 +549,10 @@ export default function ServiceRequest() {
                 <div className="mt-6 flex flex-col items-center">
                   <p className="text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider">Scan to Track</p>
                   <div className="p-2 bg-white rounded-lg border border-white/10 shadow-sm">
-                    <QRCodeSVG 
+                    <QrCodeSvg 
                       value={`https://yantrabyte.anantatechcare.com/track-ticket?t=${createdTicket}`} 
                       size={120} 
                       level="H" 
-                      includeMargin={false}
                     />
                   </div>
                 </div>

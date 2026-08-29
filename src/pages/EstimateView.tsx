@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { QRCodeSVG } from 'qrcode.react';
+import { QrCodeSvg } from '../components/QrCodeSvg';
 import { HardwareBrandsBanner } from '../components/HardwareBrandsBanner';
 
 interface InvoiceItem {
@@ -541,7 +541,7 @@ export default function EstimateView() {
               <div><strong>UPI:</strong> s0424237152@slc</div>
             </div>
             <div style={{ padding: '8px 20px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
-              <QRCodeSVG
+              <QrCodeSvg
                 value={`upi://pay?pa=s0424237152@slc&pn=${encodeURIComponent('YantraByte Solutions')}&am=${estimate.balance_due || estimate.grand_total}&cu=INR`}
                 size={72}
               />

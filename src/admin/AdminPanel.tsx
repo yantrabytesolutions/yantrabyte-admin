@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { renderToString } from 'react-dom/server';
-import { QRCodeSVG } from 'qrcode.react';
+import { getQrSvgString } from '../components/QrCodeSvg';
 import { supabase } from '../lib/supabase';
 import type {
   SiteSetting,
@@ -575,7 +574,7 @@ export default function AdminPanel() {
     
     // Generate QR code for tracking URL
     const trackUrl = `https://yantrabyte.anantatechcare.com/track?t=${ticketNo}`;
-    const qrCodeSvg = renderToString(<QRCodeSVG value={trackUrl} size={70} level="M" />);
+    const qrCodeSvg = getQrSvgString(trackUrl, 70, 'M');
     const dateStr = item.created_at ? new Date(String(item.created_at)).toLocaleDateString('en-GB') : new Date().toLocaleDateString('en-GB');
 
     const element = document.createElement('div');
@@ -865,7 +864,7 @@ export default function AdminPanel() {
 
   const printDeviceLabel = (item: Record<string, unknown>) => {
     const trackingUrl = `${window.location.origin}/track-ticket?t=${item.ticket_number}`;
-    const qrSvgString = renderToString(<QRCodeSVG value={trackingUrl} size={64} level="H" />);
+    const qrSvgString = getQrSvgString(trackingUrl, 64, 'H');
     
     const win = window.open('', '_blank', 'width=400,height=300');
     if (!win) {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { FileText, CheckCircle2, XCircle, ShieldCheck, AlertCircle } from 'lucide-react';
-import { QRCodeSVG } from 'qrcode.react';
+import { QrCodeSvg } from '../components/QrCodeSvg';
 import html2pdf from 'html2pdf.js';
 import type { Invoice } from '../types';
 import SEO from '../components/SEO';
@@ -150,7 +150,7 @@ export function QuotationApproval() {
                     </div>
                   </div>
                   <div className="w-48 h-48 bg-white rounded-xl p-2 flex-shrink-0 flex items-center justify-center relative overflow-hidden border-4 border-white/10 shadow-xl">
-                    <QRCodeSVG 
+                    <QrCodeSvg 
                       value={`upi://pay?pa=s0424237152@slc&pn=${encodeURIComponent('YantraByte Solutions')}&am=${(quotation.grand_total * 0.85).toFixed(2)}&cu=INR`} 
                       size={170} 
                     />

@@ -1,9 +1,8 @@
-import { forwardRef, useState, useEffect } from 'react';
-import QRCode from 'qrcode';
-import { QRCodeCanvas } from 'qrcode.react';
+import { forwardRef } from 'react';
 import type { ServiceTicket } from '../types';
 import { HardwareBrandsBanner } from './HardwareBrandsBanner';
 import { YANTRABYTE_LOGO_BASE64, HARDWARE_WATERMARK_BASE64 } from '../assets/invoiceAssets';
+import { QrCodeSvg } from './QrCodeSvg';
 
 interface Props {
   ticket: Partial<ServiceTicket & {
@@ -31,14 +30,6 @@ export const ServiceTicketPdfTemplate = forwardRef<HTMLDivElement, Props>(({
   const trackingUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/track-ticket?t=${ticketNo}`
     : `https://yantrabyte.anantatechcare.com/track-ticket?t=${ticketNo}`;
-
-  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
-
-  useEffect(() => {
-    QRCode.toDataURL(trackingUrl, { width: 180, margin: 1 })
-      .then((url: string) => setQrCodeDataUrl(url))
-      .catch((err: any) => console.error('Failed to generate ticket QR code:', err));
-  }, [trackingUrl]);
 
   return (
     <div 
@@ -295,19 +286,7 @@ export const ServiceTicketPdfTemplate = forwardRef<HTMLDivElement, Props>(({
                         </td>
                         <td style={{ width: '56px', verticalAlign: 'middle', textAlign: 'right', paddingLeft: '4px' }}>
                           <div style={{ background: '#ffffff', padding: '2px', display: 'inline-block', border: '1px solid #cbd5e1', borderRadius: '4px' }}>
-                            {qrCodeDataUrl ? (
-                              <img 
-                                src={qrCodeDataUrl} 
-                                alt="Track Ticket QR" 
-                                style={{ width: '52px', height: '52px', display: 'block' }} 
-                              />
-                            ) : (
-                              <QRCodeCanvas 
-                                value={trackingUrl} 
-                                size={52} 
-                                marginSize={1}
-                              />
-                            )}
+                            <QrCodeSvg value={trackingUrl} size={52} />
                           </div>
                         </td>
                       </tr>
