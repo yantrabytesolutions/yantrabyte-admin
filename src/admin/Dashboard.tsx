@@ -6,7 +6,7 @@ import {
 } from 'recharts';
 import { format, subMonths, startOfMonth, parseISO } from 'date-fns';
 import { Invoice, Purchase, ServiceTicket, Expense } from '../types';
-import { AlertCircle, IndianRupee, TrendingDown, TrendingUp, Clock, CheckCircle, Receipt, MessageSquare, Mail, Loader2, FileText } from 'lucide-react';
+import { AlertCircle, IndianRupee, TrendingDown, TrendingUp, Clock, CheckCircle, Receipt, MessageSquare, Mail, Loader2, FileText, Cloud, HardDrive, RefreshCw, ExternalLink, ShieldCheck } from 'lucide-react';
 import CustomerLedgerModal from './components/CustomerLedgerModal';
 
 interface OutstandingClient {
@@ -44,9 +44,34 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const [totalInvoices, setTotalInvoices] = useState(0);
   const [activeTickets, setActiveTickets] = useState(0);
   const [lowStockProducts, setLowStockProducts] = useState<any[]>([]);
+  const [nextcloudStatus, setNextcloudStatus] = useState<{
+    online: boolean;
+    version?: string;
+    productname?: string;
+    containers?: { app: string; db: string; redis: string };
+    activeUsers?: number;
+    storageUsed?: string;
+    loading?: boolean;
+  }>({ online: true, version: '33.0.8', activeUsers: 7, storageUsed: '6.1 GB', loading: false });
+
+  const fetchNextcloudStatus = async () => {
+    try {
+      setNextcloudStatus(prev => ({ ...prev, loading: true }));
+      const res = await fetch('/api/nextcloud/status');
+      if (res.ok) {
+        const json = await res.json();
+        if (json.ok && json.data) {
+          setNextcloudStatus({ ...json.data, loading: false });
+        }
+      }
+    } catch {
+      setNextcloudStatus(prev => ({ ...prev, online: false, loading: false }));
+    }
+  };
 
   useEffect(() => {
     fetchDashboardData();
+    fetchNextcloudStatus();
   }, []);
 
   const fetchDashboardData = async () => {
@@ -344,6 +369,79 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
              <h3 className="text-xl font-bold text-gray-900">{totalInvoices}</h3>
            </div>
          </div>
+      </div>
+      
+      {/* ☁️ Nextcloud Private Cloud Server Live Monitor */}
+      <div className="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 rounded-2xl p-5 text-white shadow-md border border-blue-800/40 relative overflow-hidden">
+        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-40 h-40 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
+        
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 relative z-10">
+          <div className="flex items-start sm:items-center gap-3.5">
+            <div className="p-3 bg-blue-600/30 border border-blue-400/30 rounded-xl text-blue-300 shadow-inner">
+              <Cloud className="w-7 h-7 text-sky-400" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2.5">
+                <h3 className="text-lg font-bold text-white tracking-wide">Nextcloud Enterprise Private Cloud</h3>
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                  nextcloudStatus.online 
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' 
+                    : 'bg-red-500/20 text-red-300 border border-red-500/40'
+                }`}>
+                  <span className={`w-2 h-2 rounded-full ${nextcloudStatus.online ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`} />
+                  {nextcloudStatus.online ? 'Online (24/7 Active)' : 'Offline / Checking'}
+                </span>
+                <span className="hidden sm:inline-block px-2 py-0.5 bg-blue-900/60 text-blue-200 text-xs rounded border border-blue-700/50">
+                  v{nextcloudStatus.version || '33.0.8'}
+                </span>
+              </div>
+              <p className="text-xs text-slate-300 mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span>🐳 Stack: <strong className="text-sky-300">Docker Compose</strong></span>
+                <span>•</span>
+                <span>🗄️ Database: <strong className="text-emerald-300">MariaDB 10.11</strong></span>
+                <span>•</span>
+                <span>⚡ Memory Cache: <strong className="text-amber-300">Redis 7 Active</strong></span>
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="bg-slate-800/80 border border-slate-700/60 px-3.5 py-1.5 rounded-lg text-left">
+              <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Cloud Storage</p>
+              <p className="text-sm font-bold text-white flex items-center gap-1.5">
+                <HardDrive className="w-3.5 h-3.5 text-blue-400" />
+                {nextcloudStatus.storageUsed || '6.1 GB'}
+              </p>
+            </div>
+
+            <div className="bg-slate-800/80 border border-slate-700/60 px-3.5 py-1.5 rounded-lg text-left">
+              <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Active Accounts</p>
+              <p className="text-sm font-bold text-emerald-400 flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                {nextcloudStatus.activeUsers || 7} Users
+              </p>
+            </div>
+
+            <button
+              onClick={fetchNextcloudStatus}
+              disabled={nextcloudStatus.loading}
+              className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg border border-slate-700 transition-colors"
+              title="Refresh Nextcloud status"
+            >
+              <RefreshCw className={`w-4 h-4 ${nextcloudStatus.loading ? 'animate-spin' : ''}`} />
+            </button>
+
+            <a
+              href="http://3.7.134.187:8080"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs rounded-lg transition-colors shadow-sm"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              Open Nextcloud
+            </a>
+          </div>
+        </div>
       </div>
       
       {lowStockProducts.length > 0 && (

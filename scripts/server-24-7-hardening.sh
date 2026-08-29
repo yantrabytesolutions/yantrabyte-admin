@@ -49,17 +49,18 @@ echo "=== 4. Creating 24/7 Self-Healing Watchdog Script ==="
 mkdir -p /var/www/yantrabyte/scripts
 cat <<'EOF' > /var/www/yantrabyte/scripts/watchdog.sh
 #!/bin/bash
-# 24/7 Auto-Healing Health Watchdog for Nextcloud, Nginx & Yantrabyte API
+# 24/7 Auto-Healing Health Watchdog for Nextcloud, Nginx, Disk & Yantrabyte API
 
-# 1. Check Nginx
+# 1. Check Nginx Web Server
 if ! systemctl is-active --quiet nginx; then
     echo "$(date) [WATCHDOG] Nginx was down! Restarting..." >> /var/log/watchdog.log
     systemctl restart nginx
 fi
 
-# 2. Check Nextcloud Containers
-if ! docker ps | grep -q nextcloud_app; then
-    echo "$(date) [WATCHDOG] Nextcloud was down! Restarting..." >> /var/log/watchdog.log
+# 2. Check Nextcloud Docker Stack & HTTP Health
+NC_HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 4 http://127.0.0.1:8080/status.php || echo "000")
+if [ "$NC_HTTP_STATUS" != "200" ] || ! docker ps | grep -q nextcloud_app || ! docker ps | grep -q nextcloud_db; then
+    echo "$(date) [WATCHDOG] Nextcloud degraded (HTTP: $NC_HTTP_STATUS). Auto-restarting stack..." >> /var/log/watchdog.log
     cd /home/ubuntu/nextcloud && docker compose up -d
 fi
 
@@ -74,6 +75,13 @@ MEM_USED_PCT=$(free | awk '/Mem:/ {printf("%.0f", $3/$2 * 100)}')
 if [ "$MEM_USED_PCT" -gt 92 ]; then
     echo "$(date) [WATCHDOG] High RAM ($MEM_USED_PCT%). Flushing page cache..." >> /var/log/watchdog.log
     sync; echo 3 > /proc/sys/vm/drop_caches
+fi
+
+# 5. Check Disk Usage & Auto-Heal if disk exceeds 80%
+DISK_USED_PCT=$(df / | awk 'NR==2 {sub("%", "", $5); print $5}')
+if [ "$DISK_USED_PCT" -gt 80 ]; then
+    echo "$(date) [WATCHDOG] High Disk Usage ($DISK_USED_PCT%). Triggering auto disk cleanup..." >> /var/log/watchdog.log
+    /var/www/yantrabyte/scripts/auto-disk-cleanup.sh >> /var/log/watchdog.log 2>&1
 fi
 EOF
 chmod +x /var/www/yantrabyte/scripts/watchdog.sh
