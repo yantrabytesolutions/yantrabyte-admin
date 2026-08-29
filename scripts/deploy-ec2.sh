@@ -144,11 +144,12 @@ else
 fi
 
 # --- PRUNING OLD RELEASES ---
-echo "🧹 Pruning old release folders (Keeping last 3)..."
-# List directory contents sorted by time (oldest first), filter to release directories, and delete all but the last 3.
+echo "🧹 Pruning old release folders (Keeping last 2)..."
 (
     cd "$RELEASES_DIR"
-    ls -dt release_* 2>/dev/null | tail -n +4 | xargs -I {} sudo rm -rf {}
-)
+    ls -dt release_* 2>/dev/null | tail -n +3 | xargs -I {} sudo rm -rf {}
+) || true
+
+sudo rm -rf /root/.npm/_cacache /root/.cache 2>/dev/null || true
 
 echo "=== 🎉 Deployment Completed Successfully ==="
