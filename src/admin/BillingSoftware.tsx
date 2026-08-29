@@ -627,7 +627,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       let pdfBase64 = '';
       const element = await preparePdfElement(inv.invoice_no);
       if (element) {
-        const opt = getPdfOptions(inv.invoice_no);
+        const opt = getPdfOptions(inv.invoice_no, inv.customer_name, inv.doc_type);
         const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob') as Blob;
         pdfBase64 = await blobToBase64(pdfBlob);
       }
@@ -1054,7 +1054,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         }
         const element = await preparePdfElement(payload.invoice_no);
         if (element) {
-          const opt = getPdfOptions(payload.invoice_no, payload.customer_name);
+          const opt = getPdfOptions(payload.invoice_no, payload.customer_name, payload.doc_type);
           try {
             pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob') as Blob;
             pdfUrl = await uploadPdfToSupabase(pdfBlob, payload.invoice_no);
@@ -1213,18 +1213,20 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     }
   };
 
-  const formatInvoiceFilename = (invoiceNumber: string, customerName?: string) => {
+  const formatInvoiceFilename = (invoiceNumber: string, customerName?: string, docType?: string) => {
     const cleanInv = (invoiceNumber || 'DRAFT').replace(/[^\w-]/g, '_');
     const cleanName = (customerName || '')
       .trim()
       .replace(/[^\w\s-]/g, '')
       .replace(/\s+/g, '_');
-    return cleanName ? `${cleanInv}_${cleanName}.pdf` : `${cleanInv}.pdf`;
+    const isQuote = docType === 'Quotation' || docType === 'Estimate' || cleanInv.startsWith('YBQ');
+    const prefix = isQuote ? 'Quotation' : 'Invoice';
+    return cleanName ? `${prefix}_${cleanInv}_${cleanName}.pdf` : `${prefix}_${cleanInv}.pdf`;
   };
 
-  const getPdfOptions = (invoiceNumber: string, customerName?: string) => ({
+  const getPdfOptions = (invoiceNumber: string, customerName?: string, docType?: string) => ({
       margin: 0,
-      filename: formatInvoiceFilename(invoiceNumber, customerName),
+      filename: formatInvoiceFilename(invoiceNumber, customerName, docType),
       image: { type: 'jpeg' as const, quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, windowWidth: 794, scrollY: 0, x: 0, y: 0 },
       jsPDF: { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const }
@@ -1278,7 +1280,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         return;
       }
       
-      const opt = getPdfOptions(inv.invoice_no, inv.customer_name);
+      const opt = getPdfOptions(inv.invoice_no, inv.customer_name, inv.doc_type);
       try {
         const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
         const url = URL.createObjectURL(pdfBlob);
@@ -1332,7 +1334,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         showToast(`Could not render ${inv.invoice_no}`, 'error');
         return;
       }
-      const opt = getPdfOptions(inv.invoice_no, inv.customer_name);
+      const opt = getPdfOptions(inv.invoice_no, inv.customer_name, inv.doc_type);
       const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob') as Blob;
       
       const res = await uploadInvoiceToDrive(pdfBlob, inv.invoice_no, inv.date, (inv.doc_type as any) || 'INVOICE');
@@ -1372,7 +1374,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         try {
           const element = await preparePdfElement(inv.invoice_no);
           if (element) {
-            const opt = getPdfOptions(inv.invoice_no, inv.customer_name);
+            const opt = getPdfOptions(inv.invoice_no, inv.customer_name, inv.doc_type);
             const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob') as Blob;
             await uploadInvoiceToDrive(pdfBlob, inv.invoice_no, inv.date, (inv.doc_type as any) || 'INVOICE');
             successCount++;
@@ -1420,7 +1422,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     try {
       const element = document.getElementById('invoice-preview');
       if (element) {
-        const opt = getPdfOptions(inv.invoice_no);
+        const opt = getPdfOptions(inv.invoice_no, inv.customer_name, inv.doc_type);
         const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob') as Blob;
         pdfBase64 = await blobToBase64(pdfBlob);
       }
@@ -2459,7 +2461,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       ) : null}
 
       {/* --- HIDDEN PRINT TEMPLATE --- */}
-      <div style={{ position: 'absolute', top: 0, left: 0, width: '794px', opacity: 0, pointerEvents: 'none', zIndex: -1000 }}>
+      <div style={{ position: 'fixed', left: '-9999px', top: 0, width: '794px', pointerEvents: 'none', zIndex: -1000 }}>
         <InvoicePdfTemplate
           ref={printRef}
           invoice={{

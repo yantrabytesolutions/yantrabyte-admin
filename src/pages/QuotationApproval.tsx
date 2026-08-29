@@ -65,9 +65,12 @@ export function QuotationApproval() {
     if (!quotation) return;
     const element = document.getElementById('quotation-content');
     if (!element) return;
+    const cleanInv = (quotation.invoice_no || 'Quotation').replace(/[^\w-]/g, '_');
+    const cleanName = (quotation.customer_name || '').trim().replace(/[^\w\s-]/g, '').replace(/\s+/g, '_');
+    const filename = cleanName ? `Quotation_${cleanInv}_${cleanName}.pdf` : `Quotation_${cleanInv}.pdf`;
     const opt = {
       margin: 0.5,
-      filename: `${quotation.invoice_no}.pdf`,
+      filename: filename,
       image: { type: 'jpeg' as const, quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' as const }

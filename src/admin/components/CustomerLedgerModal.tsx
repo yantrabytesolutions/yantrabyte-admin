@@ -146,7 +146,9 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
         .trim()
         .replace(/[^\w\s-]/g, '')
         .replace(/\s+/g, '_');
-      const filename = cleanName ? `${cleanInv}_${cleanName}.pdf` : `${cleanInv}.pdf`;
+      const isQuote = inv.doc_type === 'Quotation' || inv.doc_type === 'Estimate' || cleanInv.startsWith('YBQ');
+      const prefix = isQuote ? 'Quotation' : 'Invoice';
+      const filename = cleanName ? `${prefix}_${cleanInv}_${cleanName}.pdf` : `${prefix}_${cleanInv}.pdf`;
 
       const opt = {
         margin: 0,

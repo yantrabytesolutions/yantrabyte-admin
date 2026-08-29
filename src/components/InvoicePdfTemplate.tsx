@@ -47,7 +47,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
   quoteAdvancePercent = 85
 }, ref) => {
   const items: InvoiceItem[] = Array.isArray(invoice.items) ? invoice.items : [];
-  const isQuotation = invoice.doc_type === 'Quotation';
+  const isQuotation = invoice.doc_type === 'Quotation' || invoice.doc_type === 'Estimate' || (Boolean(invoice.invoice_no) && String(invoice.invoice_no).startsWith('YBQ'));
   const isCancelled = invoice.doc_type === 'Cancelled';
   const formattedDate = invoice.date ? (
     invoice.date.includes('-') ? invoice.date.split('-').reverse().join('/') : invoice.date
@@ -106,7 +106,30 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         overflow: 'hidden' 
       }}
     >
-      {/* Watermark */}
+      {/* Centered Brand Watermark Emblem */}
+      <div style={{
+        position: 'absolute',
+        top: '52%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '460px',
+        height: '460px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        pointerEvents: 'none',
+        zIndex: 5,
+        opacity: 0.10
+      }}>
+        <img 
+          src="/logo6.png" 
+          alt="Watermark" 
+          style={{ width: '420px', height: 'auto', objectFit: 'contain', display: 'block' }} 
+          crossOrigin="anonymous" 
+        />
+      </div>
+
+      {/* Subtle Background Circuit Pattern */}
       <div style={{
         position: 'absolute',
         top: 0, 
@@ -118,8 +141,8 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
         pointerEvents: 'none',
-        zIndex: 50,
-        opacity: 0.16
+        zIndex: 4,
+        opacity: 0.05
       }} />
 
       {/* Cancelled Stamp */}
@@ -151,7 +174,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         border: '2px solid #0B5394',
         borderRadius: '12px',
         padding: '24px',
-        backgroundColor: '#ffffff',
+        backgroundColor: 'transparent',
         boxSizing: 'border-box'
       }}>
         {/* Header */}
