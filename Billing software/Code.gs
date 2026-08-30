@@ -1,9 +1,5 @@
 const APP = {
-  CUSTOMER_SHEET: 'Form Responses 1',
-  INVOICE_SHEET:  'Invoices',
-  PURCHASE_SHEET: 'Purchases',
   PRINT_SHEET:    'Print_Invoice',
-  PDF_FOLDER_ID:  '1rdQton10P87ZR7RlUAdgtB1QVm8K2qg_',
   LOGO_FILE_ID:   '16R4HC_X6wlhVuIyb4aAgN6sFaseUMzLf',
   TIMEZONE:       Session.getScriptTimeZone() || 'Asia/Kolkata'
 };
@@ -18,7 +14,6 @@ function ping() {
   return 'Server OK';
 }
 
-// Serves logo from Google Drive as base64 data URI for the HTML frontend
 function getLogoBase64() {
   try {
     var file = DriveApp.getFileById(APP.LOGO_FILE_ID);
@@ -33,73 +28,32 @@ function getLogoBase64() {
 }
 
 function getCustomers() {
-  const ss = SpreadsheetApp.openById('17nAWzE_OZ6b0ANksVsAn08aqTcMGncbMqgKJAdjdejk');
-  const sh = ss.getSheetByName(APP.CUSTOMER_SHEET);
-  if (!sh) throw new Error('"Form Responses 1" sheet not found.');
-
-  const values = sh.getDataRange().getValues();
-  if (values.length < 2) return [];
-
-  const headers = values[0].map(h => String(h).trim());
-
-  function findCol(keys) {
-    for (const k of keys) {
-      const idx = headers.findIndex(h => h.toLowerCase().includes(k.toLowerCase()));
-      if (idx !== -1) return idx;
+  const data = supabaseGet('invoices', 'select=customerName,phone,email,address');
+  const map = {};
+  data.forEach(function(row) {
+    if (row.customerName && !map[row.customerName]) {
+      map[row.customerName] = row;
     }
-    return -1;
+  });
+  const result = [];
+  for (var k in map) {
+    result.push(map[k]);
   }
-
-  const nameIdx    = findCol(['customer name', 'name', 'full name', 'your name']);
-  const phoneIdx   = findCol(['phone', 'mobile', 'contact', 'number']);
-  const emailIdx   = findCol(['email', 'e-mail', 'mail']);
-  const addressIdx = findCol(['address', 'location', 'area', 'city']);
-
-  return values.slice(1)
-    .filter(r => r.join('').trim() !== '')
-    .map(r => {
-      function getCell(idx) {
-        if (idx === -1) return '';
-        const v = r[idx];
-        if (v === null || v === undefined) return '';
-        if (typeof v === 'number') return String(Math.round(v));
-        return String(v).trim();
-      }
-      return {
-        customerName: getCell(nameIdx),
-        phone:        getCell(phoneIdx),
-        email:        getCell(emailIdx),
-        address:      getCell(addressIdx)
-      };
-    })
-    .filter(c => c.customerName !== '');
+  return result;
 }
 
-function getOrCreateInvoiceSheet_() {
-  const ss = SpreadsheetApp.openById('17nAWzE_OZ6b0ANksVsAn08aqTcMGncbMqgKJAdjdejk');
-  let sh = ss.getSheetByName(APP.INVOICE_SHEET);
-  if (!sh) sh = ss.insertSheet(APP.INVOICE_SHEET);
-
-  if (sh.getLastRow() === 0) {
-    sh.appendRow([
-      'Date', 'Invoice No', 'Customer Name', 'Phone', 'Email',
-      'Address', 'Items', 'Subtotal', 'Discount', 'Tax',
-      'Round Off', 'Grand Total', 'Advance Paid', 'Balance Due', 'PDF URL'
-    ]);
-  }
-  return sh;
-}
-
-// FIX: Invoice number generated ONCE per transaction using lock to prevent race conditions
 function generateInvoiceNo_() {
-  const sh      = getOrCreateInvoiceSheet_();
-  const seq     = Math.max(1, sh.getLastRow());
+  const data = supabaseGet('invoices', 'select=id');
+  const seq = (data.length || 0) + 1;
   const datePart = Utilities.formatDate(new Date(), APP.TIMEZONE, 'yyyyMMdd');
   return 'YBS-' + datePart + '-' + ('000' + seq).slice(-3);
 }
 
-function getTargetFolder_() {
-  return DriveApp.getFolderById(APP.PDF_FOLDER_ID);
+function generatePurchaseNo_() {
+  const data = supabaseGet('purchases', 'select=id');
+  const seq = (data.length || 0) + 1;
+  const datePart = Utilities.formatDate(new Date(), APP.TIMEZONE, 'yyyyMMdd');
+  return 'PUR-' + datePart + '-' + ('000' + seq).slice(-3);
 }
 
 function calculateTotals_(data) {
@@ -115,74 +69,38 @@ function calculateTotals_(data) {
   return { subtotal, discount, tax, roundOff, grandTotal, advance, balance };
 }
 
-// =============================================
-// HELPER: Find invoice row by invoice number
-// =============================================
-function findInvoiceRow_(sh, invoiceNo) {
-  var values = sh.getDataRange().getValues();
-  for (var i = 1; i < values.length; i++) {
-    if (String(values[i][1]).trim() === String(invoiceNo).trim()) {
-      return i + 1; // 1-indexed row number
-    }
-  }
-  return -1;
-}
-
-// =============================================
-// Build row data array (shared by save/update)
-// =============================================
-function buildRowData_(date, invoiceNo, data, totals, pdfUrl) {
-  var itemsText = (data.items || []).map(function(it, i) {
-    return (i+1) + '. ' + it.description + ' | Qty: ' + it.qty + ' | Rate: ' + it.rate + ' | Amount: ' + (Number(it.qty)*Number(it.rate));
-  }).join('\n');
-
-  return [
-    date, invoiceNo,
-    String(data.customerName || ''),
-    String(data.phone        || ''),
-    String(data.email        || ''),
-    String(data.address      || ''),
-    itemsText,
-    totals.subtotal, totals.discount, totals.tax,
-    totals.roundOff, totals.grandTotal, totals.advance, totals.balance,
-    pdfUrl || ''
-  ];
-}
-
-// =============================================
-// LIST all saved invoices (for the Edit dropdown)
-// =============================================
 function getSavedInvoices() {
-  var sh = getOrCreateInvoiceSheet_();
-  var values = sh.getDataRange().getValues();
-  if (values.length < 2) return [];
-
-  var result = [];
-  for (var i = 1; i < values.length; i++) {
-    var r = values[i];
-    if (!String(r[1]).trim()) continue;
-    result.push({
-      date:         String(r[0]  || ''),
-      invoiceNo:    String(r[1]  || ''),
-      customerName: String(r[2]  || ''),
-      grandTotal:   Number(r[11] || 0)
-    });
-  }
-  return result.reverse(); // newest first
+  const data = supabaseGet('invoices', 'select=*&order=id.desc');
+  return data.map(function(row) {
+    return {
+      date: row.date || '',
+      invoiceNo: row.invoiceNo || '',
+      customerName: row.customerName || '',
+      grandTotal: Number(row.grandTotal || 0)
+    };
+  });
 }
 
-// =============================================
-// LOAD a single invoice for editing
-// =============================================
+function getSavedPurchases() {
+  const data = supabaseGet('purchases', 'select=*&order=id.desc');
+  return data.map(function(row) {
+    return {
+      date: row.date || '',
+      purchaseNo: row.purchaseNo || '',
+      supplierName: row.supplierName || '',
+      category: row.category || '',
+      grandTotal: Number(row.grandTotal || 0),
+      paymentMode: row.paymentMode || ''
+    };
+  });
+}
+
 function loadInvoice(invoiceNo) {
-  var sh = getOrCreateInvoiceSheet_();
-  var rowIdx = findInvoiceRow_(sh, invoiceNo);
-  if (rowIdx === -1) throw new Error('Invoice "' + invoiceNo + '" not found.');
-
-  var r = sh.getRange(rowIdx, 1, 1, 15).getValues()[0];
-
-  // Parse items text back into array
-  var itemsText = String(r[6] || '');
+  const data = supabaseGet('invoices', 'invoiceNo=eq.' + encodeURIComponent(invoiceNo));
+  if (!data || data.length === 0) throw new Error('Invoice "' + invoiceNo + '" not found.');
+  
+  var r = data[0];
+  var itemsText = String(r.itemsText || '');
   var parsedItems = [];
   if (itemsText.trim()) {
     var lines = itemsText.split('\n');
@@ -206,54 +124,127 @@ function loadInvoice(invoiceNo) {
   }
 
   return {
-    invoiceNo:    String(r[1]  || ''),
-    date:         String(r[0]  || ''),
-    customerName: String(r[2]  || ''),
-    phone:        String(r[3]  || ''),
-    email:        String(r[4]  || ''),
-    address:      String(r[5]  || ''),
+    invoiceNo:    String(r.invoiceNo  || ''),
+    date:         String(r.date  || ''),
+    customerName: String(r.customerName  || ''),
+    phone:        String(r.phone  || ''),
+    email:        String(r.email  || ''),
+    address:      String(r.address  || ''),
     items:        parsedItems,
-    discount:     Number(r[8]  || 0),
-    tax:          Number(r[9]  || 0),
-    advancePaid:  Number(r[12] || 0),
-    subtotal:     Number(r[7]  || 0),
-    grandTotal:   Number(r[11] || 0),
-    balance:      Number(r[13] || 0),
-    pdfUrl:       String(r[14] || '')
+    discount:     Number(r.discount  || 0),
+    tax:          Number(r.tax  || 0),
+    advancePaid:  Number(r.advancePaid || 0),
+    subtotal:     Number(r.subtotal  || 0),
+    grandTotal:   Number(r.grandTotal || 0),
+    balance:      Number(r.balance || 0),
+    pdfUrl:       String(r.pdfUrl || '')
   };
 }
 
-// =============================================
-// SAVE invoice (new or update existing)
-// =============================================
+function loadPurchase(purchaseNo) {
+  const data = supabaseGet('purchases', 'purchaseNo=eq.' + encodeURIComponent(purchaseNo));
+  if (!data || data.length === 0) throw new Error('Purchase "' + purchaseNo + '" not found.');
+  
+  var r = data[0];
+  var itemsText = String(r.itemsText || '');
+  var parsedItems = [];
+  if (itemsText.trim()) {
+    var lines = itemsText.split('\n');
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i].trim();
+      if (!line) continue;
+      var stripped = line.replace(/^\d+\.\s*/, '');
+      var parts = stripped.split('|');
+      var desc = (parts[0] || '').trim();
+      var qty = 1, rate = 0;
+      for (var p = 1; p < parts.length; p++) {
+        var seg = parts[p].trim();
+        if (seg.toLowerCase().indexOf('qty:') === 0) {
+          qty = Number(seg.replace(/qty:\s*/i, '').trim()) || 1;
+        } else if (seg.toLowerCase().indexOf('rate:') === 0) {
+          rate = Number(seg.replace(/rate:\s*/i, '').trim()) || 0;
+        }
+      }
+      if (desc) parsedItems.push({ description: desc, qty: qty, rate: rate });
+    }
+  }
+
+  return {
+    purchaseNo:       String(r.purchaseNo  || ''),
+    date:             String(r.date  || ''),
+    supplierName:     String(r.supplierName  || ''),
+    supplierInvoiceNo:String(r.supplierInvoiceNo  || ''),
+    phone:            String(r.phone  || ''),
+    category:         String(r.category  || ''),
+    items:            parsedItems,
+    discount:         Number(r.discount  || 0),
+    tax:              Number(r.tax  || 0),
+    advancePaid:      Number(r.advancePaid || 0),
+    subtotal:         Number(r.subtotal  || 0),
+    grandTotal:       Number(r.grandTotal || 0),
+    balance:          Number(r.balance || 0),
+    paymentMode:      String(r.paymentMode || 'Cash'),
+    notes:            String(r.notes || '')
+  };
+}
+
 function saveInvoice(data) {
   const lock = LockService.getScriptLock();
-  lock.waitLock(30000); // Wait up to 30 seconds for other processes to finish
+  lock.waitLock(30000);
   try {
-    const sh = getOrCreateInvoiceSheet_();
     if (!data.items || !data.items.length) throw new Error('Add at least one item');
 
     const totals = calculateTotals_(data);
     var invoiceNo, date;
 
+    var itemsText = (data.items || []).map(function(it, i) {
+      return (i+1) + '. ' + it.description + ' | Qty: ' + it.qty + ' | Rate: ' + it.rate + ' | Amount: ' + (Number(it.qty)*Number(it.rate));
+    }).join('\n');
+
     if (data.editInvoiceNo) {
       invoiceNo = data.editInvoiceNo;
-      var rowIdx = findInvoiceRow_(sh, invoiceNo);
-      if (rowIdx === -1) throw new Error('Invoice "' + invoiceNo + '" not found for update.');
-      var rawDate = sh.getRange(rowIdx, 1).getValue();
-      if (Object.prototype.toString.call(rawDate) === '[object Date]') {
-        date = Utilities.formatDate(rawDate, APP.TIMEZONE, 'dd/MM/yyyy');
-      } else {
-        date = String(rawDate || '');
-      }
-      var existingPdfUrl = String(sh.getRange(rowIdx, 15).getValue() || '');
-      var rowData = buildRowData_(date, invoiceNo, data, totals, existingPdfUrl);
-      sh.getRange(rowIdx, 1, 1, rowData.length).setValues([rowData]);
+      const existing = supabaseGet('invoices', 'invoiceNo=eq.' + encodeURIComponent(invoiceNo));
+      if (!existing || existing.length === 0) throw new Error('Invoice not found');
+      date = existing[0].date;
+      var existingPdfUrl = existing[0].pdfUrl || '';
+      
+      supabasePatch('invoices', {
+        customerName: data.customerName || '',
+        phone: data.phone || '',
+        email: data.email || '',
+        address: data.address || '',
+        itemsText: itemsText,
+        subtotal: totals.subtotal,
+        discount: totals.discount,
+        tax: totals.tax,
+        roundOff: totals.roundOff,
+        grandTotal: totals.grandTotal,
+        advancePaid: totals.advance,
+        balance: totals.balance,
+        pdfUrl: existingPdfUrl
+      }, 'invoiceNo=eq.' + encodeURIComponent(invoiceNo));
+      
     } else {
       invoiceNo = generateInvoiceNo_();
       date = Utilities.formatDate(new Date(), APP.TIMEZONE, 'dd/MM/yyyy');
-      var rowData = buildRowData_(date, invoiceNo, data, totals, '');
-      sh.appendRow(rowData);
+      
+      supabasePost('invoices', {
+        date: date,
+        invoiceNo: invoiceNo,
+        customerName: data.customerName || '',
+        phone: data.phone || '',
+        email: data.email || '',
+        address: data.address || '',
+        itemsText: itemsText,
+        subtotal: totals.subtotal,
+        discount: totals.discount,
+        tax: totals.tax,
+        roundOff: totals.roundOff,
+        grandTotal: totals.grandTotal,
+        advancePaid: totals.advance,
+        balance: totals.balance,
+        pdfUrl: ''
+      });
     }
 
     return {
@@ -268,15 +259,88 @@ function saveInvoice(data) {
   }
 }
 
-// =============================================
-// GENERATE PDF (new or re-generate for existing)
-// =============================================
-function generatePdf(data) {
+function savePurchase(data) {
   const lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
-    const ss       = SpreadsheetApp.openById('17nAWzE_OZ6b0ANksVsAn08aqTcMGncbMqgKJAdjdejk');
-    const logSheet = getOrCreateInvoiceSheet_();
+    if (!data.items || !data.items.length) throw new Error('Add at least one item');
+
+    const totals = calculateTotals_(data);
+    var purchaseNo, date;
+
+    var itemsText = (data.items || []).map(function(it, i) {
+      return (i+1) + '. ' + it.description + ' | Qty: ' + it.qty + ' | Rate: ' + it.rate + ' | Amount: ' + (Number(it.qty)*Number(it.rate));
+    }).join('\n');
+
+    if (data.editPurchaseNo) {
+      purchaseNo = data.editPurchaseNo;
+      const existing = supabaseGet('purchases', 'purchaseNo=eq.' + encodeURIComponent(purchaseNo));
+      if (!existing || existing.length === 0) throw new Error('Purchase not found');
+      date = existing[0].date;
+      
+      supabasePatch('purchases', {
+        supplierName: data.supplierName || '',
+        supplierInvoiceNo: data.supplierInvoiceNo || '',
+        phone: data.phone || '',
+        category: data.category || 'General',
+        itemsText: itemsText,
+        subtotal: totals.subtotal,
+        discount: totals.discount,
+        tax: totals.tax,
+        grandTotal: totals.grandTotal,
+        advancePaid: totals.advance,
+        balance: totals.balance,
+        paymentMode: data.paymentMode || 'Cash',
+        notes: data.notes || ''
+      }, 'purchaseNo=eq.' + encodeURIComponent(purchaseNo));
+      
+    } else {
+      purchaseNo = generatePurchaseNo_();
+      date = Utilities.formatDate(new Date(), APP.TIMEZONE, 'dd/MM/yyyy');
+      
+      supabasePost('purchases', {
+        date: date,
+        purchaseNo: purchaseNo,
+        supplierName: data.supplierName || '',
+        supplierInvoiceNo: data.supplierInvoiceNo || '',
+        phone: data.phone || '',
+        category: data.category || 'General',
+        itemsText: itemsText,
+        subtotal: totals.subtotal,
+        discount: totals.discount,
+        tax: totals.tax,
+        grandTotal: totals.grandTotal,
+        advancePaid: totals.advance,
+        balance: totals.balance,
+        paymentMode: data.paymentMode || 'Cash',
+        notes: data.notes || ''
+      });
+    }
+
+    return {
+      ok:          true,
+      purchaseNo:  purchaseNo,
+      subtotal:    totals.subtotal,
+      grandTotal:  totals.grandTotal,
+      balance:     totals.balance,
+      isUpdate:    !!data.editPurchaseNo
+    };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// ============================================================
+// ==================== INVOICE PDF ===========================
+// ============================================================
+
+function generatePdf(data) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  
+  // Use the exact original template spreadsheet so we keep the watermarks and brands!
+  const tempSs = SpreadsheetApp.openById('17nAWzE_OZ6b0ANksVsAn08aqTcMGncbMqgKJAdjdejk');
+  try {
     if (!data.items || !data.items.length) throw new Error('Add at least one item');
 
     const totals       = calculateTotals_(data);
@@ -289,21 +353,16 @@ function generatePdf(data) {
 
     if (data.editInvoiceNo) {
       invoiceNo = data.editInvoiceNo;
-      var rowIdx = findInvoiceRow_(logSheet, invoiceNo);
-      if (rowIdx === -1) throw new Error('Invoice "' + invoiceNo + '" not found for update.');
-      var rawDate = logSheet.getRange(rowIdx, 1).getValue();
-      if (Object.prototype.toString.call(rawDate) === '[object Date]') {
-        date = Utilities.formatDate(rawDate, APP.TIMEZONE, 'dd/MM/yyyy');
-      } else {
-        date = String(rawDate || '');
-      }
+      const existing = supabaseGet('invoices', 'invoiceNo=eq.' + encodeURIComponent(invoiceNo));
+      if (!existing || existing.length === 0) throw new Error('Invoice not found');
+      date = existing[0].date;
       isUpdate = true;
     } else {
       invoiceNo = generateInvoiceNo_();
       date = Utilities.formatDate(new Date(), APP.TIMEZONE, 'dd/MM/yyyy');
     }
 
-    createPrintableInvoiceSheet_(ss, {
+    createPrintableInvoiceSheet_(tempSs, {
       docType:      data.docType || 'Invoice',
       invoiceNo:    invoiceNo,
       date:         date,
@@ -324,221 +383,70 @@ function generatePdf(data) {
     SpreadsheetApp.flush();
     Utilities.sleep(3000);
 
-    const printSheet = ss.getSheetByName(APP.PRINT_SHEET);
-    var pdfFile = exportCurrentSheetToPdf_(ss.getId(), printSheet.getSheetId(), invoiceNo);
+    const printSheet = tempSs.getSheetByName(APP.PRINT_SHEET);
+    var pdfBlob = getPdfBlob_(tempSs.getId(), printSheet.getSheetId());
+    
+    // Upload PDF to Supabase Storage
+    const bucket = 'invoices'; // Supabase storage bucket name
+    const path = invoiceNo + '.pdf';
+    var pdfUrl = supabaseUploadStorage(bucket, path, pdfBlob);
 
-    var rowData = buildRowData_(date, invoiceNo,
-      { customerName: cleanName, phone: cleanPhone, email: cleanEmail, address: cleanAddress, items: data.items },
-      totals, pdfFile.getUrl());
+    // Save to database
+    var itemsText = (data.items || []).map(function(it, i) {
+      return (i+1) + '. ' + it.description + ' | Qty: ' + it.qty + ' | Rate: ' + it.rate + ' | Amount: ' + (Number(it.qty)*Number(it.rate));
+    }).join('\n');
 
     if (isUpdate) {
-      var rowIdx = findInvoiceRow_(logSheet, invoiceNo);
-      logSheet.getRange(rowIdx, 1, 1, rowData.length).setValues([rowData]);
+      supabasePatch('invoices', {
+        customerName: cleanName,
+        phone: cleanPhone,
+        email: cleanEmail,
+        address: cleanAddress,
+        itemsText: itemsText,
+        subtotal: totals.subtotal,
+        discount: totals.discount,
+        tax: totals.tax,
+        roundOff: totals.roundOff,
+        grandTotal: totals.grandTotal,
+        advancePaid: totals.advance,
+        balance: totals.balance,
+        pdfUrl: pdfUrl
+      }, 'invoiceNo=eq.' + encodeURIComponent(invoiceNo));
     } else {
-      logSheet.appendRow(rowData);
+      supabasePost('invoices', {
+        date: date,
+        invoiceNo: invoiceNo,
+        customerName: cleanName,
+        phone: cleanPhone,
+        email: cleanEmail,
+        address: cleanAddress,
+        itemsText: itemsText,
+        subtotal: totals.subtotal,
+        discount: totals.discount,
+        tax: totals.tax,
+        roundOff: totals.roundOff,
+        grandTotal: totals.grandTotal,
+        advancePaid: totals.advance,
+        balance: totals.balance,
+        pdfUrl: pdfUrl
+      });
     }
 
-    return { ok: true, invoiceNo: invoiceNo, pdfUrl: pdfFile.getUrl(), isUpdate: isUpdate };
+    return { ok: true, invoiceNo: invoiceNo, pdfUrl: pdfUrl, isUpdate: isUpdate };
   } finally {
     lock.releaseLock();
   }
 }
-
-// ============================================================
-// ==================== PURCHASE ENTRY ========================
-// ============================================================
-
-function getOrCreatePurchaseSheet_() {
-  const ss = SpreadsheetApp.openById('17nAWzE_OZ6b0ANksVsAn08aqTcMGncbMqgKJAdjdejk');
-  let sh = ss.getSheetByName(APP.PURCHASE_SHEET);
-  if (!sh) sh = ss.insertSheet(APP.PURCHASE_SHEET);
-
-  if (sh.getLastRow() === 0) {
-    sh.appendRow([
-      'Date', 'Purchase No', 'Supplier Name', 'Supplier Invoice No',
-      'Phone', 'Category', 'Items', 'Subtotal', 'Discount', 'Tax',
-      'Grand Total', 'Paid Amount', 'Balance', 'Payment Mode', 'Notes'
-    ]);
-    // Style header row
-    sh.getRange(1, 1, 1, 15)
-      .setBackground('#0B5394')
-      .setFontColor('#FFFFFF')
-      .setFontWeight('bold');
-  }
-  return sh;
-}
-
-function generatePurchaseNo_() {
-  const sh = getOrCreatePurchaseSheet_();
-  const seq = Math.max(1, sh.getLastRow());
-  const datePart = Utilities.formatDate(new Date(), APP.TIMEZONE, 'yyyyMMdd');
-  return 'PUR-' + datePart + '-' + ('000' + seq).slice(-3);
-}
-
-function findPurchaseRow_(sh, purchaseNo) {
-  var values = sh.getDataRange().getValues();
-  for (var i = 1; i < values.length; i++) {
-    if (String(values[i][1]).trim() === String(purchaseNo).trim()) {
-      return i + 1;
-    }
-  }
-  return -1;
-}
-
-function buildPurchaseRowData_(date, purchaseNo, data, totals) {
-  var itemsText = (data.items || []).map(function(it, i) {
-    return (i+1) + '. ' + it.description + ' | Qty: ' + it.qty + ' | Rate: ' + it.rate + ' | Amount: ' + (Number(it.qty)*Number(it.rate));
-  }).join('\n');
-
-  return [
-    date,
-    purchaseNo,
-    String(data.supplierName       || ''),
-    String(data.supplierInvoiceNo  || ''),
-    String(data.phone              || ''),
-    String(data.category           || 'General'),
-    itemsText,
-    totals.subtotal,
-    totals.discount,
-    totals.tax,
-    totals.grandTotal,
-    totals.advance,
-    totals.balance,
-    String(data.paymentMode        || 'Cash'),
-    String(data.notes              || '')
-  ];
-}
-
-// =============================================
-// SAVE a purchase entry (new or update)
-// =============================================
-function savePurchase(data) {
-  const lock = LockService.getScriptLock();
-  lock.waitLock(30000);
-  try {
-    const sh = getOrCreatePurchaseSheet_();
-    if (!data.items || !data.items.length) throw new Error('Add at least one item');
-
-    const totals = calculateTotals_(data);
-    var purchaseNo, date;
-
-    if (data.editPurchaseNo) {
-      purchaseNo = data.editPurchaseNo;
-      var rowIdx = findPurchaseRow_(sh, purchaseNo);
-      if (rowIdx === -1) throw new Error('Purchase "' + purchaseNo + '" not found for update.');
-      var rawDate = sh.getRange(rowIdx, 1).getValue();
-      if (Object.prototype.toString.call(rawDate) === '[object Date]') {
-        date = Utilities.formatDate(rawDate, APP.TIMEZONE, 'dd/MM/yyyy');
-      } else {
-        date = String(rawDate || '');
-      }
-      var rowData = buildPurchaseRowData_(date, purchaseNo, data, totals);
-      sh.getRange(rowIdx, 1, 1, rowData.length).setValues([rowData]);
-    } else {
-      purchaseNo = generatePurchaseNo_();
-      date = Utilities.formatDate(new Date(), APP.TIMEZONE, 'dd/MM/yyyy');
-      var rowData = buildPurchaseRowData_(date, purchaseNo, data, totals);
-      sh.appendRow(rowData);
-    }
-
-    return {
-      ok:          true,
-      purchaseNo:  purchaseNo,
-      subtotal:    totals.subtotal,
-      grandTotal:  totals.grandTotal,
-      balance:     totals.balance,
-      isUpdate:    !!data.editPurchaseNo
-    };
-  } finally {
-    lock.releaseLock();
-  }
-}
-
-// =============================================
-// LIST all saved purchases
-// =============================================
-function getSavedPurchases() {
-  var sh = getOrCreatePurchaseSheet_();
-  var values = sh.getDataRange().getValues();
-  if (values.length < 2) return [];
-
-  var result = [];
-  for (var i = 1; i < values.length; i++) {
-    var r = values[i];
-    if (!String(r[1]).trim()) continue;
-    result.push({
-      date:         String(r[0]  || ''),
-      purchaseNo:   String(r[1]  || ''),
-      supplierName: String(r[2]  || ''),
-      category:     String(r[5]  || ''),
-      grandTotal:   Number(r[10] || 0),
-      paymentMode:  String(r[13] || '')
-    });
-  }
-  return result.reverse(); // newest first
-}
-
-// =============================================
-// LOAD a single purchase for editing
-// =============================================
-function loadPurchase(purchaseNo) {
-  var sh = getOrCreatePurchaseSheet_();
-  var rowIdx = findPurchaseRow_(sh, purchaseNo);
-  if (rowIdx === -1) throw new Error('Purchase "' + purchaseNo + '" not found.');
-
-  var r = sh.getRange(rowIdx, 1, 1, 15).getValues()[0];
-
-  // Parse items
-  var itemsText = String(r[6] || '');
-  var parsedItems = [];
-  if (itemsText.trim()) {
-    var lines = itemsText.split('\n');
-    for (var i = 0; i < lines.length; i++) {
-      var line = lines[i].trim();
-      if (!line) continue;
-      var stripped = line.replace(/^\d+\.\s*/, '');
-      var parts = stripped.split('|');
-      var desc = (parts[0] || '').trim();
-      var qty = 1, rate = 0;
-      for (var p = 1; p < parts.length; p++) {
-        var seg = parts[p].trim();
-        if (seg.toLowerCase().indexOf('qty:') === 0) {
-          qty = Number(seg.replace(/qty:\s*/i, '').trim()) || 1;
-        } else if (seg.toLowerCase().indexOf('rate:') === 0) {
-          rate = Number(seg.replace(/rate:\s*/i, '').trim()) || 0;
-        }
-      }
-      if (desc) parsedItems.push({ description: desc, qty: qty, rate: rate });
-    }
-  }
-
-  return {
-    purchaseNo:       String(r[1]  || ''),
-    date:             String(r[0]  || ''),
-    supplierName:     String(r[2]  || ''),
-    supplierInvoiceNo:String(r[3]  || ''),
-    phone:            String(r[4]  || ''),
-    category:         String(r[5]  || ''),
-    items:            parsedItems,
-    discount:         Number(r[8]  || 0),
-    tax:              Number(r[9]  || 0),
-    advancePaid:      Number(r[11] || 0),
-    subtotal:         Number(r[7]  || 0),
-    grandTotal:       Number(r[10] || 0),
-    balance:          Number(r[12] || 0),
-    paymentMode:      String(r[13] || 'Cash'),
-    notes:            String(r[14] || '')
-  };
-}
-
-// ============================================================
-// ==================== INVOICE PDF HELPERS ===================
-// ============================================================
 
 function insertLogo_(sheet) {
   try {
     var images = sheet.getImages();
-    for (var i = 0; i < images.length; i++) { images[i].remove(); }
+    for (var i = 0; i < images.length; i++) {
+      var anchor = images[i].getAnchorCell();
+      if (anchor && anchor.getRow() <= 3 && anchor.getColumn() <= 2) {
+        images[i].remove();
+      }
+    }
     sheet.getRange('A1').clearContent();
   } catch (e) {}
 
@@ -579,7 +487,6 @@ function insertLogo_(sheet) {
     .setFontColor('#0B5394').setHorizontalAlignment('center');
 }
 
-// Tally-style invoice — 5 columns, clean borders
 function createPrintableInvoiceSheet_(ss, data) {
   var sh = ss.getSheetByName(APP.PRINT_SHEET);
   if (!sh) sh = ss.insertSheet(APP.PRINT_SHEET);
@@ -589,10 +496,6 @@ function createPrintableInvoiceSheet_(ss, data) {
 
   var totalRows = 43;
   var totalCols = 5;
-
-  if (sh.getMaxColumns() > totalCols) sh.deleteColumns(totalCols+1, sh.getMaxColumns()-totalCols);
-  if (sh.getMaxRows() > totalRows) sh.deleteRows(totalRows+1, sh.getMaxRows()-totalRows);
-  if (sh.getMaxRows() < totalRows) sh.insertRowsAfter(sh.getMaxRows(), totalRows-sh.getMaxRows());
 
   sh.setHiddenGridlines(true);
   sh.getRange(1,1,totalRows,totalCols)
@@ -751,11 +654,32 @@ function createPrintableInvoiceSheet_(ss, data) {
   }
   sh.getRange(fr+trm.length+1,1,4,3).merge();
 
-  sh.getRange(fr+1,4,1,2).merge().setValue('  Bank: North East Small Finance Bank').setFontSize(8).setFontWeight('bold');
-  sh.getRange(fr+2,4,1,2).merge().setValue('  A/C Name: YantraByte Solutions').setFontSize(8);
-  sh.getRange(fr+3,4,1,2).merge().setValue('  A/C No: 033311501023226').setFontSize(8);
-  sh.getRange(fr+4,4,1,2).merge().setValue('  IFSC: NESF0000333').setFontSize(8);
-  sh.getRange(fr+5,4,1,2).merge().setValue('  UPI: s0424237152@slc').setFontSize(8).setFontWeight('bold');
+  sh.getRange(fr+1,4,1,1).setValue('  Bank: North East Small Finance Bank').setFontSize(8).setFontWeight('bold');
+  sh.getRange(fr+2,4,1,1).setValue('  A/C Name: YantraByte Solutions').setFontSize(8);
+  sh.getRange(fr+3,4,1,1).setValue('  A/C No: 033311501023226').setFontSize(8);
+  sh.getRange(fr+4,4,1,1).setValue('  IFSC: NESF0000333').setFontSize(8);
+  sh.getRange(fr+5,4,1,1).setValue('  UPI: s0424237152@slc').setFontSize(8).setFontWeight('bold');
+
+  // Generate UPI QR Code in column 5
+  var upiString = 'upi://pay?pa=s0424237152@slc&pn=YantraByte%20Solutions&am=' + (data.grandTotal || 0);
+  var qrUrl = 'https://chart.googleapis.com/chart?chs=100x100&cht=qr&chl=' + encodeURIComponent(upiString);
+  
+  sh.getRange(fr+1,5,5,1).merge();
+  try {
+    var images = sh.getImages();
+    for (var i = 0; i < images.length; i++) {
+      var anchor = images[i].getAnchorCell();
+      if (anchor && anchor.getColumn() === 5 && anchor.getRow() >= fr && anchor.getRow() <= fr + 5) {
+        images[i].remove();
+      }
+    }
+    
+    var qrBlob = UrlFetchApp.fetch(qrUrl).getBlob();
+    var qrImg = sh.insertImage(qrBlob, 5, fr+1);
+    // Center it in the cell (approx)
+    qrImg.setAnchorCellXOffset(10);
+    qrImg.setAnchorCellYOffset(10);
+  } catch(e) {}
 
   sh.getRange(fr+6,4,5,2).merge().setValue('For YantraByte Solutions')
     .setHorizontalAlignment('center').setVerticalAlignment('bottom')
@@ -796,23 +720,27 @@ function numberToWords_(num) {
   return str.trim() + ' Rupees';
 }
 
-function exportCurrentSheetToPdf_(spreadsheetId, gid, fileName) {
-  var folder = getTargetFolder_();
-  var url = 'https://docs.google.com/spreadsheets/d/' + spreadsheetId + '/export?' + [
-    'exportFormat=pdf', 'format=pdf', 'size=A4', 'portrait=true',
-    'scale=4', 'fitw=true', 'sheetnames=false', 'printtitle=false',
-    'pagenumbers=false', 'gridlines=false', 'fzr=false', 'fzc=false',
-    'attachment=false', 'top_margin=0.50', 'bottom_margin=0.50',
-    'left_margin=0.50', 'right_margin=0.50', 'gid=' + gid
-  ].join('&');
-
-  var token    = ScriptApp.getOAuthToken();
-  var response = UrlFetchApp.fetch(url, { headers: { Authorization: 'Bearer ' + token } });
-  var file = folder.createFile(response.getBlob().setName(fileName + '.pdf'));
-  try {
-    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-  } catch (e) {
-    Logger.log('Sharing failed: ' + e.message);
+function getPdfBlob_(spreadsheetId, gid) {
+  var url = 'https://docs.google.com/spreadsheets/d/' + spreadsheetId + '/export?exportFormat=pdf&format=pdf'
+    + '&size=A4'
+    + '&portrait=true'
+    + '&fitw=true'
+    + '&sheetnames=false&printtitle=false&pagenumbers=false'
+    + '&gridlines=false'
+    + '&fzr=false'
+    + '&gid=' + gid;
+    
+  var token = ScriptApp.getOAuthToken();
+  var response = UrlFetchApp.fetch(url, {
+    headers: {
+      'Authorization': 'Bearer ' + token
+    },
+    muteHttpExceptions: true
+  });
+  
+  if (response.getResponseCode() !== 200) {
+    throw new Error('PDF Generation failed: ' + response.getContentText());
   }
-  return file;
+  
+  return response.getBlob();
 }

@@ -1,0 +1,1 @@
+ssh -i ~/.ssh/yantrabyte-key.pem -o StrictHostKeyChecking=no ubuntu@3.7.134.187 'sudo bash -c "docker exec nextcloud_db mysqldump -u nextcloud -pNextcloudDbPass2026! nextcloud > /home/ubuntu/nextcloud_db_dump.sql"'

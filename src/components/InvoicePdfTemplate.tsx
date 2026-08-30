@@ -120,11 +120,10 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
       {/* Centered Brand Watermark Emblem */}
       <div style={{
         position: 'absolute',
-        top: '48%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: '500px',
-        height: '500px',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

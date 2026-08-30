@@ -1657,3 +1657,22 @@ app.get('/api/invoices/customer/:phone', async (req, res) => {
 app.listen(port, () => {
   console.log(`Invoice email API listening on port ${port}`);
 });
+
+// Graceful shutdown to prevent headless chrome zombie processes
+const gracefulShutdown = async (signal) => {
+  console.log(`Received ${signal}. Shutting down gracefully...`);
+  if (whatsappClient) {
+    try {
+      console.log('Closing WhatsApp client...');
+      await whatsappClient.destroy();
+      console.log('WhatsApp client closed.');
+    } catch (err) {
+      console.error('Error closing WhatsApp client:', err);
+    }
+  }
+  process.exit(0);
+};
+
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGQUIT', () => gracefulShutdown('SIGQUIT'));

@@ -36,7 +36,7 @@ export const QrCodeSvg: React.FC<QrCodeSvgProps> = ({
       }
       const totalSize = mSize + 2;
       const rawSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalSize} ${totalSize}" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#ffffff"/><path d="${p}" fill="#000000"/></svg>`;
-      return `data:image/svg+xml;utf8,${encodeURIComponent(rawSvg)}`;
+      return `data:image/svg+xml;base64,${btoa(rawSvg)}`;
     } catch (e) {
       console.error('QrCodeSvg calculation error:', e);
       return '';
