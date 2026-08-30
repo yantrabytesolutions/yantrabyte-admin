@@ -1,4 +1,4 @@
-const SUPABASE_URL = 'https://eyajwjrafudarccvcada.supabase.co';
+ï»¿const SUPABASE_URL = 'https://eyajwjrafudarccvcada.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5YWp3anJhZnVkYXJjY3ZjYWRhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODkxODQ2MiwiZXhwIjoyMDk0NDk0NDYyfQ.9A9D9dPb_GoHJiREuIWML1PATN-es4MC9_DE8wvK76g';
 
 async function supabaseFetch(endpoint, options = {}) {
@@ -51,7 +51,7 @@ async function loadCustomers() {
     customers = Object.values(map);
     
     const sel = document.getElementById('customerName');
-    sel.innerHTML = '<option value="">— Select Customer —</option>';
+    sel.innerHTML = '<option value="">â€” Select Customer â€”</option>';
     customers.forEach(c => {
       const opt = document.createElement('option');
       opt.value = c.customerName;
@@ -97,16 +97,16 @@ function renderItems() {
   let total = 0;
   items.forEach((it, i) => {
     const amt = it.qty * it.rate; total += amt;
-    tbody.innerHTML += <tr><td align="center">+(i+1)+</td><td>+it.description+</td><td align="center">+it.qty+</td><td align="right">+fmtINR(it.rate)+</td><td align="right">+fmtINR(amt)+</td></tr>;
+    tbody.innerHTML += '<tr><td align="center">+(i+1)+</td><td>+it.description+</td><td align="center">+it.qty+</td><td align="right">+fmtINR(it.rate)+</td><td align="right">+fmtINR(amt)+</td></tr>';
   });
-  tbody.innerHTML += <tr><td colspan="4" align="right"><b>Subtotal</b></td><td align="right"><b>+fmtINR(total)+</b></td></tr>;
+  tbody.innerHTML += '<tr><td colspan="4" align="right"><b>Subtotal</b></td><td align="right"><b>+fmtINR(total)+</b></td></tr>';
 }
 
 async function refreshInvoiceList() {
   try {
     const data = await supabaseFetch('/rest/v1/invoices?select=*&order=id.desc');
     const sel = document.getElementById('editInvoiceSelect');
-    sel.innerHTML = '<option value="">— Select Invoice to Edit —</option>';
+    sel.innerHTML = '<option value="">â€” Select Invoice to Edit â€”</option>';
     data.forEach(inv => {
       const opt = document.createElement('option');
       opt.value = inv.invoiceNo;
@@ -339,4 +339,5 @@ window.onload = function() {
   loadCustomers();
   refreshInvoiceList();
 };
+
 
