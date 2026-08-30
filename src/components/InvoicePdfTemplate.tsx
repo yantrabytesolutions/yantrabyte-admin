@@ -1,7 +1,7 @@
 import { forwardRef } from 'react';
 import type { Invoice, InvoiceItem } from '../types';
 import { HardwareBrandsBanner } from './HardwareBrandsBanner';
-import { YANTRABYTE_LOGO_BASE64, HARDWARE_WATERMARK_BASE64 } from '../assets/invoiceAssets';
+import { YANTRABYTE_LOGO_BASE64, HARDWARE_WATERMARK_BASE64, OFFICIAL_QR_CODE_BASE64 } from '../assets/invoiceAssets';
 import { QrCodeSvg } from './QrCodeSvg';
 
 function numberToWords(num: number): string {
@@ -398,12 +398,16 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                             <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>IFSC:</span> <strong style={{ color: '#000000', fontSize: '13px' }}>NESF0000333</strong></div>
                             <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>UPI ID:</span> <strong style={{ color: '#047857', fontSize: '12.5px' }}>s0424237152@slc</strong></div>
                           </td>
-                          <td style={{ width: '88px', verticalAlign: 'middle', textAlign: 'center', paddingLeft: '4px' }}>
+                          <td style={{ width: '92px', verticalAlign: 'middle', textAlign: 'center', paddingLeft: '4px' }}>
                             <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#0B5394', marginBottom: '3px', letterSpacing: '0.5px' }}>
                               SCAN TO PAY
                             </div>
                             <div style={{ background: '#ffffff', padding: '2px', display: 'inline-block', border: '1.5px solid #0B5394', borderRadius: '4px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-                              <QrCodeSvg value={upiUrl} size={80} level="M" />
+                              <img 
+                                src={OFFICIAL_QR_CODE_BASE64} 
+                                alt="Scan To Pay" 
+                                style={{ display: 'block', width: '84px', height: '84px', imageRendering: 'pixelated' }} 
+                              />
                             </div>
                           </td>
                         </tr>
