@@ -2,7 +2,6 @@ import { forwardRef } from 'react';
 import type { Invoice, InvoiceItem } from '../types';
 import { HardwareBrandsBanner } from './HardwareBrandsBanner';
 import { YANTRABYTE_LOGO_BASE64, HARDWARE_WATERMARK_BASE64, OFFICIAL_QR_CODE_BASE64 } from '../assets/invoiceAssets';
-import { QrCodeSvg } from './QrCodeSvg';
 
 function numberToWords(num: number): string {
   num = Math.round(Number(num || 0));
@@ -95,9 +94,6 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
 
   const targetTotalRows = 11;
   const fillerCount = Math.max(0, targetTotalRows - items.length);
-
-  const safePayable = Math.max(0, Number(balanceDue > 0 ? balanceDue : grandTotal) || 0).toFixed(2);
-  const upiUrl = `upi://pay?pa=s0424237152@slc&pn=${encodeURIComponent('YantraByte Solutions')}&am=${safePayable}&cu=INR`;
 
   return (
     <div 
