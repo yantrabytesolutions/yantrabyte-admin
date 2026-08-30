@@ -125,16 +125,16 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         right: 0,
         bottom: 0,
         backgroundImage: `url(${YANTRABYTE_LOGO_BASE64})`,
-        backgroundSize: '460px auto',
+        backgroundSize: '560px auto',
         backgroundPosition: 'center center',
         backgroundRepeat: 'no-repeat',
         pointerEvents: 'none',
         zIndex: 5,
-        opacity: 0.45,
+        opacity: 0.40,
         filter: 'contrast(1.15) brightness(0.92)'
       }} />
 
-      {/* Subtle Background Circuit Pattern */}
+      {/* Full Page Hardware & Circuit Watermark Pattern */}
       <div style={{
         position: 'absolute',
         top: 0, 
@@ -142,12 +142,12 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         width: '100%', 
         height: '100%',
         backgroundImage: `url(${HARDWARE_WATERMARK_BASE64})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
+        backgroundSize: '100% 100%',
+        backgroundPosition: 'center center',
         backgroundRepeat: 'no-repeat',
         pointerEvents: 'none',
         zIndex: 4,
-        opacity: 0.30
+        opacity: 0.42
       }} />
 
       {/* Cancelled Stamp */}
