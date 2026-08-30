@@ -295,7 +295,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
           </table>
 
           {/* Totals Section */}
-          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', fontSize: '12.5px', backgroundColor: '#ffffff' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', fontSize: '12.5px', backgroundColor: 'transparent' }}>
             <tbody>
               <tr>
                 {/* Left: Amount in Words */}
