@@ -48,11 +48,11 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     online: boolean;
     version?: string;
     productname?: string;
-    containers?: { app: string; db: string; redis: string };
+    containers?: { app: string; db: string; redis?: string };
     activeUsers?: number;
     storageUsed?: string;
     loading?: boolean;
-  }>({ online: true, version: '33.0.8', activeUsers: 7, storageUsed: '6.1 GB', loading: false });
+  }>({ online: true, version: '34.0.3', activeUsers: 3, storageUsed: '7.9 GB', loading: false });
 
   const fetchNextcloudStatus = async () => {
     try {
@@ -392,15 +392,15 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                   {nextcloudStatus.online ? 'Online (24/7 Active)' : 'Offline / Checking'}
                 </span>
                 <span className="hidden sm:inline-block px-2 py-0.5 bg-blue-900/60 text-blue-200 text-xs rounded border border-blue-700/50">
-                  v{nextcloudStatus.version || '33.0.8'}
+                  v{nextcloudStatus.version || '34.0.3'}
                 </span>
               </div>
               <p className="text-xs text-slate-300 mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-                <span>🐳 Stack: <strong className="text-sky-300">Docker Compose</strong></span>
+                <span>🐳 Stack: <strong className="text-sky-300">Docker Compose (Local Laptop)</strong></span>
                 <span>•</span>
-                <span>🗄️ Database: <strong className="text-emerald-300">MariaDB 10.11</strong></span>
+                <span>🗄️ Database: <strong className="text-emerald-300">MariaDB 10.6</strong></span>
                 <span>•</span>
-                <span>⚡ Memory Cache: <strong className="text-amber-300">Redis 7 Active</strong></span>
+                <span>⚡ Host: <strong className="text-amber-300">24/7 Dedicated Server</strong></span>
               </p>
             </div>
           </div>
@@ -410,7 +410,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
               <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Cloud Storage</p>
               <p className="text-sm font-bold text-white flex items-center gap-1.5">
                 <HardDrive className="w-3.5 h-3.5 text-blue-400" />
-                {nextcloudStatus.storageUsed || '6.1 GB'}
+                {nextcloudStatus.storageUsed || '7.9 GB'}
               </p>
             </div>
 
@@ -418,7 +418,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
               <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Active Accounts</p>
               <p className="text-sm font-bold text-emerald-400 flex items-center gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                {nextcloudStatus.activeUsers !== undefined ? nextcloudStatus.activeUsers : 2} Users
+                {nextcloudStatus.activeUsers !== undefined ? nextcloudStatus.activeUsers : 3} Users
               </p>
             </div>
 
@@ -432,7 +432,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             </button>
 
             <a
-              href="http://3.7.134.187:8080"
+              href="https://anantatechcare.com"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 px-3.5 py-2 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs rounded-lg transition-colors shadow-sm"

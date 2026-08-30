@@ -256,7 +256,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                 const rate = Number(it.rate || it.price || it.amount || 0);
                 const amount = qty * rate;
                 return (
-                  <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? 'transparent' : 'rgba(248, 250, 252, 0.7)', minHeight: '30px' }}>
+                  <tr key={idx} style={{ backgroundColor: 'transparent', minHeight: '30px' }}>
                     <td style={{ textAlign: 'center', borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '5px 4px', color: '#000000' }}>
                       {idx + 1}
                     </td>
@@ -283,7 +283,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
 
               {/* Padding rows to fill full A4 height without empty gap */}
               {[...Array(fillerCount)].map((_, idx) => (
-                <tr key={`empty-${idx}`} style={{ backgroundColor: (items.length + idx) % 2 === 0 ? 'transparent' : 'rgba(248, 250, 252, 0.7)', height: '26px' }}>
+                <tr key={`empty-${idx}`} style={{ backgroundColor: 'transparent', height: '26px' }}>
                   <td style={{ borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '3px 4px', color: 'transparent' }}>.</td>
                   <td style={{ borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '3px 8px', color: 'transparent' }}>.</td>
                   <td style={{ borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '3px 4px', color: 'transparent' }}>.</td>
@@ -310,13 +310,13 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
 
                 {/* Right: Calculations Breakdown */}
                 <td style={{ width: '42%', verticalAlign: 'top', padding: 0 }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', backgroundColor: 'transparent' }}>
                     <tbody>
                       {calcRows.map((row, idx) => (
                         <tr 
                           key={row.label}
                           style={{ 
-                            backgroundColor: (row.isHighlight || row.isDue) ? '#FFF2CC' : 'transparent',
+                            backgroundColor: 'transparent',
                             height: '24px'
                           }}
                         >

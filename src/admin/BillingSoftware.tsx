@@ -1306,7 +1306,16 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       
       const opt = getPdfOptions(inv.invoice_no, inv.customer_name, inv.doc_type);
       try {
-        const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
+        const worker = (html2pdf() as any).set(opt).from(element);
+        const pdf = await worker.toPdf().get('pdf');
+        if (pdf && typeof pdf.setProperties === 'function') {
+          pdf.setProperties({
+            title: `${safeTitle}.pdf`,
+            subject: `${safeTitle}.pdf`,
+            author: 'YantraByte Solutions'
+          });
+        }
+        const pdfBlob = await worker.outputPdf('blob');
         const url = URL.createObjectURL(pdfBlob);
         if (newWindow) {
           newWindow.location.href = url;
