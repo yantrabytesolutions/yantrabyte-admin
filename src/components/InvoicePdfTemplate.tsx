@@ -178,7 +178,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         zIndex: 10,
         border: '2px solid #0B5394',
         borderRadius: '10px',
-        padding: '16px 18px',
+        padding: '14px 16px',
         backgroundColor: 'transparent',
         boxSizing: 'border-box',
         height: '100%',
@@ -189,16 +189,16 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         {/* Top Section (Header, Customer Box, Table, Totals) */}
         <div>
           {/* Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #0B5394', paddingBottom: '10px', marginBottom: '10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #0B5394', paddingBottom: '8px', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
               <img 
                 src={YANTRABYTE_LOGO_BASE64} 
                 alt="YantraByte Solutions" 
-                style={{ height: '80px', width: 'auto', display: 'block' }} 
+                style={{ height: '82px', width: 'auto', display: 'block' }} 
               />
               <div>
-                <h1 style={{ color: '#0B5394', fontSize: '21px', fontWeight: '800', margin: 0, letterSpacing: '0.3px' }}>YANTRABYTE SOLUTIONS</h1>
-                <div style={{ fontSize: '10.5px', color: '#555555', marginTop: '3px', lineHeight: '1.35' }}>
+                <h1 style={{ color: '#0B5394', fontSize: '24px', fontWeight: '900', margin: 0, letterSpacing: '0.4px' }}>YANTRABYTE SOLUTIONS</h1>
+                <div style={{ fontSize: '12px', color: '#333333', marginTop: '3px', lineHeight: '1.35', fontWeight: '500' }}>
                   47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br />
                   Chikkabettahalli, Bengaluru - 560097<br />
                   📱 09986742525 | ✉️ yantrabyte.solutions@gmail.com
@@ -206,45 +206,45 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontWeight: '700', color: isCancelled ? '#DC2626' : '#0B5394', fontSize: '18px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <div style={{ fontWeight: '800', color: isCancelled ? '#DC2626' : '#0B5394', fontSize: '21px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
                 {isCancelled ? 'CANCELLED INVOICE' : (isQuotation ? 'QUOTATION' : 'INVOICE')}
               </div>
-              <div style={{ fontSize: '12.5px', color: '#64748b', marginTop: '3px' }}>
-                {isQuotation ? 'Quote No: ' : (isCancelled ? 'Cancelled No: ' : 'Invoice No: ')} <strong>{invoice.invoice_no || 'DRAFT'}</strong>
+              <div style={{ fontSize: '14px', color: '#475569', marginTop: '3px' }}>
+                {isQuotation ? 'Quote No: ' : (isCancelled ? 'Cancelled No: ' : 'Invoice No: ')} <strong style={{ color: '#000000', fontSize: '14.5px' }}>{invoice.invoice_no || 'DRAFT'}</strong>
               </div>
-              <div style={{ fontSize: '12.5px', color: '#64748b' }}>
-                Date: <strong>{formattedDate}</strong>
+              <div style={{ fontSize: '14px', color: '#475569' }}>
+                Date: <strong style={{ color: '#000000', fontSize: '14px' }}>{formattedDate}</strong>
               </div>
             </div>
           </div>
 
           {/* Customer Details */}
-          <div style={{ marginBottom: '10px', backgroundColor: '#f8fafc', padding: '8px 12px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-            <div style={{ fontSize: '11.5px', lineHeight: '1.45' }}>
-              <span style={{ color: '#64748b', fontSize: '10px', textTransform: 'uppercase', fontWeight: '700' }}>Bill To (Customer Details)</span><br />
-              <strong style={{ color: '#0B5394', fontSize: '13.5px' }}>{invoice.customer_name || '—'}</strong><br />
-              Phone: {invoice.phone || '—'} &nbsp;|&nbsp; Email: {invoice.email || '—'}<br />
+          <div style={{ marginBottom: '8px', backgroundColor: '#f8fafc', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
+            <div style={{ fontSize: '13px', lineHeight: '1.45', color: '#1e293b' }}>
+              <span style={{ color: '#64748b', fontSize: '11px', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.4px' }}>Bill To (Customer Details)</span><br />
+              <strong style={{ color: '#0B5394', fontSize: '16px', fontWeight: '800' }}>{invoice.customer_name || '—'}</strong><br />
+              Phone: <strong>{invoice.phone || '—'}</strong> &nbsp;|&nbsp; Email: {invoice.email || '—'}<br />
               Address: {invoice.address || '—'}
             </div>
           </div>
 
           {/* Items Table */}
-          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', borderBottom: '1px solid #000000', fontSize: '12.5px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', borderBottom: '1px solid #000000', fontSize: '13.5px' }}>
             <thead>
-              <tr style={{ backgroundColor: '#0B5394', color: '#ffffff', height: '30px' }}>
-                <th style={{ width: '42px', textAlign: 'center', borderRight: '1px solid #000000', borderBottom: '1px solid #000000', padding: '5px 4px', fontWeight: 'bold' }}>
+              <tr style={{ backgroundColor: '#0B5394', color: '#ffffff', height: '32px', fontSize: '13.5px' }}>
+                <th style={{ width: '45px', textAlign: 'center', borderRight: '1px solid #000000', borderBottom: '1px solid #000000', padding: '5px 4px', fontWeight: 'bold' }}>
                   Sl<br />No.
                 </th>
                 <th style={{ textAlign: 'left', borderRight: '1px solid #000000', borderBottom: '1px solid #000000', padding: '5px 8px', fontWeight: 'bold' }}>
                   Description
                 </th>
-                <th style={{ width: '50px', textAlign: 'center', borderRight: '1px solid #000000', borderBottom: '1px solid #000000', padding: '5px 4px', fontWeight: 'bold' }}>
+                <th style={{ width: '55px', textAlign: 'center', borderRight: '1px solid #000000', borderBottom: '1px solid #000000', padding: '5px 4px', fontWeight: 'bold' }}>
                   Qty
                 </th>
-                <th style={{ width: '95px', textAlign: 'right', borderRight: '1px solid #000000', borderBottom: '1px solid #000000', padding: '5px 8px', fontWeight: 'bold' }}>
+                <th style={{ width: '105px', textAlign: 'right', borderRight: '1px solid #000000', borderBottom: '1px solid #000000', padding: '5px 8px', fontWeight: 'bold' }}>
                   Rate (₹)
                 </th>
-                <th style={{ width: '105px', textAlign: 'right', borderBottom: '1px solid #000000', padding: '5px 8px', fontWeight: 'bold' }}>
+                <th style={{ width: '115px', textAlign: 'right', borderBottom: '1px solid #000000', padding: '5px 8px', fontWeight: 'bold' }}>
                   Amount (₹)
                 </th>
               </tr>
@@ -257,24 +257,24 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                 const amount = qty * rate;
                 return (
                   <tr key={idx} style={{ backgroundColor: 'transparent', minHeight: '30px' }}>
-                    <td style={{ textAlign: 'center', borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '5px 4px', color: '#000000' }}>
+                    <td style={{ textAlign: 'center', borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '5px 4px', color: '#000000', fontWeight: 'bold', fontSize: '13.5px' }}>
                       {idx + 1}
                     </td>
-                    <td style={{ textAlign: 'left', borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '5px 8px', color: '#000000', wordBreak: 'break-word' }}>
-                      <div style={{ fontWeight: '600' }}>{desc}</div>
+                    <td style={{ textAlign: 'left', borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '5px 8px', color: '#000000', wordBreak: 'break-word', fontSize: '13.5px' }}>
+                      <div style={{ fontWeight: '700', fontSize: '14px' }}>{desc}</div>
                       {it.serial_no && (
-                        <div style={{ fontSize: '10.5px', color: '#475569', marginTop: '2px', fontWeight: 'bold' }}>
+                        <div style={{ fontSize: '12px', color: '#334155', marginTop: '2px', fontWeight: 'bold' }}>
                           S/N: {it.serial_no}
                         </div>
                       )}
                     </td>
-                    <td style={{ textAlign: 'center', borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '5px 4px', color: '#000000' }}>
+                    <td style={{ textAlign: 'center', borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '5px 4px', color: '#000000', fontWeight: 'bold', fontSize: '13.5px' }}>
                       {qty}
                     </td>
-                    <td style={{ textAlign: 'right', borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '5px 8px', color: '#000000' }}>
+                    <td style={{ textAlign: 'right', borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '5px 8px', color: '#000000', fontSize: '13.5px' }}>
                       {rate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </td>
-                    <td style={{ textAlign: 'right', borderBottom: '1px solid #e2e8f0', padding: '5px 8px', fontWeight: 'bold', color: '#000000' }}>
+                    <td style={{ textAlign: 'right', borderBottom: '1px solid #e2e8f0', padding: '5px 8px', fontWeight: 'bold', color: '#000000', fontSize: '14px' }}>
                       {amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </td>
                   </tr>
@@ -295,36 +295,36 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
           </table>
 
           {/* Totals Section */}
-          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', fontSize: '12.5px', backgroundColor: 'transparent' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', fontSize: '13.5px', backgroundColor: 'transparent' }}>
             <tbody>
               <tr>
                 {/* Left: Amount in Words */}
-                <td style={{ width: '58%', verticalAlign: 'top', padding: '8px 10px', borderRight: '1px solid #000000' }}>
-                  <div style={{ backgroundColor: '#D9EAF7', color: '#B45309', fontWeight: 'bold', fontSize: '11px', padding: '2px 6px', display: 'inline-block', marginBottom: '6px', borderRadius: '3px' }}>
+                <td style={{ width: '56%', verticalAlign: 'top', padding: '8px 10px', borderRight: '1px solid #000000' }}>
+                  <div style={{ backgroundColor: '#D9EAF7', color: '#92400E', fontWeight: '800', fontSize: '12px', padding: '2px 8px', display: 'inline-block', marginBottom: '6px', borderRadius: '3px', textTransform: 'uppercase' }}>
                     Amount in Words:
                   </div>
-                  <div style={{ fontStyle: 'italic', fontWeight: 'bold', fontSize: '12.5px', color: '#000000', lineHeight: '1.4' }}>
+                  <div style={{ fontStyle: 'italic', fontWeight: 'bold', fontSize: '14px', color: '#000000', lineHeight: '1.4' }}>
                     {numberToWords(grandTotal)}
                   </div>
                 </td>
 
                 {/* Right: Calculations Breakdown */}
-                <td style={{ width: '42%', verticalAlign: 'top', padding: 0 }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', backgroundColor: 'transparent' }}>
+                <td style={{ width: '44%', verticalAlign: 'top', padding: 0 }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13.5px', backgroundColor: 'transparent' }}>
                     <tbody>
                       {calcRows.map((row, idx) => (
                         <tr 
                           key={row.label}
                           style={{ 
                             backgroundColor: 'transparent',
-                            height: '24px'
+                            height: '26px'
                           }}
                         >
                           <td style={{ 
                             padding: '4px 8px', 
-                            color: row.isHighlight ? '#15803D' : (row.isDue ? '#B91C1C' : '#333333'), 
-                            fontWeight: (row.isHighlight || row.isDue) ? 'bold' : 'normal',
-                            fontSize: (row.isHighlight || row.isDue) ? '12.5px' : '12px',
+                            color: row.isHighlight ? '#15803D' : (row.isDue ? '#B91C1C' : '#1e293b'), 
+                            fontWeight: (row.isHighlight || row.isDue) ? '800' : '600',
+                            fontSize: (row.isHighlight || row.isDue) ? '14px' : '13px',
                             borderBottom: idx === calcRows.length - 1 ? 'none' : '1px solid #000000'
                           }}>
                             {row.label}
@@ -333,8 +333,8 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                             padding: '4px 8px', 
                             textAlign: 'right', 
                             color: row.isHighlight ? '#15803D' : (row.isDue ? '#B91C1C' : '#000000'), 
-                            fontWeight: (row.isHighlight || row.isDue) ? 'bold' : 'normal',
-                            fontSize: (row.isHighlight || row.isDue) ? '13px' : '12px',
+                            fontWeight: (row.isHighlight || row.isDue) ? '800' : '700',
+                            fontSize: (row.isHighlight || row.isDue) ? '15px' : '13.5px',
                             borderBottom: idx === calcRows.length - 1 ? 'none' : '1px solid #000000'
                           }}>
                             {row.value}
@@ -357,10 +357,10 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
               <tr>
                 {/* Terms & Conditions Box */}
                 <td style={{ width: '48%', verticalAlign: 'top', border: '1px solid #000000', padding: 0, boxSizing: 'border-box' }}>
-                  <div style={{ backgroundColor: '#0B5394', color: '#ffffff', fontWeight: 'bold', fontSize: '11.5px', textAlign: 'center', padding: '4px 0' }}>
+                  <div style={{ backgroundColor: '#0B5394', color: '#ffffff', fontWeight: 'bold', fontSize: '13px', textAlign: 'center', padding: '4px 0', letterSpacing: '0.4px' }}>
                     Terms & Conditions
                   </div>
-                  <div style={{ padding: '6px 8px', fontSize: '10px', color: '#333333', lineHeight: '1.4' }}>
+                  <div style={{ padding: '6px 8px', fontSize: '11.5px', color: '#1e293b', lineHeight: '1.42', fontWeight: '500' }}>
                     {invoice.terms_conditions ? (
                       <div style={{ whiteSpace: 'pre-wrap' }}>{invoice.terms_conditions}</div>
                     ) : isQuotation ? (
@@ -384,26 +384,26 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
 
                 {/* Bank & Payment Details Box */}
                 <td style={{ width: '52%', verticalAlign: 'top', border: '1px solid #000000', padding: 0, boxSizing: 'border-box' }}>
-                  <div style={{ backgroundColor: '#0B5394', color: '#ffffff', fontWeight: 'bold', fontSize: '11.5px', textAlign: 'center', padding: '4px 0' }}>
+                  <div style={{ backgroundColor: '#0B5394', color: '#ffffff', fontWeight: 'bold', fontSize: '13px', textAlign: 'center', padding: '4px 0', letterSpacing: '0.4px' }}>
                     Bank & Payment Details
                   </div>
                   <div style={{ padding: '6px 8px' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                       <tbody>
                         <tr>
-                          <td style={{ verticalAlign: 'middle', fontSize: '11px', lineHeight: '1.45', color: '#0f172a' }}>
+                          <td style={{ verticalAlign: 'middle', fontSize: '12.5px', lineHeight: '1.45', color: '#0f172a' }}>
                             <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>Bank:</span> North East Small Finance Bank</div>
                             <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>A/C Name:</span> YantraByte Solutions</div>
-                            <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>A/C No:</span> <strong style={{ color: '#000000', fontSize: '11.5px' }}>033311501023226</strong></div>
-                            <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>IFSC:</span> <strong style={{ color: '#000000', fontSize: '11.5px' }}>NESF0000333</strong></div>
-                            <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>UPI ID:</span> <strong style={{ color: '#047857', fontSize: '11px' }}>s0424237152@slc</strong></div>
+                            <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>A/C No:</span> <strong style={{ color: '#000000', fontSize: '13px' }}>033311501023226</strong></div>
+                            <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>IFSC:</span> <strong style={{ color: '#000000', fontSize: '13px' }}>NESF0000333</strong></div>
+                            <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>UPI ID:</span> <strong style={{ color: '#047857', fontSize: '12.5px' }}>s0424237152@slc</strong></div>
                           </td>
-                          <td style={{ width: '84px', verticalAlign: 'middle', textAlign: 'center', paddingLeft: '6px' }}>
-                            <div style={{ fontSize: '8.5px', fontWeight: 'bold', color: '#0B5394', marginBottom: '2px', letterSpacing: '0.5px' }}>
+                          <td style={{ width: '88px', verticalAlign: 'middle', textAlign: 'center', paddingLeft: '4px' }}>
+                            <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#0B5394', marginBottom: '3px', letterSpacing: '0.5px' }}>
                               SCAN TO PAY
                             </div>
                             <div style={{ background: '#ffffff', padding: '2px', display: 'inline-block', border: '1.5px solid #0B5394', borderRadius: '4px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-                              <QrCodeSvg value={upiUrl} size={76} level="M" />
+                              <QrCodeSvg value={upiUrl} size={80} level="M" />
                             </div>
                           </td>
                         </tr>
@@ -425,7 +425,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
             boxSizing: 'border-box'
           }}>
             <div style={{
-              fontSize: '10.5px',
+              fontSize: '11.5px',
               fontWeight: '900',
               color: '#000000',
               letterSpacing: '0.5px',
