@@ -56,27 +56,15 @@ export const ServiceTicketPdfTemplate = forwardRef<HTMLDivElement, Props>(({
         left: 0,
         right: 0,
         bottom: 0,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        backgroundImage: `url(${YANTRABYTE_LOGO_BASE64})`,
+        backgroundSize: '460px auto',
+        backgroundPosition: 'center center',
+        backgroundRepeat: 'no-repeat',
         zIndex: 0,
         opacity: 0.12,
-        pointerEvents: 'none'
-      }}>
-        <div style={{
-          width: '500px',
-          height: '500px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-          <img 
-            src={YANTRABYTE_LOGO_BASE64} 
-            alt="Watermark" 
-            style={{ width: '460px', height: 'auto', objectFit: 'contain', display: 'block', filter: 'contrast(1.15) brightness(0.92)' }} 
-          />
-        </div>
-      </div>
+        pointerEvents: 'none',
+        filter: 'contrast(1.15) brightness(0.92)'
+      }} />
 
       {/* Hardware Circuit Watermark */}
       <div style={{

@@ -122,21 +122,17 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         position: 'absolute',
         top: 0,
         left: 0,
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        right: 0,
+        bottom: 0,
+        backgroundImage: `url(${YANTRABYTE_LOGO_BASE64})`,
+        backgroundSize: '460px auto',
+        backgroundPosition: 'center center',
+        backgroundRepeat: 'no-repeat',
         pointerEvents: 'none',
         zIndex: 5,
-        opacity: 0.45
-      }}>
-        <img 
-          src={YANTRABYTE_LOGO_BASE64} 
-          alt="Watermark" 
-          style={{ width: '460px', height: 'auto', objectFit: 'contain', display: 'block', filter: 'contrast(1.15) brightness(0.92)' }} 
-        />
-      </div>
+        opacity: 0.45,
+        filter: 'contrast(1.15) brightness(0.92)'
+      }} />
 
       {/* Subtle Background Circuit Pattern */}
       <div style={{

@@ -21,9 +21,9 @@ export const QrCodeSvg: React.FC<QrCodeSvgProps> = ({
   style,
   level = 'M',
 }) => {
-  const dataUrl = useMemo(() => {
+  const svgData = useMemo(() => {
     try {
-      if (!value) return '';
+      if (!value) return null;
       const qr = (QRCode as any).create(value, { errorCorrectionLevel: level });
       const mSize = qr.modules.size;
       let p = '';
@@ -35,34 +35,37 @@ export const QrCodeSvg: React.FC<QrCodeSvgProps> = ({
         }
       }
       const totalSize = mSize + 2;
-      const rawSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalSize} ${totalSize}" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#ffffff"/><path d="${p}" fill="#000000"/></svg>`;
-      return `data:image/svg+xml;base64,${btoa(rawSvg)}`;
+      return { path: p, viewBox: `0 0 ${totalSize} ${totalSize}` };
     } catch (e) {
       console.error('QrCodeSvg calculation error:', e);
-      return '';
+      return null;
     }
   }, [value, level]);
 
-  const dimension = typeof size === 'number' ? `${size}px` : size;
+  const dimension = typeof size === 'number' ? size : parseInt(size.toString(), 10) || 48;
 
-  if (!dataUrl) return null;
+  if (!svgData) return null;
 
   return (
-    <img
-      src={dataUrl}
-      alt="QR Code"
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox={svgData.viewBox}
       width={dimension}
       height={dimension}
       className={className}
+      shapeRendering="crispEdges"
       style={{
         display: 'block',
-        width: dimension,
-        height: dimension,
-        minWidth: dimension,
-        minHeight: dimension,
+        width: `${dimension}px`,
+        height: `${dimension}px`,
+        minWidth: `${dimension}px`,
+        minHeight: `${dimension}px`,
         backgroundColor: '#ffffff',
         ...style,
       }}
-    />
+    >
+      <rect width="100%" height="100%" fill="#ffffff" />
+      <path d={svgData.path} fill="#000000" />
+    </svg>
   );
 };
