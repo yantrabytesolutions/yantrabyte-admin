@@ -1,7 +1,8 @@
 import { forwardRef } from 'react';
 import type { Invoice, InvoiceItem } from '../types';
 import { HardwareBrandsBanner } from './HardwareBrandsBanner';
-import { YANTRABYTE_LOGO_BASE64, HARDWARE_WATERMARK_BASE64, OFFICIAL_QR_CODE_BASE64 } from '../assets/invoiceAssets';
+import { YANTRABYTE_LOGO_BASE64, HARDWARE_WATERMARK_BASE64 } from '../assets/invoiceAssets';
+import { QR_SVG } from '../assets/qrSvg';
 
 function numberToWords(num: number): string {
   num = Math.round(Number(num || 0));
@@ -399,10 +400,9 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                               SCAN TO PAY
                             </div>
                             <div style={{ background: '#ffffff', padding: '2px', display: 'inline-block', border: '1.5px solid #0B5394', borderRadius: '4px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-                              <img 
-                                src={OFFICIAL_QR_CODE_BASE64} 
-                                alt="Scan To Pay" 
-                                style={{ display: 'block', width: '84px', height: '84px', imageRendering: 'pixelated' }} 
+                              <div 
+                                style={{ display: 'block', width: '84px', height: '84px' }} 
+                                dangerouslySetInnerHTML={{ __html: QR_SVG }}
                               />
                             </div>
                           </td>

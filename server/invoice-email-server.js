@@ -1644,8 +1644,18 @@ app.get('/api/invoices/customer/:phone', async (req, res) => {
   }
 });
 
+const distDir = path.resolve(process.cwd(), 'dist');
+if (fs.existsSync(distDir)) {
+  app.use(express.static(distDir));
+  app.use((req, res, next) => {
+    if (req.method !== 'GET') return next();
+    if (req.path.startsWith('/api') || req.path.startsWith('/whatsapp-qr')) return next();
+    res.sendFile(path.join(distDir, 'index.html'));
+  });
+}
+
 app.listen(port, () => {
-  console.log(`Invoice email API listening on port ${port}`);
+  console.log(`Invoice email & Web App listening on port ${port}`);
 });
 
 // Graceful shutdown to prevent headless chrome zombie processes
