@@ -394,15 +394,29 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                             <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>A/C No:</span> <strong style={{ color: '#000000', fontSize: '13px' }}>033311501023226</strong></div>
                             <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>IFSC:</span> <strong style={{ color: '#000000', fontSize: '13px' }}>NESF0000333</strong></div>
                             <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>UPI ID:</span> <strong style={{ color: '#047857', fontSize: '12.5px' }}>s0424237152@slc</strong></div>
+                            <div style={{ marginTop: '2px', fontSize: '11px', color: '#4338ca', fontWeight: 'bold', lineHeight: '1.25' }}>
+                              Pay via GPay / PhonePe / BHIM / Paytm: <span style={{ color: '#b91c1c', fontSize: '12px' }}>9986742525</span>
+                            </div>
                           </td>
                           <td style={{ width: '92px', verticalAlign: 'middle', textAlign: 'center', paddingLeft: '4px' }}>
                             <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#0B5394', marginBottom: '3px', letterSpacing: '0.5px' }}>
                               SCAN TO PAY
                             </div>
                             <div style={{ background: '#ffffff', padding: '2px', display: 'inline-block', border: '1.5px solid #0B5394', borderRadius: '4px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-                              <div 
-                                style={{ display: 'block', width: '84px', height: '84px' }} 
-                                dangerouslySetInnerHTML={{ __html: QR_SVG }}
+                              <img 
+                                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent('upi://pay?pa=s0424237152@slc&pn=YantraByte%20Solutions&cu=INR')}`}
+                                alt="Scan To Pay"
+                                style={{ display: 'block', width: '84px', height: '84px', objectFit: 'contain' }}
+                                onError={(e) => {
+                                  // Fallback to inline SVG if image network fails
+                                  e.currentTarget.style.display = 'none';
+                                  const parent = e.currentTarget.parentElement;
+                                  if (parent && !parent.querySelector('svg')) {
+                                    const div = document.createElement('div');
+                                    div.innerHTML = QR_SVG;
+                                    parent.appendChild(div);
+                                  }
+                                }}
                               />
                             </div>
                           </td>

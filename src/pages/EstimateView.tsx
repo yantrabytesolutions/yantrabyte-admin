@@ -539,6 +539,9 @@ export default function EstimateView() {
               <div><strong>A/C No:</strong> 033311501023226</div>
               <div><strong>IFSC:</strong> NESF0000333</div>
               <div><strong>UPI:</strong> s0424237152@slc</div>
+              <div style={{ marginTop: 4, fontSize: 11, color: '#4338ca', fontWeight: 'bold' }}>
+                Pay via GPay / PhonePe / BHIM: <span style={{ color: '#b91c1c' }}>9986742525</span>
+              </div>
             </div>
             <div style={{ padding: '8px 20px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
               <QrCodeSvg
