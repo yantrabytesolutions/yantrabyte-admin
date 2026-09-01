@@ -2,7 +2,6 @@ import { forwardRef } from 'react';
 import type { Invoice, InvoiceItem } from '../types';
 import { HardwareBrandsBanner } from './HardwareBrandsBanner';
 import { YANTRABYTE_LOGO_BASE64, HARDWARE_WATERMARK_BASE64 } from '../assets/invoiceAssets';
-import { QR_SVG } from '../assets/qrSvg';
 
 function numberToWords(num: number): string {
   num = Math.round(Number(num || 0));
