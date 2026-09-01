@@ -398,7 +398,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                               Pay via GPay / PhonePe / BHIM / Paytm: <span style={{ color: '#b91c1c', fontSize: '12px' }}>9986742525</span>
                             </div>
                           </td>
-                          <td style={{ width: '92px', verticalAlign: 'middle', textAlign: 'center', paddingLeft: '4px' }}>
+                          <td id="invoice-qr-cell" style={{ width: '92px', verticalAlign: 'middle', textAlign: 'center', paddingLeft: '4px' }}>
                             <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#0B5394', marginBottom: '3px', letterSpacing: '0.5px' }}>
                               SCAN TO PAY
                             </div>
@@ -408,13 +408,10 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                                 alt="Scan To Pay"
                                 style={{ display: 'block', width: '84px', height: '84px', objectFit: 'contain' }}
                                 onError={(e) => {
-                                  // Fallback to inline SVG if image network fails
-                                  e.currentTarget.style.display = 'none';
-                                  const parent = e.currentTarget.parentElement;
-                                  if (parent && !parent.querySelector('svg')) {
-                                    const div = document.createElement('div');
-                                    div.innerHTML = QR_SVG;
-                                    parent.appendChild(div);
+                                  // Auto-remove SCAN TO PAY box if QR cannot load
+                                  const cell = document.getElementById('invoice-qr-cell') || e.currentTarget.closest('td');
+                                  if (cell) {
+                                    (cell as HTMLElement).style.display = 'none';
                                   }
                                 }}
                               />
