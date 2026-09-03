@@ -127,7 +127,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         backgroundRepeat: 'no-repeat',
         pointerEvents: 'none',
         zIndex: 5,
-        opacity: 0.40,
+        opacity: 0.20,
         filter: 'contrast(1.15) brightness(0.92)'
       }} />
 
@@ -144,7 +144,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         backgroundRepeat: 'no-repeat',
         pointerEvents: 'none',
         zIndex: 4,
-        opacity: 0.42
+        opacity: 0.21
       }} />
 
       {/* Cancelled Stamp */}
