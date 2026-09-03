@@ -61,7 +61,7 @@ export const ServiceTicketPdfTemplate = forwardRef<HTMLDivElement, Props>(({
         backgroundPosition: 'center center',
         backgroundRepeat: 'no-repeat',
         zIndex: 0,
-        opacity: 0.06,
+        opacity: 0.03,
         pointerEvents: 'none',
         filter: 'contrast(1.15) brightness(0.92)'
       }} />
@@ -79,7 +79,7 @@ export const ServiceTicketPdfTemplate = forwardRef<HTMLDivElement, Props>(({
         backgroundRepeat: 'no-repeat',
         pointerEvents: 'none',
         zIndex: 1,
-        opacity: 0.15
+        opacity: 0.075
       }} />
 
       {/* Main Container Content */}
