@@ -2,7 +2,7 @@ import { forwardRef } from 'react';
 import type { Invoice, InvoiceItem } from '../types';
 import { HardwareBrandsBanner } from './HardwareBrandsBanner';
 import { YANTRABYTE_LOGO_BASE64, HARDWARE_WATERMARK_BASE64 } from '../assets/invoiceAssets';
-import { OFFICIAL_QR_CODE_BASE64 } from '../assets/generatedQr';
+import { QrCodeSvg } from './QrCodeSvg';
 
 function numberToWords(num: number): string {
   num = Math.round(Number(num || 0));
@@ -403,10 +403,10 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                               SCAN TO PAY
                             </div>
                             <div style={{ background: '#ffffff', padding: '2px', display: 'inline-block', border: '1.5px solid #0B5394', borderRadius: '4px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-                              <img 
-                                src={OFFICIAL_QR_CODE_BASE64 || "/Payment.jpg"}
-                                alt="Scan To Pay"
-                                style={{ display: 'block', width: '84px', height: '84px', objectFit: 'contain' }}
+                              <QrCodeSvg 
+                                value="upi://pay?pa=s0424237152@slc&pn=YantraByte%20Solutions&cu=INR" 
+                                size={82}
+                                level="M"
                               />
                             </div>
                           </td>
