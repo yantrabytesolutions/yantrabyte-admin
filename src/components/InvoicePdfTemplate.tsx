@@ -2,6 +2,7 @@ import { forwardRef } from 'react';
 import type { Invoice, InvoiceItem } from '../types';
 import { HardwareBrandsBanner } from './HardwareBrandsBanner';
 import { YANTRABYTE_LOGO_BASE64, HARDWARE_WATERMARK_BASE64 } from '../assets/invoiceAssets';
+import { OFFICIAL_QR_CODE_BASE64 } from '../assets/generatedQr';
 
 function numberToWords(num: number): string {
   num = Math.round(Number(num || 0));
@@ -383,17 +384,35 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                   <div style={{ backgroundColor: '#0B5394', color: '#ffffff', fontWeight: 'bold', fontSize: '13px', textAlign: 'center', padding: '4px 0', letterSpacing: '0.4px' }}>
                     Bank & Payment Details
                   </div>
-                  <div style={{ padding: '8px 12px' }}>
-                    <div style={{ fontSize: '13px', lineHeight: '1.55', color: '#0f172a' }}>
-                      <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>Bank:</span> North East Small Finance Bank</div>
-                      <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>A/C Name:</span> YantraByte Solutions</div>
-                      <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>A/C No:</span> <strong style={{ color: '#000000', fontSize: '13.5px' }}>033311501023226</strong></div>
-                      <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>IFSC:</span> <strong style={{ color: '#000000', fontSize: '13.5px' }}>NESF0000333</strong></div>
-                      <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>UPI ID:</span> <strong style={{ color: '#047857', fontSize: '13px' }}>s0424237152@slc</strong></div>
-                      <div style={{ marginTop: '3px', fontSize: '11.5px', color: '#4338ca', fontWeight: 'bold', lineHeight: '1.3' }}>
-                        Pay via GPay / PhonePe / BHIM / Paytm: <span style={{ color: '#b91c1c', fontSize: '12.5px' }}>9986742525</span>
-                      </div>
-                    </div>
+                  <div style={{ padding: '6px 8px' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <tbody>
+                        <tr>
+                          <td style={{ verticalAlign: 'middle', fontSize: '12.5px', lineHeight: '1.45', color: '#0f172a' }}>
+                            <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>Bank:</span> North East Small Finance Bank</div>
+                            <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>A/C Name:</span> YantraByte Solutions</div>
+                            <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>A/C No:</span> <strong style={{ color: '#000000', fontSize: '13px' }}>033311501023226</strong></div>
+                            <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>IFSC:</span> <strong style={{ color: '#000000', fontSize: '13px' }}>NESF0000333</strong></div>
+                            <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>UPI ID:</span> <strong style={{ color: '#047857', fontSize: '12.5px' }}>s0424237152@slc</strong></div>
+                            <div style={{ marginTop: '2px', fontSize: '11px', color: '#4338ca', fontWeight: 'bold', lineHeight: '1.25' }}>
+                              Pay via GPay / PhonePe / BHIM / Paytm: <span style={{ color: '#b91c1c', fontSize: '12px' }}>9986742525</span>
+                            </div>
+                          </td>
+                          <td id="invoice-qr-cell" style={{ width: '92px', verticalAlign: 'middle', textAlign: 'center', paddingLeft: '4px' }}>
+                            <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#0B5394', marginBottom: '3px', letterSpacing: '0.5px' }}>
+                              SCAN TO PAY
+                            </div>
+                            <div style={{ background: '#ffffff', padding: '2px', display: 'inline-block', border: '1.5px solid #0B5394', borderRadius: '4px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                              <img 
+                                src={OFFICIAL_QR_CODE_BASE64 || "/Payment.jpg"}
+                                alt="Scan To Pay"
+                                style={{ display: 'block', width: '84px', height: '84px', objectFit: 'contain' }}
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 </td>
               </tr>

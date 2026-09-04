@@ -6,6 +6,7 @@ import html2pdf from 'html2pdf.js';
 import type { Invoice } from '../types';
 import SEO from '../components/SEO';
 import { HardwareBrandsBanner } from '../components/HardwareBrandsBanner';
+import { OFFICIAL_QR_CODE_BASE64 } from '../assets/generatedQr';
 
 export function QuotationApproval() {
   const { id } = useParams<{ id: string }>();
@@ -150,9 +151,10 @@ export function QuotationApproval() {
                     </div>
                   </div>
                   <div className="w-48 h-48 bg-white rounded-xl p-2 flex-shrink-0 flex items-center justify-center relative overflow-hidden border-4 border-white/10 shadow-xl">
-                    <QrCodeSvg 
-                      value={`upi://pay?pa=s0424237152@slc&pn=${encodeURIComponent('YantraByte Solutions')}&am=${(quotation.grand_total * 0.85).toFixed(2)}&cu=INR`} 
-                      size={170} 
+                    <img 
+                      src={OFFICIAL_QR_CODE_BASE64 || "/Payment.jpg"} 
+                      alt="Payment QR Code" 
+                      className="w-full h-full object-contain"
                     />
                   </div>
                 </div>
