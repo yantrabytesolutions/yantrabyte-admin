@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { QrCodeSvg } from '../components/QrCodeSvg';
 import { HardwareBrandsBanner } from '../components/HardwareBrandsBanner';
 import { OFFICIAL_QR_CODE_BASE64 } from '../assets/generatedQr';
 

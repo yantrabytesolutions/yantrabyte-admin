@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { FileText, CheckCircle2, XCircle, ShieldCheck, AlertCircle } from 'lucide-react';
-import { QrCodeSvg } from '../components/QrCodeSvg';
 import html2pdf from 'html2pdf.js';
 import type { Invoice } from '../types';
 import SEO from '../components/SEO';
