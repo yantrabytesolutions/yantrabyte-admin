@@ -1,7 +1,7 @@
 import { forwardRef } from 'react';
 import type { Invoice, InvoiceItem } from '../types';
 import { HardwareBrandsBanner } from './HardwareBrandsBanner';
-import { YANTRABYTE_LOGO_BASE64, HARDWARE_WATERMARK_BASE64, OFFICIAL_QR_CODE_BASE64 } from '../assets/invoiceAssets';
+import { YANTRABYTE_LOGO_BASE64, HARDWARE_WATERMARK_BASE64 } from '../assets/invoiceAssets';
 import { QrCodeSvg } from './QrCodeSvg';
 
 function numberToWords(num: number): string {
