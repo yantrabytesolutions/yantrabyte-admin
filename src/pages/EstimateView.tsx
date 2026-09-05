@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { HardwareBrandsBanner } from '../components/HardwareBrandsBanner';
-import { QrCodeSvg } from '../components/QrCodeSvg';
+import { QrCodeRenderer } from '../components/QrCodeRenderer';
 
 interface InvoiceItem {
   description: string;
@@ -545,7 +545,7 @@ export default function EstimateView() {
             </div>
             <div style={{ padding: '8px 20px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ background: '#fff', padding: '2px', border: '1px solid #e5e7eb', borderRadius: '6px', display: 'inline-block' }}>
-                <QrCodeSvg 
+                <QrCodeRenderer 
                   value="upi://pay?pa=s0424237152@slc&pn=YantraByte%20Solutions&cu=INR" 
                   size={76} 
                 />
