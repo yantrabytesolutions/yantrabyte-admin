@@ -2612,7 +2612,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       ) : null}
 
       {/* --- HIDDEN PRINT TEMPLATE --- */}
-      <div style={{ position: 'fixed', left: '-9999px', top: 0, width: '794px', pointerEvents: 'none', zIndex: -1000 }}>
+      <div style={{ position: 'fixed', left: 0, top: 0, width: '794px', opacity: 0.001, pointerEvents: 'none', zIndex: -9999 }}>
         <InvoicePdfTemplate
           ref={printRef}
           invoice={{
