@@ -80,7 +80,9 @@ export const QrCodeRenderer: React.FC<QrCodeRendererProps> = ({
       QRCode.toDataURL(value, { errorCorrectionLevel: 'M', margin: 1, width: size }, (err: Error | null, url: string) => {
         if (!err && url) setDataUrl(url);
       });
-    } catch (e) {}
+    } catch (e) {
+      console.error('DataURL QR error:', e);
+    }
   }, [value, size]);
 
   return (
