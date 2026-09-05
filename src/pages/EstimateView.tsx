@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { HardwareBrandsBanner } from '../components/HardwareBrandsBanner';
 import { OFFICIAL_QR_CODE_BASE64 } from '../assets/invoiceAssets';
+import { QrCodeSvg } from '../components/QrCodeSvg';
 
 interface InvoiceItem {
   description: string;
@@ -545,18 +546,9 @@ export default function EstimateView() {
             </div>
             <div style={{ padding: '8px 20px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ background: '#fff', padding: '2px', border: '1px solid #e5e7eb', borderRadius: '6px', display: 'inline-block' }}>
-                <img 
-                  src={OFFICIAL_QR_CODE_BASE64} 
-                  alt="Scan to Pay QR"
-                  width={76}
-                  height={76}
-                  style={{
-                    width: '76px',
-                    height: '76px',
-                    minWidth: '76px',
-                    minHeight: '76px',
-                    display: 'block'
-                  }}
+                <QrCodeSvg 
+                  value="upi://pay?pa=s0424237152@slc&pn=YantraByte%20Solutions&cu=INR" 
+                  size={76} 
                 />
               </div>
               <div style={{ fontSize: 11, color: '#6b7280' }}>
