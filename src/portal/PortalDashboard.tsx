@@ -97,6 +97,16 @@ export default function PortalDashboard() {
         jsPDF: { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const }
       };
 
+      if (printRef.current) {
+        const imgElements = Array.from(printRef.current.querySelectorAll('img'));
+        await Promise.all(
+          imgElements.map(img => {
+            if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+            if (typeof img.decode === 'function') return img.decode().catch(() => Promise.resolve());
+            return new Promise(res => { img.onload = () => res(null); img.onerror = () => res(null); setTimeout(res, 300); });
+          })
+        );
+      }
       await html2pdf().set(opt).from(printRef.current).save();
     } catch (error) {
       console.error("Error generating PDF:", error);
