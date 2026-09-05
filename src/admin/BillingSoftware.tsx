@@ -1235,7 +1235,28 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
   const preparePdfElement = async (invoiceNumber: string) => {
     if (!printRef.current) return null;
     setPrintInvoiceNumber(invoiceNumber);
-    await new Promise(resolve => window.setTimeout(resolve, 0));
+    // Allow React state update to flush to DOM
+    await new Promise(resolve => window.setTimeout(resolve, 50));
+
+    // Ensure all images (including QR code and logos) inside print template are fully loaded
+    const el = printRef.current;
+    if (el) {
+      const imgElements = Array.from(el.querySelectorAll('img'));
+      await Promise.all(
+        imgElements.map(img => {
+          if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+          if (typeof img.decode === 'function') {
+            return img.decode().catch(() => Promise.resolve());
+          }
+          return new Promise(res => {
+            img.onload = () => res(null);
+            img.onerror = () => res(null);
+            setTimeout(res, 300);
+          });
+        })
+      );
+    }
+
     return printRef.current;
   };
 

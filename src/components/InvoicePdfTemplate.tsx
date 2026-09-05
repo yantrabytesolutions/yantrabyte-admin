@@ -405,12 +405,14 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                               <img 
                                 src={OFFICIAL_QR_CODE_BASE64} 
                                 alt="Scan to Pay QR"
+                                width={80}
+                                height={80}
                                 style={{
                                   width: '80px',
                                   height: '80px',
-                                  display: 'block',
-                                  imageRendering: 'pixelated',
-                                  objectFit: 'contain'
+                                  minWidth: '80px',
+                                  minHeight: '80px',
+                                  display: 'block'
                                 }}
                               />
                             </div>

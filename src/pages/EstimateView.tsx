@@ -548,12 +548,14 @@ export default function EstimateView() {
                 <img 
                   src={OFFICIAL_QR_CODE_BASE64} 
                   alt="Scan to Pay QR"
+                  width={76}
+                  height={76}
                   style={{
                     width: '76px',
                     height: '76px',
-                    display: 'block',
-                    imageRendering: 'pixelated',
-                    objectFit: 'contain'
+                    minWidth: '76px',
+                    minHeight: '76px',
+                    display: 'block'
                   }}
                 />
               </div>
