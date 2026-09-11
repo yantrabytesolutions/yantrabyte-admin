@@ -51,22 +51,19 @@ Write-Host "[*] Copying Windows installation files from Drive ${winDrive}:\..." 
 Copy-Item -Path "${winDrive}:\*" -Destination $workDir -Recurse -Force
 Dismount-DiskImage -ImagePath $sourceIso
 
-# 4. INSTANT DIRECT STREAM EXPORT WITH WIMLIB: Keep ONLY Windows 11 Home (Index 1) & Windows 11 Pro (Index 6)
-Write-Host "[*] Filtering WIM image using wimlib (Keeping ONLY Windows 11 Home & Pro)..." -ForegroundColor Yellow
+# 4. INSTANT DIRECT STREAM EXPORT WITH WIMLIB: Keep ONLY Windows 11 Pro (Index 6)
+Write-Host "[*] Filtering WIM image using wimlib (Keeping ONLY Windows 11 Pro)..." -ForegroundColor Yellow
 $srcWim = Get-ChildItem (Join-Path $workDir "sources") -Filter "install.*" | Select-Object -First 1
 $destWim = Join-Path $workDir "sources\install_filtered.wim"
 
 if ($srcWim -and (Test-Path $wimlib)) {
-    Write-Host "    [+] Exporting Index 1: Windows 11 Home..." -ForegroundColor Green
-    & $wimlib export "$($srcWim.FullName)" 1 "$destWim"
-    
     Write-Host "    [+] Exporting Index 6: Windows 11 Pro..." -ForegroundColor Green
     & $wimlib export "$($srcWim.FullName)" 6 "$destWim"
     
     if (Test-Path $destWim) {
         Remove-Item -Path $srcWim.FullName -Force
         Move-Item -Path $destWim -Destination (Join-Path $workDir "sources\install.wim") -Force
-        Write-Host "[SUCCESS] WIM filtered! Only Windows 11 Home and Pro remain in setup." -ForegroundColor Green
+        Write-Host "[SUCCESS] WIM filtered! Only Windows 11 Pro remains in setup." -ForegroundColor Green
     }
 }
 

@@ -60,15 +60,14 @@ for ($i = 1; $i -le 12; $i++) {
 if (-not $homeIndex) { $homeIndex = 1 } # Fallback index 1 for Home
 if (-not $proIndex)  { $proIndex  = 6 } # Fallback index 6 for Pro
 
-Write-Host "[*] Exporting Index $homeIndex (Home) and Index $proIndex (Pro) into new install.wim..." -ForegroundColor Yellow
+Write-Host "[*] Exporting Index $proIndex (Pro) into new install.wim..." -ForegroundColor Yellow
 
-& dism.exe /Export-Image /SourceImageFile:"$($wimFile.FullName)" /SourceIndex:$homeIndex /DestinationImageFile:"$tempWim" /Compress:max
 & dism.exe /Export-Image /SourceImageFile:"$($wimFile.FullName)" /SourceIndex:$proIndex /DestinationImageFile:"$tempWim" /Compress:max
 
 if (Test-Path $tempWim) {
     Remove-Item -Path $wimFile.FullName -Force
     Move-Item -Path $tempWim -Destination (Join-Path $workDir "sources\install.wim") -Force
-    Write-Host "[SUCCESS] install.wim replaced! Only Home & Pro remain." -ForegroundColor Green
+    Write-Host "[SUCCESS] install.wim replaced! Only Windows 11 Pro remains." -ForegroundColor Green
 } else {
     Write-Host "[ERROR] DISM Export failed!" -ForegroundColor Red
     pause
