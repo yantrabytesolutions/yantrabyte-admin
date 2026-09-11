@@ -53,21 +53,42 @@ echo [OK] YantraByte branding configured.
 
 :: Copy ISOs to USB
 echo.
-echo [*] Copying YantraByte_Solutions_Master_Rescue.iso to %USB_TARGET% ...
-copy /y "D:\YantraByte_Solutions_Master_Rescue.iso" "%USB_TARGET%YantraByte_Solutions_Master_Rescue.iso"
+if exist "D:\YantraByte_Solutions_Master_Rescue.iso" (
+    echo [*] Copying YantraByte_Solutions_Master_Rescue.iso to %USB_TARGET% ...
+    copy /y "D:\YantraByte_Solutions_Master_Rescue.iso" "%USB_TARGET%YantraByte_Solutions_Master_Rescue.iso"
+) else (
+    echo [SKIP] YantraByte_Solutions_Master_Rescue.iso not found on D:\ drive. Skipping optional rescue suite.
+)
 
 echo.
-echo [*] Copying win11_ultimate_autoinstall.iso to %USB_TARGET% ...
-copy /y "D:\win11_ultimate_autoinstall.iso" "%USB_TARGET%win11_ultimate_autoinstall.iso"
+set "ISO_COPIED=0"
+if exist "D:\Windows11_Custom_Unattended.iso" (
+    echo [*] Copying Windows11_Custom_Unattended.iso (Pro Only + All Fixes) to %USB_TARGET% ...
+    copy /y "D:\Windows11_Custom_Unattended.iso" "%USB_TARGET%Windows11_Custom_Unattended.iso"
+    if !errorlevel! equ 0 set "ISO_COPIED=1"
+) else if exist "D:\win11_ultimate_autoinstall.iso" (
+    echo [*] Copying win11_ultimate_autoinstall.iso to %USB_TARGET% ...
+    copy /y "D:\win11_ultimate_autoinstall.iso" "%USB_TARGET%win11_ultimate_autoinstall.iso"
+    if !errorlevel! equ 0 set "ISO_COPIED=1"
+) else (
+    echo [ERROR] No Windows 11 ISO found on D:\ drive!
+)
 
 echo.
-echo ===================================================================
-echo            YANTRABYTE MULTI-BOOT USB UPDATED SUCCESSFULLY!
-echo ===================================================================
-echo.
-echo Your USB drive (%USB_TARGET%) is now fully updated with:
-echo   1. YantraByte_Solutions_Master_Rescue.iso
-echo   2. win11_ultimate_autoinstall.iso
-echo   3. Custom YantraByte Solutions Menu Branding (ventoy.json)
+if !ISO_COPIED! equ 1 (
+    echo ===================================================================
+    echo            YANTRABYTE MULTI-BOOT USB UPDATED SUCCESSFULLY!
+    echo ===================================================================
+    echo.
+    echo Your USB drive (%USB_TARGET%) has been successfully updated!
+) else (
+    echo ===================================================================
+    echo               USB COPY FAILED / INCOMPLETE
+    echo ===================================================================
+    echo.
+    echo Please check:
+    echo 1. Ensure drive %USB_TARGET% is the main Ventoy partition (exFAT/NTFS) and NOT VTOYEFI.
+    echo 2. Ensure your USB drive has at least 12 GB of free space available.
+)
 echo.
 pause
