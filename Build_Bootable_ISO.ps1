@@ -41,13 +41,15 @@ Write-Host "[*] Running Microsoft oscdimg engine..." -ForegroundColor Yellow
 if (Test-Path $targetIso) { Remove-Item -Path $targetIso -Force }
 
 $etfsboot = Join-Path $workDir "boot\etfsboot.com"
-$efisys   = Join-Path $workDir "efi\microsoft\boot\efisys.bin"
+$efisysNoPrompt = Join-Path $workDir "efi\microsoft\boot\efisys_noprompt.bin"
+$efisysBin      = Join-Path $workDir "efi\microsoft\boot\efisys.bin"
+$efisys = if (Test-Path $efisysNoPrompt) { $efisysNoPrompt } else { $efisysBin }
 
 $bootData = "2#p0,e,b`"$etfsboot`"#pEF,e,b`"$efisys`""
 
 $processInfo = New-Object System.Diagnostics.ProcessStartInfo
 $processInfo.FileName = $oscdimg
-$processInfo.Arguments = "-m -o -u2 -udfver102 -bootdata:$bootData `"$workDir`" `"$targetIso`""
+$processInfo.Arguments = "-m -o -h -u2 -udfver102 -l`"WIN11_INSTALL`" -bootdata:$bootData `"$workDir`" `"$targetIso`""
 $processInfo.UseShellExecute = $false
 $processInfo.RedirectStandardOutput = $true
 $processInfo.RedirectStandardError = $true
