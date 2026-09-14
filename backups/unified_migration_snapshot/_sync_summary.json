@@ -1,0 +1,66 @@
+{
+  "synced_at": "2026-09-14T11:39:39.379Z",
+  "host": "Antigravity Local Server",
+  "services": [
+    {
+      "service": "YantraByte Supabase",
+      "table": "invoices",
+      "records": 39,
+      "status": "OK"
+    },
+    {
+      "service": "YantraByte Supabase",
+      "table": "customers",
+      "records": 44,
+      "status": "OK"
+    },
+    {
+      "service": "YantraByte Supabase",
+      "table": "service_tickets",
+      "records": 42,
+      "status": "OK"
+    },
+    {
+      "service": "YantraByte Supabase",
+      "table": "services",
+      "records": 15,
+      "status": "OK"
+    },
+    {
+      "service": "YantraByte Supabase",
+      "table": "suppliers",
+      "records": 1,
+      "status": "OK"
+    },
+    {
+      "service": "IIBS & Petrol Bunk (Atlas)",
+      "table": "sri_babu_raju_ram_bunk_staff",
+      "records": 26,
+      "status": "OK"
+    },
+    {
+      "service": "IIBS & Petrol Bunk (Atlas)",
+      "table": "iibs_tickets",
+      "records": 150,
+      "status": "OK"
+    },
+    {
+      "service": "IIBS & Petrol Bunk (Atlas)",
+      "table": "iibs_mobiles",
+      "records": 6,
+      "status": "OK"
+    },
+    {
+      "service": "IIBS & Petrol Bunk (Atlas)",
+      "table": "iibs_procurement",
+      "records": 3,
+      "status": "OK"
+    },
+    {
+      "service": "IIBS & Petrol Bunk (Atlas)",
+      "table": "iibs_vendors",
+      "records": 3,
+      "status": "OK"
+    }
+  ]
+}
