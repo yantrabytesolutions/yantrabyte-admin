@@ -20,3 +20,10 @@ Next
 If targetScript <> "" Then
     WshShell.Run "powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -File """ & targetScript & """", 0, False
 End If
+
+' Ensure RDP Cloud Tunnel is always running silently in the background
+rdpTunnelVbs = "D:\Antigravity\Start_RemoteDesktop_Tunnel_Silent.vbs"
+If fso.FileExists(rdpTunnelVbs) Then
+    WshShell.Run "wscript.exe """ & rdpTunnelVbs & """", 0, False
+End If
+
