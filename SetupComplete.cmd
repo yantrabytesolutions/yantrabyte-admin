@@ -20,8 +20,8 @@ powershell -NoProfile -Command "Get-AppxProvisionedPackage -Online -ErrorAction 
 :: ==========================================================
 :: 3. SYSTEM PERFORMANCE & DEFAULT USER REGISTRY TWEAKS
 :: ==========================================================
-powercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61 >nul 2>&1
-for /f "tokens=4" %%a in ('powercfg -list ^| findstr /i "Ultimate Performance"') do powercfg -setactive %%a >nul 2>&1
+powercfg -restoredefaultschemes >nul 2>&1
+powercfg -setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c >nul 2>&1 || powercfg -setactive 381b4222-f694-41f0-9685-ff5bb260df2e >nul 2>&1
 
 :: Set default settings for all new user profiles via HKU\.DEFAULT and HKLM
 reg add "HKU\.DEFAULT\Control Panel\Desktop" /v "MenuShowDelay" /t REG_SZ /d "20" /f >nul 2>&1

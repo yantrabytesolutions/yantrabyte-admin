@@ -2,7 +2,7 @@ import { forwardRef } from 'react';
 import type { Invoice, InvoiceItem } from '../types';
 import { HardwareBrandsBanner } from './HardwareBrandsBanner';
 import { YANTRABYTE_LOGO_BASE64, HARDWARE_WATERMARK_BASE64 } from '../assets/invoiceAssets';
-import { QR_SVG } from '../assets/qrSvg';
+import { QrCodeRenderer } from './QrCodeRenderer';
 
 function numberToWords(num: number): string {
   num = Math.round(Number(num || 0));
@@ -127,7 +127,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         backgroundRepeat: 'no-repeat',
         pointerEvents: 'none',
         zIndex: 5,
-        opacity: 0.40,
+        opacity: 0.10,
         filter: 'contrast(1.15) brightness(0.92)'
       }} />
 
@@ -144,7 +144,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         backgroundRepeat: 'no-repeat',
         pointerEvents: 'none',
         zIndex: 4,
-        opacity: 0.42
+        opacity: 0.105
       }} />
 
       {/* Cancelled Stamp */}
@@ -394,15 +394,18 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                             <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>A/C No:</span> <strong style={{ color: '#000000', fontSize: '13px' }}>033311501023226</strong></div>
                             <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>IFSC:</span> <strong style={{ color: '#000000', fontSize: '13px' }}>NESF0000333</strong></div>
                             <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>UPI ID:</span> <strong style={{ color: '#047857', fontSize: '12.5px' }}>s0424237152@slc</strong></div>
+                            <div style={{ marginTop: '2px', fontSize: '11px', color: '#4338ca', fontWeight: 'bold', lineHeight: '1.25' }}>
+                              Pay via GPay / PhonePe / BHIM / Paytm: <span style={{ color: '#b91c1c', fontSize: '12px' }}>9986742525</span>
+                            </div>
                           </td>
-                          <td style={{ width: '92px', verticalAlign: 'middle', textAlign: 'center', paddingLeft: '4px' }}>
+                          <td id="invoice-qr-cell" style={{ width: '92px', verticalAlign: 'middle', textAlign: 'center', paddingLeft: '4px' }}>
                             <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#0B5394', marginBottom: '3px', letterSpacing: '0.5px' }}>
                               SCAN TO PAY
                             </div>
                             <div style={{ background: '#ffffff', padding: '2px', display: 'inline-block', border: '1.5px solid #0B5394', borderRadius: '4px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-                              <div 
-                                style={{ display: 'block', width: '84px', height: '84px' }} 
-                                dangerouslySetInnerHTML={{ __html: QR_SVG }}
+                              <QrCodeRenderer 
+                                value="upi://pay?pa=s0424237152@slc&pn=YantraByte%20Solutions&cu=INR" 
+                                size={80} 
                               />
                             </div>
                           </td>

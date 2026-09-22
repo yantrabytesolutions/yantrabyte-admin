@@ -1812,8 +1812,10 @@ export default function AdminPanel() {
           <select
             value={status}
             onChange={e => updateTicketStatus(String(item.id), e.target.value)}
-            style={{ colorScheme: 'dark' }}
-            className={`px-2 py-0.5 rounded-full text-xs font-medium border bg-[#0F172A] text-white cursor-pointer outline-none transition-all ${colors[status] || 'bg-white/5 text-[#64748B] border-white/10'}`}
+            style={{ colorScheme: isDarkMode ? 'dark' : 'light' }}
+            className={`px-2 py-0.5 rounded-full text-xs font-medium border cursor-pointer outline-none transition-all ${
+              isDarkMode ? 'bg-[#0F172A] text-white' : 'bg-white text-slate-800 shadow-xs'
+            } ${colors[status] || (isDarkMode ? 'bg-white/5 text-[#64748B] border-white/10' : 'bg-slate-100 text-slate-700 border-slate-300')}`}
           >
             <option value="open">Open</option>
             <option value="in-progress">In Progress</option>
@@ -1838,15 +1840,15 @@ export default function AdminPanel() {
       );
     }
     if (colKey === 'created_at' || colKey === 'updated_at' || colKey === 'published_at') {
-      return <span className="text-[#94A3B8] text-xs">{formatDate(String(val))}</span>;
+      return <span className={`text-xs ${isDarkMode ? 'text-[#94A3B8]' : 'text-slate-500'}`}>{formatDate(String(val))}</span>;
     }
     if (colKey === 'rating') {
       return <span className="text-yellow-400">{val as React.ReactNode}</span>;
     }
     if (typeof val === 'object' && val !== null) {
-      return <span className="text-[#64748B] text-xs">{truncateStr(JSON.stringify(val), 30)}</span>;
+      return <span className={`text-xs ${isDarkMode ? 'text-[#64748B]' : 'text-slate-500'}`}>{truncateStr(JSON.stringify(val), 30)}</span>;
     }
-    return <span className="text-white text-sm">{truncateStr(String(val || '-'), 40)}</span>;
+    return <span className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>{truncateStr(String(val || '-'), 40)}</span>;
   };
 
   const exportCurrentTableToCSV = () => {
@@ -1976,7 +1978,11 @@ export default function AdminPanel() {
             placeholder="Search..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-[#64748B] text-sm focus:outline-none focus:border-[#0EA5E9]/50 transition-all"
+            className={`w-full pl-10 pr-4 py-2.5 rounded-lg border text-sm focus:outline-none focus:border-[#0EA5E9]/50 transition-all ${
+              isDarkMode 
+                ? 'bg-white/5 border-white/10 text-white placeholder-[#64748B]' 
+                : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400 shadow-sm'
+            }`}
           />
         </div>
 
@@ -1986,34 +1992,50 @@ export default function AdminPanel() {
             <Loader2 className="w-6 h-6 text-[#0EA5E9] animate-spin" />
           </div>
         ) : filteredData.length === 0 ? (
-          <div className="text-center py-20 text-[#64748B]">
-            <p className="text-lg">No items found</p>
+          <div className={`text-center py-20 ${isDarkMode ? 'text-[#64748B]' : 'text-slate-500'}`}>
+            <p className="text-lg font-medium">No items found</p>
             <p className="text-sm mt-1">Click "Add New" to create your first item</p>
           </div>
         ) : (
-          <div className="overflow-x-auto backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl">
+          <div className={`overflow-x-auto rounded-xl border ${
+            isDarkMode 
+              ? 'backdrop-blur-xl bg-white/5 border-white/10' 
+              : 'bg-white border-slate-200 shadow-sm'
+          }`}>
             <table className="w-full">
               <thead>
-                <tr className="border-b border-white/10">
+                <tr className={`border-b ${isDarkMode ? 'border-white/10 bg-white/[0.02]' : 'border-slate-200 bg-slate-50'}`}>
                   {columns.map(col => (
-                    <th key={col.key} className="px-4 py-3 text-left text-xs font-semibold text-[#94A3B8] uppercase tracking-wider">
+                    <th key={col.key} className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider ${
+                      isDarkMode ? 'text-[#94A3B8]' : 'text-slate-600'
+                    }`}>
                       {col.label}
                     </th>
                   ))}
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-[#94A3B8] uppercase tracking-wider sticky right-0 bg-[#0B1120] z-10 border-l border-white/10 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.3)]">
+                  <th className={`px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider sticky right-0 z-10 border-l shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.1)] ${
+                    isDarkMode ? 'bg-[#0B1120] text-[#94A3B8] border-white/10' : 'bg-slate-50 text-slate-600 border-slate-200'
+                  }`}>
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {filteredData.map((item) => (
-                  <tr key={String(item.id)} className="group border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                  <tr key={String(item.id)} className={`group border-b transition-colors ${
+                    isDarkMode 
+                      ? 'border-white/5 hover:bg-white/[0.04]' 
+                      : 'border-slate-100 hover:bg-slate-50/80'
+                  }`}>
                     {columns.map(col => (
                       <td key={col.key} className="px-4 py-3">
                         {renderCellValue(item, col.key)}
                       </td>
                     ))}
-                    <td className="px-4 py-3 sticky right-0 bg-[#0B1120] group-hover:bg-[#131B2C] z-10 border-l border-white/10 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.3)]">
+                    <td className={`px-4 py-3 sticky right-0 z-10 border-l shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.1)] transition-colors ${
+                      isDarkMode 
+                        ? 'bg-[#0B1120] group-hover:bg-[#131B2C] border-white/10' 
+                        : 'bg-white group-hover:bg-slate-50 border-slate-200'
+                    }`}>
                       <div className="flex items-center justify-end gap-2">
                         {config.publishedField && (
                           <button
@@ -2042,56 +2064,88 @@ export default function AdminPanel() {
                               <>
                                 <button
                                   onClick={() => handleInstantBill(item)}
-                                  className="p-1.5 rounded-lg hover:bg-white/5 text-[#64748B] hover:text-[#0EA5E9] transition-all"
+                                  className={`p-1.5 rounded-lg transition-all ${
+                                    isDarkMode 
+                                      ? 'hover:bg-white/5 text-[#94A3B8] hover:text-[#0EA5E9]' 
+                                      : 'hover:bg-slate-100 text-slate-500 hover:text-[#0284C7]'
+                                  }`}
                                   title="Create Invoice for this Repair"
                                 >
                                   <CreditCard className="w-4 h-4" />
                                 </button>
                                 <button
                                   onClick={() => sendWhatsAppAlert(item)}
-                                  className="p-1.5 rounded-lg hover:bg-white/5 text-[#64748B] hover:text-green-400 transition-all"
+                                  className={`p-1.5 rounded-lg transition-all ${
+                                    isDarkMode 
+                                      ? 'hover:bg-white/5 text-[#94A3B8] hover:text-green-400' 
+                                      : 'hover:bg-green-50 text-slate-500 hover:text-green-600'
+                                  }`}
                                   title="Send WhatsApp Client Alert"
                                 >
                                   <MessageSquare className="w-4 h-4" />
                                 </button>
                                 <button
                                   onClick={() => sendTelegramAlert(item)}
-                                  className="p-1.5 rounded-lg hover:bg-white/5 text-[#64748B] hover:text-blue-400 transition-all"
+                                  className={`p-1.5 rounded-lg transition-all ${
+                                    isDarkMode 
+                                      ? 'hover:bg-white/5 text-[#94A3B8] hover:text-blue-400' 
+                                      : 'hover:bg-blue-50 text-slate-500 hover:text-blue-600'
+                                  }`}
                                   title="Send Telegram Client Alert"
                                 >
                                   <Send className="w-4 h-4" />
                                 </button>
                                 <button
                                   onClick={() => printDeviceLabel(item)}
-                                  className="p-1.5 rounded-lg hover:bg-white/5 text-[#64748B] hover:text-amber-400 transition-all"
+                                  className={`p-1.5 rounded-lg transition-all ${
+                                    isDarkMode 
+                                      ? 'hover:bg-white/5 text-[#94A3B8] hover:text-amber-400' 
+                                      : 'hover:bg-amber-50 text-slate-500 hover:text-amber-600'
+                                  }`}
                                   title="Print Device Label"
                                 >
                                   <Ticket className="w-4 h-4" />
                                 </button>
                                 <button
                                   onClick={() => printJobSheet(item)}
-                                  className="p-1.5 rounded-lg hover:bg-white/5 text-[#64748B] hover:text-emerald-400 transition-all"
+                                  className={`p-1.5 rounded-lg transition-all ${
+                                    isDarkMode 
+                                      ? 'hover:bg-white/5 text-[#94A3B8] hover:text-emerald-400' 
+                                      : 'hover:bg-emerald-50 text-slate-500 hover:text-emerald-600'
+                                  }`}
                                   title="Print Job Sheet / Drop-off Receipt"
                                 >
                                   <Receipt className="w-4 h-4" />
                                 </button>
                                 <button
                                   onClick={() => uploadJobSheetToGoogleDrive(item)}
-                                  className="p-1.5 rounded-lg hover:bg-white/5 text-[#64748B] hover:text-amber-400 transition-all"
+                                  className={`p-1.5 rounded-lg transition-all ${
+                                    isDarkMode 
+                                      ? 'hover:bg-white/5 text-[#94A3B8] hover:text-amber-400' 
+                                      : 'hover:bg-amber-50 text-slate-500 hover:text-amber-600'
+                                  }`}
                                   title="Upload / Sync Job Sheet to Google Drive"
                                 >
                                   <HardDrive className="w-4 h-4" />
                                 </button>
                                 <button
                                   onClick={() => setSelectedJobSheetTicket(item as unknown as ServiceTicket)}
-                                  className="p-1.5 rounded-lg hover:bg-white/5 text-[#64748B] hover:text-purple-400 transition-all"
+                                  className={`p-1.5 rounded-lg transition-all ${
+                                    isDarkMode 
+                                      ? 'hover:bg-white/5 text-[#94A3B8] hover:text-purple-400' 
+                                      : 'hover:bg-purple-50 text-slate-500 hover:text-purple-600'
+                                  }`}
                                   title="Digital Job Sheet & Customer Touch Sign-off"
                                 >
                                   <FileCheck className="w-4 h-4" />
                                 </button>
                                 <button
                                   onClick={() => sendReviewRequestWhatsApp(item)}
-                                  className="p-1.5 rounded-lg hover:bg-amber-500/10 text-amber-400 hover:text-amber-300 transition-all"
+                                  className={`p-1.5 rounded-lg transition-all ${
+                                    isDarkMode 
+                                      ? 'hover:bg-amber-500/10 text-amber-400 hover:text-amber-300' 
+                                      : 'hover:bg-amber-50 text-amber-500 hover:text-amber-600'
+                                  }`}
                                   title="⭐ Send 5-Star Google Review Request on WhatsApp"
                                 >
                                   <Star className="w-4 h-4" />
@@ -2099,7 +2153,11 @@ export default function AdminPanel() {
                                 {item.status !== 'completed' && item.status !== 'closed' && (
                                   <button
                                     onClick={() => markTicketCompleted(item)}
-                                    className="p-1.5 rounded-lg hover:bg-white/5 text-[#64748B] hover:text-green-500 transition-all"
+                                    className={`p-1.5 rounded-lg transition-all ${
+                                      isDarkMode 
+                                        ? 'hover:bg-white/5 text-[#94A3B8] hover:text-green-500' 
+                                        : 'hover:bg-green-50 text-slate-500 hover:text-green-600'
+                                    }`}
                                     title="Mark as Completed"
                                   >
                                     <CheckCircle className="w-4 h-4" />
@@ -2109,7 +2167,11 @@ export default function AdminPanel() {
                             )}
                             <button
                               onClick={() => openEditForm(item)}
-                              className="p-1.5 rounded-lg hover:bg-white/5 text-[#64748B] hover:text-[#0EA5E9] transition-all"
+                              className={`p-1.5 rounded-lg transition-all ${
+                                isDarkMode 
+                                  ? 'hover:bg-white/5 text-[#94A3B8] hover:text-[#0EA5E9]' 
+                                  : 'hover:bg-slate-100 text-slate-500 hover:text-[#0284C7]'
+                              }`}
                               title="Edit"
                             >
                               <Pencil className="w-4 h-4" />
@@ -2118,13 +2180,15 @@ export default function AdminPanel() {
                               <div className="flex items-center gap-1">
                                 <button
                                   onClick={() => handleDelete(String(item.id))}
-                                  className="px-2 py-1 rounded-lg bg-red-500/20 text-red-400 text-xs font-medium hover:bg-red-500/30 transition-all"
+                                  className="px-2 py-1 rounded-lg bg-red-500/20 text-red-500 text-xs font-medium hover:bg-red-500/30 transition-all"
                                 >
                                   Confirm
                                 </button>
                                 <button
                                   onClick={() => setDeleteConfirm(null)}
-                                  className="px-2 py-1 rounded-lg bg-white/5 text-[#94A3B8] text-xs hover:bg-white/10 transition-all"
+                                  className={`px-2 py-1 rounded-lg text-xs transition-all ${
+                                    isDarkMode ? 'bg-white/5 text-[#94A3B8] hover:bg-white/10' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                  }`}
                                 >
                                   Cancel
                                 </button>
@@ -2132,7 +2196,11 @@ export default function AdminPanel() {
                             ) : (
                               <button
                                 onClick={() => setDeleteConfirm(String(item.id))}
-                                className="p-1.5 rounded-lg hover:bg-white/5 text-[#64748B] hover:text-red-400 transition-all"
+                                className={`p-1.5 rounded-lg transition-all ${
+                                  isDarkMode 
+                                    ? 'hover:bg-white/5 text-[#94A3B8] hover:text-red-400' 
+                                    : 'hover:bg-red-50 text-slate-500 hover:text-red-600'
+                                }`}
                                 title="Delete"
                               >
                                 <Trash2 className="w-4 h-4" />

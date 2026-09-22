@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Antigravity Unified Operations Server</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: #111827;
+      --border: #1f2937;
+      --text: #f9fafb;
+      --text-muted: #9ca3af;
+      --accent: #3b82f6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      padding: 1.5rem;
+      min-height: 100vh;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 2rem;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      margin-bottom: 2rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+    .header-left h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .header-left p {
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+      font-size: 0.9rem;
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #10b981;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s, border-color 0.2s;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: #3b82f6;
+    }
+    .card-head {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .ci-fuel { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+    .ci-iibs { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+    .ci-ybs { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+    .ci-cloud { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; }
+    
+    .card-head h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+    .card-desc {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      line-height: 1.5;
+      margin-bottom: 1.25rem;
+    }
+    .card-meta {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 8px;
+      padding: 0.75rem;
+      margin-bottom: 1.25rem;
+      font-size: 0.8rem;
+      display: flex;
+      justify-content: space-between;
+    }
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 0.8rem;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-decoration: none;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.15s;
+      border: none;
+    }
+    .btn-fuel { background: #d97706; }
+    .btn-fuel:hover { background: #b45309; }
+    .btn-iibs { background: #2563eb; }
+    .btn-iibs:hover { background: #1d4ed8; }
+    .btn-ybs { background: #059669; }
+    .btn-ybs:hover { background: #047857; }
+    .btn-cloud { background: #7c3aed; }
+    .btn-cloud:hover { background: #6d28d9; }
+
+    .remote-strip {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.25rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .remote-title h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .remote-title p {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-top: 0.2rem;
+    }
+    .remote-endpoints {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .pill {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid #334155;
+      padding: 0.45rem 0.85rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-family: monospace;
+      color: #93c5fd;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="header-left">
+      <h1><i data-lucide="server" style="color: #3b82f6;"></i> Antigravity Unified Operations Server</h1>
+      <p>Single-Hub Remote Control for Fuel Station, IIBS Desk, YantraByte Billing & Nextcloud</p>
+    </div>
+    <div class="status-badge">
+      <div class="pulse-dot"></div>
+      Server Online & Sync Active
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <!-- 1. Fuel Station -->
+    <div class="card">
+      <div>
+        <div class="card-head">
+          <div class="card-icon ci-fuel"><i data-lucide="fuel"></i></div>
+          <div>
+            <h2>Fuel Station Attendance</h2>
+            <small style="color: #f59e0b;">Sri Babu Raju Ram Bunk</small>
+          </div>
+        </div>
+        <p class="card-desc">Biometric shift timings, punch in/out roster, 26 staff active monitoring & daily CSV export.</p>
+        <div class="card-meta">
+          <span>Active Staff: <strong>26 Members</strong></span>
+          <span>Database: <strong>MongoDB Atlas</strong></span>
+        </div>
+      </div>
+      <a href="https://iibsservicerequest.vercel.app/petrol-bunk.html" target="_blank" class="btn btn-fuel">
+        <i data-lucide="external-link"></i> Open Fuel Station Portal
+      </a>
+    </div>
+
+    <!-- 2. IIBS Desk -->
+    <div class="card">
+      <div>
+        <div class="card-head">
+          <div class="card-icon ci-iibs"><i data-lucide="life-buoy"></i></div>
+          <div>
+            <h2>IIBS Service Desk</h2>
+            <small style="color: #60a5fa;">Campus Support Portal</small>
+          </div>
+        </div>
+        <p class="card-desc">IT and infrastructure ticketing, technician work orders, mobile asset register & vendor procurement.</p>
+        <div class="card-meta">
+          <span>Active Tickets: <strong>150+</strong></span>
+          <span>Assets Logged: <strong>Mobiles & Laptops</strong></span>
+        </div>
+      </div>
+      <a href="https://iibsservicerequest.vercel.app/admin.html" target="_blank" class="btn btn-iibs">
+        <i data-lucide="external-link"></i> Open IIBS Admin Desk
+      </a>
+    </div>
+
+    <!-- 3. YantraByte & anantatechcare -->
+    <div class="card">
+      <div>
+        <div class="card-head">
+          <div class="card-icon ci-ybs"><i data-lucide="receipt"></i></div>
+          <div>
+            <h2>YantraByte & Billing</h2>
+            <small style="color: #34d399;">Invoicing & Operations</small>
+          </div>
+        </div>
+        <p class="card-desc">Client billing, automated quotation generator, repair tracking, customer ledger and payment QR receipts.</p>
+        <div class="card-meta">
+          <span>Invoices: <strong>39 Live</strong></span>
+          <span>Customers: <strong>44 Directory</strong></span>
+        </div>
+      </div>
+      <a href="https://yantrabyte.anantatechcare.com/admin" target="_blank" class="btn btn-ybs">
+        <i data-lucide="external-link"></i> Open YantraByte Admin
+      </a>
+    </div>
+
+    <!-- 4. Nextcloud Private Vault -->
+    <div class="card">
+      <div>
+        <div class="card-head">
+          <div class="card-icon ci-cloud"><i data-lucide="cloud"></i></div>
+          <div>
+            <h2>Nextcloud Storage Vault</h2>
+            <small style="color: #c084fc;">anantatechcare.com</small>
+          </div>
+        </div>
+        <p class="card-desc">Enterprise private cloud, 200GB+ storage vaults, mobile auto-camera backups & client family sharing.</p>
+        <div class="card-meta">
+          <span>Storage Node: <strong>1 TB Local Vault</strong></span>
+          <span>Protocol: <strong>WebDAV SSL</strong></span>
+        </div>
+      </div>
+      <a href="https://anantatechcare.com" target="_blank" class="btn btn-cloud">
+        <i data-lucide="external-link"></i> Open Nextcloud Server
+      </a>
+    </div>
+
+  </div>
+
+  <div class="remote-strip">
+    <div class="remote-title">
+      <h3><i data-lucide="monitor" style="color: #38bdf8;"></i> Remote Desktop & Cloud Relay Status</h3>
+      <p>Always connect from your mobile, laptop or remote PC using your credentials</p>
+    </div>
+    <div class="remote-endpoints">
+      <div class="pill">Chrome Remote Desktop: Active</div>
+      <div class="pill">Local RDP: 192.168.0.248:3389</div>
+      <div class="pill">SSH Cloud Relay: 3.7.134.187:33890</div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>

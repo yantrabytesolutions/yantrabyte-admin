@@ -1,4 +1,13 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /portal
+Disallow: /portal/
+Disallow: /estimate/
+Disallow: /quotation/
+Disallow: /whatsapp
+Disallow: /api/
 
 Sitemap: https://yantrabyte.anantatechcare.com/sitemap.xml
+
+

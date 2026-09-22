@@ -1,0 +1,74 @@
+[
+  {
+    "id": "3a1b0695-e1fc-45d8-99ae-ceb6bfe3a8c8",
+    "question": "What areas in Bangalore do you serve?",
+    "answer": "We serve all areas in Bangalore including Whitefield, Electronic City, Koramangala, Indiranagar, HSR Layout, Marathahalli, BTM Layout, Jayanagar, and more.",
+    "category": "general",
+    "is_published": true,
+    "sort_order": 1,
+    "created_at": "2026-05-16T08:56:33.051143+00:00"
+  },
+  {
+    "id": "db6394d5-5d33-4e15-9ad4-90c23d5a3134",
+    "question": "Do you provide same-day service?",
+    "answer": "Yes! We offer same-day service for most repair and installation requests. Emergency support is available 24/7.",
+    "category": "general",
+    "is_published": true,
+    "sort_order": 2,
+    "created_at": "2026-05-16T08:56:33.051143+00:00"
+  },
+  {
+    "id": "2971c2a3-d8fc-484d-b1bf-15d2ecf77317",
+    "question": "What brands of CCTV cameras do you install?",
+    "answer": "We install all major brands including Hikvision, Dahua, CP Plus, Godrej, and Samsung. We recommend the best option based on your requirements and budget.",
+    "category": "cctv",
+    "is_published": true,
+    "sort_order": 3,
+    "created_at": "2026-05-16T08:56:33.051143+00:00"
+  },
+  {
+    "id": "2d07cdc6-d0cf-48dc-8704-9704128028dd",
+    "question": "How much does CCTV installation cost?",
+    "answer": "CCTV installation costs vary based on the number of cameras, type (analog/IP), and features required. Contact us for a free site survey and customized quote.",
+    "category": "cctv",
+    "is_published": true,
+    "sort_order": 4,
+    "created_at": "2026-05-16T08:56:33.051143+00:00"
+  },
+  {
+    "id": "cbd9022a-8754-428a-8aa4-2c265820115c",
+    "question": "Do you provide warranty on repairs?",
+    "answer": "Yes, we provide a 90-day warranty on all repair services and 1-year warranty on new installations.",
+    "category": "repair",
+    "is_published": true,
+    "sort_order": 5,
+    "created_at": "2026-05-16T08:56:33.051143+00:00"
+  },
+  {
+    "id": "6c21c05b-9bfb-4694-8bf2-febce00b0af9",
+    "question": "What is included in AMC support?",
+    "answer": "Our AMC includes regular maintenance visits, priority support, spare parts (select plans), performance reports, and emergency response within 4 hours.",
+    "category": "amc",
+    "is_published": true,
+    "sort_order": 6,
+    "created_at": "2026-05-16T08:56:33.051143+00:00"
+  },
+  {
+    "id": "113a5118-a101-487e-aa38-5ca9f1789140",
+    "question": "Can I monitor CCTV from my phone?",
+    "answer": "Absolutely! All our CCTV installations come with mobile app setup so you can monitor your property from anywhere in the world.",
+    "category": "cctv",
+    "is_published": true,
+    "sort_order": 7,
+    "created_at": "2026-05-16T08:56:33.051143+00:00"
+  },
+  {
+    "id": "cf47249f-d88a-446a-a4a7-3f5613ab6080",
+    "question": "Do you offer free consultations?",
+    "answer": "Yes, we offer free on-site consultations for CCTV, networking, and office IT setup projects. Call us to schedule yours.",
+    "category": "general",
+    "is_published": true,
+    "sort_order": 8,
+    "created_at": "2026-05-16T08:56:33.051143+00:00"
+  }
+]

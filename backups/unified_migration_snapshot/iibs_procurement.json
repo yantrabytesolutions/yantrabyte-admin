@@ -1,0 +1,92 @@
+[
+  {
+    "_id": "6a3baf64e45b9fd62de829f6",
+    "doc_type": "RFQ",
+    "ref_id": "RFQ-1003",
+    "vendor_name": "AARMOUR SURVEILLANCE PVT LTD",
+    "vendor_email": "praveein@aarmour.asia",
+    "items": [
+      {
+        "description": "16 port GIGA POE SWITCH ",
+        "quantity": 2,
+        "unit_price": 0,
+        "total": 0,
+        "_id": "6a3baf64e45b9fd62de829f7"
+      },
+      {
+        "description": "4port POE SWITCH",
+        "quantity": 2,
+        "unit_price": 0,
+        "total": 0,
+        "_id": "6a3baf64e45b9fd62de829f8"
+      }
+    ],
+    "total_amount": 0,
+    "remarks": "",
+    "status": "Sent",
+    "date": "2026-06-24T10:20:20.458Z",
+    "replies": [],
+    "__v": 0
+  },
+  {
+    "_id": "6a3a674b3d0be46348337d2e",
+    "doc_type": "RFQ",
+    "ref_id": "RFQ-1002",
+    "vendor_name": "AARMOUR SURVEILLANCE PVT LTD",
+    "vendor_email": "praveein@aarmour.asia",
+    "items": [
+      {
+        "description": "8gb memeroy card",
+        "quantity": 1,
+        "unit_price": 0,
+        "total": 0,
+        "_id": "6a3a74967dabf89ff0d50079"
+      }
+    ],
+    "total_amount": 0,
+    "remarks": "required one 8 GB memory card",
+    "status": "Sent",
+    "date": "2026-06-23T11:00:27.910Z",
+    "replies": [],
+    "__v": 0
+  },
+  {
+    "_id": "6a3a4c25130f2dde50f663e4",
+    "doc_type": "RFQ",
+    "ref_id": "RFQ-1006",
+    "vendor_name": "AARMOUR SURVEILLANCE PVT LTD",
+    "vendor_email": "praveein@aarmour.asia",
+    "items": [
+      {
+        "description": " Laserjet All-in-one Printer with 12A toner supported ",
+        "quantity": 1,
+        "unit_price": 0,
+        "total": 0,
+        "_id": "6a3a74a07dabf89ff0d5007e"
+      }
+    ],
+    "total_amount": 0,
+    "remarks": "Request Quotation for\nPlease send a quotation",
+    "status": "Replied",
+    "date": "2026-06-23T09:04:37.275Z",
+    "replies": [
+      {
+        "date": "2026-06-24T10:27:24.000Z",
+        "from": "praveein@aarmour.asia",
+        "subject": "RE: Request for Quotation from IIBS [REF: RFQ-1006]",
+        "body": "Hi,\n\nPlease find enclosed offer for your requirement..\n\n\n\n\n\n  Warm Regards\n\n\nPraveein Kumar S\nDirector\n \n\n\n\n\n-----Original Message-----\nFrom: IIBS IT Department <iibsitdesk@gmail.com> \nSent: 23 June 2026 05:27 PM\nTo: praveein@aarmour.asia\nSubject: Request for Quotation from IIBS [REF: RFQ-1006]\n\nDear AARMOUR SURVEILLANCE PVT LTD,\n\nPlease find attached the Request for Quotation (RFQ-1006) from IIBS.\nIf you have any questions or to respond, please reply directly to this email.\n\nBest Regards,\nIIBS IT Department\n",
+        "_id": "6a3bb1989db38ff901fe0f42",
+        "attachments": []
+      },
+      {
+        "date": "2026-06-24T10:27:24.000Z",
+        "from": "praveein@aarmour.asia",
+        "subject": "RE: Request for Quotation from IIBS [REF: RFQ-1006]",
+        "body": "Hi,\n\nPlease find enclosed offer for your requirement..\n\n\n\n\n\n  Warm Regards\n\n\nPraveein Kumar S\nDirector\n \n\n\n\n\n-----Original Message-----\nFrom: IIBS IT Department <iibsitdesk@gmail.com> \nSent: 23 June 2026 05:27 PM\nTo: praveein@aarmour.asia\nSubject: Request for Quotation from IIBS [REF: RFQ-1006]\n\nDear AARMOUR SURVEILLANCE PVT LTD,\n\nPlease find attached the Request for Quotation (RFQ-1006) from IIBS.\nIf you have any questions or to respond, please reply directly to this email.\n\nBest Regards,\nIIBS IT Department\n",
+        "_id": "6a3bb1b19db38ff901fe0f4a",
+        "attachments": []
+      }
+    ],
+    "__v": 2
+  }
+]

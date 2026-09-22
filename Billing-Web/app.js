@@ -1,4 +1,4 @@
-﻿const SUPABASE_URL = 'https://eyajwjrafudarccvcada.supabase.co';
+const SUPABASE_URL = 'https://eyajwjrafudarccvcada.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5YWp3anJhZnVkYXJjY3ZjYWRhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODkxODQ2MiwiZXhwIjoyMDk0NDk0NDYyfQ.9A9D9dPb_GoHJiREuIWML1PATN-es4MC9_DE8wvK76g';
 
 async function supabaseFetch(endpoint, options = {}) {
@@ -258,7 +258,14 @@ async function generateInvoice() {
     document.getElementById('pdf-balance').innerText = fmtINR(balance);
     
     const upiString = 'upi://pay?pa=s0424237152@slc&pn=YantraByte%20Solutions&am=' + grandTotal;
-    document.getElementById('pdf-qr').src = 'https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl=' + encodeURIComponent(upiString);
+    const qrImg = document.getElementById('pdf-qr');
+    const qrContainer = document.getElementById('pdf-qr-container');
+    if (qrImg) {
+      qrImg.onerror = function() {
+        if (qrContainer) qrContainer.style.display = 'none';
+      };
+      qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent(upiString);
+    }
 
     let tbody = '';
     items.forEach((it, i) => {

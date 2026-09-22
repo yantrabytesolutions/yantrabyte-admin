@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { QrCodeSvg } from '../components/QrCodeSvg';
 import { HardwareBrandsBanner } from '../components/HardwareBrandsBanner';
+import { QrCodeRenderer } from '../components/QrCodeRenderer';
 
 interface InvoiceItem {
   description: string;
@@ -539,12 +539,17 @@ export default function EstimateView() {
               <div><strong>A/C No:</strong> 033311501023226</div>
               <div><strong>IFSC:</strong> NESF0000333</div>
               <div><strong>UPI:</strong> s0424237152@slc</div>
+              <div style={{ marginTop: 4, fontSize: 11, color: '#4338ca', fontWeight: 'bold' }}>
+                Pay via GPay / PhonePe / BHIM: <span style={{ color: '#b91c1c' }}>9986742525</span>
+              </div>
             </div>
             <div style={{ padding: '8px 20px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
-              <QrCodeSvg
-                value={`upi://pay?pa=s0424237152@slc&pn=${encodeURIComponent('YantraByte Solutions')}&am=${estimate.balance_due || estimate.grand_total}&cu=INR`}
-                size={72}
-              />
+              <div style={{ background: '#fff', padding: '2px', border: '1px solid #e5e7eb', borderRadius: '6px', display: 'inline-block' }}>
+                <QrCodeRenderer 
+                  value="upi://pay?pa=s0424237152@slc&pn=YantraByte%20Solutions&cu=INR" 
+                  size={76} 
+                />
+              </div>
               <div style={{ fontSize: 11, color: '#6b7280' }}>
                 Scan to pay<br />via UPI
               </div>

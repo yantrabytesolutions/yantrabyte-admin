@@ -51,22 +51,19 @@ Write-Host "[*] Copying Windows installation files from Drive ${winDrive}:\..." 
 Copy-Item -Path "${winDrive}:\*" -Destination $workDir -Recurse -Force
 Dismount-DiskImage -ImagePath $sourceIso
 
-# 4. INSTANT DIRECT STREAM EXPORT WITH WIMLIB: Keep ONLY Windows 11 Home (Index 1) & Windows 11 Pro (Index 6)
-Write-Host "[*] Filtering WIM image using wimlib (Keeping ONLY Windows 11 Home & Pro)..." -ForegroundColor Yellow
+# 4. INSTANT DIRECT STREAM EXPORT WITH WIMLIB: Keep ONLY Windows 11 Pro (Index 6)
+Write-Host "[*] Filtering WIM image using wimlib (Keeping ONLY Windows 11 Pro)..." -ForegroundColor Yellow
 $srcWim = Get-ChildItem (Join-Path $workDir "sources") -Filter "install.*" | Select-Object -First 1
 $destWim = Join-Path $workDir "sources\install_filtered.wim"
 
 if ($srcWim -and (Test-Path $wimlib)) {
-    Write-Host "    [+] Exporting Index 1: Windows 11 Home..." -ForegroundColor Green
-    & $wimlib export "$($srcWim.FullName)" 1 "$destWim"
-    
     Write-Host "    [+] Exporting Index 6: Windows 11 Pro..." -ForegroundColor Green
     & $wimlib export "$($srcWim.FullName)" 6 "$destWim"
     
     if (Test-Path $destWim) {
         Remove-Item -Path $srcWim.FullName -Force
         Move-Item -Path $destWim -Destination (Join-Path $workDir "sources\install.wim") -Force
-        Write-Host "[SUCCESS] WIM filtered! Only Windows 11 Home and Pro remain in setup." -ForegroundColor Green
+        Write-Host "[SUCCESS] WIM filtered! Only Windows 11 Pro remains in setup." -ForegroundColor Green
     }
 }
 
@@ -208,12 +205,15 @@ Write-Host "[*] Packaging Bootable ISO with Microsoft oscdimg engine..." -Foregr
 if (Test-Path $targetIso) { Remove-Item -Path $targetIso -Force }
 
 $etfsboot = Join-Path $workDir "boot\etfsboot.com"
-$efisys   = Join-Path $workDir "efi\microsoft\boot\efisys.bin"
+$efisysNoPrompt = Join-Path $workDir "efi\microsoft\boot\efisys_noprompt.bin"
+$efisysBin      = Join-Path $workDir "efi\microsoft\boot\efisys.bin"
+$efisys = if (Test-Path $efisysNoPrompt) { $efisysNoPrompt } else { $efisysBin }
+
 $bootData = "2#p0,e,b`"$etfsboot`"#pEF,e,b`"$efisys`""
 
 $processInfo = New-Object System.Diagnostics.ProcessStartInfo
 $processInfo.FileName = $oscdimg
-$processInfo.Arguments = "-m -o -u2 -udfver102 -bootdata:$bootData `"$workDir`" `"$targetIso`""
+$processInfo.Arguments = "-m -o -h -u2 -udfver102 -l`"WIN11_INSTALL`" -bootdata:$bootData `"$workDir`" `"$targetIso`""
 $processInfo.UseShellExecute = $false
 $processInfo.RedirectStandardOutput = $true
 $processInfo.RedirectStandardError = $true

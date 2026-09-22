@@ -157,6 +157,16 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
         html2canvas: { scale: 2, useCORS: true, windowWidth: 794, scrollY: 0, x: 0, y: 0 },
         jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
       };
+      if (invoicePrintRef.current) {
+        const imgElements = Array.from(invoicePrintRef.current.querySelectorAll('img'));
+        await Promise.all(
+          imgElements.map(img => {
+            if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+            if (typeof img.decode === 'function') return img.decode().catch(() => Promise.resolve());
+            return new Promise(res => { img.onload = () => res(null); img.onerror = () => res(null); setTimeout(res, 300); });
+          })
+        );
+      }
       await (html2pdf as any)().set(opt).from(invoicePrintRef.current).save();
     } catch (err) {
       console.error('Error generating PDF:', err);

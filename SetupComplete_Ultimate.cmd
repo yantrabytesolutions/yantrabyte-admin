@@ -8,12 +8,18 @@ title Ultimate Windows 11 Instant Setup
 reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v "EnableFirstLogonAnimation" /t REG_DWORD /d 0 /f >nul 2>&1
 reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v "EnableAdminAccount" /t REG_DWORD /d 1 /f >nul 2>&1
 
-set "SERVICES=BDESVC DiagTrack diagsvc DPS WdiServiceHost WdiSystemHost Netlogon WPCSvc PhoneSvc Fax seclogon SensorService SCardSvr WalletService WbioSrvc WerSvc icssvc MapsBroker XboxGipSvc XblAuthManager XblGameSave XboxNetApiSvc dmwappushservice"
+set "SERVICES=BDESVC DiagTrack diagsvc DPS WdiServiceHost WdiSystemHost Netlogon WPCSvc PhoneSvc Fax SCardSvr WalletService WerSvc icssvc MapsBroker XboxGipSvc XblAuthManager XblGameSave XboxNetApiSvc dmwappushservice"
 
 for %%S in (%SERVICES%) do (
     net stop "%%S" /y >nul 2>&1
     sc config "%%S" start= disabled >nul 2>&1
 )
+
+:: Ensure critical Settings app services remain active
+sc config seclogon start= demand >nul 2>&1
+sc config SensorService start= demand >nul 2>&1
+sc config WbioSrvc start= demand >nul 2>&1
+sc config VaultSvc start= auto >nul 2>&1
 
 :: ==========================================================
 :: 2. INSTANT REGISTRY BLOATWARE DISABLER (0.001 SECONDS)
@@ -36,8 +42,8 @@ schtasks /change /tn "Microsoft\Windows\Customer Experience Improvement Program\
 :: ==========================================================
 :: 3. SYSTEM PERFORMANCE & MULTIMEDIA RESPONSIVENESS TWEAKS
 :: ==========================================================
-powercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61 >nul 2>&1
-for /f "tokens=4" %%a in ('powercfg -list ^| findstr /i "Ultimate Performance"') do powercfg -setactive %%a >nul 2>&1
+powercfg -restoredefaultschemes >nul 2>&1
+powercfg -setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c >nul 2>&1 || powercfg -setactive 381b4222-f694-41f0-9685-ff5bb260df2e >nul 2>&1
 
 :: Set default settings for all new user profiles via HKU\.DEFAULT and HKLM
 reg add "HKU\.DEFAULT\Control Panel\Desktop" /v "MenuShowDelay" /t REG_SZ /d "20" /f >nul 2>&1

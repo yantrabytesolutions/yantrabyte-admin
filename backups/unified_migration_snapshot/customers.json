@@ -1,0 +1,442 @@
+[
+  {
+    "id": "c946bd69-bfdf-4db9-98a4-58fecb33501a",
+    "name": "Aarmour Surveillance",
+    "phone": "9902583833",
+    "email": "info@aarmour.asia",
+    "address": null,
+    "created_at": "2026-05-27T11:34:41.79863+00:00",
+    "updated_at": "2026-08-24T14:33:44.228+00:00",
+    "account_id": null
+  },
+  {
+    "id": "0695de96-d593-4be7-8781-cd327f927bdf",
+    "name": "Dr Sreelekshmi",
+    "phone": "9207199609",
+    "email": null,
+    "address": "House No 137, B3, 3rd Main Rd, 4th Phase, Yelahanka New Town, Bengaluru, Karnataka 560064",
+    "created_at": "2026-06-06T15:32:04.080514+00:00",
+    "updated_at": "2026-06-27T03:50:01.671+00:00",
+    "account_id": null
+  },
+  {
+    "id": "b1076131-2e8d-45bd-9014-e16aa332f7b1",
+    "name": "Manjunath",
+    "phone": "+91 91640 21900",
+    "email": "manjunath7580@gmail.com",
+    "address": null,
+    "created_at": "2026-07-05T10:34:21.691881+00:00",
+    "updated_at": "2026-07-05T10:34:21.691881+00:00",
+    "account_id": null
+  },
+  {
+    "id": "24451977-5060-4aaa-8dca-fbe951311879",
+    "name": "Dr Sreelekshmi",
+    "phone": "99449569718",
+    "email": null,
+    "address": "House No 1135, 9th Cross Rd, 7th Block, HMT Layout, Vidyaranyapura, Bengaluru, Karnataka 560097",
+    "created_at": "2026-05-29T08:47:01.253733+00:00",
+    "updated_at": "2026-06-27T03:51:42.123+00:00",
+    "account_id": null
+  },
+  {
+    "id": "67ea40cb-f507-4633-bb6a-083122500928",
+    "name": "yantrabyte solutions",
+    "phone": "9986742525",
+    "email": "yantrabyte.solutions@gmail.com",
+    "address": "47A 1st, Cross ,SAINAGAR 2ND STAGE, 2nd Main Rd, Vidyaranyapura Post, Chikkabettahalli, Bengaluru, Karnataka 560097",
+    "created_at": "2026-06-25T15:43:57.290468+00:00",
+    "updated_at": "2026-07-30T18:14:59.174783+00:00",
+    "account_id": null
+  },
+  {
+    "id": "87791cd6-4787-46ec-8e76-e2dc3b56757f",
+    "name": "Yogesh Aradhya",
+    "phone": "97413 22746",
+    "email": "yogesharadhya03@gmail.com",
+    "address": "12, Sri Sai Krupa Nilaya, 8th cross, Kanshiram nagar, Bengaluru 560097",
+    "created_at": "2026-07-20T16:51:00.528656+00:00",
+    "updated_at": "2026-08-03T11:42:11.650718+00:00",
+    "account_id": null
+  },
+  {
+    "id": "e4624865-d875-4374-873b-0af75b525732",
+    "name": "test",
+    "phone": "99999999999",
+    "email": "rameshas2105@gmail.com",
+    "address": null,
+    "created_at": "2026-06-06T15:32:04.080514+00:00",
+    "updated_at": "2026-06-22T08:46:37.278+00:00",
+    "account_id": null
+  },
+  {
+    "id": "ee4b3ae7-dda2-4c1f-bb41-e5f57b38fe05",
+    "name": "Dr.Sreelekshmi's Kerala Ayurveda Centre (Yelahanka New Town)",
+    "phone": "9449569718",
+    "email": "thomasnvarghese@gmail.com",
+    "address": "House No 137, B3, 3rd Main Rd, 4th Phase, Yelahanka New Town, Bengaluru, Karnataka 560064",
+    "created_at": "2026-07-20T15:16:36.274489+00:00",
+    "updated_at": "2026-08-03T11:42:14.284878+00:00",
+    "account_id": null
+  },
+  {
+    "id": "b2ef0dfd-9b3f-4c25-99f4-ef55c1c80811",
+    "name": "Dion Saldanha",
+    "phone": "9591159063",
+    "email": "dionsaldanha56@gmail.com",
+    "address": "374, 5th Main Rd\nAMS Layout, Vidyaranyapura",
+    "created_at": "2026-07-13T15:45:37.266627+00:00",
+    "updated_at": "2026-08-03T11:42:16.98096+00:00",
+    "account_id": null
+  },
+  {
+    "id": "4494eb2d-e011-47c7-bd8c-33f3d1833a87",
+    "name": "jameel",
+    "phone": "+91 98853 31724",
+    "email": "jameel259@gmail.com",
+    "address": "H.no.11,11th cross Veerasagar main road, Mundeshwar layout - Attur Yelahanka 560064",
+    "created_at": "2026-06-12T17:47:22.728871+00:00",
+    "updated_at": "2026-06-14T11:11:43.3+00:00",
+    "account_id": null
+  },
+  {
+    "id": "9cacb4d8-d78f-4b50-a5fd-da9339eb2909",
+    "name": "Security Verification Bot",
+    "phone": "9999999999",
+    "email": "rameshas2105@gmail.com",
+    "address": null,
+    "created_at": "2026-06-06T15:32:04.080514+00:00",
+    "updated_at": "2026-08-28T05:22:59.309365+00:00",
+    "account_id": null
+  },
+  {
+    "id": "d0923652-1150-4ad0-9923-0adb030995b7",
+    "name": "Sougandh Sujay M M",
+    "phone": "8105295401",
+    "email": "sougandh.mm@gmail.com",
+    "address": "6-B \"SOUJANYA\" opposite USA Apartment Thindlu Vidyaranyapura Bengaluru 560097",
+    "created_at": "2026-06-06T15:32:04.080514+00:00",
+    "updated_at": "2026-06-22T09:59:20.912+00:00",
+    "account_id": null
+  },
+  {
+    "id": "5a4185e4-19fc-474b-b011-948119d529b1",
+    "name": "Sagar",
+    "phone": "9591451419",
+    "email": "sagar.venkatesh1989@gmail.com",
+    "address": "Vidyaranyapura, bangalore",
+    "created_at": "2026-06-06T15:32:04.080514+00:00",
+    "updated_at": "2026-06-22T10:01:50.291+00:00",
+    "account_id": null
+  },
+  {
+    "id": "902ba896-cc93-4539-b4b1-db74b79529c9",
+    "name": "Vijaya paints and hardware",
+    "phone": "95383 00013",
+    "email": "selva8484@yahoo.co.in",
+    "address": "Maruthi Nagar Bangalore 94",
+    "created_at": "2026-08-25T04:22:34.477358+00:00",
+    "updated_at": "2026-08-30T11:05:50.811+00:00",
+    "account_id": null
+  },
+  {
+    "id": "44ecc880-4f28-4037-a18d-9ea47f006457",
+    "name": "N Prashanth",
+    "phone": "9164154505",
+    "email": "prashanthraju2004@gmail.com",
+    "address": "#417/7 , G2 , 4th cross , A sector , Yelahanka - Newtown",
+    "created_at": "2026-05-28T02:24:44.422129+00:00",
+    "updated_at": "2026-06-22T10:02:48.623+00:00",
+    "account_id": null
+  },
+  {
+    "id": "61a44666-112a-476a-8a8d-44ea64ac4241",
+    "name": "Yashwanth P",
+    "phone": "9901759653",
+    "email": "yashavanthp2004@gmail.com",
+    "address": null,
+    "created_at": "2026-06-25T15:43:57.290468+00:00",
+    "updated_at": "2026-06-26T12:59:21.874677+00:00",
+    "account_id": null
+  },
+  {
+    "id": "4ab7729c-2c16-4d51-99b9-2ca6ef32271d",
+    "name": "Manjesh",
+    "phone": "8660701899",
+    "email": "tmanjesh. 7712@gmail.com",
+    "address": null,
+    "created_at": "2026-06-06T15:32:04.080514+00:00",
+    "updated_at": "2026-06-22T11:14:57.727+00:00",
+    "account_id": null
+  },
+  {
+    "id": "20e73e4e-894f-4d5e-9326-1382cda62270",
+    "name": "Sreekanth",
+    "phone": "9900055411",
+    "email": null,
+    "address": "Arvind BelAir, Yelahanka main road, Vidyaranyapura",
+    "created_at": "2026-07-09T15:19:30.737409+00:00",
+    "updated_at": "2026-08-03T11:42:19.350952+00:00",
+    "account_id": null
+  },
+  {
+    "id": "81e3aecb-e36e-4b6a-8edc-0a8f44333515",
+    "name": "Girish",
+    "phone": "9945408547",
+    "email": "giri1119@gmail.com",
+    "address": null,
+    "created_at": "2026-06-06T15:32:04.080514+00:00",
+    "updated_at": "2026-06-06T15:32:04.080514+00:00",
+    "account_id": null
+  },
+  {
+    "id": "d2efdfad-3434-45b5-ae47-c70f1afa1d8e",
+    "name": "Drakshayni",
+    "phone": "99726 40959",
+    "email": "drakshayinianp@gmail.com",
+    "address": "# 520 SVS patells apartment Byatarayanapura",
+    "created_at": "2026-06-25T15:43:57.290468+00:00",
+    "updated_at": "2026-08-19T11:47:46.209+00:00",
+    "account_id": null
+  },
+  {
+    "id": "5c1ed170-c944-4efd-bd4c-9e6efc6cbfae",
+    "name": "Mallarswami nonvinkere",
+    "phone": "9731846846",
+    "email": "mailar@gmail.com",
+    "address": null,
+    "created_at": "2026-06-06T15:32:04.080514+00:00",
+    "updated_at": "2026-06-06T15:32:04.080514+00:00",
+    "account_id": null
+  },
+  {
+    "id": "bfb520f9-71e6-4470-90bf-5cd861fd6d71",
+    "name": "Swarna",
+    "phone": "9632595904",
+    "email": "rameshas2105@gmail.com",
+    "address": null,
+    "created_at": "2026-06-06T15:32:04.080514+00:00",
+    "updated_at": "2026-06-06T15:32:04.080514+00:00",
+    "account_id": null
+  },
+  {
+    "id": "3c0b7d60-2294-43bc-9a20-162abd3f552b",
+    "name": "Girish Malige",
+    "phone": "9886253098",
+    "email": "girimalige@yahoo.co.in",
+    "address": null,
+    "created_at": "2026-06-06T15:32:04.080514+00:00",
+    "updated_at": "2026-06-22T11:20:46.199+00:00",
+    "account_id": null
+  },
+  {
+    "id": "7ebb57df-4b23-4c2e-9da9-eb64886f04d0",
+    "name": "Dikshit Achari",
+    "phone": "8088898483",
+    "email": "dikshitachari05@gmail.com",
+    "address": "Address: Sri Balaji Boys PG, Adityanagar, Vidyaranyapura, Bengaluru",
+    "created_at": "2026-05-31T05:17:00.855379+00:00",
+    "updated_at": "2026-06-22T11:23:37.945+00:00",
+    "account_id": null
+  },
+  {
+    "id": "93164661-658b-4acf-b9f2-7ebbd58944d9",
+    "name": "Chandraprabha",
+    "phone": "831 022 8320",
+    "email": "shivanisiya67@gmail.com",
+    "address": "SLV GREEN LEAF APARTMENT,  Vidyaranpura, 560097",
+    "created_at": "2026-08-02T09:16:57.213123+00:00",
+    "updated_at": "2026-08-19T11:51:30.314+00:00",
+    "account_id": null
+  },
+  {
+    "id": "8fec0b07-ec5f-408a-8699-ad18ca3436ef",
+    "name": "Akhil Rajput",
+    "phone": "8548035733",
+    "email": "Andajay200@gmail.com",
+    "address": null,
+    "created_at": "2026-06-06T15:32:04.080514+00:00",
+    "updated_at": "2026-06-06T15:32:04.080514+00:00",
+    "account_id": null
+  },
+  {
+    "id": "1a37ac84-6c6b-4289-8a16-dbe257206887",
+    "name": "Uv Suresh",
+    "phone": "9448368498",
+    "email": "unchil1957@gmail.com",
+    "address": null,
+    "created_at": "2026-06-29T09:41:56.184804+00:00",
+    "updated_at": "2026-06-30T07:07:45.264+00:00",
+    "account_id": null
+  },
+  {
+    "id": "e812d632-e77f-4c0d-8288-78fddef410b0",
+    "name": "yantrabyte solutions",
+    "phone": "999999999",
+    "email": "yantrabyte.solutions@gmail.com",
+    "address": "47A 1st, Cross ,SAINAGAR 2ND STAGE, 2nd Main Rd, Vidyaranyapura Post, Chikkabettahalli, Bengaluru, Karnataka 560097",
+    "created_at": "2026-06-12T18:01:27.726122+00:00",
+    "updated_at": "2026-06-12T18:01:27.726122+00:00",
+    "account_id": null
+  },
+  {
+    "id": "3ef913bd-5d5e-4c82-8ed7-791ccd47d3af",
+    "name": "Sunitha",
+    "phone": "78929 16238",
+    "email": "sunithars18@gmail.com",
+    "address": "#496, Sri Vasuki Nilaya, 6th Main, AMS Layout, Vidyaranyapura, Bangalore",
+    "created_at": "2026-09-04T11:02:57.186066+00:00",
+    "updated_at": "2026-09-05T13:42:03.926+00:00",
+    "account_id": null
+  },
+  {
+    "id": "f62d18c3-6ef4-4ae1-899b-241f6226e36e",
+    "name": "Kanishk",
+    "phone": "7019863826",
+    "email": "kanishk.cse@skit.org.in",
+    "address": null,
+    "created_at": "2026-06-25T15:43:57.290468+00:00",
+    "updated_at": "2026-06-25T15:43:57.290468+00:00",
+    "account_id": null
+  },
+  {
+    "id": "dfe74391-f870-4108-b001-c69d38a9ee27",
+    "name": "Jayaprakash Reddy",
+    "phone": "7204207382",
+    "email": "jpreddygm@gmail.com",
+    "address": "No.25, 1st FLOOR, Behind Ramakrishna Apartments\nDoddabommasandra, Vidyaranyapura Post\nBENGALURU, KARNATAKA 560097\nIndia",
+    "created_at": "2026-06-18T16:07:57.982636+00:00",
+    "updated_at": "2026-08-03T11:42:21.862241+00:00",
+    "account_id": null
+  },
+  {
+    "id": "a0b2bf8e-443b-4341-92b2-ea89be44a7e4",
+    "name": "Riyaz",
+    "phone": "8147773763",
+    "email": "riyaz.shaikk@gmail.com",
+    "address": null,
+    "created_at": "2026-06-25T15:43:57.290468+00:00",
+    "updated_at": "2026-06-25T15:43:57.290468+00:00",
+    "account_id": null
+  },
+  {
+    "id": "1d567c92-e968-4887-af41-df6771591999",
+    "name": "Guru Raghavendran S ",
+    "phone": "9535633007",
+    "email": "sguragha@gmail.com",
+    "address": null,
+    "created_at": "2026-06-25T15:43:57.290468+00:00",
+    "updated_at": "2026-06-25T15:43:57.290468+00:00",
+    "account_id": null
+  },
+  {
+    "id": "8d800ca8-98db-4c25-9088-9c726baeee49",
+    "name": "Jameel Ahmed",
+    "phone": "9885331724",
+    "email": "jameel259@gmail.com",
+    "address": "Vidyaranyapuura",
+    "created_at": "2026-06-25T15:43:57.290468+00:00",
+    "updated_at": "2026-06-25T15:43:57.290468+00:00",
+    "account_id": null
+  },
+  {
+    "id": "54daa61b-2200-4d24-8ab9-b974798e17d9",
+    "name": "test",
+    "phone": "test",
+    "email": "rameshas2105@gmail.com",
+    "address": null,
+    "created_at": "2026-06-06T15:32:04.080514+00:00",
+    "updated_at": "2026-06-30T07:28:31.939+00:00",
+    "account_id": null
+  },
+  {
+    "id": "c81d461f-da40-49f8-87b7-3c15814bd399",
+    "name": "Test Customer",
+    "phone": "1234567890",
+    "email": "test@example.com",
+    "address": "123 Test St",
+    "created_at": "2026-06-25T15:43:57.290468+00:00",
+    "updated_at": "2026-06-30T08:47:21.081+00:00",
+    "account_id": null
+  },
+  {
+    "id": "dc636c54-c30e-44e8-a22b-18a25a851da4",
+    "name": "Priya v",
+    "phone": "8867009880",
+    "email": null,
+    "address": "#98 6th Main 1st c Cross Remco layout Hampinagar Bangalore 560104",
+    "created_at": "2026-08-03T14:53:52.629568+00:00",
+    "updated_at": "2026-08-19T11:52:05.459+00:00",
+    "account_id": null
+  },
+  {
+    "id": "eb0af4c3-f72c-4de5-9c15-0893fbd1facb",
+    "name": "RAMESH",
+    "phone": "9901733369",
+    "email": "rameshas2105@gmail.com",
+    "address": "Vidyaranyanpura",
+    "created_at": "2026-06-25T15:43:57.290468+00:00",
+    "updated_at": "2026-08-19T11:57:15.939+00:00",
+    "account_id": null
+  },
+  {
+    "id": "db996d54-13f6-4549-93f1-e80d47687b46",
+    "name": "Sunitha",
+    "phone": "7892916238",
+    "email": "sunithars18@gmail.com",
+    "address": "#496, Sri Vasuki Nilaya, 6th Main, AMS Layout, Vidyaranyapura, Bangalore",
+    "created_at": "2026-09-04T09:10:59.288122+00:00",
+    "updated_at": "2026-09-05T11:16:32.007+00:00",
+    "account_id": null
+  },
+  {
+    "id": "d3c938a9-4b31-42c0-965d-db704a16aa07",
+    "name": "Test",
+    "phone": "Test",
+    "email": "rameshas2105@gmail.com",
+    "address": null,
+    "created_at": "2026-06-06T15:32:04.080514+00:00",
+    "updated_at": "2026-08-07T17:31:23.817+00:00",
+    "account_id": null
+  },
+  {
+    "id": "6901fafe-ff76-4db4-8783-989b9ea5d6e1",
+    "name": "Dharmpal k",
+    "phone": "9986015929",
+    "email": "dharmpal.k@gmail.com",
+    "address": null,
+    "created_at": "2026-08-14T14:41:02.968442+00:00",
+    "updated_at": "2026-08-14T17:20:08.108+00:00",
+    "account_id": null
+  },
+  {
+    "id": "fb41aa0d-a2a0-43a3-bd30-5339636a6021",
+    "name": "IIBS",
+    "phone": null,
+    "email": null,
+    "address": "75, Bangalore North, Jala Hobli, Begur, Muthugadahalli, Bengaluru, Karnataka 562110",
+    "created_at": "2026-06-30T04:20:36.418091+00:00",
+    "updated_at": "2026-09-08T05:28:27.365+00:00",
+    "account_id": null
+  },
+  {
+    "id": "b9d76e14-62e9-47e3-8a26-626db681bfd3",
+    "name": "Sanjay Joshi",
+    "phone": "9880716890",
+    "email": "joshiss2007@gmail.com",
+    "address": "Vidyaranyapura",
+    "created_at": "2026-09-10T16:10:40.219085+00:00",
+    "updated_at": "2026-09-10T16:13:19.807905+00:00",
+    "account_id": null
+  },
+  {
+    "id": "934e63df-4fd9-409e-aba4-8e39c306628d",
+    "name": "Online sales",
+    "phone": null,
+    "email": null,
+    "address": null,
+    "created_at": "2026-09-12T07:00:53.605115+00:00",
+    "updated_at": "2026-09-12T07:04:58.017+00:00",
+    "account_id": null
+  }
+]
