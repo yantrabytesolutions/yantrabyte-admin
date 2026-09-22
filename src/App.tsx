@@ -20,6 +20,8 @@ import PortalLogin from './portal/PortalLogin';
 import PortalDashboard from './portal/PortalDashboard';
 import EstimateView from './pages/EstimateView';
 import WhatsAppConnectPage from './pages/WhatsAppConnectPage';
+import BillingSoftware from './admin/BillingSoftware';
+
 
 const DomainGuard = ({ children }: { children: React.ReactNode }) => {
   const hostname = window.location.hostname;
@@ -49,11 +51,33 @@ const DomainGuard = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const isNagarathnammaCashBillApp = typeof window !== 'undefined' && window.location.hostname.includes('nagarathnamma-cash-bill');
+
 const RootRoute = () => {
+  if (isNagarathnammaCashBillApp) {
+    return (
+      <div className="min-h-screen bg-slate-100 p-4 md:p-8">
+        <BillingSoftware />
+      </div>
+    );
+  }
   return <Home />;
 };
 
 function App() {
+  if (isNagarathnammaCashBillApp) {
+    return (
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<RootRoute />} />
+          <Route path="/estimate/:id" element={<EstimateView />} />
+          <Route path="/quotation/:id" element={<QuotationApproval />} />
+          <Route path="*" element={<RootRoute />} />
+        </Routes>
+      </BrowserRouter>
+    );
+  }
+
   return (
     <BrowserRouter>
       <Routes>
