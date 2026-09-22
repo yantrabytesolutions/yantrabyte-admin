@@ -1,0 +1,9 @@
+{
+  "name": "nagarathnamma-cash-bill",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Nagarathnamma Screen & Offset Printing Cash Bill software with Supabase Realtime Sync",
+  "scripts": {
+    "start": "node -e \"const http=require('http'),fs=require('fs'),path=require('path');const port=process.env.PORT||5000;http.createServer((req,res)=>{let f=path.join('.',req.url==='/'?'index.html':req.url);if(fs.existsSync(f)&&fs.statSync(f).isFile()){res.writeHead(200);fs.createReadStream(f).pipe(res);}else{res.writeHead(404);res.end('Not found');}}).listen(port,()=>{console.log('Server started on port '+port);});\""
+  }
+}

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Nagarathnamma Cash Bill</title>
+  <meta name="description" content="Nagarathnamma Screen & Offset Printing Cash Bill software with instant Mobile & PC Cloud Sync">
+  <meta name="theme-color" content="#1e3a8a">
+  <script>
+    // Clean up any old service worker from previous site caches
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for (let registration of registrations) {
+          registration.unregister();
+        }
+      });
+    }
+  </script>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Supabase JS Client CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700;1,800&family=Playfair+Display:ital,wght@1,700;1,900&display=swap" rel="stylesheet">
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 8mm 10mm 8mm 10mm;
+    }
+    body {
+      font-family: 'Montserrat', sans-serif;
+    }
+    @media print {
+      html, body {
+        width: 100% !important;
+        height: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #fff !important;
+        overflow: hidden !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      body * {
+        visibility: hidden;
+      }
+      #print-area, #print-area * {
+        visibility: visible;
+      }
+      #print-area {
+        display: block !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        page-break-after: avoid !important;
+        page-break-inside: avoid !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+    .font-futura {
+      font-family: 'Montserrat', sans-serif;
+      letter-spacing: 0.05em;
+    }
+    .font-brand-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-style: italic;
+      font-weight: 900;
+    }
+    .font-script-logo {
+      font-family: 'Great Vibes', cursive;
+    }
+    /* Dotted underline styling to match physical pad */
+    .dotted-leader {
+      border-bottom: 1.5px dotted #000;
+      min-height: 20px;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen">
+  <div id="app" class="flex flex-col min-h-screen"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
