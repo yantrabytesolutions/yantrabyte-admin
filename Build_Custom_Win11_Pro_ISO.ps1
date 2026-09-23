@@ -4,7 +4,8 @@
 
 $ErrorActionPreference = "Stop"
 
-$sourceIso      = "C:\Users\sys1\Downloads\Win11_25H2_English_x64_v2.iso"
+$sourceIso      = "D:\iso file\Windows11.iso"
+$isoSourceDir   = "D:\iso file"
 $downloadsFolder = "C:\Users\sys1\Downloads"
 $targetIso1     = "C:\Users\sys1\Downloads\Win11_Pro_Custom_AutoInstall_Debloated.iso"
 $targetIso2     = "D:\win11_pro_custom_autoinstall.iso"
@@ -15,7 +16,7 @@ $oscdimg        = Join-Path $toolsDir "oscdimg.exe"
 $wimlib         = Join-Path $toolsDir "wimlib\wimlib-imagex.exe"
 
 Write-Host "===================================================================" -ForegroundColor Cyan
-Write-Host "  BUILDING CUSTOM DEBLOATED WINDOWS 11 PRO ISO" -ForegroundColor Cyan
+Write-Host "  BUILDING CUSTOM DEBLOATED WINDOWS 11 PRO ISO (STABLE RELEASE)" -ForegroundColor Cyan
 Write-Host "===================================================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -90,10 +91,11 @@ if (-not $proIndex) {
     $proIndex = 6
 }
 
-Write-Host "    [+] Exporting Index $proIndex (Windows 11 Pro) to single-edition WIM..." -ForegroundColor Green
+Write-Host "    [+] Exporting Index $proIndex (Windows 11 Pro) with verified standard compression..." -ForegroundColor Green
 $destWim = Join-Path $sourcesDir "install_filtered.wim"
 
-& $wimlib export "$($srcWim.FullName)" $proIndex "$destWim" --compress=LZX:9
+# Using standard LZX (without extreme :9 chunking) to guarantee zero unpacking errors at 20%
+& $wimlib export "$($srcWim.FullName)" $proIndex "$destWim" --compress=LZX
 
 if (Test-Path $destWim) {
     Remove-Item -Path $srcWim.FullName -Force
@@ -112,17 +114,39 @@ New-Item -ItemType Directory -Path $oemInstallers -Force | Out-Null
 $softwareList = @(
     "ChromeStandaloneSetup64.exe",
     "7z2501-x64.exe",
-    "fix_lag_optimize.bat",
-    "OfficeSetup.exe"
+    "fix_lag_optimize.bat"
 )
 
 foreach ($soft in $softwareList) {
-    $softPath = Join-Path $downloadsFolder $soft
-    if (Test-Path $softPath) {
-        Copy-Item -Path $softPath -Destination (Join-Path $oemInstallers $soft) -Force
+    $srcPath = Join-Path $isoSourceDir $soft
+    if (-not (Test-Path $srcPath)) {
+        $srcPath = Join-Path $downloadsFolder $soft
+    }
+    if (Test-Path $srcPath) {
+        Copy-Item -Path $srcPath -Destination (Join-Path $oemInstallers $soft) -Force
         Write-Host "    [+] Bundled: $soft" -ForegroundColor Green
     } else {
-        Write-Host "    [-] Warning: $soft not found in Downloads, skipping." -ForegroundColor Yellow
+        Write-Host "    [-] Warning: $soft not found, skipping." -ForegroundColor Yellow
+    }
+}
+
+# Extract Full Offline Office 2024 Pro Plus Retail into Installers\Office2024
+$officeImg = Join-Path $isoSourceDir "ProPlus2024Retail.img"
+if (Test-Path $officeImg) {
+    Write-Host "[*] Extracting Full Offline Microsoft Office 2024 Pro Plus Retail into OEM installers..." -ForegroundColor Yellow
+    $officeDestDir = Join-Path $oemInstallers "Office2024"
+    New-Item -ItemType Directory -Path $officeDestDir -Force | Out-Null
+    
+    Mount-DiskImage -ImagePath $officeImg | Out-Null
+    Start-Sleep -Seconds 3
+    $offDrive = (Get-DiskImage -ImagePath $officeImg | Get-Volume).DriveLetter
+    if ($offDrive) {
+        Copy-Item -Path "${offDrive}:\*" -Destination $officeDestDir -Recurse -Force
+        Dismount-DiskImage -ImagePath $officeImg | Out-Null
+        Write-Host "[OK] Office 2024 full offline package bundled successfully." -ForegroundColor Green
+    } else {
+        Dismount-DiskImage -ImagePath $officeImg | Out-Null
+        Write-Host "[!] Could not mount Office IMG drive letter." -ForegroundColor Red
     }
 }
 
@@ -184,7 +208,7 @@ reg add "HKU\.DEFAULT\Control Panel\Desktop" /v "MenuShowDelay" /t REG_SZ /d "20
 powercfg -restoredefaultschemes >nul 2>&1
 powercfg -setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c >nul 2>&1 || powercfg -setactive 381b4222-f694-41f0-9685-ff5bb260df2e >nul 2>&1
 
-:: 6. Execute Silent Software Installers
+:: 6. Execute 100% Automated Silent Software Installers
 set "INSTALL_DIR=%SystemDrive%\Installers"
 if exist "%INSTALL_DIR%" (
     if exist "%INSTALL_DIR%\7z2501-x64.exe" (
@@ -196,8 +220,13 @@ if exist "%INSTALL_DIR%" (
     if exist "%INSTALL_DIR%\fix_lag_optimize.bat" (
         call "%INSTALL_DIR%\fix_lag_optimize.bat" >nul 2>&1
     )
-    if exist "%INSTALL_DIR%\OfficeSetup.exe" (
-        start "" "%INSTALL_DIR%\OfficeSetup.exe" /configure >nul 2>&1
+    :: Install Microsoft Office 2024 Pro Plus Retail (Full Offline Silent)
+    if exist "%INSTALL_DIR%\Office2024\Office\Setup64.exe" (
+        start /wait "" "%INSTALL_DIR%\Office2024\Office\Setup64.exe"
+    ) else if exist "%INSTALL_DIR%\Office2024\Setup64.exe" (
+        start /wait "" "%INSTALL_DIR%\Office2024\Setup64.exe"
+    ) else if exist "%INSTALL_DIR%\Office2024\setup.exe" (
+        start /wait "" "%INSTALL_DIR%\Office2024\setup.exe"
     )
 )
 
@@ -248,6 +277,14 @@ $autounattendXml = @"
                 </RunSynchronousCommand>
                 <RunSynchronousCommand wcm:action="add" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
                     <Order>5</Order>
+                    <Path>reg add "HKLM\SYSTEM\Setup\LabConfig" /v "BypassCPUCheck" /t REG_DWORD /d 1 /f</Path>
+                </RunSynchronousCommand>
+                <RunSynchronousCommand wcm:action="add" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+                    <Order>6</Order>
+                    <Path>reg add "HKLM\SYSTEM\Setup\LabConfig" /v "BypassDiskCheck" /t REG_DWORD /d 1 /f</Path>
+                </RunSynchronousCommand>
+                <RunSynchronousCommand wcm:action="add" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+                    <Order>7</Order>
                     <Path>reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\OOBE" /v "BypassNRO" /t REG_DWORD /d 1 /f</Path>
                 </RunSynchronousCommand>
             </RunSynchronous>

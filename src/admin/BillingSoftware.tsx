@@ -636,9 +636,15 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         throw new Error('Could not render PDF preview element');
       }
 
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+
       const res = await fetch('/api/invoices/send-whatsapp-pdf', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({
           customerPhone: phone,
           customerName: inv.customer_name,
@@ -1172,9 +1178,15 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
         if (pdfBlob) {
           try {
             const pdfBase64 = await blobToBase64(pdfBlob);
+            const { data: sessionData } = await supabase.auth.getSession();
+            const token = sessionData.session?.access_token;
+
             const waRes = await fetch('/api/invoices/send-whatsapp-pdf', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { Authorization: `Bearer ${token}` } : {})
+              },
               body: JSON.stringify({
                 customerPhone: phone,
                 customerName,

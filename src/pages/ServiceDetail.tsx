@@ -72,6 +72,18 @@ const FALLBACK_SERVICE_DETAILS: Record<string, Service & { features: string[]; b
     benefits: ['Predictable IT budgeting with fixed annual costs', 'Priority response with guaranteed SLAs', 'Prevent issues before they cause downtime', 'Dedicated team that knows your infrastructure', 'Significant savings on parts and emergency calls', 'Detailed monthly reports on system health'],
     meta_title: '', meta_description: '', is_featured: false, is_published: true, sort_order: 8, created_at: '', updated_at: '',
   },
+  'am-support': {
+    id: '8-alias', title: 'AMC Support', slug: 'am-support', short_description: 'Annual maintenance contracts for ongoing IT support, preventive maintenance, and priority response.', full_description: 'Our Annual Maintenance Contracts provide comprehensive IT support with guaranteed response times, preventive maintenance schedules, and priority access to our engineering team. AMC clients enjoy unlimited remote support, discounted parts, and scheduled site visits to keep their IT infrastructure running at peak performance throughout the year.', icon: 'FileCheck',
+    features: ['Unlimited Remote Support', 'Priority On-Site Response', 'Preventive Maintenance', 'Discounted Spare Parts', 'Scheduled Site Visits', 'Dedicated Account Manager', 'Monthly Health Reports', 'Emergency Support'],
+    benefits: ['Predictable IT budgeting with fixed annual costs', 'Priority response with guaranteed SLAs', 'Prevent issues before they cause downtime', 'Dedicated team that knows your infrastructure', 'Significant savings on parts and emergency calls', 'Detailed monthly reports on system health'],
+    meta_title: '', meta_description: '', is_featured: false, is_published: true, sort_order: 8, created_at: '', updated_at: '',
+  },
+  'server-setup': {
+    id: '10', title: 'Server Setup & Maintenance', slug: 'server-setup', short_description: 'Enterprise server installation, configuration, virtualization, and ongoing maintenance.', full_description: 'Complete server deployment solutions including Windows Server, Linux, active directory setup, virtualization with VMware/Hyper-V, and enterprise backup systems.', icon: 'Server',
+    features: ['Windows & Linux Server', 'VMware & Hyper-V', 'Active Directory Setup', 'RAID Configuration', 'Automated Backups', '24/7 Server Monitoring', 'Security Hardening', 'Disaster Recovery Planning'],
+    benefits: ['Maximized server uptime', 'Centralized user and access management', 'Redundant data protection', 'Optimized hardware performance', 'Fast disaster recovery', 'Enterprise compliance'],
+    meta_title: '', meta_description: '', is_featured: false, is_published: true, sort_order: 10, created_at: '', updated_at: '',
+  },
   'wifi-solutions': {
     id: '9', title: 'Wi-Fi Solutions', slug: 'wifi-solutions', short_description: 'High-performance Wi-Fi coverage for offices, apartments, hotels, and commercial spaces with seamless roaming.', full_description: 'We design and deploy high-performance Wi-Fi networks using enterprise-grade access points from Ubiquiti, TP-Link Omada, and Ruckus. Our solutions include site surveys, heat mapping, access point placement, controller configuration, and seamless roaming setup to ensure consistent coverage across your entire premises.', icon: 'Wifi',
     features: ['Site Survey & Heat Mapping', 'Enterprise Access Points', 'Seamless Roaming', 'Guest Network Setup', 'Bandwidth Management', 'Cloud Controller', 'PoE Installation', 'Coverage Optimization'],
@@ -658,11 +670,20 @@ export default function ServiceDetail() {
   // Find service index for icon mapping
   const serviceIndex = Object.keys(FALLBACK_SERVICE_DETAILS).indexOf(slug || '');
 
+  const seoTitle = currentService.slug === 'laptop-repair'
+    ? 'Laptop Service Near Me | Fast Laptop Repair in Vidyaranyapura & Yelahanka - Yantrabyte'
+    : `${currentService.title} in Bangalore | Yantrabyte Solutions`;
+
+  const seoDescription = currentService.slug === 'laptop-repair'
+    ? 'Best laptop service center near me in Vidyaranyapura, Yelahanka & Bangalore. Chip-level motherboard repair, screen replacement, battery & SSD upgrades for Dell, HP, Lenovo, Apple, Asus. Same-day service.'
+    : (currentService.short_description || `Professional ${currentService.title} by Yantrabyte Solutions in Bangalore.`);
+
   return (
     <div className="bg-[#0B1120]">
       <SEO 
-        title={`${currentService.title} | Yantrabyte Solutions`} 
-        description={currentService.short_description || `Professional ${currentService.title} by Yantrabyte Solutions in Bangalore.`}
+        title={seoTitle} 
+        description={seoDescription}
+        keywords={currentService.slug === 'laptop-repair' ? 'laptop service near me, laptop repair near me, laptop chip level repair Vidyaranyapura, laptop repair Yelahanka, computer service near me, screen replacement Bangalore' : undefined}
       />
       <HeroBanner title={currentService.title} />
       <ServiceOverview service={currentService} index={serviceIndex >= 0 ? serviceIndex : 0} />

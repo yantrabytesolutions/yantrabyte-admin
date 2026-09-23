@@ -770,15 +770,20 @@ function ServicesSection() {
               {displayed.map((service, i) => {
                 const IconComponent = service.icon ? (ICON_MAP[service.icon] || SERVICE_ICONS[i % SERVICE_ICONS.length]) : SERVICE_ICONS[i % SERVICE_ICONS.length];
                 return (
-                  <motion.div key={service.id} variants={staggerItem}
-                    whileHover={{ scale: 1.04, borderColor: 'rgba(14,165,233,0.5)' }}
-                    className="group backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 transition-all duration-300 hover:shadow-lg hover:shadow-[#0EA5E9]/10 cursor-pointer">
-                    <div className="w-12 h-12 rounded-xl bg-[#0EA5E9]/10 flex items-center justify-center mb-4 group-hover:bg-[#0EA5E9]/20 transition-colors duration-300">
-                      <IconComponent className="w-6 h-6 text-[#0EA5E9]" />
-                    </div>
-                    <h3 className="text-white font-semibold text-lg mb-2">{service.title}</h3>
-                    <p className="text-[#94A3B8] text-sm leading-relaxed">{service.short_description}</p>
-                  </motion.div>
+                  <Link key={service.id} to={`/services/${service.slug}`} className="block focus:outline-none">
+                    <motion.div variants={staggerItem}
+                      whileHover={{ scale: 1.04, borderColor: 'rgba(14,165,233,0.5)' }}
+                      className="group backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 transition-all duration-300 hover:shadow-lg hover:shadow-[#0EA5E9]/10 cursor-pointer h-full">
+                      <div className="w-12 h-12 rounded-xl bg-[#0EA5E9]/10 flex items-center justify-center mb-4 group-hover:bg-[#0EA5E9]/20 transition-colors duration-300">
+                        <IconComponent className="w-6 h-6 text-[#0EA5E9]" />
+                      </div>
+                      <h3 className="text-white font-semibold text-lg mb-2 group-hover:text-[#0EA5E9] transition-colors">{service.title}</h3>
+                      <p className="text-[#94A3B8] text-sm leading-relaxed mb-4">{service.short_description}</p>
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#0EA5E9] group-hover:translate-x-1 transition-transform">
+                        Explore Service <ArrowRight className="w-3.5 h-3.5" />
+                      </span>
+                    </motion.div>
+                  </Link>
                 );
               })}
             </motion.div>
@@ -1740,13 +1745,15 @@ export default function Home() {
   return (
     <div className="bg-[#0B1120]">
       <SEO 
-        title="Yantrabyte Solutions | IT & Security Solutions in Bangalore" 
-        description="Yantrabyte Solutions offers professional CCTV installation, laptop repair, desktop repair, networking, biometric systems, and smart security solutions in Bangalore."
+        title="Laptop Service Near Me | Best Computer & CCTV Repair in Vidyaranyapura, Bangalore - Yantrabyte" 
+        description="Top-rated laptop service near you in Vidyaranyapura, Yelahanka & Bangalore. Chip-level motherboard repair, screen replacement, SSD upgrades, CCTV installation & AMC. Call +91-9986742525."
+        keywords="laptop service near me, laptop repair near me, computer repair Vidyaranyapura, laptop chip level repair Bangalore, dell hp lenovo laptop service Yelahanka, best laptop repair shop near me, CCTV installation Bangalore"
         schema={{
           "@context": "https://schema.org",
-          "@type": "LocalBusiness",
+          "@type": ["LocalBusiness", "ComputerRepairService", "SecuritySystemInstaller"],
           "name": "Yantrabyte Solutions",
-          "description": "Complete IT & Security Solutions in Bangalore - CCTV Installation, Computer Repair, Networking & Smart Security Solutions",
+          "alternateName": "Yantrabyte Laptop & Computer Service Center",
+          "description": "Top-rated laptop repair and computer service center in Vidyaranyapura and Yelahanka, Bangalore. Specializing in chip-level motherboard repair, screen replacement, SSD upgrades, CCTV installation, and AMC.",
           "url": "https://yantrabyte.anantatechcare.com",
           "telephone": "+91-9986742525",
           "email": "yantrabyte.solutions@gmail.com",
@@ -1758,13 +1765,30 @@ export default function Home() {
             "postalCode": "560097",
             "addressCountry": "IN"
           },
-          "areaServed": {
-            "@type": "City",
-            "name": "Bangalore"
+          "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": 13.0827,
+            "longitude": 77.5583
           },
-          "priceRange": "$$",
-          "openingHours": "Mo-Sa 09:00-19:00",
-          "sameAs": []
+          "areaServed": [
+            "Vidyaranyapura",
+            "Chikkabettahalli",
+            "Yelahanka",
+            "Sahakar Nagar",
+            "Jalahalli",
+            "MS Palya",
+            "Hebbal",
+            "Bengaluru North",
+            "Bangalore"
+          ],
+          "priceRange": "₹₹",
+          "openingHours": "Mo-Sa 09:00-20:30, Su 10:00-18:00",
+          "sameAs": [
+            "https://www.facebook.com/yantrabytesolutions",
+            "https://www.instagram.com/yantrabyte.solutions",
+            "https://www.linkedin.com/company/yantrabyte-solutions",
+            "https://twitter.com/YantraByte"
+          ]
         }}
       />
       <HeroSection />

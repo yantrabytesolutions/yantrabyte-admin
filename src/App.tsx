@@ -93,6 +93,7 @@ function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/service-request" element={<ServiceRequest />} />
           <Route path="/servicerequest" element={<ServiceRequest />} />
+          <Route path="/track" element={<TrackTicket />} />
           <Route path="/track-ticket" element={<TrackTicket />} />
           <Route path="/quotation/:id" element={<QuotationApproval />} />
           <Route path="/my-invoices" element={<CustomerHistory />} />

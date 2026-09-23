@@ -17,8 +17,16 @@ import path from 'path';
 
 dotenv.config();
 
+// Global crash protection for WhatsApp and background tasks
+process.on('uncaughtException', (err) => {
+  console.error('⚠️ [Safe Guard] Uncaught Exception trapped:', err.message || err);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('⚠️ [Safe Guard] Unhandled Rejection trapped:', reason);
+});
+
 const app = express();
-const port = Number(process.env.INVOICE_API_PORT || process.env.PORT || 4000);
+const port = Number(process.env.PORT || process.env.INVOICE_API_PORT || 4000);
 const maxPdfSize = process.env.INVOICE_MAX_JSON_SIZE || '200mb';
 
 let isWhatsappReady = false;
@@ -29,6 +37,12 @@ const whatsappClient = new Client({
   authStrategy: new LocalAuth({
     dataPath: path.join(process.cwd(), '.wwebjs_auth')
   }),
+  authTimeoutMs: 90000,
+  webVersionCache: {
+    type: 'remote',
+    remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.1047958339-alpha.html',
+  },
+  userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
   puppeteer: {
     headless: true,
     args: [
@@ -86,20 +100,64 @@ whatsappClient.on('ready', () => {
   latestQrDataUrl = null;
 });
 
-whatsappClient.on('disconnected', (reason) => {
+whatsappClient.on('disconnected', async (reason) => {
   console.log('⚠️ WhatsApp Disconnected:', reason);
   isWhatsappReady = false;
+  latestQrCode = null;
+  latestQrDataUrl = null;
+  try {
+    console.log('🔄 Attempting to re-initialize WhatsApp client in 5 seconds...');
+    setTimeout(() => {
+      whatsappClient.initialize().catch((err) => {
+        console.error('❌ Failed to re-initialize WhatsApp client:', err.message || err);
+      });
+    }, 5000);
+  } catch (err) {
+    console.error('Error scheduling WhatsApp re-initialization:', err);
+  }
 });
 
-whatsappClient.initialize();
+const startWhatsAppWithRetry = () => {
+  whatsappClient.initialize().catch((err) => {
+    console.error('❌ WhatsApp init warning:', err.message || err);
+    if (String(err).includes('auth timeout')) {
+      console.log('🔄 Re-attempting WhatsApp init in 10s...');
+      setTimeout(startWhatsAppWithRetry, 10000);
+    }
+  });
+};
+
+startWhatsAppWithRetry();
 
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - content-length: ${req.headers['content-length']}`);
   next();
 });
-app.use(cors());
-app.use(express.json({ limit: '500mb' }));
-app.use(express.urlencoded({ limit: '500mb', extended: true }));
+app.disable('x-powered-by');
+
+// Security Headers Middleware
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  next();
+});
+
+app.use(cors({
+  origin: [
+    'https://yantrabyte.anantatechcare.com',
+    'https://anantatechcare.com',
+    'http://localhost:3000',
+    'http://localhost:4000',
+    'http://localhost:5173'
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+app.use(express.json({ limit: '25mb' }));
+app.use(express.urlencoded({ limit: '25mb', extended: true }));
 
 const requiredEnv = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'];
 const GMAIL_USER_DEFAULT = process.env.GMAIL_USER || 'yantrabyte.solutions@gmail.com';
@@ -1543,7 +1601,7 @@ cron.schedule('0 11 * * *', async () => {
 
 
 // --- WHATSAPP PDF ATTACHMENT ENDPOINT ---
-app.post('/api/invoices/send-whatsapp-pdf', async (req, res) => {
+app.post('/api/invoices/send-whatsapp-pdf', requireSupabaseUser, async (req, res) => {
   const {
     customerPhone,
     customerName,
@@ -1608,8 +1666,9 @@ app.get('/api/invoices/customer/:phone', async (req, res) => {
     const cleanPhone = phone.replace(/\D/g, '');
     if (cleanPhone.length < 10) return res.status(400).json({ error: 'Invalid phone number' });
     
-    // Search with last 10 digits to handle various formats
+    // Search with last 10 digits to handle various formats (digits only, safe against injection)
     const last10 = cleanPhone.slice(-10);
+    if (!/^\d{10}$/.test(last10)) return res.status(400).json({ error: 'Invalid phone format' });
     
     const { data: invData, error: invError } = await supabaseAdmin
       .from('invoices')
@@ -1646,7 +1705,7 @@ app.get('/api/invoices/customer/:phone', async (req, res) => {
 
 const distDir = path.resolve(process.cwd(), 'dist');
 if (fs.existsSync(distDir)) {
-  app.use(express.static(distDir));
+  app.use(express.static(distDir, { redirect: false }));
   app.use((req, res, next) => {
     if (req.method !== 'GET') return next();
     if (req.path.startsWith('/api') || req.path.startsWith('/whatsapp-qr')) return next();
@@ -1654,9 +1713,18 @@ if (fs.existsSync(distDir)) {
   });
 }
 
-app.listen(port, () => {
-  console.log(`Invoice email & Web App listening on port ${port}`);
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Invoice email & Web App listening on 0.0.0.0:${port}`);
 });
+
+if (port !== 3000) {
+  try {
+    const backupServer = app.listen(3000, '0.0.0.0', () => {
+      console.log('Also listening on 0.0.0.0:3000');
+    });
+    backupServer.on('error', () => {});
+  } catch (err) {}
+}
 
 // Graceful shutdown to prevent headless chrome zombie processes
 const gracefulShutdown = async (signal) => {
