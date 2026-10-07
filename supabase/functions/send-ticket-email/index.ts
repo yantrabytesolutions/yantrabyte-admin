@@ -332,8 +332,11 @@ Deno.serve(async (req) => {
       }
     }
 
-    const gmailUser = Deno.env.get('GMAIL_USER');
-    const gmailPass = Deno.env.get('GMAIL_APP_PASSWORD');
+    // Normalize ticket number field
+    ticket.ticket_no = ticket.ticket_no || ticket.ticket_number || '';
+
+    const gmailUser = Deno.env.get('GMAIL_USER') || 'yantrabyte.solutions@gmail.com';
+    const gmailPass = Deno.env.get('GMAIL_APP_PASSWORD') || 'gfwyhurtzlynglln';
 
     const escapeHtml = (text: string) =>
       text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');

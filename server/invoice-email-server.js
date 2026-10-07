@@ -161,7 +161,7 @@ app.use(express.urlencoded({ limit: '25mb', extended: true }));
 
 const requiredEnv = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'];
 const GMAIL_USER_DEFAULT = process.env.GMAIL_USER || 'yantrabyte.solutions@gmail.com';
-const GMAIL_PASS_DEFAULT = process.env.GMAIL_APP_PASSWORD || 'rxayraewvdndnqqi';
+const GMAIL_PASS_DEFAULT = process.env.GMAIL_APP_PASSWORD || 'gfwyhurtzlynglln';
 const driveEnv = ['GOOGLE_DRIVE_FOLDER_ID'];
 const sheetsEnv = ['GOOGLE_SHEETS_SPREADSHEET_ID'];
 const serviceTicketHeaders = [
