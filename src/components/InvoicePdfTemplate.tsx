@@ -414,9 +414,11 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                               </>
                             ) : (
                               <>
-                                <div><span style={{ fontWeight: "bold", color: "#1e3a8a" }}>Company:</span> ANANTATECH CARE</div>
-                                <div><span style={{ fontWeight: "bold", color: "#1e3a8a" }}>Payment Mode:</span> Bank Transfer / UPI / Cash</div>
-                                <div style={{ marginTop: "4px", fontSize: "11px", color: "#64748b" }}>Bank details provided upon request or per project contract.</div>
+                                <div><span style={{ fontWeight: "bold", color: "#1e3a8a" }}>A/C Name:</span> Swarna Gowri</div>
+                                <div><span style={{ fontWeight: "bold", color: "#1e3a8a" }}>A/C No:</span> <strong style={{ color: "#000000", fontSize: "13px" }}>8813910769</strong></div>
+                                <div><span style={{ fontWeight: "bold", color: "#1e3a8a" }}>IFSC:</span> <strong style={{ color: "#000000", fontSize: "13px" }}>KKBK0008094</strong></div>
+                                <div><span style={{ fontWeight: "bold", color: "#1e3a8a" }}>Branch:</span> Kotak Mahindra Bank, Vidyaranyapura, Bangalore</div>
+                                <div style={{ marginTop: "2px", fontSize: "11px", color: "#047857", fontWeight: "bold" }}>Pay via NEFT / RTGS / IMPS / UPI</div>
                               </>
                             )}
                           </td>
