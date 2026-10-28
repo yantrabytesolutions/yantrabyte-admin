@@ -40,16 +40,19 @@ interface Props {
   companySignature?: string;
   quoteValidityDays?: number;
   quoteAdvancePercent?: number;
+  brand?: 'yantrabyte' | 'anantatechcare';
 }
 
 export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ 
   invoice, 
   companySignature: _companySignature,
   quoteValidityDays = 7,
-  quoteAdvancePercent = 85
+  quoteAdvancePercent = 85,
+  brand = 'yantrabyte'
 }, ref) => {
   const items: InvoiceItem[] = Array.isArray(invoice.items) ? invoice.items : [];
-  const isQuotation = invoice.doc_type === 'Quotation' || invoice.doc_type === 'Estimate' || (Boolean(invoice.invoice_no) && String(invoice.invoice_no).startsWith('YBQ'));
+  const isAnanta = brand === 'anantatechcare' || (Boolean(invoice.invoice_no) && String(invoice.invoice_no).startsWith('ATC'));
+  const isQuotation = invoice.doc_type === 'Quotation' || invoice.doc_type === 'Estimate' || (Boolean(invoice.invoice_no) && (String(invoice.invoice_no).startsWith('YBQ') || String(invoice.invoice_no).startsWith('ATCQ')));
   const isCancelled = invoice.doc_type === 'Cancelled';
   const formattedDate = invoice.date ? (
     invoice.date.includes('-') ? invoice.date.split('-').reverse().join('/') : invoice.date
@@ -121,7 +124,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundImage: `url(${YANTRABYTE_LOGO_BASE64})`,
+        backgroundImage: isAnanta ? "none" : `url(${YANTRABYTE_LOGO_BASE64})`,
         backgroundSize: '560px auto',
         backgroundPosition: 'center center',
         backgroundRepeat: 'no-repeat',
@@ -188,17 +191,25 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
           {/* Header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #0B5394', paddingBottom: '8px', marginBottom: '8px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-              <img 
-                src={YANTRABYTE_LOGO_BASE64} 
-                alt="YantraByte Solutions" 
-                style={{ height: '82px', width: 'auto', display: 'block' }} 
-              />
+              {!isAnanta ? (
+                <img
+                  src={YANTRABYTE_LOGO_BASE64}
+                  alt="YantraByte Solutions"
+                  style={{ height: "82px", width: "auto", display: "block" }}
+                />
+              ) : (
+                <div style={{ width: "64px", height: "64px", borderRadius: "12px", background: "linear-gradient(135deg, #0D9488, #0B5394)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: "bold", fontSize: "22px", letterSpacing: "1px" }}>
+                  ATC
+                </div>
+              )}
               <div>
-                <h1 style={{ color: '#0B5394', fontSize: '24px', fontWeight: '900', margin: 0, letterSpacing: '0.4px' }}>YANTRABYTE SOLUTIONS</h1>
+                <h1 style={{ color: "#0B5394", fontSize: "24px", fontWeight: "900", margin: 0, letterSpacing: "0.4px" }}>
+                  {isAnanta ? "ANANTATECH CARE" : "YANTRABYTE SOLUTIONS"}
+                </h1>
                 <div style={{ fontSize: '12px', color: '#333333', marginTop: '3px', lineHeight: '1.35', fontWeight: '500' }}>
                   47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br />
                   Chikkabettahalli, Bengaluru - 560097<br />
-                  📱 09986742525 | ✉️ yantrabyte.solutions@gmail.com
+                  Phone: 09986742525 | Email: {isAnanta ? "rameshas@anantatech.com" : "yantrabyte.solutions@gmail.com"}
                 </div>
               </div>
             </div>
@@ -382,22 +393,33 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                 {/* Bank & Payment Details Box */}
                 <td style={{ width: '52%', verticalAlign: 'top', border: '1px solid #000000', padding: 0, boxSizing: 'border-box' }}>
                   <div style={{ backgroundColor: '#0B5394', color: '#ffffff', fontWeight: 'bold', fontSize: '13px', textAlign: 'center', padding: '4px 0', letterSpacing: '0.4px' }}>
-                    Bank & Payment Details
+                    {isAnanta ? "Payment Details" : "Bank & Payment Details"}
                   </div>
                   <div style={{ padding: '6px 8px' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                       <tbody>
                         <tr>
                           <td style={{ verticalAlign: 'middle', fontSize: '12.5px', lineHeight: '1.45', color: '#0f172a' }}>
-                            <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>Bank:</span> North East Small Finance Bank</div>
-                            <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>A/C Name:</span> YantraByte Solutions</div>
-                            <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>A/C No:</span> <strong style={{ color: '#000000', fontSize: '13px' }}>033311501023226</strong></div>
-                            <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>IFSC:</span> <strong style={{ color: '#000000', fontSize: '13px' }}>NESF0000333</strong></div>
-                            <div><span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>UPI ID:</span> <strong style={{ color: '#047857', fontSize: '12.5px' }}>s0424237152@slc</strong></div>
-                            <div style={{ marginTop: '2px', fontSize: '11px', color: '#4338ca', fontWeight: 'bold', lineHeight: '1.25' }}>
-                              Pay via GPay / PhonePe / BHIM / Paytm: <span style={{ color: '#b91c1c', fontSize: '12px' }}>9986742525</span>
-                            </div>
+                            {!isAnanta ? (
+                              <>
+                                <div><span style={{ fontWeight: "bold", color: "#1e3a8a" }}>Bank:</span> North East Small Finance Bank</div>
+                                <div><span style={{ fontWeight: "bold", color: "#1e3a8a" }}>A/C Name:</span> YantraByte Solutions</div>
+                                <div><span style={{ fontWeight: "bold", color: "#1e3a8a" }}>A/C No:</span> <strong style={{ color: "#000000", fontSize: "13px" }}>033311501023226</strong></div>
+                                <div><span style={{ fontWeight: "bold", color: "#1e3a8a" }}>IFSC:</span> <strong style={{ color: "#000000", fontSize: "13px" }}>NESF0000333</strong></div>
+                                <div><span style={{ fontWeight: "bold", color: "#1e3a8a" }}>UPI ID:</span> <strong style={{ color: "#047857", fontSize: "12.5px" }}>s0424237152@slc</strong></div>
+                                <div style={{ marginTop: "2px", fontSize: "11px", color: "#4338ca", fontWeight: "bold", lineHeight: "1.25" }}>
+                                  Pay via GPay / PhonePe / BHIM / Paytm: <span style={{ color: "#b91c1c", fontSize: "12px" }}>9986742525</span>
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <div><span style={{ fontWeight: "bold", color: "#1e3a8a" }}>Company:</span> ANANTATECH CARE</div>
+                                <div><span style={{ fontWeight: "bold", color: "#1e3a8a" }}>Payment Mode:</span> Bank Transfer / UPI / Cash</div>
+                                <div style={{ marginTop: "4px", fontSize: "11px", color: "#64748b" }}>Bank details provided upon request or per project contract.</div>
+                              </>
+                            )}
                           </td>
+                          {!isAnanta ? (
                           <td id="invoice-qr-cell" style={{ width: '92px', verticalAlign: 'middle', textAlign: 'center', paddingLeft: '4px' }}>
                             <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#0B5394', marginBottom: '3px', letterSpacing: '0.5px' }}>
                               SCAN TO PAY
@@ -409,6 +431,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                               />
                             </div>
                           </td>
+                          ) : null}
                         </tr>
                       </tbody>
                     </table>

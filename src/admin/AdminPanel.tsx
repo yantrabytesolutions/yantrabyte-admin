@@ -1709,7 +1709,41 @@ export default function AdminPanel() {
               <LayoutDashboard className="w-8 h-8 text-[#0EA5E9]" />
             </div>
             <h1 className="text-2xl font-bold text-white">Admin Panel</h1>
-            <p className="text-[#94A3B8] text-sm mt-2">Yantrabyte Solutions</p>
+            <p className="text-[#94A3B8] text-sm mt-2 font-medium">{selectedBrand === "anantatechcare" ? "ANANTATECH CARE" : "YantraByte Solutions"}</p>
+
+            {/* Company Selection Tabs */}
+            <div className="mt-6 flex items-center justify-center">
+              <div className="p-1 rounded-xl bg-white/5 border border-white/10 flex gap-1 w-full max-w-xs">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedBrand("yantrabyte");
+                    localStorage.setItem("admin_brand", "yantrabyte");
+                  }}
+                  className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
+                    selectedBrand === "yantrabyte"
+                      ? "bg-[#0EA5E9] text-white shadow-md"
+                      : "text-[#94A3B8] hover:text-white"
+                  }`}
+                >
+                  YantraByte
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedBrand("anantatechcare");
+                    localStorage.setItem("admin_brand", "anantatechcare");
+                  }}
+                  className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
+                    selectedBrand === "anantatechcare"
+                      ? "bg-teal-500 text-white shadow-md"
+                      : "text-[#94A3B8] hover:text-white"
+                  }`}
+                >
+                  ANANTATECH CARE
+                </button>
+              </div>
+            </div>
           </div>
           <form onSubmit={handleLogin} className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 space-y-5">
             {authError && (
@@ -2528,7 +2562,7 @@ export default function AdminPanel() {
   const renderContent = () => {
     if (activeSection === 'dashboard') return renderDashboard();
     if (activeSection === 'settings') return renderSettings();
-    if (activeSection === 'billing') return <BillingSoftware initialAutofillTicket={autofillTicket} onClearAutofill={() => setAutofillTicket(null)} initialTab={billingInitialTab} />;
+    if (activeSection === 'billing') return <BillingSoftware brand={selectedBrand} onBrandChange={setSelectedBrand} initialAutofillTicket={autofillTicket} onClearAutofill={() => setAutofillTicket(null)} initialTab={billingInitialTab} />;
     if (activeSection === 'purchase') return <PurchaseSoftware />;
     if (activeSection === 'external') return <ExternalRepairs />;
     if (activeSection === 'inventory') return <InventoryMovement />;
@@ -2569,7 +2603,25 @@ export default function AdminPanel() {
           </div>
           {sidebarOpen && (
             <div className="min-w-0">
-              <h1 className={`font-bold text-sm truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Yantrabyte</h1>
+              <div className="flex items-center gap-1.5">
+                <h1 className={`font-bold text-sm truncate ${isDarkMode ? "text-white" : "text-slate-900"}`}>{selectedBrand === "anantatechcare" ? "ANANTATECH CARE" : "YantraByte"}</h1>
+              </div>
+              <div className="mt-1 flex gap-1">
+                <button
+                  type="button"
+                  onClick={() => { setSelectedBrand("yantrabyte"); localStorage.setItem("admin_brand", "yantrabyte"); }}
+                  className={`text-[10px] px-1.5 py-0.5 rounded font-semibold transition-all ${selectedBrand === "yantrabyte" ? "bg-[#0EA5E9] text-white" : "text-slate-400 hover:text-white"}`}
+                >
+                  YB
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setSelectedBrand("anantatechcare"); localStorage.setItem("admin_brand", "anantatechcare"); }}
+                  className={`text-[10px] px-1.5 py-0.5 rounded font-semibold transition-all ${selectedBrand === "anantatechcare" ? "bg-teal-500 text-white" : "text-slate-400 hover:text-white"}`}
+                >
+                  ATC
+                </button>
+              </div>
               <p className={`text-xs truncate ${isDarkMode ? 'text-[#64748B]' : 'text-slate-500'}`}>Admin Panel</p>
             </div>
           )}

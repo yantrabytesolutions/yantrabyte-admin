@@ -15,6 +15,8 @@ import CustomerLedgerModal from './components/CustomerLedgerModal';
 import { InvoicePdfTemplate } from '../components/InvoicePdfTemplate';
 
 interface BillingSoftwareProps {
+  brand?: 'yantrabyte' | 'anantatechcare';
+  onBrandChange?: (brand: 'yantrabyte' | 'anantatechcare') => void;
   initialAutofillTicket?: ServiceTicket | null;
   onClearAutofill?: () => void;
   initialTab?: 'editor' | 'history' | 'quotations' | 'pending' | 'settings';
@@ -82,7 +84,29 @@ const INVOICE_HEADERS = [
   'Invoice Link',
 ];
 
-export default function BillingSoftware({ initialAutofillTicket, onClearAutofill, initialTab = 'editor' }: BillingSoftwareProps) {
+export default function BillingSoftware({
+  initialAutofillTicket,
+  onClearAutofill,
+  initialTab = 'editor',
+  brand: propBrand,
+  onBrandChange
+}: BillingSoftwareProps) {
+  const [currentBrand, setCurrentBrand] = useState<'yantrabyte' | 'anantatechcare'>(() => {
+    if (propBrand) return propBrand;
+    return (localStorage.getItem('admin_brand') as 'yantrabyte' | 'anantatechcare') || 'yantrabyte';
+  });
+
+  useEffect(() => {
+    if (propBrand && propBrand !== currentBrand) {
+      setCurrentBrand(propBrand);
+    }
+  }, [propBrand]);
+
+  const setBrand = (b: 'yantrabyte' | 'anantatechcare') => {
+    setCurrentBrand(b);
+    localStorage.setItem('admin_brand', b);
+    if (onBrandChange) onBrandChange(b);
+  };
   const [docType, setDocType] = useState('Invoice');
   const [invoiceDate, setInvoiceDate] = useState<string>(new Date().toISOString().slice(0, 10));
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
@@ -736,7 +760,8 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
 
   const generateInvoiceNoAsync = async (type: string = docType) => {
     const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const prefix = type === 'Quotation' ? 'YBQ' : 'YBS';
+    const isAnanta = currentBrand === 'anantatechcare';
+    const prefix = type === 'Quotation' ? (isAnanta ? 'ATCQ' : 'YBQ') : (isAnanta ? 'ATC' : 'YBS');
     
     const { data } = await supabase
       .from('invoices')
@@ -1637,7 +1662,39 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
     <div className="w-full space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">YantraByte <span className="text-blue-600">Billing System</span></h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-bold text-gray-900">
+              {currentBrand === "anantatechcare" ? "ANANTATECH CARE" : "YantraByte"}{" "}
+              <span className={currentBrand === "anantatechcare" ? "text-teal-600" : "text-blue-600"}>
+                Billing System
+              </span>
+            </h2>
+            {/* Company Selector Toggle */}
+            <div className="flex items-center bg-gray-100 p-1 rounded-lg border border-gray-200">
+              <button
+                type="button"
+                onClick={() => setBrand("yantrabyte")}
+                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${
+                  currentBrand === "yantrabyte"
+                    ? "bg-blue-600 text-white shadow-xs"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                YantraByte
+              </button>
+              <button
+                type="button"
+                onClick={() => setBrand("anantatechcare")}
+                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${
+                  currentBrand === "anantatechcare"
+                    ? "bg-teal-600 text-white shadow-xs"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                ANANTATECH CARE
+              </button>
+            </div>
+          </div>
           <p className="text-sm text-gray-500 mt-0.5">Create, edit, and generate PDF invoices and quotations natively.</p>
         </div>
         <div className="flex items-center flex-wrap gap-2.5">
@@ -2626,6 +2683,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
       {/* --- HIDDEN PRINT TEMPLATE --- */}
       <div style={{ position: 'fixed', left: 0, top: 0, width: '794px', opacity: 0.001, pointerEvents: 'none', zIndex: -9999 }}>
         <InvoicePdfTemplate
+          brand={currentBrand}
           ref={printRef}
           invoice={{
             id: selectedInvoiceId || '',
