@@ -463,6 +463,9 @@ export default function AdminPanel() {
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
   const [loggingIn, setLoggingIn] = useState(false);
+  const [selectedBrand, setSelectedBrand] = useState<'yantrabyte' | 'anantatechcare'>(() => {
+    return (localStorage.getItem('admin_brand') as 'yantrabyte' | 'anantatechcare') || 'yantrabyte';
+  });
 
   const [activeSection, setActiveSection] = useState<Section>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);

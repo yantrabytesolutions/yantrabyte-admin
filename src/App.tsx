@@ -28,7 +28,7 @@ const DomainGuard = ({ children }: { children: React.ReactNode }) => {
   const pathname = window.location.pathname.toLowerCase();
 
   if (hostname === 'anantatechcare.com' || hostname === 'www.anantatechcare.com') {
-    if (pathname.includes('/service-request') || pathname.includes('/servicerequest') || pathname.includes('/admin')) {
+    if (pathname.includes('/service-request') || pathname.includes('/servicerequest')) {
       return (
         <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center px-4">
           <div className="max-w-md w-full text-center bg-white p-8 rounded-lg shadow-md border border-gray-100">
