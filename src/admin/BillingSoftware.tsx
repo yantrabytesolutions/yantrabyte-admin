@@ -2402,7 +2402,14 @@ export default function BillingSoftware({
                   const cleanPhone = phone ? phone.replace(/\D/g, '') : '';
                   const phoneNum = cleanPhone.length === 10 ? cleanPhone : (cleanPhone.length > 10 ? cleanPhone.slice(-10) : '');
                   const itemsSummary = items.map((it, idx) => `${idx + 1}. ${it.description} (Qty: ${it.qty}) - ₹${(it.qty * it.rate).toLocaleString('en-IN')}`).join('\n');
-                  const msg = `*YANTRABYTE SOLUTIONS* 🛠️\n*Invoice No:* ${printInvoiceNumber || (selectedInvoiceId ? (invoices.find(i=>i.id===selectedInvoiceId)?.invoice_no || 'INV-2026') : 'INV-2026')}\n*Date:* ${invoiceDate}\n*Customer:* ${customerName || 'Valued Customer'}\n\n*Billing Summary:*\n${itemsSummary}\n\n*Grand Total:* ₹${grandTotal.toLocaleString('en-IN')}\n*Advance Paid:* ₹${advancePaid.toLocaleString('en-IN')}\n*Balance Due:* ₹${balanceDue.toLocaleString('en-IN')}\n\n*Pay via UPI:* s0424237152@slc\n*Bank:* North East Small Finance Bank | A/C: 033311501023226 | IFSC: NESF0000333\n\nThank you for choosing YantraByte Solutions!`;
+                                    const isAnanta = currentBrand === 'anantatechcare';
+                  const compName = isAnanta ? 'ANANTATECH CARE' : 'YANTRABYTE SOLUTIONS';
+                  const bankTxt = isAnanta
+                    ? '*Bank Details:* Kotak Mahindra Bank | A/C: 8813910769 | IFSC: KKBK0008094 | Name: Swarna Gowri | Branch: Vidyaranyapura, Bangalore'
+                    : '*Pay via UPI:* s0424237152@slc\n*Bank:* North East Small Finance Bank | A/C: 033311501023226 | IFSC: NESF0000333';
+                  const invNum = printInvoiceNumber || (selectedInvoiceId ? (invoices.find(i=>i.id===selectedInvoiceId)?.invoice_no || 'INV-2026') : 'INV-2026');
+                  const custName = customerName || 'Valued Customer';
+                  const msg = `*${compName}* 🛠️\n*Invoice No:* ${invNum}\n*Date:* ${invoiceDate}\n*Customer:* ${custName}\n\n*Billing Summary:*\n${itemsSummary}\n\n*Grand Total:* ₹${grandTotal.toLocaleString('en-IN')}\n*Advance Paid:* ₹${advancePaid.toLocaleString('en-IN')}\n*Balance Due:* ₹${balanceDue.toLocaleString('en-IN')}\n\n${bankTxt}\n\nThank you for choosing ${compName}!`;
                   const targetUrl = phoneNum ? `https://api.whatsapp.com/send?phone=91${phoneNum}&text=${encodeURIComponent(msg)}` : `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
                   window.open(targetUrl, '_blank');
                 }} 

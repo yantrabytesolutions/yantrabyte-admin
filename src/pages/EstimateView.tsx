@@ -285,6 +285,11 @@ export default function EstimateView() {
 
       {/* Main Card */}
       <div id="estimate-card" style={{
+        position: 'relative',
+        backgroundImage: isAnanta ? 'url(/work-laptop.png)' : 'none',
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'center 45%',
+        backgroundSize: '420px auto',
         maxWidth: 800, margin: '0 auto',
         background: '#fff', borderRadius: 16,
         boxShadow: '0 4px 24px rgba(11,83,148,0.10), 0 1px 4px rgba(0,0,0,0.04)',
@@ -298,23 +303,23 @@ export default function EstimateView() {
           flexWrap: 'wrap', gap: 16
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div style={{
+                        <div style={{
               width: 56, height: 56,
-              background: 'linear-gradient(135deg, #0B5394, #1A73E8)',
-              borderRadius: '50%',
+              background: isAnanta ? 'linear-gradient(135deg, #0D9488, #0B5394)' : 'linear-gradient(135deg, #0B5394, #1A73E8)',
+              borderRadius: isAnanta ? 12 : '50%',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               color: '#fff', fontWeight: 700, fontSize: 20,
               boxShadow: '0 2px 8px rgba(11,83,148,0.3)'
-            }}>YB</div>
+            }}>{isAnanta ? 'ATC' : 'YB'}</div>
             <div>
               <h1 style={{ fontSize: 20, fontWeight: 700, color: '#0B5394', margin: 0, letterSpacing: -0.3 }}>
-                YANTRABYTE SOLUTIONS
+                {isAnanta ? 'ANANTATECH CARE' : 'YANTRABYTE SOLUTIONS'}
               </h1>
               <p style={{ fontSize: 12, color: '#6b7280', margin: '2px 0 0' }}>
                 47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post, Bengaluru - 560097
               </p>
               <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
-                📱 09986742525 &nbsp;|&nbsp; ✉️ yantrabyte.solutions@gmail.com
+                Phone: 09986742525 &nbsp;|&nbsp; Email: {isAnanta ? 'rameshas@anantatech.com' : 'yantrabyte.solutions@gmail.com'}
               </p>
             </div>
           </div>
@@ -533,17 +538,31 @@ export default function EstimateView() {
             }}>
               Bank & Payment Details
             </div>
-            <div style={{ padding: '14px 20px', fontSize: 12, color: '#374151', lineHeight: 1.9 }}>
-              <div><strong>Bank:</strong> North East Small Finance Bank</div>
-              <div><strong>A/C Name:</strong> YantraByte Solutions</div>
-              <div><strong>A/C No:</strong> 033311501023226</div>
-              <div><strong>IFSC:</strong> NESF0000333</div>
-              <div><strong>UPI:</strong> s0424237152@slc</div>
-              <div style={{ marginTop: 4, fontSize: 11, color: '#4338ca', fontWeight: 'bold' }}>
-                Pay via GPay / PhonePe / BHIM: <span style={{ color: '#b91c1c' }}>9986742525</span>
-              </div>
+                        <div style={{ padding: '14px 20px', fontSize: 12, color: '#374151', lineHeight: 1.9 }}>
+              {!isAnanta ? (
+                <>
+                  <div><strong>Bank:</strong> North East Small Finance Bank</div>
+                  <div><strong>A/C Name:</strong> YantraByte Solutions</div>
+                  <div><strong>A/C No:</strong> 033311501023226</div>
+                  <div><strong>IFSC:</strong> NESF0000333</div>
+                  <div><strong>UPI:</strong> s0424237152@slc</div>
+                  <div style={{ marginTop: 4, fontSize: 11, color: '#4338ca', fontWeight: 'bold' }}>
+                    Pay via GPay / PhonePe / BHIM: <span style={{ color: '#b91c1c' }}>9986742525</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div><strong>A/C Name:</strong> Swarna Gowri</div>
+                  <div><strong>A/C No:</strong> 8813910769</div>
+                  <div><strong>IFSC Code:</strong> KKBK0008094</div>
+                  <div><strong>Branch:</strong> Kotak Mahindra Bank, Vidyaranyapura, Bangalore</div>
+                  <div style={{ marginTop: 4, fontSize: 11, color: '#047857', fontWeight: 'bold' }}>
+                    Pay via NEFT / RTGS / IMPS / UPI
+                  </div>
+                </>
+              )}
             </div>
-            <div style={{ padding: '8px 20px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+            {!isAnanta && (<div style={{ padding: '8px 20px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ background: '#fff', padding: '2px', border: '1px solid #e5e7eb', borderRadius: '6px', display: 'inline-block' }}>
                 <QrCodeRenderer 
                   value="upi://pay?pa=s0424237152@slc&pn=YantraByte%20Solutions&cu=INR" 
@@ -553,7 +572,8 @@ export default function EstimateView() {
               <div style={{ fontSize: 11, color: '#6b7280' }}>
                 Scan to pay<br />via UPI
               </div>
-            </div>
+            </div>)}
+
           </div>
         </div>
 
