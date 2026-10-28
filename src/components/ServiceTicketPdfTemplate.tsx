@@ -2,9 +2,11 @@ import { forwardRef } from 'react';
 import type { ServiceTicket } from '../types';
 import { HardwareBrandsBanner } from './HardwareBrandsBanner';
 import { YANTRABYTE_LOGO_BASE64, HARDWARE_WATERMARK_BASE64 } from '../assets/invoiceAssets';
+import { LAPTOP_SYSTEM_WATERMARK_BASE64 } from '../assets/laptopWatermark';
 import { QrCodeSvg } from './QrCodeSvg';
 
 interface Props {
+  brand?: 'yantrabyte' | 'anantatechcare';
   ticket: Partial<ServiceTicket & {
     device_make_model?: string;
     service_method?: string;
@@ -18,7 +20,8 @@ interface Props {
 
 export const ServiceTicketPdfTemplate = forwardRef<HTMLDivElement, Props>(({ 
   ticket, 
-  companySignature: _companySignature 
+  companySignature: _companySignature,
+  brand = 'yantrabyte'
 }, ref) => {
   const ticketNo = ticket.ticket_number || 'DRAFT';
   const rawDate = ticket.created_at || new Date().toISOString();
@@ -26,6 +29,11 @@ export const ServiceTicketPdfTemplate = forwardRef<HTMLDivElement, Props>(({
   const formattedDate = !isNaN(dateObj.getTime())
     ? `${dateObj.toLocaleDateString('en-GB')} ${dateObj.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`
     : rawDate;
+
+  const isAnanta = brand === 'anantatechcare' || (Boolean(ticket.ticket_number) && String(ticket.ticket_number).startsWith('ATC'));
+  const brandName = isAnanta ? 'ANANTATECH CARE' : 'YANTRABYTE SOLUTIONS';
+  const brandEmail = isAnanta ? 'rameshas@anantatech.com' : 'yantrabyte.solutions@gmail.com';
+  const watermarkBg = isAnanta ? `url(${LAPTOP_SYSTEM_WATERMARK_BASE64})` : `url(${YANTRABYTE_LOGO_BASE64})`;
 
   const trackingUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/track-ticket?t=${ticketNo}`
@@ -56,12 +64,12 @@ export const ServiceTicketPdfTemplate = forwardRef<HTMLDivElement, Props>(({
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundImage: `url(${YANTRABYTE_LOGO_BASE64})`,
-        backgroundSize: '460px auto',
+        backgroundImage: watermarkBg,
+        backgroundSize: isAnanta ? '420px auto' : '460px auto',
         backgroundPosition: 'center center',
         backgroundRepeat: 'no-repeat',
         zIndex: 0,
-        opacity: 0.03,
+        opacity: isAnanta ? 0.08 : 0.03,
         pointerEvents: 'none',
         filter: 'contrast(1.15) brightness(0.92)'
       }} />
@@ -100,22 +108,37 @@ export const ServiceTicketPdfTemplate = forwardRef<HTMLDivElement, Props>(({
             <tbody>
               <tr>
                 <td style={{ width: '130px', padding: '10px 12px', verticalAlign: 'middle' }}>
-                  <img 
-                    src={YANTRABYTE_LOGO_BASE64} 
-                    alt="YantraByte Solutions" 
-                    style={{ height: '95px', width: 'auto', display: 'block' }} 
-                  />
+                  {isAnanta ? (
+                    <div style={{
+                      width: '64px',
+                      height: '64px',
+                      background: 'linear-gradient(135deg, #0D9488, #0B5394)',
+                      borderRadius: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#ffffff',
+                      fontWeight: 800,
+                      fontSize: '22px'
+                    }}>ATC</div>
+                  ) : (
+                    <img 
+                      src={YANTRABYTE_LOGO_BASE64} 
+                      alt="YantraByte Solutions" 
+                      style={{ height: '95px', width: 'auto', display: 'block' }} 
+                    />
+                  )}
                 </td>
                 <td style={{ textAlign: 'right', padding: '10px 16px', verticalAlign: 'middle' }}>
                   <div style={{ fontSize: '20px', fontWeight: 'bold', letterSpacing: '0.5px', color: '#0B5394', textTransform: 'uppercase' }}>
-                    YANTRABYTE SOLUTIONS
+                    {brandName}
                   </div>
                   <div style={{ fontSize: '12px', color: '#333333', marginTop: '4px', lineHeight: '1.4' }}>
                     47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br />
                     Chikkabettahalli, Bengaluru - 560097
                   </div>
                   <div style={{ fontSize: '12px', color: '#333333', marginTop: '4px' }}>
-                    📱 Phone: 09986742525 &nbsp;|&nbsp; ✉️ Email: yantrabyte.solutions@gmail.com
+                    📱 Phone: 09986742525 &nbsp;|&nbsp; ✉️ Email: {brandEmail}
                   </div>
                 </td>
               </tr>

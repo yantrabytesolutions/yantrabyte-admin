@@ -28,6 +28,7 @@ import InventoryMovement from './InventoryMovement';
 import FinancialReports from './FinancialReports';
 import { WhatsAppConnectModal } from './components/WhatsAppConnectModal';
 import { YANTRABYTE_LOGO_BASE64, HARDWARE_WATERMARK_BASE64 } from '../assets/invoiceAssets';
+import { LAPTOP_SYSTEM_WATERMARK_BASE64 } from '../assets/laptopWatermark';
 import DigitalJobSheetModal from './components/DigitalJobSheetModal';
 import { ServiceTicketPdfTemplate } from '../components/ServiceTicketPdfTemplate';
 import ReactQuill from 'react-quill';
@@ -580,6 +581,10 @@ export default function AdminPanel() {
     const qrCodeSvg = getQrSvgString(trackUrl, 70, 'M');
     const dateStr = item.created_at ? new Date(String(item.created_at)).toLocaleDateString('en-GB') : new Date().toLocaleDateString('en-GB');
 
+    const isAnantaTicket = selectedBrand === 'anantatechcare' || String(ticketNo).startsWith('ATC');
+    const ticketBrandName = isAnantaTicket ? 'ANANTATECH CARE' : 'YantraByte Solutions';
+    const ticketEmail = isAnantaTicket ? 'rameshas@anantatech.com' : 'yantrabyte.solutions@gmail.com';
+    const watermarkSrc = isAnantaTicket ? LAPTOP_SYSTEM_WATERMARK_BASE64 : YANTRABYTE_LOGO_BASE64;
     const element = document.createElement('div');
     element.style.width = '794px';
     element.style.boxSizing = 'border-box';
@@ -591,7 +596,7 @@ export default function AdminPanel() {
       <div style="width: 794px; height: 1080px; padding: 28px; box-sizing: border-box; overflow: hidden; background-color: #ffffff; position: relative;">
         <!-- Watermark -->
         <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 500px; height: 500px; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 5; opacity: 0.45;">
-          <img src="${YANTRABYTE_LOGO_BASE64}" style="width: 460px; height: auto; object-fit: contain; display: block; filter: contrast(1.15) brightness(0.92);" />
+          <img src="${watermarkSrc}" style="width: 460px; height: auto; object-fit: contain; display: block; filter: contrast(1.15) brightness(0.92);" />
         </div>
         <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url(${HARDWARE_WATERMARK_BASE64}); background-size: cover; background-position: center; background-repeat: no-repeat; pointer-events: none; z-index: 4; opacity: 0.30;">
         </div>
@@ -600,11 +605,11 @@ export default function AdminPanel() {
         <table style="width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 16px;">
           <tr>
             <td style="width: 56%; vertical-align: top; padding-right: 16px;">
-              <div style="font-size: 25px; font-weight: bold; color: #0B5394; text-transform: uppercase; letter-spacing: 0.3px;">YantraByte Solutions</div>
+              <div style="font-size: 25px; font-weight: bold; color: #0B5394; text-transform: uppercase; letter-spacing: 0.3px;">${ticketBrandName}</div>
               <div style="font-size: 11px; color: #444444; line-height: 1.45; margin-top: 5px;">
                 IT service, repair, and network management experts.<br />
                 47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br />
-                Phone: 09986742525 | Email: yantrabyte.solutions@gmail.com
+                Phone: 09986742525 | Email: ${ticketEmail}
               </div>
             </td>
             <td style="width: 44%; text-align: right; vertical-align: top;">
@@ -2764,6 +2769,7 @@ export default function AdminPanel() {
             <ServiceTicketPdfTemplate
               ref={ticketPrintRef}
               ticket={activeTicketForPdf}
+              brand={selectedBrand}
             />
           )}
         </div>
