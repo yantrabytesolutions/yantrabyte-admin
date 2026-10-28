@@ -2,6 +2,7 @@ import { forwardRef } from 'react';
 import type { Invoice, InvoiceItem } from '../types';
 import { HardwareBrandsBanner } from './HardwareBrandsBanner';
 import { YANTRABYTE_LOGO_BASE64, HARDWARE_WATERMARK_BASE64 } from '../assets/invoiceAssets';
+import { LAPTOP_SYSTEM_WATERMARK_BASE64 } from '../assets/laptopWatermark';
 import { QrCodeRenderer } from './QrCodeRenderer';
 
 function numberToWords(num: number): string {
@@ -124,13 +125,13 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundImage: isAnanta ? "none" : `url(${YANTRABYTE_LOGO_BASE64})`,
-        backgroundSize: '560px auto',
+        backgroundImage: isAnanta ? `url(${LAPTOP_SYSTEM_WATERMARK_BASE64})` : `url(${YANTRABYTE_LOGO_BASE64})`,
+        backgroundSize: isAnanta ? '420px auto' : '560px auto',
         backgroundPosition: 'center center',
         backgroundRepeat: 'no-repeat',
         pointerEvents: 'none',
         zIndex: 5,
-        opacity: 0.10,
+        opacity: isAnanta ? 0.08 : 0.10,
         filter: 'contrast(1.15) brightness(0.92)'
       }} />
 
