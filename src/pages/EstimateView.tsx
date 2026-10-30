@@ -288,7 +288,7 @@ export default function EstimateView() {
       {/* Main Card */}
       <div id="estimate-card" style={{
         position: 'relative',
-        backgroundImage: isAnanta ? 'url(/work-laptop.png)' : 'none',
+        backgroundImage: isAnanta ? 'url(/desktop.jpg)' : 'none',
         backgroundRepeat: 'no-repeat',
         backgroundPosition: 'center 45%',
         backgroundSize: '420px auto',
