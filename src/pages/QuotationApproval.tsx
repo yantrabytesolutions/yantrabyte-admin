@@ -10,6 +10,7 @@ import { OFFICIAL_QR_CODE_BASE64 } from '../assets/generatedQr';
 export function QuotationApproval() {
   const { id } = useParams<{ id: string }>();
   const [quotation, setQuotation] = useState<Invoice | null>(null);
+  const isAnanta = Boolean(quotation?.invoice_no?.startsWith('ATC')) || (typeof window !== 'undefined' && window.location.hostname.includes('ananta') && !window.location.hostname.startsWith('yantrabyte.'));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [signature, setSignature] = useState('');
@@ -142,20 +143,34 @@ export function QuotationApproval() {
                       <p className="text-3xl font-bold text-white">₹{(quotation.grand_total * 0.85).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
                     </div>
                     <div className="text-sm text-slate-300 space-y-2 p-4 bg-white/5 rounded-lg border border-white/5">
-                      <p><strong className="text-white">Bank:</strong> North East Small Finance Bank</p>
-                      <p><strong className="text-white">A/C Name:</strong> YantraByte Solutions</p>
-                      <p><strong className="text-white">A/C No:</strong> 033311501023226</p>
-                      <p><strong className="text-white">IFSC Code:</strong> NESF0000333</p>
-                      <p className="pt-2 mt-2 border-t border-white/10"><strong className="text-white">UPI ID:</strong> s0424237152@slc</p>
+                      {!isAnanta ? (
+                        <>
+                          <p><strong className="text-white">Bank:</strong> North East Small Finance Bank</p>
+                          <p><strong className="text-white">A/C Name:</strong> YantraByte Solutions</p>
+                          <p><strong className="text-white">A/C No:</strong> 033311501023226</p>
+                          <p><strong className="text-white">IFSC Code:</strong> NESF0000333</p>
+                          <p className="pt-2 mt-2 border-t border-white/10"><strong className="text-white">UPI ID:</strong> s0424237152@slc</p>
+                        </>
+                      ) : (
+                        <>
+                          <p><strong className="text-white">Bank:</strong> Kotak Mahindra Bank</p>
+                          <p><strong className="text-white">A/C Name:</strong> Swarna Gowri</p>
+                          <p><strong className="text-white">A/C No:</strong> 8813910769</p>
+                          <p><strong className="text-white">IFSC Code:</strong> KKBK0008094</p>
+                          <p><strong className="text-white">Branch:</strong> Vidyaranyapura, Bangalore</p>
+                        </>
+                      )}
                     </div>
                   </div>
-                  <div className="w-48 h-48 bg-white rounded-xl p-2 flex-shrink-0 flex items-center justify-center relative overflow-hidden border-4 border-white/10 shadow-xl">
-                    <img 
-                      src={OFFICIAL_QR_CODE_BASE64 || "/Payment.jpg"} 
-                      alt="Payment QR Code" 
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
+                  {!isAnanta ? (
+                    <div className="w-48 h-48 bg-white rounded-xl p-2 flex-shrink-0 flex items-center justify-center relative overflow-hidden border-4 border-white/10 shadow-xl">
+                      <img 
+                        src={OFFICIAL_QR_CODE_BASE64 || "/Payment.jpg"} 
+                        alt="Payment QR Code" 
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                  ) : null}
                 </div>
                 <div className="mt-6 bg-white/5 rounded-xl p-4 border border-white/10">
                   <p className="text-sm text-slate-400 mb-2">Payment Status</p>

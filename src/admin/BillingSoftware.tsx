@@ -509,6 +509,15 @@ export default function BillingSoftware({
   const loadInvoice = (id: string) => {
     const inv = invoices.find(i => i.id === id);
     if (!inv) return;
+
+    if (inv.invoice_no) {
+      if (inv.invoice_no.startsWith('ATC') || inv.invoice_no.startsWith('ATCQ')) {
+        setBrand('anantatechcare');
+      } else if (inv.invoice_no.startsWith('YBS') || inv.invoice_no.startsWith('YBQ')) {
+        setBrand('yantrabyte');
+      }
+    }
+
     setSelectedInvoiceId(inv.id);
     setDocType(inv.doc_type);
     if (inv.date) {
@@ -724,7 +733,9 @@ export default function BillingSoftware({
     if (!phone) { showToast('No phone number available for WhatsApp', 'error'); return; }
 
     const quoteLink = `https://yantrabyte.anantatechcare.com/quotation/${inv.id}`;
-    const text = `Hi *${inv.customer_name}*,\n\nGreetings from *YantraByte Solutions*! 👋\n\nChecking in regarding your Quotation *#${inv.invoice_no}* for *₹${inv.grand_total.toLocaleString('en-IN')}*.\n\nPlease let us know if you have any questions or would like us to customize the estimate. You can review and approve your estimate online here:\n${quoteLink}\n\nWe look forward to serving you!\n*YantraByte Solutions* (Call/WA: +91 99867 42525)`;
+    const isAnantaQuote = inv.invoice_no?.startsWith('ATC') || currentBrand === 'anantatechcare';
+    const companyName = isAnantaQuote ? 'ANANTATECH CARE' : 'YantraByte Solutions';
+    const text = `Hi *${inv.customer_name}*,\n\nGreetings from *${companyName}*! 👋\n\nChecking in regarding your Quotation *#${inv.invoice_no}* for *₹${inv.grand_total.toLocaleString('en-IN')}*.\n\nPlease let us know if you have any questions or would like us to customize the estimate. You can review and approve your estimate online here:\n${quoteLink}\n\nWe look forward to serving you!\n*${companyName}* (Call/WA: +91 99867 42525)`;
 
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
     showToast('Opening WhatsApp follow-up chat...');
@@ -1177,7 +1188,7 @@ export default function BillingSoftware({
               documentType: docType,
               filename: (payload.customer_name && payload.customer_name.trim())
                 ? `${payload.customer_name.trim().replace(/[/\\?%*:|"<>]/g, '-')}.pdf`
-                : `YBS-${payload.invoice_no}.pdf`,
+                : `${payload.invoice_no.startsWith('ATC') || payload.invoice_no.startsWith('ATCQ') ? 'ATC-' : 'YBS-'}${payload.invoice_no}.pdf`,
               pdfUrl: pdfUrl,
             }),
           });
@@ -1256,7 +1267,7 @@ export default function BillingSoftware({
     const cleanCustomer = (customerName || '').trim().replace(/[/\\?%*:|"<>]/g, '-');
     if (cleanCustomer) return `${cleanCustomer}.pdf`;
     const cleanInv = (invoiceNumber || 'DRAFT').replace(/[^\w-]/g, '_');
-    const isQuote = docType === 'Quotation' || docType === 'Estimate' || cleanInv.startsWith('YBQ');
+    const isQuote = docType === 'Quotation' || docType === 'Estimate' || cleanInv.startsWith('YBQ') || cleanInv.startsWith('ATCQ');
     const prefix = isQuote ? 'Quotation' : 'Invoice';
     return `${prefix}_${cleanInv}.pdf`;
   };
@@ -1333,7 +1344,9 @@ export default function BillingSoftware({
     const inv = invoices.find(i => i.id === id);
     if (!inv) return;
 
-    const safeTitle = inv.customer_name?.trim().replace(/[/\\?%*:|"<>]/g, '-') || `YBS-${inv.invoice_no}`;
+    const isAnantaDoc = inv.invoice_no?.startsWith('ATC') || inv.invoice_no?.startsWith('ATCQ') || currentBrand === 'anantatechcare';
+    const fallbackPrefix = isAnantaDoc ? 'ATC-' : 'YBS-';
+    const safeTitle = inv.customer_name?.trim().replace(/[/\\?%*:|"<>]/g, '-') || `${fallbackPrefix}${inv.invoice_no}`;
 
     // Open window synchronously to bypass popup blocker
     const newWindow = window.open('', '_blank');
@@ -1370,7 +1383,7 @@ export default function BillingSoftware({
           pdf.setProperties({
             title: `${safeTitle}.pdf`,
             subject: `${safeTitle}.pdf`,
-            author: 'YantraByte Solutions'
+            author: isAnantaDoc ? 'ANANTATECH CARE' : 'YantraByte Solutions'
           });
         }
         const pdfBlob = await worker.outputPdf('blob');
@@ -3067,7 +3080,7 @@ export default function BillingSoftware({
                           if (advPaid > 0) {
                             reminderMsg = `Dear ${inv.customer_name},\n\nThis is a gentle reminder that your remaining balance of ₹${balDue.toLocaleString('en-IN')} (Total: ₹${gTotal.toLocaleString('en-IN')}, Paid: ₹${advPaid.toLocaleString('en-IN')}) for Invoice No. ${inv.invoice_no} is currently due.`;
                           }
-                          reminderMsg += `\n\nYou can view and pay your invoice securely online here:\n${estimateUrl}\n\nPlease arrange for the payment at your earliest convenience.\n\nThank you,\nYantrabyte Solutions`;
+                          reminderMsg += `\n\nYou can view and pay your invoice securely online here:\n${estimateUrl}\n\nPlease arrange for the payment at your earliest convenience.\n\nThank you,\n${inv.invoice_no?.startsWith('ATC') ? 'ANANTATECH CARE' : 'YantraByte Solutions'}`;
                           
                           const whatsappUrl = phoneNum ? `https://wa.me/91${phoneNum.length === 10 ? phoneNum : phoneNum.replace(/^91/, '')}?text=${encodeURIComponent(reminderMsg)}` : '#';
                           

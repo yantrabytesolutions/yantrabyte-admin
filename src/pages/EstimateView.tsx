@@ -200,7 +200,8 @@ export default function EstimateView() {
   const handleDownloadPdf = async (e: React.MouseEvent) => {
     e.preventDefault();
     if (!estimate?.pdf_url) return;
-    const safeCustomer = estimate.customer_name?.trim().replace(/[/\\?%*:|"<>]/g, '-') || `YBS-${estimate.invoice_no}`;
+    const fallbackPfx = (Boolean(estimate.invoice_no) && String(estimate.invoice_no).startsWith('ATC')) ? 'ATC-' : 'YBS-';
+    const safeCustomer = estimate.customer_name?.trim().replace(/[/\\?%*:|"<>]/g, '-') || `${fallbackPfx}${estimate.invoice_no}`;
     const filename = `${safeCustomer}.pdf`;
     try {
       const res = await fetch(estimate.pdf_url);
@@ -248,9 +249,9 @@ export default function EstimateView() {
             background: 'rgba(255,255,255,0.2)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: '#fff', fontWeight: 700, fontSize: 16
-          }}>YB</div>
+          }}>{isAnanta ? 'ATC' : 'YB'}</div>
           <div>
-            <div style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>YantraByte Solutions</div>
+            <div style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{isAnanta ? 'ANANTATECH CARE' : 'YantraByte Solutions'}</div>
             <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12 }}>{docLabel} #{estimate.invoice_no}</div>
           </div>
         </div>
