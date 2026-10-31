@@ -21,15 +21,15 @@ const staggerItem = {
 const sections = [
   {
     title: '1. Acceptance of Terms',
-    content: `By accessing or using the website and services of Yantrabyte Solutions ("Company," "we," "our," or "us"), you agree to be bound by these Terms and Conditions ("Terms"). If you do not agree to these Terms, you must not access or use our website or services.
+    content: `By accessing or using the website and services of Ananta Techcare ("Company," "we," "our," or "us"), you agree to be bound by these Terms and Conditions ("Terms"). If you do not agree to these Terms, you must not access or use our website or services.
 
-These Terms constitute a legally binding agreement between you ("Client," "you," or "your") and Yantrabyte Solutions. We reserve the right to modify these Terms at any time by posting updated Terms on our website. Your continued use of our website or services after any such changes constitutes your acceptance of the revised Terms.
+These Terms constitute a legally binding agreement between you ("Client," "you," or "your") and Ananta Techcare. We reserve the right to modify these Terms at any time by posting updated Terms on our website. Your continued use of our website or services after any such changes constitutes your acceptance of the revised Terms.
 
 It is your responsibility to review these Terms periodically. We will make reasonable efforts to notify you of material changes, but ultimate responsibility for staying informed rests with you. The most current version of these Terms will always be available on our website.`,
   },
   {
     title: '2. Services',
-    content: `Yantrabyte Solutions provides IT infrastructure, security, and technology services including but not limited to:
+    content: `Ananta Techcare provides IT infrastructure, security, and technology services including but not limited to:
 
 CCTV Installation and Monitoring: Professional installation, configuration, and maintenance of surveillance camera systems for residential and commercial properties.
 
@@ -71,7 +71,7 @@ Disclaimer: TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, OUR SERVICES AND 
   },
   {
     title: '5. Limitation of Liability',
-    content: `To the maximum extent permitted by applicable law, Yantrabyte Solutions and its directors, employees, partners, agents, and affiliates shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including but not limited to loss of profits, data, use, goodwill, or other intangible losses, resulting from:
+    content: `To the maximum extent permitted by applicable law, Ananta Techcare and its directors, employees, partners, agents, and affiliates shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including but not limited to loss of profits, data, use, goodwill, or other intangible losses, resulting from:
 
 (a) Your access to or use of or inability to access or use our website or services;
 (b) Any conduct or content of any third party on our website or in connection with our services;
@@ -84,9 +84,9 @@ This limitation of liability applies whether the alleged liability is based on c
   },
   {
     title: '6. Intellectual Property',
-    content: `Ownership: All content, features, and functionality of our website, including but not limited to text, graphics, logos, images, software, and the compilation thereof, are the exclusive property of Yantrabyte Solutions and are protected by Indian and international copyright, trademark, and other intellectual property laws.
+    content: `Ownership: All content, features, and functionality of our website, including but not limited to text, graphics, logos, images, software, and the compilation thereof, are the exclusive property of Ananta Techcare and are protected by Indian and international copyright, trademark, and other intellectual property laws.
 
-Proprietary Materials: Our service methodologies, technical documentation, proprietary software tools, and trade secrets remain our exclusive property. No license or right is granted to you to use any trademark, service mark, logo, or other proprietary information of Yantrabyte Solutions without our prior written consent.
+Proprietary Materials: Our service methodologies, technical documentation, proprietary software tools, and trade secrets remain our exclusive property. No license or right is granted to you to use any trademark, service mark, logo, or other proprietary information of Ananta Techcare without our prior written consent.
 
 Client Content: You retain all rights to any content you provide to us, including business information, system configurations, and data. By providing content to us, you grant us a limited, non-exclusive, non-transferable license to use such content solely for the purpose of providing our services.
 
@@ -128,7 +128,7 @@ Dispute Resolution: Before initiating formal legal proceedings, you agree to att
 
 Severability: If any provision of these Terms is found to be unenforceable or invalid, that provision shall be limited or eliminated to the minimum extent necessary so that these Terms otherwise remain in full force and effect.
 
-Entire Agreement: These Terms, together with any applicable service agreements, constitute the entire agreement between you and Yantrabyte Solutions regarding the use of our website and services, superseding any prior agreements.
+Entire Agreement: These Terms, together with any applicable service agreements, constitute the entire agreement between you and Ananta Techcare regarding the use of our website and services, superseding any prior agreements.
 
 Waiver: Our failure to enforce any right or provision of these Terms will not be considered a waiver of those rights. Any waiver of these Terms must be in writing and signed by us.`,
   },
@@ -136,7 +136,7 @@ Waiver: Our failure to enforce any right or provision of these Terms will not be
     title: '10. Contact Information',
     content: `For any questions, concerns, or notices regarding these Terms and Conditions, please contact us:
 
-Yantrabyte Solutions
+Ananta Techcare
 Email: legal@yantrabyte.com
 Phone: +91-9986742525
 Address: 47A 1st Cross, Sainagar 2nd Stage, 2nd Main Rd, Vidyaranyapura Post, Chikkabettahalli, Bengaluru, Karnataka 560097
@@ -154,8 +154,8 @@ export default function Terms() {
   return (
     <div className="bg-[#0B1120]">
       <SEO 
-        title="Terms & Conditions | Yantrabyte Solutions" 
-        description="Please read our Terms and Conditions carefully before using the services of Yantrabyte Solutions."
+        title="Terms & Conditions | Ananta Techcare" 
+        description="Please read our Terms and Conditions carefully before using the services of Ananta Techcare."
       />
       {/* Hero Banner */}
       <section className="relative overflow-hidden bg-gradient-to-br from-[#0B1120] via-[#111827] to-[#0B1120] pt-32 pb-20 md:pt-40 md:pb-28">
@@ -206,7 +206,7 @@ export default function Terms() {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="text-lg text-[#94A3B8] max-w-2xl mx-auto leading-relaxed"
           >
-            Please read these terms carefully before using our services. By engaging Yantrabyte Solutions, you agree to these terms.
+            Please read these terms carefully before using our services. By engaging Ananta Techcare, you agree to these terms.
           </motion.p>
 
           <motion.p
@@ -232,7 +232,7 @@ export default function Terms() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div variants={fadeInUp} className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 md:p-12 mb-8">
             <p className="text-[#94A3B8] leading-relaxed">
-              These Terms and Conditions govern your use of the website and services provided by Yantrabyte Solutions. By accessing our website or engaging our services, you acknowledge that you have read, understood, and agree to be bound by these Terms. If you are using our services on behalf of an organization, you represent and warrant that you have the authority to bind that organization to these Terms.
+              These Terms and Conditions govern your use of the website and services provided by Ananta Techcare. By accessing our website or engaging our services, you acknowledge that you have read, understood, and agree to be bound by these Terms. If you are using our services on behalf of an organization, you represent and warrant that you have the authority to bind that organization to these Terms.
             </p>
           </motion.div>
 

@@ -382,7 +382,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                       <>
                         <div style={{ marginBottom: '1px' }}>1. Service warranty is valid for 30 days only.</div>
                         <div style={{ marginBottom: '1px' }}>2. No warranty for Windows installation/software issues.</div>
-                        <div style={{ marginBottom: '1px' }}>3. YantraByte Solutions is not responsible for any data loss.</div>
+                        <div style={{ marginBottom: '1px' }}>3. Ananta Techcare is not responsible for any data loss.</div>
                         <div style={{ marginBottom: '1px' }}>4. Customer should take backup of all important files prior.</div>
                         <div style={{ marginBottom: '1px' }}>5. Physical, liquid or burnt damages void warranty.</div>
                         <div>6. No warranty for swollen batteries or electrical faults.</div>

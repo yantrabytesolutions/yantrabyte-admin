@@ -747,7 +747,7 @@ export default function AdminPanel() {
           <div style="font-size: 13px; font-weight: bold; margin-bottom: 6px; color: #111111;">TERMS & CONDITIONS:</div>
           <ol style="margin: 0; padding-left: 15px; font-size: 12px; color: #555555; line-height: 1.5;">
             <li>Diagnostic charges are applicable for all devices checked in for repair, even if estimate is rejected.</li>
-            <li>Backup all data before drop-off. Yantrabyte Solutions is not liable for data loss or corruption during repair.</li>
+            <li>Backup all data before drop-off. Ananta Techcare is not liable for data loss or corruption during repair.</li>
             <li>Devices not collected within 30 days of repair completion warning may be subject to storage fees or disposal.</li>
             <li>Any hardware components replaced will carry their respective standard OEM manufacturer warranties.</li>
           </ol>

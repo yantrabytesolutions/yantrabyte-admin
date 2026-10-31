@@ -521,7 +521,7 @@ export default function EstimateView() {
                 <>
                   <p>1. Service warranty is valid for 30 days only.</p>
                   <p>2. No warranty for Windows installation/software issues.</p>
-                  <p>3. YantraByte Solutions is not responsible for any data loss.</p>
+                  <p>3. Ananta Techcare is not responsible for any data loss.</p>
                   <p>4. Customer should take backup of all important files prior.</p>
                   <p>5. Physical, liquid or burnt damages void warranty.</p>
                 </>
