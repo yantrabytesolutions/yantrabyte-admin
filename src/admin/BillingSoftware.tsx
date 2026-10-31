@@ -779,7 +779,7 @@ export default function BillingSoftware({
       .select('invoice_no')
       .like('invoice_no', `${prefix}-%`);
       
-    let maxSeq = 0;
+    let maxSeq = 100;
     if (data) {
       data.forEach(row => {
         if (row.invoice_no) {

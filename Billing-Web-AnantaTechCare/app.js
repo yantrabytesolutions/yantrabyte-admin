@@ -142,10 +142,21 @@ async function saveInvoice() {
         })
       });
     } else {
-      const idData = await supabaseFetch('/rest/v1/invoices?select=id');
-      const seq = (idData.length || 0) + 1;
       const d = new Date();
-      invNo = 'ATC-' + d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0') + '-' + String(seq).padStart(3,'0');
+      const prefix = docType === 'Quotation' ? 'ATCQ' : 'ATC';
+      let maxSeq = 100;
+      try {
+        const idData = await supabaseFetch('/rest/v1/invoices?select=invoice_no&invoice_no=like.' + prefix + '-*');
+        if (Array.isArray(idData)) {
+          idData.forEach(row => {
+            const parts = (row.invoice_no || '').split('-');
+            const num = parseInt(parts[parts.length - 1], 10);
+            if (!isNaN(num) && num > maxSeq) maxSeq = num;
+          });
+        }
+      } catch(e) {}
+      const seq = maxSeq + 1;
+      invNo = prefix + '-' + d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0') + '-' + String(seq).padStart(3,'0');
       
       await supabaseFetch('/rest/v1/invoices', {
         method: 'POST',
@@ -236,9 +247,20 @@ async function generateInvoice() {
     let invNo = editInvoiceNo;
     const d = new Date();
     if (!invNo) {
-      const idData = await supabaseFetch('/rest/v1/invoices?select=id');
-      const seq = (idData.length || 0) + 1;
-      invNo = 'ATC-' + d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0') + '-' + String(seq).padStart(3,'0');
+      const prefix = docType === 'Quotation' ? 'ATCQ' : 'ATC';
+      let maxSeq = 100;
+      try {
+        const idData = await supabaseFetch('/rest/v1/invoices?select=invoice_no&invoice_no=like.' + prefix + '-*');
+        if (Array.isArray(idData)) {
+          idData.forEach(row => {
+            const parts = (row.invoice_no || '').split('-');
+            const num = parseInt(parts[parts.length - 1], 10);
+            if (!isNaN(num) && num > maxSeq) maxSeq = num;
+          });
+        }
+      } catch(e) {}
+      const seq = maxSeq + 1;
+      invNo = prefix + '-' + d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0') + '-' + String(seq).padStart(3,'0');
     }
 
     // 2. Populate Template
@@ -261,11 +283,14 @@ async function generateInvoice() {
     if (qrContainer) qrContainer.style.display = 'none';
     let tbody = '';
     items.forEach((it, i) => {
-      tbody += '<tr><td style="border: 1px solid #000; padding: 8px; text-align: center;">'+(i+1)+'</td>';
-      tbody += '<td style="border: 1px solid #000; padding: 8px;">'+it.description+'</td>';
-      tbody += '<td style="border: 1px solid #000; padding: 8px; text-align: center;">'+it.qty+'</td>';
-      tbody += '<td style="border: 1px solid #000; padding: 8px; text-align: right;">'+fmtINR(it.rate)+'</td>';
-      tbody += '<td style="border: 1px solid #000; padding: 8px; text-align: right;">'+fmtINR(it.qty*it.rate)+'</td></tr>';
+      const bg = (i % 2 === 1) ? '#f8fafc' : '#ffffff';
+      tbody += '<tr style="background: ' + bg + ';">';
+      tbody += '<td style="border-bottom: 1px solid #e2e8f0; padding: 10px 8px; text-align: center; font-weight: 600; color: #64748b;">' + (i + 1) + '</td>';
+      tbody += '<td style="border-bottom: 1px solid #e2e8f0; padding: 10px 14px; font-weight: 600; color: #1e293b;">' + it.description + '</td>';
+      tbody += '<td style="border-bottom: 1px solid #e2e8f0; padding: 10px 8px; text-align: center; font-weight: 600; color: #334155;">' + it.qty + '</td>';
+      tbody += '<td style="border-bottom: 1px solid #e2e8f0; padding: 10px 14px; text-align: right; color: #334155;">' + fmtINR(it.rate) + '</td>';
+      tbody += '<td style="border-bottom: 1px solid #e2e8f0; padding: 10px 14px; text-align: right; font-weight: 700; color: #0f172a;">' + fmtINR(it.qty * it.rate) + '</td>';
+      tbody += '</tr>';
     });
     document.getElementById('pdf-items').innerHTML = tbody;
 

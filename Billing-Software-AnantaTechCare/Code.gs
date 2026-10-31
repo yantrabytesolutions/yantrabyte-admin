@@ -44,8 +44,10 @@ function getCustomers() {
 
 function generateInvoiceNo_() {
   const data = supabaseGet('invoices', 'select=id');
-  const seq = (data.length || 0) + 1;
-  const datePart = Utilities.formatDate(new Date(), APP.TIMEZONE, 'yyyyMMdd');
+  var maxSeq = 100;
+  (data || []).forEach(function(row) { if (row.invoiceNo) { var parts = row.invoiceNo.split('-'); var num = parseInt(parts[parts.length-1], 10); if (!isNaN(num) && num > maxSeq) maxSeq = num; } });
+  var seq = maxSeq + 1;
+  var datePart = Utilities.formatDate(new Date(), APP.TIMEZONE, 'yyyyMMdd');
   return 'ATC-' + datePart + '-' + ('000' + seq).slice(-3);
 }
 
@@ -484,7 +486,7 @@ function insertLogo_(sheet) {
   } catch (e) {}
 
   sheet.getRange('A1').setValue('YB').setFontSize(22).setFontWeight('bold')
-    .setFontColor('#0B5394').setHorizontalAlignment('center');
+    .setFontColor('#0D9488').setHorizontalAlignment('center');
 }
 
 function createPrintableInvoiceSheet_(ss, data) {
@@ -499,7 +501,7 @@ function createPrintableInvoiceSheet_(ss, data) {
 
   sh.setHiddenGridlines(true);
   sh.getRange(1,1,totalRows,totalCols)
-    .setFontFamily('Arial').setFontSize(9).setVerticalAlignment('middle')
+    .setFontFamily('Trebuchet MS').setFontSize(9).setVerticalAlignment('middle')
     .setWrap(true).setBackground('#FFFFFF').setFontColor('#000000');
 
   sh.setColumnWidth(1, 40);
@@ -518,7 +520,7 @@ function createPrintableInvoiceSheet_(ss, data) {
   insertLogo_(sh);
 
   sh.getRange('C1:E1').merge().setValue('ANANTATECH CARE')
-    .setFontSize(18).setFontWeight('bold').setFontColor('#0B5394')
+    .setFontSize(18).setFontWeight('bold').setFontColor('#0D9488')
     .setHorizontalAlignment('right').setVerticalAlignment('bottom');
 
   sh.getRange('C2:E2').merge()
@@ -534,14 +536,14 @@ function createPrintableInvoiceSheet_(ss, data) {
   var docTitle = (data.docType === 'Quotation') ? 'QUOTATION' : 'TAX INVOICE';
   sh.setRowHeight(4, 25);
   sh.getRange('A4:E4').merge().setValue(docTitle)
-    .setBackground('#0B5394').setFontColor('#FFFFFF').setFontWeight('bold')
+    .setBackground('#0D9488').setFontColor('#FFFFFF').setFontWeight('bold')
     .setFontSize(12).setHorizontalAlignment('center');
   sh.getRange('A4:E4').setBorder(true,true,true,true,null,null,'#000000',SpreadsheetApp.BorderStyle.SOLID);
 
   var noLabel = (data.docType === 'Quotation') ? '  Quotation No: ' : '  Invoice No: ';
   sh.setRowHeight(5, 25);
   sh.getRange('A5:C5').merge().setValue(noLabel + String(data.invoiceNo || 'N/A'))
-    .setFontWeight('bold').setFontSize(10).setFontColor('#0B5394').setNumberFormat('@');
+    .setFontWeight('bold').setFontSize(10).setFontColor('#0D9488').setNumberFormat('@');
   sh.getRange('D5:E5').merge().setValue('Date: ' + String(data.date || ''))
     .setFontWeight('bold').setFontSize(10).setHorizontalAlignment('right').setNumberFormat('@');
   sh.getRange('A5:E5').setBorder(true,true,true,true,null,null,'#000000',SpreadsheetApp.BorderStyle.SOLID);
@@ -571,7 +573,7 @@ function createPrintableInvoiceSheet_(ss, data) {
 
   sh.setRowHeight(10, 25);
   sh.getRange('A10:E10').setValues([['Sl No.', 'Description', 'Qty', 'Rate', 'Amount']]);
-  sh.getRange('A10:E10').setBackground('#0B5394').setFontColor('#FFFFFF')
+  sh.getRange('A10:E10').setBackground('#0D9488').setFontColor('#FFFFFF')
     .setFontWeight('bold').setHorizontalAlignment('center').setFontSize(10)
     .setBorder(true,true,true,true,true,null,'#000000',SpreadsheetApp.BorderStyle.SOLID);
 
@@ -628,9 +630,9 @@ function createPrintableInvoiceSheet_(ss, data) {
   var fr = tr + 7;
 
   sh.getRange(fr,1,1,3).merge().setValue('  Terms & Conditions')
-    .setBackground('#0B5394').setFontColor('#FFFFFF').setFontWeight('bold').setFontSize(9);
+    .setBackground('#0D9488').setFontColor('#FFFFFF').setFontWeight('bold').setFontSize(9);
   sh.getRange(fr,4,1,2).merge().setValue('  Bank & Payment Details')
-    .setBackground('#0B5394').setFontColor('#FFFFFF').setFontWeight('bold').setFontSize(9);
+    .setBackground('#0D9488').setFontColor('#FFFFFF').setFontWeight('bold').setFontSize(9);
 
   var trm = (data.docType === 'Quotation') ? [
     '1. Quotation is valid for 7 days from the date of issue.',

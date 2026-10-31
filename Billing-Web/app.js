@@ -142,10 +142,21 @@ async function saveInvoice() {
         })
       });
     } else {
-      const idData = await supabaseFetch('/rest/v1/invoices?select=id');
-      const seq = (idData.length || 0) + 1;
       const d = new Date();
-      invNo = 'YBS-' + d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0') + '-' + String(seq).padStart(3,'0');
+      const prefix = docType === 'Quotation' ? 'YBQ' : 'YBS';
+      let maxSeq = 100;
+      try {
+        const idData = await supabaseFetch('/rest/v1/invoices?select=invoice_no&invoice_no=like.' + prefix + '-*');
+        if (Array.isArray(idData)) {
+          idData.forEach(row => {
+            const parts = (row.invoice_no || '').split('-');
+            const num = parseInt(parts[parts.length - 1], 10);
+            if (!isNaN(num) && num > maxSeq) maxSeq = num;
+          });
+        }
+      } catch(e) {}
+      const seq = maxSeq + 1;
+      invNo = prefix + '-' + d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0') + '-' + String(seq).padStart(3,'0');
       
       await supabaseFetch('/rest/v1/invoices', {
         method: 'POST',
@@ -236,9 +247,20 @@ async function generateInvoice() {
     let invNo = editInvoiceNo;
     const d = new Date();
     if (!invNo) {
-      const idData = await supabaseFetch('/rest/v1/invoices?select=id');
-      const seq = (idData.length || 0) + 1;
-      invNo = 'YBS-' + d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0') + '-' + String(seq).padStart(3,'0');
+      const prefix = docType === 'Quotation' ? 'YBQ' : 'YBS';
+      let maxSeq = 100;
+      try {
+        const idData = await supabaseFetch('/rest/v1/invoices?select=invoice_no&invoice_no=like.' + prefix + '-*');
+        if (Array.isArray(idData)) {
+          idData.forEach(row => {
+            const parts = (row.invoice_no || '').split('-');
+            const num = parseInt(parts[parts.length - 1], 10);
+            if (!isNaN(num) && num > maxSeq) maxSeq = num;
+          });
+        }
+      } catch(e) {}
+      const seq = maxSeq + 1;
+      invNo = prefix + '-' + d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0') + '-' + String(seq).padStart(3,'0');
     }
 
     // 2. Populate Template

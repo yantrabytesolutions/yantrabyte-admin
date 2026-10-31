@@ -44,8 +44,10 @@ function getCustomers() {
 
 function generateInvoiceNo_() {
   const data = supabaseGet('invoices', 'select=id');
-  const seq = (data.length || 0) + 1;
-  const datePart = Utilities.formatDate(new Date(), APP.TIMEZONE, 'yyyyMMdd');
+  var maxSeq = 100;
+  (data || []).forEach(function(row) { if (row.invoiceNo) { var parts = row.invoiceNo.split('-'); var num = parseInt(parts[parts.length-1], 10); if (!isNaN(num) && num > maxSeq) maxSeq = num; } });
+  var seq = maxSeq + 1;
+  var datePart = Utilities.formatDate(new Date(), APP.TIMEZONE, 'yyyyMMdd');
   return 'YBS-' + datePart + '-' + ('000' + seq).slice(-3);
 }
 

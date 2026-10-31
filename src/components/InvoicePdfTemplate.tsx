@@ -31,14 +31,18 @@ function numberToWords(num: number): string {
   if (crore) str += three(crore) + ' Crore ';
   if (lakh) str += three(lakh) + ' Lakh ';
   if (thousand) str += three(thousand) + ' Thousand ';
-  if (rest) str += three(rest) + ' ';
+  if (rest) {
+    if (str !== '') str += 'and ';
+    if (rest < 20) str += a[rest];
+    else str += b[Math.floor(rest / 10)] + (rest % 10 ? ' ' + a[rest % 10] : '');
+  }
 
-  return str.trim() + ' Rupees';
+  return (str.trim() + ' Rupees Only').replace(/\s+/g, ' ');
 }
 
 interface Props {
   invoice: Invoice;
-  companySignature?: string;
+  companySignature?: string | null;
   quoteValidityDays?: number;
   quoteAdvancePercent?: number;
   brand?: 'yantrabyte' | 'anantatechcare';
@@ -100,6 +104,17 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
   const targetTotalRows = 11;
   const fillerCount = Math.max(0, targetTotalRows - items.length);
 
+  // ----------------------------------------------------
+  // DISTINCT BRAND STYLING & CONTEMPORARY THEME SETTINGS
+  // ----------------------------------------------------
+  const primaryColor = isAnanta ? "#0D9488" : "#0B5394";
+  const primaryDark = isAnanta ? "#0F766E" : "#1E3A8A";
+  const primaryLight = isAnanta ? "#F0FDFA" : "#F8FAFC";
+  const primaryBorder = isAnanta ? "#99F6E4" : "#CBD5E1";
+  const fontFam = isAnanta 
+    ? "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
+    : "Arial, sans-serif";
+
   return (
     <div 
       ref={ref} 
@@ -111,7 +126,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         padding: '16px', 
         backgroundColor: '#ffffff', 
         color: '#000000', 
-        fontFamily: 'Arial, sans-serif', 
+        fontFamily: fontFam, 
         position: 'relative', 
         overflow: 'hidden',
         display: 'flex',
@@ -131,8 +146,8 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         backgroundRepeat: 'no-repeat',
         pointerEvents: 'none',
         zIndex: 5,
-        opacity: isAnanta ? 0.18 : 0.10,
-        filter: 'contrast(1.15) brightness(0.92)'
+        opacity: isAnanta ? 0.14 : 0.10,
+        filter: isAnanta ? 'contrast(1.05) brightness(0.96)' : 'contrast(1.15) brightness(0.92)'
       }} />
 
       {/* Full Page Hardware & Circuit Watermark Pattern */}
@@ -148,7 +163,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         backgroundRepeat: 'no-repeat',
         pointerEvents: 'none',
         zIndex: 4,
-        opacity: 0.105
+        opacity: isAnanta ? 0.05 : 0.105
       }} />
 
       {/* Cancelled Stamp */}
@@ -177,9 +192,9 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
       <div style={{
         position: 'relative',
         zIndex: 10,
-        border: '2px solid #0B5394',
-        borderRadius: '10px',
-        padding: '14px 16px',
+        border: isAnanta ? '1.5px solid #0D9488' : '2px solid #0B5394',
+        borderRadius: isAnanta ? '16px' : '10px',
+        padding: '16px 18px',
         backgroundColor: 'transparent',
         boxSizing: 'border-box',
         height: '100%',
@@ -190,7 +205,14 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         {/* Top Section (Header, Customer Box, Table, Totals) */}
         <div>
           {/* Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #0B5394', paddingBottom: '8px', marginBottom: '8px' }}>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            borderBottom: isAnanta ? '2px solid #0D9488' : `2px solid ${primaryColor}`, 
+            paddingBottom: '10px', 
+            marginBottom: '10px' 
+          }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
               {!isAnanta ? (
                 <img
@@ -199,12 +221,36 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                   style={{ height: "82px", width: "auto", display: "block" }}
                 />
               ) : (
-                <div style={{ width: "64px", height: "64px", borderRadius: "12px", background: "linear-gradient(135deg, #0D9488, #0B5394)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: "bold", fontSize: "22px", letterSpacing: "1px" }}>
+                <div style={{ 
+                  width: "60px", 
+                  height: "60px", 
+                  borderRadius: "14px", 
+                  background: "linear-gradient(135deg, #0D9488, #0F766E)", 
+                  display: "flex", 
+                  alignItems: "center", 
+                  justifyContent: "center", 
+                  color: "#ffffff", 
+                  fontWeight: "800", 
+                  fontSize: "20px", 
+                  letterSpacing: "1px",
+                  boxShadow: "0 4px 12px rgba(13, 148, 136, 0.25)"
+                }}>
                   ATC
                 </div>
               )}
               <div>
-                <h1 style={{ color: "#0B5394", fontSize: "24px", fontWeight: "900", margin: 0, letterSpacing: "0.4px" }}>
+                {isAnanta && (
+                  <div style={{ display: 'inline-block', backgroundColor: '#CCFBF1', color: '#0F766E', fontSize: '10px', fontWeight: '800', padding: '2px 8px', borderRadius: '20px', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '3px' }}>
+                    IT Hardware &amp; Care
+                  </div>
+                )}
+                <h1 style={{ 
+                  color: primaryColor, 
+                  fontSize: isAnanta ? "23px" : "24px", 
+                  fontWeight: "900", 
+                  margin: 0, 
+                  letterSpacing: isAnanta ? "-0.02em" : "0.4px" 
+                }}>
                   {isAnanta ? "ANANTATECH CARE" : "YANTRABYTE SOLUTIONS"}
                 </h1>
                 <div style={{ fontSize: '12px', color: '#333333', marginTop: '3px', lineHeight: '1.35', fontWeight: '500' }}>
@@ -215,45 +261,82 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontWeight: '800', color: isCancelled ? '#DC2626' : '#0B5394', fontSize: '21px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+              <div style={{ 
+                fontWeight: '900', 
+                color: isCancelled ? '#DC2626' : (isAnanta ? '#0D9488' : '#0B5394'), 
+                fontSize: isAnanta ? '22px' : '21px', 
+                textTransform: 'uppercase', 
+                letterSpacing: isAnanta ? '0.04em' : '0.6px' 
+              }}>
                 {isCancelled ? 'CANCELLED INVOICE' : (isQuotation ? 'QUOTATION' : 'INVOICE')}
               </div>
-              <div style={{ fontSize: '14px', color: '#475569', marginTop: '3px' }}>
-                {isQuotation ? 'Quote No: ' : (isCancelled ? 'Cancelled No: ' : 'Invoice No: ')} <strong style={{ color: '#000000', fontSize: '14.5px' }}>{invoice.invoice_no || 'DRAFT'}</strong>
+              <div style={{ fontSize: '14px', color: '#475569', marginTop: '4px' }}>
+                {isQuotation ? 'Quote No: ' : (isCancelled ? 'Cancelled No: ' : 'Invoice No: ')} 
+                <strong style={{ 
+                  color: isAnanta ? '#0F766E' : '#000000', 
+                  fontSize: '14.5px',
+                  fontFamily: isAnanta ? 'monospace' : 'inherit',
+                  fontWeight: isAnanta ? '700' : 'bold'
+                }}>
+                  {invoice.invoice_no || 'DRAFT'}
+                </strong>
               </div>
-              <div style={{ fontSize: '14px', color: '#475569' }}>
+              <div style={{ fontSize: '14px', color: '#475569', marginTop: '2px' }}>
                 Date: <strong style={{ color: '#000000', fontSize: '14px' }}>{formattedDate}</strong>
               </div>
             </div>
           </div>
 
           {/* Customer Details */}
-          <div style={{ marginBottom: '8px', backgroundColor: '#f8fafc', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
+          <div style={{ 
+            marginBottom: '10px', 
+            backgroundColor: primaryLight, 
+            padding: '10px 14px', 
+            borderRadius: isAnanta ? '10px' : '6px', 
+            border: isAnanta ? `1px solid ${primaryBorder}` : '1px solid #cbd5e1' 
+          }}>
             <div style={{ fontSize: '13px', lineHeight: '1.45', color: '#1e293b' }}>
-              <span style={{ color: '#64748b', fontSize: '11px', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.4px' }}>Bill To (Customer Details)</span><br />
-              <strong style={{ color: '#0B5394', fontSize: '16px', fontWeight: '800' }}>{invoice.customer_name || '—'}</strong><br />
+              <span style={{ 
+                color: isAnanta ? '#0D9488' : '#64748b', 
+                fontSize: '11px', 
+                textTransform: 'uppercase', 
+                fontWeight: '800', 
+                letterSpacing: '0.06em' 
+              }}>
+                Bill To (Customer Details)
+              </span><br />
+              <strong style={{ color: primaryColor, fontSize: '16px', fontWeight: '800' }}>{invoice.customer_name || '—'}</strong><br />
               Phone: <strong>{invoice.phone || '—'}</strong> &nbsp;|&nbsp; Email: {invoice.email || '—'}<br />
               Address: {invoice.address || '—'}
             </div>
           </div>
 
           {/* Items Table */}
-          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', borderBottom: '1px solid #000000', fontSize: '13.5px' }}>
+          <table style={{ 
+            width: '100%', 
+            borderCollapse: isAnanta ? 'separate' : 'collapse', 
+            borderSpacing: 0,
+            tableLayout: 'fixed', 
+            borderBottom: isAnanta ? `1px solid ${primaryBorder}` : '1px solid #000000', 
+            fontSize: '13.5px',
+            borderRadius: isAnanta ? '8px' : '0',
+            overflow: 'hidden'
+          }}>
             <thead>
-              <tr style={{ backgroundColor: '#0B5394', color: '#ffffff', height: '32px', fontSize: '13.5px' }}>
-                <th style={{ width: '45px', textAlign: 'center', borderRight: '1px solid #000000', borderBottom: '1px solid #000000', padding: '5px 4px', fontWeight: 'bold' }}>
+              <tr style={{ backgroundColor: primaryColor, color: '#ffffff', height: '34px', fontSize: '13px' }}>
+                <th style={{ width: '45px', textAlign: 'center', borderRight: isAnanta ? '1px solid rgba(255,255,255,0.2)' : '1px solid #000000', borderBottom: isAnanta ? 'none' : '1px solid #000000', padding: '6px 4px', fontWeight: '700', textTransform: isAnanta ? 'uppercase' : 'none', letterSpacing: isAnanta ? '0.05em' : 'normal' }}>
                   Sl<br />No.
                 </th>
-                <th style={{ textAlign: 'left', borderRight: '1px solid #000000', borderBottom: '1px solid #000000', padding: '5px 8px', fontWeight: 'bold' }}>
+                <th style={{ textAlign: 'left', borderRight: isAnanta ? '1px solid rgba(255,255,255,0.2)' : '1px solid #000000', borderBottom: isAnanta ? 'none' : '1px solid #000000', padding: '6px 10px', fontWeight: '700', textTransform: isAnanta ? 'uppercase' : 'none', letterSpacing: isAnanta ? '0.05em' : 'normal' }}>
                   Description
                 </th>
-                <th style={{ width: '55px', textAlign: 'center', borderRight: '1px solid #000000', borderBottom: '1px solid #000000', padding: '5px 4px', fontWeight: 'bold' }}>
+                <th style={{ width: '55px', textAlign: 'center', borderRight: isAnanta ? '1px solid rgba(255,255,255,0.2)' : '1px solid #000000', borderBottom: isAnanta ? 'none' : '1px solid #000000', padding: '6px 4px', fontWeight: '700', textTransform: isAnanta ? 'uppercase' : 'none', letterSpacing: isAnanta ? '0.05em' : 'normal' }}>
                   Qty
                 </th>
-                <th style={{ width: '105px', textAlign: 'right', borderRight: '1px solid #000000', borderBottom: '1px solid #000000', padding: '5px 8px', fontWeight: 'bold' }}>
+                <th style={{ width: '105px', textAlign: 'right', borderRight: isAnanta ? '1px solid rgba(255,255,255,0.2)' : '1px solid #000000', borderBottom: isAnanta ? 'none' : '1px solid #000000', padding: '6px 10px', fontWeight: '700', textTransform: isAnanta ? 'uppercase' : 'none', letterSpacing: isAnanta ? '0.05em' : 'normal' }}>
                   Rate (₹)
                 </th>
-                <th style={{ width: '115px', textAlign: 'right', borderBottom: '1px solid #000000', padding: '5px 8px', fontWeight: 'bold' }}>
+                <th style={{ width: '115px', textAlign: 'right', borderBottom: isAnanta ? 'none' : '1px solid #000000', padding: '6px 10px', fontWeight: '700', textTransform: isAnanta ? 'uppercase' : 'none', letterSpacing: isAnanta ? '0.05em' : 'normal' }}>
                   Amount (₹)
                 </th>
               </tr>
@@ -264,26 +347,28 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                 const qty = Number(it.qty || 1);
                 const rate = Number(it.rate || it.price || it.amount || 0);
                 const amount = qty * rate;
+                const rowBg = isAnanta ? (idx % 2 === 1 ? '#F8FAFC' : '#FFFFFF') : 'transparent';
+                const cellBorder = isAnanta ? `1px solid #E2E8F0` : '1px solid #000000';
                 return (
-                  <tr key={idx} style={{ backgroundColor: 'transparent', minHeight: '30px' }}>
-                    <td style={{ textAlign: 'center', borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '5px 4px', color: '#000000', fontWeight: 'bold', fontSize: '13.5px' }}>
+                  <tr key={idx} style={{ backgroundColor: rowBg, minHeight: '30px' }}>
+                    <td style={{ textAlign: 'center', borderRight: cellBorder, borderBottom: '1px solid #e2e8f0', padding: '6px 4px', color: '#000000', fontWeight: 'bold', fontSize: '13.5px' }}>
                       {idx + 1}
                     </td>
-                    <td style={{ textAlign: 'left', borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '5px 8px', color: '#000000', wordBreak: 'break-word', fontSize: '13.5px' }}>
+                    <td style={{ textAlign: 'left', borderRight: cellBorder, borderBottom: '1px solid #e2e8f0', padding: '6px 10px', color: '#000000', wordBreak: 'break-word', fontSize: '13.5px' }}>
                       <div style={{ fontWeight: '700', fontSize: '14px' }}>{desc}</div>
                       {it.serial_no && (
-                        <div style={{ fontSize: '12px', color: '#334155', marginTop: '2px', fontWeight: 'bold' }}>
+                        <div style={{ fontSize: '12px', color: isAnanta ? '#0D9488' : '#334155', marginTop: '2px', fontWeight: 'bold' }}>
                           S/N: {it.serial_no}
                         </div>
                       )}
                     </td>
-                    <td style={{ textAlign: 'center', borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '5px 4px', color: '#000000', fontWeight: 'bold', fontSize: '13.5px' }}>
+                    <td style={{ textAlign: 'center', borderRight: cellBorder, borderBottom: '1px solid #e2e8f0', padding: '6px 4px', color: '#000000', fontWeight: 'bold', fontSize: '13.5px' }}>
                       {qty}
                     </td>
-                    <td style={{ textAlign: 'right', borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '5px 8px', color: '#000000', fontSize: '13.5px' }}>
+                    <td style={{ textAlign: 'right', borderRight: cellBorder, borderBottom: '1px solid #e2e8f0', padding: '6px 10px', color: '#000000', fontSize: '13.5px' }}>
                       {rate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </td>
-                    <td style={{ textAlign: 'right', borderBottom: '1px solid #e2e8f0', padding: '5px 8px', fontWeight: 'bold', color: '#000000', fontSize: '14px' }}>
+                    <td style={{ textAlign: 'right', borderBottom: '1px solid #e2e8f0', padding: '6px 10px', fontWeight: 'bold', color: '#000000', fontSize: '14px' }}>
                       {amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </td>
                   </tr>
@@ -292,12 +377,12 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
 
               {/* Padding rows to fill full A4 height without empty gap */}
               {[...Array(fillerCount)].map((_, idx) => (
-                <tr key={`empty-${idx}`} style={{ backgroundColor: 'transparent', height: '26px' }}>
-                  <td style={{ borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '3px 4px', color: 'transparent' }}>.</td>
-                  <td style={{ borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '3px 8px', color: 'transparent' }}>.</td>
-                  <td style={{ borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '3px 4px', color: 'transparent' }}>.</td>
-                  <td style={{ borderRight: '1px solid #000000', borderBottom: '1px solid #e2e8f0', padding: '3px 8px', color: 'transparent' }}>.</td>
-                  <td style={{ borderBottom: '1px solid #e2e8f0', padding: '3px 8px', color: 'transparent' }}>.</td>
+                <tr key={`fill-${idx}`} style={{ backgroundColor: isAnanta ? ((items.length + idx) % 2 === 1 ? '#F8FAFC' : '#FFFFFF') : 'transparent', height: '24px' }}>
+                  <td style={{ borderRight: isAnanta ? '1px solid #E2E8F0' : '1px solid #000000', borderBottom: '1px solid #f1f5f9', padding: '2px 4px' }}>&nbsp;</td>
+                  <td style={{ borderRight: isAnanta ? '1px solid #E2E8F0' : '1px solid #000000', borderBottom: '1px solid #f1f5f9', padding: '2px 8px' }}>&nbsp;</td>
+                  <td style={{ borderRight: isAnanta ? '1px solid #E2E8F0' : '1px solid #000000', borderBottom: '1px solid #f1f5f9', padding: '2px 4px' }}>&nbsp;</td>
+                  <td style={{ borderRight: isAnanta ? '1px solid #E2E8F0' : '1px solid #000000', borderBottom: '1px solid #f1f5f9', padding: '2px 8px' }}>&nbsp;</td>
+                  <td style={{ borderBottom: '1px solid #f1f5f9', padding: '2px 8px' }}>&nbsp;</td>
                 </tr>
               ))}
             </tbody>
@@ -308,11 +393,22 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
             <tbody>
               <tr>
                 {/* Left: Amount in Words */}
-                <td style={{ width: '56%', verticalAlign: 'top', padding: '8px 10px', borderRight: '1px solid #000000' }}>
-                  <div style={{ backgroundColor: '#D9EAF7', color: '#92400E', fontWeight: '800', fontSize: '12px', padding: '2px 8px', display: 'inline-block', marginBottom: '6px', borderRadius: '3px', textTransform: 'uppercase' }}>
+                <td style={{ width: '56%', verticalAlign: 'top', padding: '10px 12px', borderRight: isAnanta ? '1px solid #E2E8F0' : '1px solid #000000' }}>
+                  <div style={{ 
+                    backgroundColor: isAnanta ? '#CCFBF1' : '#D9EAF7', 
+                    color: isAnanta ? '#0F766E' : '#92400E', 
+                    fontWeight: '800', 
+                    fontSize: '11px', 
+                    padding: '3px 8px', 
+                    display: 'inline-block', 
+                    marginBottom: '6px', 
+                    borderRadius: '4px', 
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em'
+                  }}>
                     Amount in Words:
                   </div>
-                  <div style={{ fontStyle: 'italic', fontWeight: 'bold', fontSize: '14px', color: '#000000', lineHeight: '1.4' }}>
+                  <div style={{ fontStyle: 'italic', fontWeight: 'bold', fontSize: '13.5px', color: '#000000', lineHeight: '1.4' }}>
                     {numberToWords(grandTotal)}
                   </div>
                 </td>
@@ -325,26 +421,26 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                         <tr 
                           key={row.label}
                           style={{ 
-                            backgroundColor: 'transparent',
+                            backgroundColor: row.isHighlight ? (isAnanta ? '#F0FDFA' : '#FFFBEB') : 'transparent',
                             height: '26px'
                           }}
                         >
                           <td style={{ 
                             padding: '4px 8px', 
-                            color: row.isHighlight ? '#15803D' : (row.isDue ? '#B91C1C' : '#1e293b'), 
+                            color: row.isHighlight ? (isAnanta ? '#0F766E' : '#15803D') : (row.isDue ? '#B91C1C' : '#1e293b'), 
                             fontWeight: (row.isHighlight || row.isDue) ? '800' : '600',
                             fontSize: (row.isHighlight || row.isDue) ? '14px' : '13px',
-                            borderBottom: idx === calcRows.length - 1 ? 'none' : '1px solid #000000'
+                            borderBottom: idx === calcRows.length - 1 ? 'none' : (isAnanta ? '1px solid #E2E8F0' : '1px solid #000000')
                           }}>
                             {row.label}
                           </td>
                           <td style={{ 
                             padding: '4px 8px', 
                             textAlign: 'right', 
-                            color: row.isHighlight ? '#15803D' : (row.isDue ? '#B91C1C' : '#000000'), 
+                            color: row.isHighlight ? (isAnanta ? '#0F766E' : '#15803D') : (row.isDue ? '#B91C1C' : '#000000'), 
                             fontWeight: (row.isHighlight || row.isDue) ? '800' : '700',
                             fontSize: (row.isHighlight || row.isDue) ? '15px' : '13.5px',
-                            borderBottom: idx === calcRows.length - 1 ? 'none' : '1px solid #000000'
+                            borderBottom: idx === calcRows.length - 1 ? 'none' : (isAnanta ? '1px solid #E2E8F0' : '1px solid #000000')
                           }}>
                             {row.value}
                           </td>
@@ -365,11 +461,28 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
             <tbody>
               <tr>
                 {/* Terms & Conditions Box */}
-                <td style={{ width: '48%', verticalAlign: 'top', border: '1px solid #000000', padding: 0, boxSizing: 'border-box' }}>
-                  <div style={{ backgroundColor: '#0B5394', color: '#ffffff', fontWeight: 'bold', fontSize: '13px', textAlign: 'center', padding: '4px 0', letterSpacing: '0.4px' }}>
-                    Terms & Conditions
+                <td style={{ 
+                  width: '48%', 
+                  verticalAlign: 'top', 
+                  border: isAnanta ? '1px solid #99F6E4' : '1px solid #000000', 
+                  borderRadius: isAnanta ? '8px' : '0', 
+                  padding: 0, 
+                  boxSizing: 'border-box',
+                  overflow: 'hidden'
+                }}>
+                  <div style={{ 
+                    backgroundColor: primaryColor, 
+                    color: '#ffffff', 
+                    fontWeight: 'bold', 
+                    fontSize: '12px', 
+                    textAlign: 'center', 
+                    padding: '5px 0', 
+                    letterSpacing: isAnanta ? '0.05em' : '0.4px',
+                    textTransform: isAnanta ? 'uppercase' : 'none'
+                  }}>
+                    Terms &amp; Conditions
                   </div>
-                  <div style={{ padding: '6px 8px', fontSize: '11.5px', color: '#1e293b', lineHeight: '1.42', fontWeight: '500' }}>
+                  <div style={{ padding: '8px 10px', fontSize: '11px', color: '#1e293b', lineHeight: '1.45', fontWeight: '500' }}>
                     {invoice.terms_conditions ? (
                       <div style={{ whiteSpace: 'pre-wrap' }}>{invoice.terms_conditions}</div>
                     ) : isQuotation ? (
@@ -382,7 +495,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                       <>
                         <div style={{ marginBottom: '1px' }}>1. Service warranty is valid for 30 days only.</div>
                         <div style={{ marginBottom: '1px' }}>2. No warranty for Windows installation/software issues.</div>
-                        <div style={{ marginBottom: '1px' }}>3. Ananta Techcare is not responsible for any data loss.</div>
+                        <div style={{ marginBottom: '1px' }}>3. AnantaTech Care is not responsible for any data loss.</div>
                         <div style={{ marginBottom: '1px' }}>4. Customer should take backup of all important files prior.</div>
                         <div style={{ marginBottom: '1px' }}>5. Physical, liquid or burnt damages void warranty.</div>
                         <div>6. No warranty for swollen batteries or electrical faults.</div>
@@ -392,15 +505,32 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                 </td>
 
                 {/* Bank & Payment Details Box */}
-                <td style={{ width: '52%', verticalAlign: 'top', border: '1px solid #000000', padding: 0, boxSizing: 'border-box' }}>
-                  <div style={{ backgroundColor: '#0B5394', color: '#ffffff', fontWeight: 'bold', fontSize: '13px', textAlign: 'center', padding: '4px 0', letterSpacing: '0.4px' }}>
+                <td style={{ 
+                  width: '52%', 
+                  verticalAlign: 'top', 
+                  border: isAnanta ? '1px solid #99F6E4' : '1px solid #000000', 
+                  borderRadius: isAnanta ? '8px' : '0', 
+                  padding: 0, 
+                  boxSizing: 'border-box',
+                  overflow: 'hidden'
+                }}>
+                  <div style={{ 
+                    backgroundColor: primaryColor, 
+                    color: '#ffffff', 
+                    fontWeight: 'bold', 
+                    fontSize: '12px', 
+                    textAlign: 'center', 
+                    padding: '5px 0', 
+                    letterSpacing: isAnanta ? '0.05em' : '0.4px',
+                    textTransform: isAnanta ? 'uppercase' : 'none'
+                  }}>
                     {isAnanta ? "Payment Details" : "Bank & Payment Details"}
                   </div>
-                  <div style={{ padding: '6px 8px' }}>
+                  <div style={{ padding: '8px 10px' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                       <tbody>
                         <tr>
-                          <td style={{ verticalAlign: 'middle', fontSize: '12.5px', lineHeight: '1.45', color: '#0f172a' }}>
+                          <td style={{ verticalAlign: 'middle', fontSize: '12px', lineHeight: '1.45', color: '#0f172a' }}>
                             {!isAnanta ? (
                               <>
                                 <div><span style={{ fontWeight: "bold", color: "#1e3a8a" }}>Bank:</span> North East Small Finance Bank</div>
@@ -414,11 +544,11 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                               </>
                             ) : (
                               <>
-                                <div><span style={{ fontWeight: "bold", color: "#1e3a8a" }}>A/C Name:</span> Swarna Gowri</div>
-                                <div><span style={{ fontWeight: "bold", color: "#1e3a8a" }}>A/C No:</span> <strong style={{ color: "#000000", fontSize: "13px" }}>8813910769</strong></div>
-                                <div><span style={{ fontWeight: "bold", color: "#1e3a8a" }}>IFSC:</span> <strong style={{ color: "#000000", fontSize: "13px" }}>KKBK0008094</strong></div>
-                                <div><span style={{ fontWeight: "bold", color: "#1e3a8a" }}>Branch:</span> Kotak Mahindra Bank, Vidyaranyapura, Bangalore</div>
-                                <div style={{ marginTop: "2px", fontSize: "11px", color: "#047857", fontWeight: "bold" }}>Pay via NEFT / RTGS / IMPS / UPI</div>
+                                <div><span style={{ fontWeight: "bold", color: primaryDark }}>Company:</span> ANANTATECH CARE</div>
+                                <div><span style={{ fontWeight: "bold", color: primaryDark }}>A/C Name:</span> Swarna Gowri</div>
+                                <div><span style={{ fontWeight: "bold", color: primaryDark }}>A/C No:</span> <strong style={{ color: primaryDark, fontSize: "13px" }}>8813910769</strong></div>
+                                <div><span style={{ fontWeight: "bold", color: primaryDark }}>IFSC:</span> <strong style={{ color: primaryDark, fontSize: "13px" }}>KKBK0008094</strong> (Kotak Mahindra Bank)</div>
+                                <div style={{ marginTop: "3px", fontSize: "11px", color: "#0D9488", fontWeight: "bold" }}>Pay via NEFT / RTGS / IMPS / UPI</div>
                               </>
                             )}
                           </td>
@@ -448,16 +578,16 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
           <div style={{
             textAlign: 'center',
             padding: '4px 8px',
-            backgroundColor: '#F1F5F9',
-            border: '1.2px solid #0B5394',
-            borderRadius: '4px',
+            backgroundColor: isAnanta ? '#F0FDFA' : '#F1F5F9',
+            border: `1.2px solid ${primaryColor}`,
+            borderRadius: isAnanta ? '6px' : '4px',
             boxSizing: 'border-box'
           }}>
             <div style={{
-              fontSize: '11.5px',
+              fontSize: '11px',
               fontWeight: '900',
-              color: '#000000',
-              letterSpacing: '0.5px',
+              color: isAnanta ? '#0F766E' : '#000000',
+              letterSpacing: '0.06em',
               textTransform: 'uppercase'
             }}>
               THIS IS A SYSTEM GENERATED DOCUMENT, NO SIGNATURE REQUIRED

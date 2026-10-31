@@ -4,13 +4,13 @@
   <base target="_top">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ANANTATECH CARE - Billing System</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: 'Inter', Arial, sans-serif;
-      background: linear-gradient(135deg, #e8f0fe 0%, #f4f6f8 50%, #e3edf7 100%);
+      background: linear-gradient(135deg, #f0fdfa 0%, #f4f6f8 50%, #e3edf7 100%);
       height: 100vh;
       overflow: hidden;
       padding: 20px;
@@ -39,7 +39,7 @@
       justify-content: space-between;
       margin-bottom: 20px;
       padding-bottom: 16px;
-      border-bottom: 2px solid #e8f0fe;
+      border-bottom: 2px solid #f0fdfa;
     }
     .header-left {
       display: flex;
@@ -51,24 +51,24 @@
       border-radius: 50%;
       object-fit: cover;
       box-shadow: 0 2px 8px rgba(11, 83, 148, 0.25);
-      border: 2px solid #e8f0fe;
+      border: 2px solid #f0fdfa;
     }
     .logo-placeholder {
       width: 52px; height: 52px;
-      background: linear-gradient(135deg, #0B5394, #1A73E8);
+      background: linear-gradient(135deg, #0D9488, #0F766E);
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       color: #fff; font-weight: 700; font-size: 18px;
       box-shadow: 0 2px 8px rgba(11, 83, 148, 0.3);
     }
-    .header h2 { color: #0B5394; font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
-    .header h2 span { color: #1A73E8; font-weight: 500; }
+    .header h2 { color: #0D9488; font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+    .header h2 span { color: #0F766E; font-weight: 500; }
     .server-btn {
       background: #f0f4f8; border: 1px solid #d0d7de;
       border-radius: 8px; padding: 8px 14px;
       font-size: 12px; color: #555; cursor: pointer; transition: all 0.2s;
     }
-    .server-btn:hover { background: #e3edf7; border-color: #0B5394; color: #0B5394; }
+    .server-btn:hover { background: #e3edf7; border-color: #0D9488; color: #0D9488; }
 
     /* ============ TAB SWITCHER ============ */
     .tab-bar {
@@ -96,9 +96,9 @@
       justify-content: center;
       gap: 8px;
     }
-    .tab-btn:hover { background: #e8f0fe; color: #0B5394; }
+    .tab-btn:hover { background: #f0fdfa; color: #0D9488; }
     .tab-btn.active {
-      background: linear-gradient(135deg, #0B5394, #1A73E8);
+      background: linear-gradient(135deg, #0D9488, #0F766E);
       color: #fff;
     }
     .tab-btn.active-purchase {
@@ -163,10 +163,10 @@
 
     /* Section Labels */
     .section-title {
-      font-size: 13px; font-weight: 600; color: #0B5394;
+      font-size: 13px; font-weight: 600; color: #0D9488;
       text-transform: uppercase; letter-spacing: 0.8px;
       margin: 20px 0 12px; padding-bottom: 6px;
-      border-bottom: 1px solid #e8f0fe;
+      border-bottom: 1px solid #f0fdfa;
     }
     .section-title.green { color: #2e7d32; border-bottom-color: #c8e6c9; }
 
@@ -190,7 +190,7 @@
       background: #fafbfc;
     }
     input:focus, textarea:focus, select:focus {
-      outline: none; border-color: #1A73E8;
+      outline: none; border-color: #0F766E;
       box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.12); background: #fff;
     }
     textarea { resize: vertical; }
@@ -211,7 +211,7 @@
     .btn:active { transform: translateY(0); }
     .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-    .blue   { background: linear-gradient(135deg, #0B5394, #1A73E8); }
+    .blue   { background: linear-gradient(135deg, #0D9488, #0F766E); }
     .green  { background: linear-gradient(135deg, #1b7a34, #2b8a3e); }
     .teal   { background: linear-gradient(135deg, #00695c, #00897b); }
     .red    { background: #c92a2a; }
@@ -226,7 +226,7 @@
       box-shadow: 0 1px 4px rgba(0,0,0,0.05);
     }
     table th {
-      background: linear-gradient(135deg, #0B5394, #1565c0);
+      background: linear-gradient(135deg, #0D9488, #1565c0);
       color: #fff; padding: 10px 12px; font-weight: 600;
       font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px;
     }
@@ -240,7 +240,7 @@
     /* Status Box */
     .status {
       margin-top: 18px; background: #f8fbfe;
-      border-left: 4px solid #0B5394; border-radius: 0 10px 10px 0;
+      border-left: 4px solid #0D9488; border-radius: 0 10px 10px 0;
       padding: 14px 16px; white-space: pre-wrap; font-size: 13px;
       color: #37474f; line-height: 1.6; transition: all 0.3s;
     }
@@ -647,74 +647,105 @@
   <script src="app.js"></script>
   <!-- PDF Template (Hidden from view) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <div id="pdf-template" style="display: none; padding: 40px; font-family: Arial, sans-serif; color: #000; background: #fff; width: 800px; position: relative;">
-    <!-- Systems & Laptop Watermark -->
-    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: url('../public/work-laptop.png'); background-repeat: no-repeat; background-position: center center; background-size: 400px auto; opacity: 0.08; pointer-events: none; z-index: 1;"></div>
-    <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
+    <div id="pdf-template" style="display: none; padding: 40px; font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif; color: #0f172a; background: #ffffff; width: 800px; position: relative; box-sizing: border-box;">
+    <!-- Minimalist Watermark -->
+    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: url('../public/work-laptop.png'); background-repeat: no-repeat; background-position: center center; background-size: 420px auto; opacity: 0.05; pointer-events: none; z-index: 1;"></div>
+
+    <!-- Modern Minimalist Header -->
+    <div style="position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 24px; margin-bottom: 24px; border-bottom: 2px solid #0d9488;">
       <div>
-        <h1 style="color: #0B5394; font-size: 28px; margin: 0;">ANANTATECH CARE</h1>
-        <p style="font-size: 12px; color: #555; margin: 5px 0;">47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br>Chikkabettahalli, Bengaluru - 560097</p>
-        <p style="font-size: 12px; color: #555; margin: 0;">Phone: 09986742525 | Email: rameshas@anantatech.com</p>
+        <div style="display: inline-block; background: #ccfbf1; color: #0f766e; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 9999px; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px;">IT Hardware & Care</div>
+        <h1 style="color: #0f766e; font-size: 28px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 6px 0;">ANANTATECH CARE</h1>
+        <p style="font-size: 12px; color: #64748b; line-height: 1.5; margin: 0;">47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br>Chikkabettahalli, Bengaluru - 560097<br><span style="font-weight: 600; color: #0f766e;">Phone:</span> 09986742525 &nbsp;|&nbsp; <span style="font-weight: 600; color: #0f766e;">Email:</span> rameshas@anantatech.com</p>
+      </div>
+      <div style="text-align: right;">
+        <div id="pdf-doc-title" style="font-size: 24px; font-weight: 800; color: #0d9488; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 6px;">TAX INVOICE</div>
+        <div style="font-size: 13px; color: #64748b; margin-bottom: 3px;">
+          <strong style="color: #334155;">Number:</strong> <span id="pdf-inv-no" style="font-family: monospace; font-weight: 700; color: #0f766e; font-size: 14px;"></span>
+        </div>
+        <div style="font-size: 13px; color: #64748b;">
+          <strong style="color: #334155;">Date:</strong> <span id="pdf-date" style="font-weight: 600; color: #0f172a;"></span>
+        </div>
       </div>
     </div>
-    
-    <div style="background: #0B5394; color: #fff; text-align: center; padding: 10px; font-weight: bold; font-size: 18px; margin-bottom: 15px;" id="pdf-doc-title">TAX INVOICE</div>
-    
-    <div style="display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 14px;">
-      <div>
-        <strong>Invoice No:</strong> <span id="pdf-inv-no"></span>
-      </div>
-      <div>
-        <strong>Date:</strong> <span id="pdf-date"></span>
+
+    <!-- Client Card (Modern Slate Card) -->
+    <div style="position: relative; z-index: 2; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px;">
+      <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #0d9488; margin-bottom: 6px;">Billed To</div>
+      <div id="pdf-cust-name" style="font-size: 17px; font-weight: 700; color: #0f172a; margin-bottom: 4px;"></div>
+      <div style="font-size: 13px; color: #475569; line-height: 1.45;">
+        <span style="color: #64748b;">Phone:</span> <strong style="color: #1e293b;" id="pdf-cust-phone"></strong> &nbsp;|&nbsp; <span style="color: #64748b;">Email:</span> <span id="pdf-cust-email"></span><br>
+        <span style="color: #64748b;">Address:</span> <span id="pdf-cust-address"></span>
       </div>
     </div>
-    
-    <div style="border: 1px solid #000; padding: 10px; margin-bottom: 20px; font-size: 14px;">
-      <div style="background: #e8f0fe; font-weight: bold; padding: 5px; margin: -10px -10px 10px -10px; border-bottom: 1px solid #000;">Bill To:</div>
-      <strong id="pdf-cust-name" style="font-size: 16px;"></strong><br>
-      Phone: <span id="pdf-cust-phone"></span> | Email: <span id="pdf-cust-email"></span><br>
-      Address: <span id="pdf-cust-address"></span>
-    </div>
-    
-    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px;">
+
+    <!-- Contemporary Clean Items Table -->
+    <table style="position: relative; z-index: 2; width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 24px; font-size: 13.5px; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">
       <thead>
-        <tr style="background: #0B5394; color: #fff;">
-          <th style="border: 1px solid #000; padding: 8px;">Sl No.</th>
-          <th style="border: 1px solid #000; padding: 8px; text-align: left;">Description</th>
-          <th style="border: 1px solid #000; padding: 8px;">Qty</th>
-          <th style="border: 1px solid #000; padding: 8px; text-align: right;">Rate</th>
-          <th style="border: 1px solid #000; padding: 8px; text-align: right;">Amount</th>
+        <tr style="background: #0f766e; color: #ffffff;">
+          <th style="padding: 12px 10px; text-align: center; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; width: 45px;">#</th>
+          <th style="padding: 12px 14px; text-align: left; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Description</th>
+          <th style="padding: 12px 10px; text-align: center; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; width: 55px;">Qty</th>
+          <th style="padding: 12px 14px; text-align: right; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; width: 100px;">Rate</th>
+          <th style="padding: 12px 14px; text-align: right; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; width: 110px;">Amount</th>
         </tr>
       </thead>
       <tbody id="pdf-items">
       </tbody>
     </table>
-    
-    <div style="display: flex; justify-content: flex-end; margin-bottom: 30px;">
-      <table style="width: 300px; border-collapse: collapse; font-size: 14px;">
-        <tr><td style="padding: 5px; border: 1px solid #000; background: #e8f0fe;">Subtotal</td><td style="padding: 5px; border: 1px solid #000; text-align: right;" id="pdf-subtotal"></td></tr>
-        <tr><td style="padding: 5px; border: 1px solid #000; background: #e8f0fe;">Discount</td><td style="padding: 5px; border: 1px solid #000; text-align: right;" id="pdf-discount"></td></tr>
-        <tr><td style="padding: 5px; border: 1px solid #000; background: #e8f0fe;">Tax</td><td style="padding: 5px; border: 1px solid #000; text-align: right;" id="pdf-tax"></td></tr>
-        <tr><td style="padding: 5px; border: 1px solid #000; background: #fff2cc; font-weight: bold;">Grand Total</td><td style="padding: 5px; border: 1px solid #000; text-align: right; font-weight: bold; background: #fff2cc;" id="pdf-grand"></td></tr>
-        <tr><td style="padding: 5px; border: 1px solid #000; background: #e8f0fe;">Advance Paid</td><td style="padding: 5px; border: 1px solid #000; text-align: right;" id="pdf-advance"></td></tr>
-        <tr><td style="padding: 5px; border: 1px solid #000; background: #fff2cc; font-weight: bold;">Balance Due</td><td style="padding: 5px; border: 1px solid #000; text-align: right; font-weight: bold; background: #fff2cc;" id="pdf-balance"></td></tr>
-      </table>
-    </div>
-    
-    <div style="display: flex; justify-content: space-between; font-size: 12px; border: 1px solid #000;">
-      <div style="width: 50%; padding: 10px; border-right: 1px solid #000;">
-        <div style="background: #0B5394; color: #fff; padding: 5px; font-weight: bold; margin: -10px -10px 10px -10px;">Terms & Conditions</div>
-        1. Service warranty is valid for 30 days only.<br>
-        2. No warranty for Windows installation/software issues.<br>
-        3. Not responsible for data loss. Backup your files.<br>
-        4. Physical, liquid or burnt damages void warranty.<br>
+
+    <!-- Totals Card -->
+    <div style="position: relative; z-index: 2; display: flex; justify-content: flex-end; margin-bottom: 28px;">
+      <div style="width: 320px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px;">
+        <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; color: #475569;">
+          <span>Subtotal</span>
+          <span id="pdf-subtotal" style="font-weight: 600; color: #0f172a;"></span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; color: #475569;">
+          <span>Discount</span>
+          <span id="pdf-discount" style="font-weight: 600; color: #059669;"></span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; color: #475569; border-bottom: 1px dashed #cbd5e1; padding-bottom: 8px;">
+          <span>Tax</span>
+          <span id="pdf-tax" style="font-weight: 600; color: #0f172a;"></span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 8px 0; font-size: 16px; font-weight: 800; color: #0f766e;">
+          <span>Grand Total</span>
+          <span id="pdf-grand"></span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; color: #475569; border-top: 1px dashed #cbd5e1; padding-top: 8px;">
+          <span>Advance Paid</span>
+          <span id="pdf-advance" style="font-weight: 600; color: #0f172a;"></span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 14px; font-weight: 800; color: #b91c1c;">
+          <span>Balance Due</span>
+          <span id="pdf-balance"></span>
+        </div>
       </div>
-            <div style="width: 50%; padding: 10px;">
-        <div style="background: #0B5394; color: #fff; padding: 5px; font-weight: bold; margin: -10px -10px 10px -10px;">Payment Details</div>
-        <strong>Company Name:</strong> ANANTATECH CARE<br>
-        <div id="pdf-bank-info" style="margin-top: 8px; font-size: 12px; color: #333;">
-          <strong>Payment Mode:</strong> Cash / Bank Transfer / UPI<br>
-          <span style="color: #666; font-size: 11px;">(Contact for bank transfer details or provide new account info)</span>
+    </div>
+
+    <!-- Footer Information Grid -->
+    <div style="position: relative; z-index: 2; display: flex; gap: 16px; font-size: 12px;">
+      <!-- Terms Card -->
+      <div style="flex: 1; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px;">
+        <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #0f766e; margin-bottom: 8px; border-bottom: 1px solid #ccfbf1; padding-bottom: 4px;">Terms & Conditions</div>
+        <div style="color: #64748b; line-height: 1.55;">
+          1. Service warranty is valid for 30 days only.<br>
+          2. No warranty for OS installation / software issues.<br>
+          3. AnantaTech Care is not responsible for data loss.<br>
+          4. Physical, liquid or burnt damages void warranty.
+        </div>
+      </div>
+
+      <!-- Payment Details Card -->
+      <div style="flex: 1; background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 10px; padding: 14px 16px;">
+        <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #0f766e; margin-bottom: 8px; border-bottom: 1px solid #99f6e4; padding-bottom: 4px;">Bank & Payment Details</div>
+        <div style="font-size: 12px; color: #334155; line-height: 1.55;">
+          <div><span style="color: #64748b;">Company:</span> <strong>ANANTATECH CARE</strong></div>
+          <div><span style="color: #64748b;">A/C Name:</span> <strong>Swarna Gowri</strong></div>
+          <div><span style="color: #64748b;">A/C No:</span> <strong style="color: #0f766e; font-size: 13px;">8813910769</strong></div>
+          <div><span style="color: #64748b;">IFSC:</span> <strong style="color: #0f766e; font-size: 13px;">KKBK0008094</strong> (Kotak Mahindra Bank)</div>
+          <div style="margin-top: 4px; font-size: 11px; font-weight: 700; color: #0d9488;">Pay via NEFT / RTGS / IMPS / UPI</div>
         </div>
       </div>
     </div>
