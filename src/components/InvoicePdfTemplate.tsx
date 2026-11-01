@@ -136,13 +136,13 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         right: 0,
         bottom: 0,
         backgroundImage: isAnanta ? `url(${ANANTATECHCARE_LOGO_BASE64})` : `url(${YANTRABYTE_LOGO_BASE64})`,
-        backgroundSize: isAnanta ? '460px 460px' : '560px auto',
+        backgroundSize: isAnanta ? '500px 500px' : '560px auto',
         backgroundPosition: 'center center',
         backgroundRepeat: 'no-repeat',
         pointerEvents: 'none',
         zIndex: 5,
-        opacity: isAnanta ? 0.16 : 0.12,
-        filter: isAnanta ? 'contrast(1.05) brightness(0.96)' : 'contrast(1.15) brightness(0.92)'
+        opacity: isAnanta ? 0.30 : 0.12,
+        filter: isAnanta ? 'contrast(1.25) brightness(0.92)' : 'contrast(1.15) brightness(0.92)'
       }} />
 
       {/* Full Page Hardware & Circuit Watermark Pattern */}
@@ -219,15 +219,11 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                 <img
                   src={ANANTATECHCARE_LOGO_BASE64}
                   alt="AnantaTech Care"
-                  style={{ height: "82px", width: "82px", objectFit: "contain", display: "block" }}
+                  style={{ height: "105px", width: "105px", objectFit: "contain", display: "block" }}
                 />
               )}
               <div>
-                {isAnanta && (
-                  <div style={{ display: 'inline-block', backgroundColor: '#FEF3C7', color: '#92400E', fontSize: '10px', fontWeight: '800', padding: '2px 8px', borderRadius: '20px', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '3px' }}>
-                    IT Hardware &amp; Care
-                  </div>
-                )}
+                
                 <h1 style={{ 
                   color: primaryColor, 
                   fontSize: isAnanta ? "23px" : "24px", 
