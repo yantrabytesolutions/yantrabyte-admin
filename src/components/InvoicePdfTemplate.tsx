@@ -141,7 +141,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         backgroundRepeat: 'no-repeat',
         pointerEvents: 'none',
         zIndex: 5,
-        opacity: isAnanta ? 0.35 : 0.25,
+        opacity: isAnanta ? 0.16 : 0.12,
         filter: isAnanta ? 'contrast(1.05) brightness(0.96)' : 'contrast(1.15) brightness(0.92)'
       }} />
 
@@ -158,7 +158,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         backgroundRepeat: 'no-repeat',
         pointerEvents: 'none',
         zIndex: 4,
-        opacity: isAnanta ? 0.05 : 0.105
+        opacity: isAnanta ? 0.03 : 0.05
       }} />
 
       {/* Cancelled Stamp */}
@@ -346,10 +346,10 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                 const cellBorder = isAnanta ? `1px solid #E2E8F0` : '1px solid #000000';
                 return (
                   <tr key={idx} style={{ backgroundColor: rowBg, minHeight: '30px' }}>
-                    <td style={{ textAlign: 'center', borderRight: cellBorder, borderBottom: '1px solid #e2e8f0', padding: '6px 4px', color: '#000000', fontWeight: 'bold', fontSize: '13.5px' }}>
+                    <td style={{ textAlign: 'center', borderRight: cellBorder, borderBottom: 'none', padding: '6px 4px', color: '#000000', fontWeight: 'bold', fontSize: '13.5px' }}>
                       {idx + 1}
                     </td>
-                    <td style={{ textAlign: 'left', borderRight: cellBorder, borderBottom: '1px solid #e2e8f0', padding: '6px 10px', color: '#000000', wordBreak: 'break-word', fontSize: '13.5px' }}>
+                    <td style={{ textAlign: 'left', borderRight: cellBorder, borderBottom: 'none', padding: '6px 10px', color: '#000000', wordBreak: 'break-word', fontSize: '13.5px' }}>
                       <div style={{ fontWeight: '700', fontSize: '14px' }}>{desc}</div>
                       {it.serial_no && (
                         <div style={{ fontSize: '12px', color: isAnanta ? '#0D9488' : '#334155', marginTop: '2px', fontWeight: 'bold' }}>
@@ -357,13 +357,13 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                         </div>
                       )}
                     </td>
-                    <td style={{ textAlign: 'center', borderRight: cellBorder, borderBottom: '1px solid #e2e8f0', padding: '6px 4px', color: '#000000', fontWeight: 'bold', fontSize: '13.5px' }}>
+                    <td style={{ textAlign: 'center', borderRight: cellBorder, borderBottom: 'none', padding: '6px 4px', color: '#000000', fontWeight: 'bold', fontSize: '13.5px' }}>
                       {qty}
                     </td>
-                    <td style={{ textAlign: 'right', borderRight: cellBorder, borderBottom: '1px solid #e2e8f0', padding: '6px 10px', color: '#000000', fontSize: '13.5px' }}>
+                    <td style={{ textAlign: 'right', borderRight: cellBorder, borderBottom: 'none', padding: '6px 10px', color: '#000000', fontSize: '13.5px' }}>
                       {rate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </td>
-                    <td style={{ textAlign: 'right', borderBottom: '1px solid #e2e8f0', padding: '6px 10px', fontWeight: 'bold', color: '#000000', fontSize: '14px' }}>
+                    <td style={{ textAlign: 'right', borderBottom: 'none', padding: '6px 10px', fontWeight: 'bold', color: '#000000', fontSize: '14px' }}>
                       {amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </td>
                   </tr>
@@ -373,11 +373,11 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
               {/* Padding rows to fill full A4 height without empty gap */}
               {[...Array(fillerCount)].map((_, idx) => (
                 <tr key={`fill-${idx}`} style={{ backgroundColor: 'transparent', height: '24px' }}>
-                  <td style={{ borderRight: isAnanta ? '1px solid #E2E8F0' : '1px solid #000000', borderBottom: '1px solid #f1f5f9', padding: '2px 4px' }}>&nbsp;</td>
-                  <td style={{ borderRight: isAnanta ? '1px solid #E2E8F0' : '1px solid #000000', borderBottom: '1px solid #f1f5f9', padding: '2px 8px' }}>&nbsp;</td>
-                  <td style={{ borderRight: isAnanta ? '1px solid #E2E8F0' : '1px solid #000000', borderBottom: '1px solid #f1f5f9', padding: '2px 4px' }}>&nbsp;</td>
-                  <td style={{ borderRight: isAnanta ? '1px solid #E2E8F0' : '1px solid #000000', borderBottom: '1px solid #f1f5f9', padding: '2px 8px' }}>&nbsp;</td>
-                  <td style={{ borderBottom: '1px solid #f1f5f9', padding: '2px 8px' }}>&nbsp;</td>
+                  <td style={{ borderRight: isAnanta ? '1px solid #E2E8F0' : '1px solid #000000', borderBottom: 'none', padding: '2px 4px' }}>&nbsp;</td>
+                  <td style={{ borderRight: isAnanta ? '1px solid #E2E8F0' : '1px solid #000000', borderBottom: 'none', padding: '2px 8px' }}>&nbsp;</td>
+                  <td style={{ borderRight: isAnanta ? '1px solid #E2E8F0' : '1px solid #000000', borderBottom: 'none', padding: '2px 4px' }}>&nbsp;</td>
+                  <td style={{ borderRight: isAnanta ? '1px solid #E2E8F0' : '1px solid #000000', borderBottom: 'none', padding: '2px 8px' }}>&nbsp;</td>
+                  <td style={{ borderBottom: 'none', padding: '2px 8px' }}>&nbsp;</td>
                 </tr>
               ))}
             </tbody>
