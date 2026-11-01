@@ -30,11 +30,7 @@ function numberToWords(num: number): string {
   if (crore) str += three(crore) + ' Crore ';
   if (lakh) str += three(lakh) + ' Lakh ';
   if (thousand) str += three(thousand) + ' Thousand ';
-  if (rest) {
-    if (str !== '') str += 'and ';
-    if (rest < 20) str += a[rest];
-    else str += b[Math.floor(rest / 10)] + (rest % 10 ? ' ' + a[rest % 10] : '');
-  }
+  if (rest) str += three(rest) + ' ';
 
   return (str.trim() + ' Rupees Only').replace(/\s+/g, ' ');
 }
@@ -111,8 +107,8 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
   const primaryLight = isAnanta ? "#EEF2FF" : "#F8FAFC";
   const primaryBorder = isAnanta ? "#C7D2FE" : "#CBD5E1";
   const fontFam = isAnanta 
-    ? "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
-    : "Arial, sans-serif";
+    ? "'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
+    : "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 
   return (
     <div 
