@@ -1,7 +1,6 @@
 import { forwardRef } from 'react';
 import type { Invoice, InvoiceItem } from '../types';
 import { YANTRABYTE_LOGO_BASE64, HARDWARE_WATERMARK_BASE64 } from '../assets/invoiceAssets';
-import { LAPTOP_SYSTEM_WATERMARK_BASE64 } from '../assets/laptopWatermark';
 import { ANANTATECHCARE_LOGO_BASE64 } from '../assets/anantaLogo';
 import { QrCodeRenderer } from './QrCodeRenderer';
 
