@@ -51,9 +51,30 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
   brand = 'yantrabyte'
 }, ref) => {
   const items: InvoiceItem[] = Array.isArray(invoice.items) ? invoice.items : [];
-  const isAnanta = brand === 'anantatechcare' || (Boolean(invoice.invoice_no) && String(invoice.invoice_no).startsWith('ATC'));
-  const isQuotation = invoice.doc_type === 'Quotation' || invoice.doc_type === 'Estimate' || (Boolean(invoice.invoice_no) && (String(invoice.invoice_no).startsWith('YBQ') || String(invoice.invoice_no).startsWith('ATCQ')));
+  const isAnanta = brand === 'anantatechcare' || (Boolean(invoice.invoice_no) && (String(invoice.invoice_no).startsWith('ATC') || String(invoice.invoice_no).startsWith('AT-')));
+  const isQuotation = invoice.doc_type === 'Quotation' || invoice.doc_type === 'Estimate' || (Boolean(invoice.invoice_no) && (String(invoice.invoice_no).startsWith('YBQ') || String(invoice.invoice_no).startsWith('ATCQ') || String(invoice.invoice_no).startsWith('AT-QUOTE')));
+  const isServiceBill = invoice.doc_type === 'Service Bill' || (Boolean(invoice.invoice_no) && (String(invoice.invoice_no).startsWith('ATC-SRV') || String(invoice.invoice_no).startsWith('AT-SRV') || String(invoice.invoice_no).startsWith('SRV')));
   const isCancelled = invoice.doc_type === 'Cancelled';
+
+  const companyEmail = isAnanta
+    ? (isServiceBill ? 'service@anantatechcare.com' : 'sales@anantatechcare.com')
+    : (isServiceBill ? 'service@anantatechcare.com' : 'yantrabyte.solutions@gmail.com');
+
+  const docTitle = isCancelled 
+    ? 'CANCELLED INVOICE' 
+    : isQuotation 
+      ? 'QUOTATION' 
+      : isServiceBill 
+        ? 'SERVICE BILL' 
+        : 'SALE INVOICE';
+
+  const docNumberLabel = isQuotation 
+    ? 'Quote No: ' 
+    : isCancelled 
+      ? 'Cancelled No: ' 
+      : isServiceBill 
+        ? 'Service Bill No: ' 
+        : 'Invoice No: ';
   const formattedDate = invoice.date ? (
     invoice.date.includes('-') ? invoice.date.split('-').reverse().join('/') : invoice.date
   ) : new Date().toLocaleDateString('en-GB');
@@ -236,7 +257,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                 <div style={{ fontSize: '12px', color: '#333333', marginTop: '3px', lineHeight: '1.35', fontWeight: '500' }}>
                   47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br />
                   Chikkabettahalli, Bengaluru - 560097<br />
-                  Phone: 09986742525 | Email: {isAnanta ? "rameshas@anantatech.com" : "yantrabyte.solutions@gmail.com"}
+                  Phone: 09986742525 | Email: {companyEmail}
                 </div>
               </div>
             </div>
@@ -248,10 +269,10 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                 textTransform: 'uppercase', 
                 letterSpacing: isAnanta ? '0.04em' : '0.6px' 
               }}>
-                {isCancelled ? 'CANCELLED INVOICE' : (isQuotation ? 'QUOTATION' : 'INVOICE')}
+                {docTitle}
               </div>
               <div style={{ fontSize: '14px', color: '#475569', marginTop: '4px' }}>
-                {isQuotation ? 'Quote No: ' : (isCancelled ? 'Cancelled No: ' : 'Invoice No: ')} 
+                {docNumberLabel} 
                 <strong style={{ 
                   color: isAnanta ? '#78350F' : '#000000', 
                   fontSize: '14.5px',

@@ -151,7 +151,7 @@ export default function BillingSoftware({
   const [printInvoiceNumber, setPrintInvoiceNumber] = useState('');
   const [deliveryPopup, setDeliveryPopup] = useState<DeliveryPopup>(null);
 
-  const [activeTab, setActiveTab] = useState<'editor' | 'history' | 'quotations' | 'pending' | 'renewals' | 'settings'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'editor' | 'history' | 'sales' | 'services' | 'quotations' | 'pending' | 'renewals' | 'settings'>(initialTab as any);
   const [historySearchTerm, setHistorySearchTerm] = useState('');
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
   const [historyDrawerData, setHistoryDrawerData] = useState<{
@@ -310,8 +310,8 @@ export default function BillingSoftware({
       setPaymentMode('Not specified');
       setDueDate('');
       
-      // Auto-set document type to 'Invoice'
-      setDocType('Invoice');
+      // Auto-set document type to 'Service Bill'
+      setDocType('Service Bill');
       
       // Add dynamic service item for this ticket!
       const defaultDesc = `Service Charge: Repair of ${initialAutofillTicket.device_type || 'Device'} (${initialAutofillTicket.ticket_number})`;
@@ -764,15 +764,23 @@ export default function BillingSoftware({
   const paymentStatus = getPaymentStatus(docType, balanceDue, advancePaid);
 
   // Stats dashboard calculations
-  const totalBilled = invoices.filter(i => i.doc_type === 'Invoice').reduce((acc, i) => acc + (i.grand_total || 0), 0);
-  const totalOutstanding = invoices.filter(i => i.doc_type === 'Invoice').reduce((acc, i) => acc + Math.max(i.balance_due || 0, 0), 0);
-  const invoiceCount = invoices.filter(i => i.doc_type === 'Invoice').length;
+  const isPayableDoc = (doc: string = '') => doc !== 'Quotation' && doc !== 'Estimate' && doc !== 'Cancelled';
+  const totalBilled = invoices.filter(i => isPayableDoc(i.doc_type)).reduce((acc, i) => acc + (i.grand_total || 0), 0);
+  const totalOutstanding = invoices.filter(i => isPayableDoc(i.doc_type)).reduce((acc, i) => acc + Math.max(i.balance_due || 0, 0), 0);
+  const invoiceCount = invoices.filter(i => isPayableDoc(i.doc_type)).length;
   const quoteCount = invoices.filter(i => i.doc_type === 'Quotation').length;
 
   const generateInvoiceNoAsync = async (type: string = docType) => {
     const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const isAnanta = currentBrand === 'anantatechcare';
-    const prefix = type === 'Quotation' ? (isAnanta ? 'ATCQ' : 'YBQ') : (isAnanta ? 'ATC' : 'YBS');
+    let prefix = isAnanta ? 'ATC-SALE' : 'YBS-SALE';
+    if (type === 'Quotation' || type === 'Estimate') {
+      prefix = isAnanta ? 'ATCQ' : 'YBQ';
+    } else if (type === 'Service Bill' || type === 'Service') {
+      prefix = isAnanta ? 'ATC-SRV' : 'YBS-SRV';
+    } else {
+      prefix = isAnanta ? 'ATC-SALE' : 'YBS';
+    }
     
     const { data } = await supabase
       .from('invoices')
@@ -1838,7 +1846,27 @@ export default function BillingSoftware({
               : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
           }`}
         >
-          <List className="w-4 h-4 mr-2" /> All Saved Documents
+          <List className="w-4 h-4 mr-2" /> All Documents
+        </button>
+        <button
+          onClick={() => setActiveTab('sales' as any)}
+          className={`py-2.5 px-4 text-xs sm:text-sm font-semibold rounded-lg transition-all flex items-center whitespace-nowrap ${
+            activeTab === ('sales' as any)
+              ? 'bg-sky-600 text-white shadow-sm'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+          }`}
+        >
+          <Receipt className="w-4 h-4 mr-2" /> Sale Bills
+        </button>
+        <button
+          onClick={() => setActiveTab('services' as any)}
+          className={`py-2.5 px-4 text-xs sm:text-sm font-semibold rounded-lg transition-all flex items-center whitespace-nowrap ${
+            activeTab === ('services' as any)
+              ? 'bg-indigo-600 text-white shadow-sm'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+          }`}
+        >
+          <Wrench className="w-4 h-4 mr-2" /> Service Bills
         </button>
         <button
           onClick={() => setActiveTab('quotations')}
@@ -1918,11 +1946,15 @@ export default function BillingSoftware({
                 )}
                 <div className="flex bg-gray-100 p-1 rounded-lg flex-wrap gap-1">
                   <button 
-                    className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-colors ${docType === 'Invoice' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
-                    onClick={() => setDocType('Invoice')}
-                  >Invoice</button>
+                    className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-colors ${(docType === 'Invoice' || docType === 'Sale Bill') ? 'bg-white text-blue-700 shadow-sm font-bold' : 'text-gray-600 hover:text-gray-900'}`}
+                    onClick={() => setDocType('Sale Bill')}
+                  >Sale Bill</button>
                   <button 
-                    className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-colors ${docType === 'Quotation' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+                    className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-colors ${docType === 'Service Bill' ? 'bg-white text-indigo-700 shadow-sm font-bold' : 'text-gray-600 hover:text-gray-900'}`}
+                    onClick={() => setDocType('Service Bill')}
+                  >Service Bill</button>
+                  <button 
+                    className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-colors ${docType === 'Quotation' ? 'bg-white text-purple-700 shadow-sm font-bold' : 'text-gray-600 hover:text-gray-900'}`}
                     onClick={() => setDocType('Quotation')}
                   >Quotation</button>
                   {!!selectedInvoiceId && (
@@ -2482,8 +2514,10 @@ export default function BillingSoftware({
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {invoices.filter(inv => {
+                  if (activeTab === ('sales' as any) && (inv.doc_type === 'Service Bill' || inv.doc_type === 'Quotation' || inv.doc_type === 'Estimate' || (inv.invoice_no && (inv.invoice_no.includes('SRV'))))) return false;
+                  if (activeTab === ('services' as any) && !(inv.doc_type === 'Service Bill' || (inv.invoice_no && (inv.invoice_no.includes('SRV'))))) return false;
                   if (activeTab === 'quotations' && inv.doc_type !== 'Quotation') return false;
-                  if (activeTab === 'pending' && (inv.doc_type !== 'Invoice' || (inv.balance_due || 0) <= 0)) return false;
+                  if (activeTab === 'pending' && ((inv.balance_due || 0) <= 0 || inv.doc_type === 'Quotation')) return false;
                   if (activeTab === 'renewals') {
                     if (inv.doc_type !== 'Invoice') return false;
                     // Check if invoice date is older than 250 days or has 12m warranty / recurring

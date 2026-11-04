@@ -735,6 +735,10 @@ app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {
   const cleanInvoiceNumber = String(invoiceNumber || 'invoice');
   const cleanDocumentType = String(documentType || 'Invoice');
   const cleanCustomerName = String(customerName || 'Customer');
+  const isServiceDoc = cleanDocumentType.toLowerCase().includes('service') || cleanInvoiceNumber.includes('SRV');
+  const senderEmail = isServiceDoc ? (process.env.SERVICE_EMAIL || 'service@anantatechcare.com') : (process.env.SALES_EMAIL || 'sales@anantatechcare.com');
+  const senderUser = isServiceDoc ? (process.env.SERVICE_GMAIL_USER || GMAIL_USER_DEFAULT) : (process.env.SALES_GMAIL_USER || GMAIL_USER_DEFAULT);
+  const senderPass = isServiceDoc ? (process.env.SERVICE_GMAIL_PASS || GMAIL_PASS_DEFAULT) : (process.env.SALES_GMAIL_PASS || GMAIL_PASS_DEFAULT);
   const defaultFilename = (cleanCustomerName && cleanCustomerName !== 'Customer') 
     ? `${cleanCustomerName}.pdf` 
     : `${cleanInvoiceNumber}.pdf`;
@@ -757,8 +761,8 @@ app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: GMAIL_USER_DEFAULT,
-      pass: GMAIL_PASS_DEFAULT,
+      user: senderUser,
+      pass: senderPass,
     },
   });
 
@@ -767,10 +771,10 @@ app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {
 
   try {
     mailResult = await transporter.sendMail({
-      from: `"YantraByte Solutions" <${GMAIL_USER_DEFAULT}>`,
+      from: `"Ananta Techcare" <${senderEmail}>`,
       to,
-      replyTo: process.env.GMAIL_REPLY_TO || GMAIL_USER_DEFAULT,
-      subject: `${cleanDocumentType} ${cleanInvoiceNumber} - YantraByte Solutions`,
+      replyTo: senderEmail,
+      subject: `${cleanDocumentType} ${cleanInvoiceNumber} - Ananta Techcare`,
       text: [
         `Dear ${cleanCustomerName},`,
         '',
