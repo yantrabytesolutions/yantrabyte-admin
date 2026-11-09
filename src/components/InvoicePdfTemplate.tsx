@@ -123,10 +123,10 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
   // ----------------------------------------------------
   // DISTINCT BRAND STYLING & CONTEMPORARY THEME SETTINGS
   // ----------------------------------------------------
-  const primaryColor = isAnanta ? "#B45309" : "#0B5394";
-  const primaryDark = isAnanta ? "#78350F" : "#1E3A8A";
-  const primaryLight = isAnanta ? "#FFFBEB" : "#F8FAFC";
-  const primaryBorder = isAnanta ? "#FDE68A" : "#CBD5E1";
+  const primaryColor = isAnanta ? "#0D9488" : "#0B5394";
+  const primaryDark = isAnanta ? "#0F766E" : "#1E3A8A";
+  const primaryLight = isAnanta ? "#F0FDFA" : "#F8FAFC";
+  const primaryBorder = isAnanta ? "#99F6E4" : "#CBD5E1";
   const fontFam = isAnanta 
     ? "'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
     : "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
@@ -208,8 +208,8 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
       <div style={{
         position: 'relative',
         zIndex: 10,
-        border: isAnanta ? '2px solid #D97706' : '2px solid #0B5394',
-        borderRadius: isAnanta ? '16px' : '10px',
+        border: isAnanta ? '2px solid #0D9488' : '2px solid #0B5394',
+        borderRadius: '10px',
         padding: '16px 18px',
         backgroundColor: 'transparent',
         boxSizing: 'border-box',
@@ -274,7 +274,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
               <div style={{ fontSize: '14px', color: '#475569', marginTop: '4px' }}>
                 {docNumberLabel} 
                 <strong style={{ 
-                  color: isAnanta ? '#78350F' : '#000000', 
+                  color: isAnanta ? '#0F766E' : '#000000', 
                   fontSize: '14.5px',
                   fontFamily: isAnanta ? 'monospace' : 'inherit',
                   fontWeight: isAnanta ? '700' : 'bold'
@@ -298,7 +298,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
           }}>
             <div style={{ fontSize: '13px', lineHeight: '1.45', color: '#1e293b' }}>
               <span style={{ 
-                color: isAnanta ? '#B45309' : '#64748b', 
+                color: isAnanta ? '#0D9488' : '#64748b', 
                 fontSize: '11px', 
                 textTransform: 'uppercase', 
                 fontWeight: '800', 
@@ -315,12 +315,12 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
           {/* Items Table */}
           <table style={{ 
             width: '100%', 
-            borderCollapse: isAnanta ? 'separate' : 'collapse', 
+            borderCollapse: 'collapse', 
             borderSpacing: 0,
             tableLayout: 'fixed', 
-            borderBottom: isAnanta ? `1px solid ${primaryBorder}` : '1px solid #000000', 
+            borderBottom: isAnanta ? '1px solid #0D9488' : '1px solid #000000', 
             fontSize: '13.5px',
-            borderRadius: isAnanta ? '8px' : '0',
+            borderRadius: '0',
             overflow: 'hidden'
           }}>
             <thead>
@@ -396,8 +396,8 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                 {/* Left: Amount in Words */}
                 <td style={{ width: '56%', verticalAlign: 'top', padding: '10px 12px', borderRight: isAnanta ? '1px solid #E2E8F0' : '1px solid #000000' }}>
                   <div style={{ 
-                    backgroundColor: isAnanta ? '#FEF3C7' : '#D9EAF7', 
-                    color: isAnanta ? '#B45309' : '#92400E', 
+                    backgroundColor: isAnanta ? '#CCFBF1' : '#D9EAF7', 
+                    color: isAnanta ? '#0F766E' : '#92400E', 
                     fontWeight: '800', 
                     fontSize: '11px', 
                     padding: '3px 8px', 
@@ -422,13 +422,13 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                         <tr 
                           key={row.label}
                           style={{ 
-                            backgroundColor: row.isHighlight ? (isAnanta ? '#FEF3C7' : '#FFFBEB') : 'transparent',
+                            backgroundColor: row.isHighlight ? (isAnanta ? '#CCFBF1' : '#FFFBEB') : 'transparent',
                             height: '26px'
                           }}
                         >
                           <td style={{ 
                             padding: '4px 8px', 
-                            color: row.isHighlight ? (isAnanta ? '#B45309' : '#15803D') : (row.isDue ? '#B91C1C' : '#1e293b'), 
+                            color: row.isHighlight ? (isAnanta ? '#0F766E' : '#15803D') : (row.isDue ? '#B91C1C' : '#1e293b'), 
                             fontWeight: (row.isHighlight || row.isDue) ? '800' : '600',
                             fontSize: (row.isHighlight || row.isDue) ? '14px' : '13px',
                             borderBottom: idx === calcRows.length - 1 ? 'none' : (isAnanta ? '1px solid #E2E8F0' : '1px solid #000000')
@@ -438,7 +438,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                           <td style={{ 
                             padding: '4px 8px', 
                             textAlign: 'right', 
-                            color: row.isHighlight ? (isAnanta ? '#B45309' : '#15803D') : (row.isDue ? '#B91C1C' : '#000000'), 
+                            color: row.isHighlight ? (isAnanta ? '#0F766E' : '#15803D') : (row.isDue ? '#B91C1C' : '#000000'), 
                             fontWeight: (row.isHighlight || row.isDue) ? '800' : '700',
                             fontSize: (row.isHighlight || row.isDue) ? '15px' : '13.5px',
                             borderBottom: idx === calcRows.length - 1 ? 'none' : (isAnanta ? '1px solid #E2E8F0' : '1px solid #000000')
@@ -581,15 +581,15 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
           <div style={{
             textAlign: 'center',
             padding: '4px 8px',
-            backgroundColor: isAnanta ? '#FFFBEB' : '#F1F5F9',
+            backgroundColor: isAnanta ? '#F0FDFA' : '#F1F5F9',
             border: `1.2px solid ${primaryColor}`,
-            borderRadius: isAnanta ? '6px' : '4px',
+            borderRadius: '4px',
             boxSizing: 'border-box'
           }}>
             <div style={{
               fontSize: '11px',
               fontWeight: '900',
-              color: isAnanta ? '#92400E' : '#000000',
+              color: isAnanta ? '#0F766E' : '#000000',
               letterSpacing: '0.06em',
               textTransform: 'uppercase'
             }}>
