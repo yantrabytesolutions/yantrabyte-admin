@@ -153,7 +153,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
           justifyContent: 'space-between'
         }}
       >
-        {/* Subtle Brand Watermark Logo */}
+        {/* Distinct Brand Watermark Emblem */}
         <div style={{
           position: 'absolute',
           top: 0,
@@ -161,13 +161,29 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
           right: 0,
           bottom: 0,
           backgroundImage: `url(${ANANTATECHCARE_LOGO_BASE64})`,
-          backgroundSize: '460px 460px',
-          backgroundPosition: 'center 48%',
+          backgroundSize: '520px 520px',
+          backgroundPosition: 'center 50%',
           backgroundRepeat: 'no-repeat',
           pointerEvents: 'none',
-          zIndex: 1,
-          opacity: 0.08,
-          filter: 'grayscale(30%)'
+          zIndex: 5,
+          opacity: 0.22,
+          filter: 'contrast(1.2) brightness(0.95)'
+        }} />
+
+        {/* Full Page Circuit Watermark Pattern */}
+        <div style={{
+          position: 'absolute',
+          top: 0, 
+          left: 0, 
+          width: '100%', 
+          height: '100%',
+          backgroundImage: `url(${HARDWARE_WATERMARK_BASE64})`,
+          backgroundSize: '100% 100%',
+          backgroundPosition: 'center center',
+          backgroundRepeat: 'no-repeat',
+          pointerEvents: 'none',
+          zIndex: 4,
+          opacity: 0.04
         }} />
 
         {/* Cancelled Stamp */}
@@ -223,9 +239,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                 />
               </div>
               <div>
-                <div style={{ fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#99F6E4', fontWeight: '800' }}>
-                  Technology &bull; Service &bull; Solutions
-                </div>
+                
                 <h1 style={{ 
                   color: '#FFFFFF', 
                   fontSize: '24px', 
@@ -272,7 +286,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
             {/* Bill To Card */}
             <div style={{
               flex: '1.4',
-              backgroundColor: softCardBg,
+              backgroundColor: 'rgba(240, 253, 250, 0.72)', backdropFilter: 'blur(1px)',
               border: `1.5px solid ${borderTeal}`,
               borderRadius: '12px',
               padding: '12px 14px',
@@ -304,7 +318,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
             {/* Quick Status / Payment Terms Card */}
             <div style={{
               flex: '1',
-              backgroundColor: '#F8FAFC',
+              backgroundColor: 'rgba(248, 250, 252, 0.72)',
               border: '1.5px solid #E2E8F0',
               borderRadius: '12px',
               padding: '12px 14px',
@@ -365,7 +379,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                   const amount = qty * rate;
                   const isEven = idx % 2 === 1;
                   return (
-                    <tr key={idx} style={{ backgroundColor: isEven ? '#F8FAFC' : '#FFFFFF', borderBottom: '1px solid #E2E8F0' }}>
+                    <tr key={idx} style={{ backgroundColor: isEven ? 'rgba(248, 250, 252, 0.65)' : 'transparent', borderBottom: '1px solid #E2E8F0' }}>
                       <td style={{ textAlign: 'center', padding: '7px 4px', color: '#64748B', fontWeight: '700' }}>
                         {idx + 1}
                       </td>
@@ -392,7 +406,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
 
                 {/* Filler spacing rows */}
                 {[...Array(fillerCount)].map((_, idx) => (
-                  <tr key={`fill-${idx}`} style={{ backgroundColor: (items.length + idx) % 2 === 1 ? '#F8FAFC' : '#FFFFFF', height: '24px', borderBottom: '1px solid #E2E8F0' }}>
+                  <tr key={`fill-${idx}`} style={{ backgroundColor: (items.length + idx) % 2 === 1 ? 'rgba(248, 250, 252, 0.65)' : 'transparent', height: '24px', borderBottom: '1px solid #E2E8F0' }}>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
@@ -414,7 +428,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
             {/* Amount in words badge box */}
             <div style={{
               flex: '1.3',
-              backgroundColor: '#F8FAFC',
+              backgroundColor: 'rgba(248, 250, 252, 0.72)',
               border: '1.5px solid #E2E8F0',
               borderRadius: '10px',
               padding: '10px 14px'
@@ -437,7 +451,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
             {/* Calculation rows */}
             <div style={{
               flex: '1',
-              backgroundColor: '#FFFFFF',
+              backgroundColor: 'rgba(255, 255, 255, 0.75)',
               border: `1.5px solid ${borderTeal}`,
               borderRadius: '10px',
               overflow: 'hidden'
@@ -472,7 +486,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
             {/* Terms & Conditions Card */}
             <div style={{
               flex: '1',
-              backgroundColor: '#F8FAFC',
+              backgroundColor: 'rgba(248, 250, 252, 0.75)',
               border: '1.5px solid #E2E8F0',
               borderRadius: '12px',
               padding: '10px 12px',
@@ -516,7 +530,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
             {/* Bank & Scan To Pay Card */}
             <div style={{
               flex: '1.25',
-              background: softCardBg,
+              background: 'rgba(240, 253, 250, 0.78)',
               border: `1.5px solid ${borderTeal}`,
               borderRadius: '12px',
               padding: '10px 12px'
