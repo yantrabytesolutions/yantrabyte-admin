@@ -660,10 +660,10 @@ function createPrintableInvoiceSheet_(ss, data) {
   sh.getRange(fr+2,4,1,1).setValue('  A/C Name: ANANTATECH CARE').setFontSize(8);
   sh.getRange(fr+3,4,1,1).setValue('  A/C No: 260226952682568').setFontSize(8).setFontWeight('bold');
   sh.getRange(fr+4,4,1,1).setValue('  IFSC: AUBL0002695 (AU Small Finance Bank, Koramangala)').setFontSize(8);
-  sh.getRange(fr+5,4,1,1).setValue('  UPI: s0424237152@slc').setFontSize(8).setFontWeight('bold');
+  sh.getRange(fr+5,4,1,1).setValue('  UPI: anantatechcare011126@aubiz').setFontSize(8).setFontWeight('bold');
 
   // Generate UPI QR Code in column 5
-  var upiString = 'upi://pay?pn=ANANTATECH%20CARE&am=' + (data.grandTotal || 0);
+  var upiString = 'upi://pay?ver=01&mode=01&pa=anantatechcare011126@aubiz&pn=ANANTA%20TECHCARE&mc=7372&am=' + (data.grandTotal || 0);
   var qrUrl = 'https://chart.googleapis.com/chart?chs=100x100&cht=qr&chl=' + encodeURIComponent(upiString);
   
   sh.getRange(fr+1,5,5,1).merge();
