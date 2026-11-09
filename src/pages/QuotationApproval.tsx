@@ -1,4 +1,3 @@
-import { ANANTA_QR_CODE_BASE64 } from '../assets/anantaQr';
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { FileText, CheckCircle2, XCircle, ShieldCheck, AlertCircle } from 'lucide-react';
@@ -7,7 +6,6 @@ import type { Invoice } from '../types';
 import SEO from '../components/SEO';
 import { HardwareBrandsBanner } from '../components/HardwareBrandsBanner';
 import { QrCodeRenderer } from '../components/QrCodeRenderer';
-import { OFFICIAL_QR_CODE_BASE64 } from '../assets/generatedQr';
 
 export function QuotationApproval() {
   const { id } = useParams<{ id: string }>();

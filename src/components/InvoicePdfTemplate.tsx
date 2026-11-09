@@ -2,7 +2,6 @@ import { forwardRef } from 'react';
 import type { Invoice, InvoiceItem } from '../types';
 import { YANTRABYTE_LOGO_BASE64, HARDWARE_WATERMARK_BASE64 } from '../assets/invoiceAssets';
 import { ANANTATECHCARE_LOGO_BASE64 } from '../assets/anantaLogo';
-import { ANANTA_QR_CODE_BASE64 } from '../assets/anantaQr';
 import { QrCodeRenderer } from './QrCodeRenderer';
 
 function numberToWords(num: number): string {
