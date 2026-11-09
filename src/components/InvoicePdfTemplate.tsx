@@ -221,72 +221,133 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         {/* Top Section (Header, Customer Box, Table, Totals) */}
         <div>
           {/* Header */}
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center', 
-            borderBottom: `2px solid ${primaryColor}`, 
-            paddingBottom: '10px', 
-            marginBottom: '10px' 
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-              {!isAnanta ? (
+          {!isAnanta ? (
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              borderBottom: `2px solid ${primaryColor}`, 
+              paddingBottom: '10px', 
+              marginBottom: '10px' 
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                 <img
                   src={YANTRABYTE_LOGO_BASE64}
                   alt="YantraByte Solutions"
                   style={{ height: "82px", width: "auto", display: "block" }}
                 />
-              ) : (
-                <img
-                  src={ANANTATECHCARE_LOGO_BASE64}
-                  alt="AnantaTech Care"
-                  style={{ height: "105px", width: "105px", objectFit: "contain", display: "block" }}
-                />
-              )}
-              <div>
-                
-                <h1 style={{ 
-                  color: primaryColor, 
-                  fontSize: isAnanta ? "23px" : "24px", 
-                  fontWeight: "900", 
-                  margin: 0, 
-                  letterSpacing: isAnanta ? "-0.02em" : "0.4px" 
-                }}>
-                  {isAnanta ? "ANANTATECH CARE" : "YANTRABYTE SOLUTIONS"}
-                </h1>
-                <div style={{ fontSize: '12px', color: '#333333', marginTop: '3px', lineHeight: '1.35', fontWeight: '500' }}>
-                  47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br />
-                  Chikkabettahalli, Bengaluru - 560097<br />
-                  Phone: 09986742525 | Email: {companyEmail}
+                <div>
+                  <h1 style={{ color: primaryColor, fontSize: "24px", fontWeight: "900", margin: 0, letterSpacing: "0.4px" }}>
+                    YANTRABYTE SOLUTIONS
+                  </h1>
+                  <div style={{ fontSize: '12px', color: '#333333', marginTop: '3px', lineHeight: '1.35', fontWeight: '500' }}>
+                    47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br />
+                    Chikkabettahalli, Bengaluru - 560097<br />
+                    Phone: 09986742525 | Email: {companyEmail}
+                  </div>
+                </div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontWeight: '900', color: isCancelled ? '#DC2626' : primaryColor, fontSize: '21px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+                  {docTitle}
+                </div>
+                <div style={{ fontSize: '14px', color: '#475569', marginTop: '4px' }}>
+                  {docNumberLabel} <strong style={{ color: '#000000', fontSize: '14.5px' }}>{invoice.invoice_no || 'DRAFT'}</strong>
+                </div>
+                <div style={{ fontSize: '14px', color: '#475569', marginTop: '2px' }}>
+                  Date: <strong style={{ color: '#000000', fontSize: '14px' }}>{formattedDate}</strong>
                 </div>
               </div>
             </div>
-            <div style={{ textAlign: 'right' }}>
+          ) : (
+            /* Dual-Tone Structured Header for AnantaTech Care */
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'stretch', 
+              gap: '12px',
+              borderBottom: '2px solid #0D9488', 
+              paddingBottom: '10px', 
+              marginBottom: '10px' 
+            }}>
+              {/* Left Box: Logo & Company Identity in Soft Teal Card */}
               <div style={{ 
-                fontWeight: '900', 
-                color: isCancelled ? '#DC2626' : primaryColor, 
-                fontSize: isAnanta ? '22px' : '21px', 
-                textTransform: 'uppercase', 
-                letterSpacing: isAnanta ? '0.04em' : '0.6px' 
+                flex: 1, 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '14px',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: '1.5px solid #99F6E4',
+                backgroundColor: 'rgba(240, 253, 250, 0.65)'
               }}>
-                {docTitle}
+                <img
+                  src={ANANTATECHCARE_LOGO_BASE64}
+                  alt="AnantaTech Care"
+                  style={{ height: "92px", width: "92px", objectFit: "contain", display: "block" }}
+                />
+                <div>
+                  <h1 style={{ 
+                    color: '#0D9488', 
+                    fontSize: "23px", 
+                    fontWeight: "900", 
+                    margin: 0, 
+                    letterSpacing: "-0.01em" 
+                  }}>
+                    ANANTATECH CARE
+                  </h1>
+                  <div style={{ fontSize: '12px', color: '#334155', marginTop: '3px', lineHeight: '1.35', fontWeight: '500' }}>
+                    47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br />
+                    Chikkabettahalli, Bengaluru - 560097<br />
+                    Phone: <strong>09986742525</strong> | Email: {companyEmail}
+                  </div>
+                </div>
               </div>
-              <div style={{ fontSize: '14px', color: '#475569', marginTop: '4px' }}>
-                {docNumberLabel} 
-                <strong style={{ 
-                  color: isAnanta ? '#0F766E' : '#000000', 
-                  fontSize: '14.5px',
-                  fontFamily: isAnanta ? 'monospace' : 'inherit',
-                  fontWeight: isAnanta ? '700' : 'bold'
+
+              {/* Right Box: Distinct Document Metadata Card with Accent Badge */}
+              <div style={{ 
+                width: '245px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'flex-end',
+                textAlign: 'right',
+                padding: '8px 14px',
+                borderRadius: '8px',
+                border: '1.5px solid #0D9488',
+                backgroundColor: '#F0FDFA'
+              }}>
+                <div style={{ 
+                  display: 'inline-block',
+                  backgroundColor: isCancelled ? '#DC2626' : '#0D9488',
+                  color: '#ffffff',
+                  fontSize: '13px',
+                  fontWeight: '800',
+                  padding: '4px 12px',
+                  borderRadius: '4px',
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase',
+                  marginBottom: '6px'
                 }}>
-                  {invoice.invoice_no || 'DRAFT'}
-                </strong>
-              </div>
-              <div style={{ fontSize: '14px', color: '#475569', marginTop: '2px' }}>
-                Date: <strong style={{ color: '#000000', fontSize: '14px' }}>{formattedDate}</strong>
+                  {docTitle}
+                </div>
+                <div style={{ fontSize: '13.5px', color: '#475569', marginTop: '2px' }}>
+                  {docNumberLabel}
+                  <strong style={{ 
+                    color: '#0F766E', 
+                    fontSize: '14.5px',
+                    fontFamily: 'monospace',
+                    fontWeight: '800'
+                  }}>
+                    {invoice.invoice_no || 'DRAFT'}
+                  </strong>
+                </div>
+                <div style={{ fontSize: '13.5px', color: '#475569', marginTop: '3px' }}>
+                  Date: <strong style={{ color: '#0f172a', fontSize: '14px' }}>{formattedDate}</strong>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Customer Details */}
           <div style={{ 
@@ -496,7 +557,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                       <>
                         <div style={{ marginBottom: '1px' }}>1. Service warranty is valid for 30 days only.</div>
                         <div style={{ marginBottom: '1px' }}>2. No warranty for Windows installation/software issues.</div>
-                        <div style={{ marginBottom: '1px' }}>3. AnantaTech Care is not responsible for any data loss.</div>
+                        <div style={{ marginBottom: '1px' }}>3. {isAnanta ? 'AnantaTech Care' : 'YantraByte Solutions'} is not responsible for any data loss.</div>
                         <div style={{ marginBottom: '1px' }}>4. Customer should take backup of all important files prior.</div>
                         <div style={{ marginBottom: '1px' }}>5. Physical, liquid or burnt damages void warranty.</div>
                         <div>6. No warranty for swollen batteries or electrical faults.</div>
