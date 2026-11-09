@@ -280,7 +280,7 @@ async function generateInvoice() {
     document.getElementById('pdf-balance').innerText = fmtINR(balance);
     
     const qrContainer = document.getElementById('pdf-qr-container');
-    if (qrContainer) qrContainer.style.display = 'none';
+    if (qrContainer) qrContainer.style.display = 'block';
     let tbody = '';
     items.forEach((it, i) => {
       const bg = (i % 2 === 1) ? '#f8fafc' : '#ffffff';

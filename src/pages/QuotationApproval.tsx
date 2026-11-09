@@ -1,3 +1,4 @@
+import { ANANTA_QR_CODE_BASE64 } from '../assets/anantaQr';
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { FileText, CheckCircle2, XCircle, ShieldCheck, AlertCircle } from 'lucide-react';
@@ -153,24 +154,22 @@ export function QuotationApproval() {
                         </>
                       ) : (
                         <>
-                          <p><strong className="text-white">Bank:</strong> Kotak Mahindra Bank</p>
-                          <p><strong className="text-white">A/C Name:</strong> Swarna Gowri</p>
-                          <p><strong className="text-white">A/C No:</strong> 8813910769</p>
-                          <p><strong className="text-white">IFSC Code:</strong> KKBK0008094</p>
-                          <p><strong className="text-white">Branch:</strong> Vidyaranyapura, Bangalore</p>
+                          <p><strong className="text-white">Company / A/C:</strong> ANANTATECH CARE</p>
+                          <p><strong className="text-white">Bank:</strong> AU Small Finance Bank</p>
+                          <p><strong className="text-white">Branch:</strong> Koramangala</p>
+                          <p><strong className="text-white">A/C No:</strong> 260226952682568</p>
+                          <p><strong className="text-white">IFSC Code:</strong> AUBL0002695</p>
                         </>
                       )}
                     </div>
                   </div>
-                  {!isAnanta ? (
-                    <div className="w-48 h-48 bg-white rounded-xl p-2 flex-shrink-0 flex items-center justify-center relative overflow-hidden border-4 border-white/10 shadow-xl">
-                      <img 
-                        src={OFFICIAL_QR_CODE_BASE64 || "/Payment.jpg"} 
-                        alt="Payment QR Code" 
-                        className="w-full h-full object-contain"
-                      />
-                    </div>
-                  ) : null}
+                  <div className="w-48 h-48 bg-white rounded-xl p-2 flex-shrink-0 flex items-center justify-center relative overflow-hidden border-4 border-white/10 shadow-xl">
+                    <img 
+                      src={isAnanta ? ANANTA_QR_CODE_BASE64 : (OFFICIAL_QR_CODE_BASE64 || "/Payment.jpg")} 
+                      alt="Payment QR Code" 
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
                 </div>
                 <div className="mt-6 bg-white/5 rounded-xl p-4 border border-white/10">
                   <p className="text-sm text-slate-400 mb-2">Payment Status</p>

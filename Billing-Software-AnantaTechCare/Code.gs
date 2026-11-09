@@ -658,8 +658,8 @@ function createPrintableInvoiceSheet_(ss, data) {
 
   sh.getRange(fr+1,4,1,1).setValue('  Payment Mode: Bank Transfer / UPI / Cash').setFontSize(8).setFontWeight('bold');
   sh.getRange(fr+2,4,1,1).setValue('  A/C Name: ANANTATECH CARE').setFontSize(8);
-  sh.getRange(fr+3,4,1,1).setValue('  A/C No: Available on request').setFontSize(8);
-  sh.getRange(fr+4,4,1,1).setValue('  IFSC: ').setFontSize(8);
+  sh.getRange(fr+3,4,1,1).setValue('  A/C No: 260226952682568').setFontSize(8).setFontWeight('bold');
+  sh.getRange(fr+4,4,1,1).setValue('  IFSC: AUBL0002695 (AU Small Finance Bank, Koramangala)').setFontSize(8);
   sh.getRange(fr+5,4,1,1).setValue('  UPI: s0424237152@slc').setFontSize(8).setFontWeight('bold');
 
   // Generate UPI QR Code in column 5

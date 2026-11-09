@@ -2450,7 +2450,7 @@ export default function BillingSoftware({
                                     const isAnanta = currentBrand === 'anantatechcare';
                   const compName = isAnanta ? 'ANANTATECH CARE' : 'YANTRABYTE SOLUTIONS';
                   const bankTxt = isAnanta
-                    ? '*Bank Details:* Kotak Mahindra Bank | A/C: 8813910769 | IFSC: KKBK0008094 | Name: Swarna Gowri | Branch: Vidyaranyapura, Bangalore'
+                    ? '*Bank Details:* AU Small Finance Bank | A/C: 260226952682568 | IFSC: AUBL0002695 | Name: ANANTATECH CARE | Branch: Koramangala, Bangalore'
                     : '*Pay via UPI:* s0424237152@slc\n*Bank:* North East Small Finance Bank | A/C: 033311501023226 | IFSC: NESF0000333';
                   const invNum = printInvoiceNumber || (selectedInvoiceId ? (invoices.find(i=>i.id===selectedInvoiceId)?.invoice_no || 'INV-2026') : 'INV-2026');
                   const custName = customerName || 'Valued Customer';

@@ -1,3 +1,4 @@
+import { ANANTA_QR_CODE_BASE64 } from '../assets/anantaQr';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -554,27 +555,32 @@ export default function EstimateView() {
                 </>
               ) : (
                 <>
-                  <div><strong>A/C Name:</strong> Swarna Gowri</div>
-                  <div><strong>A/C No:</strong> 8813910769</div>
-                  <div><strong>IFSC Code:</strong> KKBK0008094</div>
-                  <div><strong>Branch:</strong> Kotak Mahindra Bank, Vidyaranyapura, Bangalore</div>
+                  <div><strong>Company / A/C:</strong> ANANTATECH CARE</div>
+                  <div><strong>Bank:</strong> AU Small Finance Bank</div>
+                  <div><strong>Branch:</strong> Koramangala</div>
+                  <div><strong>A/C No:</strong> 260226952682568</div>
+                  <div><strong>IFSC Code:</strong> AUBL0002695</div>
                   <div style={{ marginTop: 4, fontSize: 11, color: '#047857', fontWeight: 'bold' }}>
                     Pay via NEFT / RTGS / IMPS / UPI
                   </div>
                 </>
               )}
             </div>
-            {!isAnanta && (<div style={{ padding: '8px 20px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ padding: '8px 20px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ background: '#fff', padding: '2px', border: '1px solid #e5e7eb', borderRadius: '6px', display: 'inline-block' }}>
-                <QrCodeRenderer 
-                  value="upi://pay?pa=s0424237152@slc&pn=YantraByte%20Solutions&cu=INR" 
-                  size={76} 
-                />
+                {isAnanta ? (
+                  <img src={ANANTA_QR_CODE_BASE64} alt="Scan & Pay UPI" style={{ width: '76px', height: '76px', objectFit: 'contain', display: 'block' }} />
+                ) : (
+                  <QrCodeRenderer 
+                    value="upi://pay?pa=s0424237152@slc&pn=YantraByte%20Solutions&cu=INR" 
+                    size={76} 
+                  />
+                )}
               </div>
               <div style={{ fontSize: 11, color: '#6b7280' }}>
-                Scan to pay<br />via UPI
+                Scan & Pay<br />Any UPI App
               </div>
-            </div>)}
+            </div>
 
           </div>
         </div>

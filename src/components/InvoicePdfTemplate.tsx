@@ -2,6 +2,7 @@ import { forwardRef } from 'react';
 import type { Invoice, InvoiceItem } from '../types';
 import { YANTRABYTE_LOGO_BASE64, HARDWARE_WATERMARK_BASE64 } from '../assets/invoiceAssets';
 import { ANANTATECHCARE_LOGO_BASE64 } from '../assets/anantaLogo';
+import { ANANTA_QR_CODE_BASE64 } from '../assets/anantaQr';
 import { QrCodeRenderer } from './QrCodeRenderer';
 
 function numberToWords(num: number): string {
@@ -545,27 +546,31 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                               </>
                             ) : (
                               <>
-                                <div><span style={{ fontWeight: "bold", color: primaryDark }}>Company:</span> ANANTATECH CARE</div>
-                                <div><span style={{ fontWeight: "bold", color: primaryDark }}>A/C Name:</span> Swarna Gowri</div>
-                                <div><span style={{ fontWeight: "bold", color: primaryDark }}>A/C No:</span> <strong style={{ color: primaryDark, fontSize: "13px" }}>8813910769</strong></div>
-                                <div><span style={{ fontWeight: "bold", color: primaryDark }}>IFSC:</span> <strong style={{ color: primaryDark, fontSize: "13px" }}>KKBK0008094</strong> (Kotak Mahindra Bank)</div>
+                                <div><span style={{ fontWeight: "bold", color: primaryDark }}>Company / A/C:</span> ANANTATECH CARE</div>
+                                <div><span style={{ fontWeight: "bold", color: primaryDark }}>Bank:</span> AU Small Finance Bank</div>
+                                <div><span style={{ fontWeight: "bold", color: primaryDark }}>Branch:</span> Koramangala</div>
+                                <div><span style={{ fontWeight: "bold", color: primaryDark }}>A/C No:</span> <strong style={{ color: primaryDark, fontSize: "13px" }}>260226952682568</strong></div>
+                                <div><span style={{ fontWeight: "bold", color: primaryDark }}>IFSC:</span> <strong style={{ color: primaryDark, fontSize: "13px" }}>AUBL0002695</strong></div>
                                 <div style={{ marginTop: "3px", fontSize: "11px", color: "#0D9488", fontWeight: "bold" }}>Pay via NEFT / RTGS / IMPS / UPI</div>
                               </>
                             )}
                           </td>
-                          {!isAnanta ? (
                           <td id="invoice-qr-cell" style={{ width: '92px', verticalAlign: 'middle', textAlign: 'center', paddingLeft: '4px' }}>
-                            <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#0B5394', marginBottom: '3px', letterSpacing: '0.5px' }}>
+                            <div style={{ fontSize: '10px', fontWeight: 'bold', color: isAnanta ? primaryDark : '#0B5394', marginBottom: '3px', letterSpacing: '0.5px' }}>
                               SCAN TO PAY
                             </div>
-                            <div style={{ background: '#ffffff', padding: '2px', display: 'inline-block', border: '1.5px solid #0B5394', borderRadius: '4px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-                              <QrCodeRenderer 
-                                value="upi://pay?pa=s0424237152@slc&pn=YantraByte%20Solutions&cu=INR" 
-                                size={80} 
-                              />
+                            <div style={{ background: '#ffffff', padding: '2px', display: 'inline-block', border: `1.5px solid ${isAnanta ? primaryDark : '#0B5394'}`, borderRadius: '4px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                              {isAnanta ? (
+                                <img src={ANANTA_QR_CODE_BASE64} alt="Scan & Pay UPI" style={{ width: '80px', height: '80px', objectFit: 'contain', display: 'block' }} />
+                              ) : (
+                                <QrCodeRenderer 
+                                  value="upi://pay?pa=s0424237152@slc&pn=YantraByte%20Solutions&cu=INR" 
+                                  size={80} 
+                                />
+                              )}
                             </div>
+                            {isAnanta && <div style={{ fontSize: '8px', color: '#64748b', fontWeight: 'bold', marginTop: '2px' }}>ANY UPI APP</div>}
                           </td>
-                          ) : null}
                         </tr>
                       </tbody>
                     </table>

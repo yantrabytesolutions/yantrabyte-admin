@@ -741,14 +741,20 @@
       </div>
 
       <!-- Payment Details Card -->
-      <div style="flex: 1; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 10px; padding: 14px 16px;">
-        <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #0f766e; margin-bottom: 8px; border-bottom: 1px solid #c7d2fe; padding-bottom: 4px;">Bank & Payment Details</div>
-        <div style="font-size: 12px; color: #334155; line-height: 1.55;">
-          <div><span style="color: #64748b;">Company:</span> <strong>ANANTATECH CARE</strong></div>
-          <div><span style="color: #64748b;">A/C Name:</span> <strong>Swarna Gowri</strong></div>
-          <div><span style="color: #64748b;">A/C No:</span> <strong style="color: #0f766e; font-size: 13px;">8813910769</strong></div>
-          <div><span style="color: #64748b;">IFSC:</span> <strong style="color: #0f766e; font-size: 13px;">KKBK0008094</strong> (Kotak Mahindra Bank)</div>
+      <div style="flex: 1; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 10px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+        <div style="font-size: 12px; color: #334155; line-height: 1.55; flex: 1;">
+          <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #0f766e; margin-bottom: 8px; border-bottom: 1px solid #c7d2fe; padding-bottom: 4px;">Bank & Payment Details</div>
+          <div><span style="color: #64748b;">Company / A/C Name:</span> <strong>ANANTATECH CARE</strong></div>
+          <div><span style="color: #64748b;">Bank:</span> <strong>AU Small Finance Bank</strong></div>
+          <div><span style="color: #64748b;">Branch:</span> <strong>Koramangala</strong></div>
+          <div><span style="color: #64748b;">A/C No:</span> <strong style="color: #0f766e; font-size: 13px;">260226952682568</strong></div>
+          <div><span style="color: #64748b;">IFSC:</span> <strong style="color: #0f766e; font-size: 13px;">AUBL0002695</strong></div>
           <div style="margin-top: 4px; font-size: 11px; font-weight: 700; color: #0d9488;">Pay via NEFT / RTGS / IMPS / UPI</div>
+        </div>
+        <div id="pdf-qr-container" style="text-align: center; flex-shrink: 0; background: #ffffff; padding: 8px; border-radius: 8px; border: 1px solid #cbd5e1; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+          <img id="pdf-qr" src="anantatech_qr.jpeg" alt="Scan & Pay UPI QR" style="width: 100px; height: 100px; object-fit: contain; display: block; border-radius: 4px;">
+          <div style="font-size: 10px; font-weight: 800; color: #0f766e; margin-top: 5px; letter-spacing: 0.04em;">SCAN & PAY</div>
+          <div style="font-size: 8.5px; color: #64748b; font-weight: 600;">ANY UPI APP</div>
         </div>
       </div>
     </div>
