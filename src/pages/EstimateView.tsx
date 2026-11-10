@@ -568,14 +568,10 @@ export default function EstimateView() {
             </div>
             <div style={{ padding: '8px 20px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ background: '#fff', padding: '2px', border: '1px solid #e5e7eb', borderRadius: '6px', display: 'inline-block' }}>
-                {isAnanta ? (
-                  <img src={ANANTA_QR_CODE_BASE64} alt="Scan & Pay UPI" style={{ width: '76px', height: '76px', objectFit: 'contain', display: 'block' }} />
-                ) : (
-                  <QrCodeRenderer 
-                    value="upi://pay?pa=s0424237152@slc&pn=YantraByte%20Solutions&cu=INR" 
-                    size={76} 
-                  />
-                )}
+                <QrCodeRenderer 
+                  value={isAnanta ? "upi://pay?pa=anantatechcare011126@aubiz&pn=ANANTATECH%20CARE&cu=INR" : "upi://pay?pa=s0424237152@slc&pn=YantraByte%20Solutions&cu=INR"} 
+                  size={76} 
+                />
               </div>
               <div style={{ fontSize: 11, color: '#6b7280' }}>
                 Scan & Pay<br />Any UPI App

@@ -568,14 +568,10 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                               SCAN TO PAY
                             </div>
                             <div style={{ background: '#ffffff', padding: '2px', display: 'inline-block', border: `1.5px solid ${isAnanta ? primaryDark : '#0B5394'}`, borderRadius: '4px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-                              {isAnanta ? (
-                                <img src={ANANTA_QR_CODE_BASE64} alt="Scan & Pay UPI" style={{ width: '80px', height: '80px', objectFit: 'contain', display: 'block' }} />
-                              ) : (
-                                <QrCodeRenderer 
-                                  value="upi://pay?pa=s0424237152@slc&pn=YantraByte%20Solutions&cu=INR" 
-                                  size={80} 
-                                />
-                              )}
+                              <QrCodeRenderer 
+                                value={isAnanta ? "upi://pay?pa=anantatechcare011126@aubiz&pn=ANANTATECH%20CARE&cu=INR" : "upi://pay?pa=s0424237152@slc&pn=YantraByte%20Solutions&cu=INR"} 
+                                size={80} 
+                              />
                             </div>
                             {isAnanta && <div style={{ fontSize: '8px', color: '#64748b', fontWeight: 'bold', marginTop: '2px' }}>ANY UPI APP</div>}
                           </td>
