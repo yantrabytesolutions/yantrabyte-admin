@@ -1,4 +1,4 @@
-﻿import { forwardRef } from 'react';
+import { forwardRef } from 'react';
 import type { Invoice, InvoiceItem } from '../types';
 import { YANTRABYTE_LOGO_BASE64, HARDWARE_WATERMARK_BASE64 } from '../assets/invoiceAssets';
 import { ANANTATECHCARE_LOGO_BASE64 } from '../assets/anantaLogo';
@@ -306,7 +306,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
 
               {/* Right Box: Distinct Document Metadata Card with Accent Badge */}
               <div style={{ 
-                width: '245px',
+                minWidth: '270px',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center',
@@ -331,18 +331,19 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                 }}>
                   {docTitle}
                 </div>
-                <div style={{ fontSize: '13.5px', color: '#475569', marginTop: '2px' }}>
+                <div style={{ fontSize: '13.5px', color: '#475569', marginTop: '2px', whiteSpace: 'nowrap' }}>
                   {docNumberLabel}
                   <strong style={{ 
                     color: '#1E3A8A', 
-                    fontSize: '14.5px',
+                    fontSize: '13.5px',
                     fontFamily: 'monospace',
-                    fontWeight: '800'
+                    fontWeight: '800',
+                    whiteSpace: 'nowrap'
                   }}>
                     {invoice.invoice_no || 'DRAFT'}
                   </strong>
                 </div>
-                <div style={{ fontSize: '13.5px', color: '#475569', marginTop: '3px' }}>
+                <div style={{ fontSize: '13.5px', color: '#475569', marginTop: '3px', whiteSpace: 'nowrap' }}>
                   Date: <strong style={{ color: '#0f172a', fontSize: '14px' }}>{formattedDate}</strong>
                 </div>
               </div>
