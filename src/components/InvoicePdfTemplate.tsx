@@ -2,6 +2,7 @@ import { forwardRef } from 'react';
 import type { Invoice, InvoiceItem } from '../types';
 import { YANTRABYTE_LOGO_BASE64, HARDWARE_WATERMARK_BASE64 } from '../assets/invoiceAssets';
 import { ANANTATECHCARE_LOGO_BASE64 } from '../assets/anantaLogo';
+import { ANANTA_QR_CODE_BASE64 } from '../assets/anantaQr';
 import { QrCodeRenderer } from './QrCodeRenderer';
 
 function numberToWords(num: number): string {
@@ -123,13 +124,19 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
   // ----------------------------------------------------
   // DISTINCT BRAND STYLING & CONTEMPORARY THEME SETTINGS
   // ----------------------------------------------------
-  const primaryColor = isAnanta ? "#1E3A8A" : "#0B5394";
-  const primaryDark = isAnanta ? "#172554" : "#1E3A8A";
-  const primaryLight = isAnanta ? "#F8FAFC" : "#F8FAFC";
-  const primaryBorder = isAnanta ? "#CBD5E1" : "#CBD5E1";
+  // Red & Yellow Executive Palette for AnantaTech Care:
+  // Primary Red: #DC2626 (Bold Crimson Red)
+  // Deep Red / Dark Accent: #991B1B (Burgundy)
+  // Warm Yellow Gold Border: #FACC15 / #EAB308
+  // Soft Yellow Gold Tint Background: #FEFCE8 / #FEF08A
+  const primaryColor = isAnanta ? "#DC2626" : "#0B5394";
+  const primaryDark = isAnanta ? "#991B1B" : "#1E3A8A";
+  const primaryLight = isAnanta ? "#FEFCE8" : "#F8FAFC";
+  const primaryBorder = isAnanta ? "#FACC15" : "#CBD5E1";
   const fontFam = isAnanta 
-    ? "'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
+    ? "'Outfit', 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
     : "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+  const monoFont = "'JetBrains Mono', 'Courier New', monospace";
 
   return (
     <div 
@@ -208,8 +215,8 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
       <div style={{
         position: 'relative',
         zIndex: 10,
-        border: isAnanta ? '2px solid #1E3A8A' : '2px solid #0B5394',
-        borderRadius: '10px',
+        border: isAnanta ? '2px solid #DC2626' : '2px solid #0B5394',
+        borderRadius: isAnanta ? '16px' : '10px',
         padding: '16px 18px',
         backgroundColor: 'transparent',
         boxSizing: 'border-box',
@@ -221,134 +228,73 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         {/* Top Section (Header, Customer Box, Table, Totals) */}
         <div>
           {/* Header */}
-          {!isAnanta ? (
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center', 
-              borderBottom: `2px solid ${primaryColor}`, 
-              paddingBottom: '10px', 
-              marginBottom: '10px' 
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            borderBottom: isAnanta ? '2.5px solid #DC2626' : `2px solid ${primaryColor}`, 
+            paddingBottom: '10px', 
+            marginBottom: '10px' 
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              {!isAnanta ? (
                 <img
                   src={YANTRABYTE_LOGO_BASE64}
                   alt="YantraByte Solutions"
                   style={{ height: "82px", width: "auto", display: "block" }}
                 />
-                <div>
-                  <h1 style={{ color: primaryColor, fontSize: "24px", fontWeight: "900", margin: 0, letterSpacing: "0.4px" }}>
-                    YANTRABYTE SOLUTIONS
-                  </h1>
-                  <div style={{ fontSize: '12px', color: '#333333', marginTop: '3px', lineHeight: '1.35', fontWeight: '500' }}>
-                    47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br />
-                    Chikkabettahalli, Bengaluru - 560097<br />
-                    Phone: 09986742525 | Email: {companyEmail}
-                  </div>
-                </div>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontWeight: '900', color: isCancelled ? '#DC2626' : primaryColor, fontSize: '21px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
-                  {docTitle}
-                </div>
-                <div style={{ fontSize: '14px', color: '#475569', marginTop: '4px' }}>
-                  {docNumberLabel} <strong style={{ color: '#000000', fontSize: '14.5px' }}>{invoice.invoice_no || 'DRAFT'}</strong>
-                </div>
-                <div style={{ fontSize: '14px', color: '#475569', marginTop: '2px' }}>
-                  Date: <strong style={{ color: '#000000', fontSize: '14px' }}>{formattedDate}</strong>
-                </div>
-              </div>
-            </div>
-          ) : (
-            /* Dual-Tone Structured Header for AnantaTech Care */
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'stretch', 
-              gap: '12px',
-              borderBottom: '2px solid #1E3A8A', 
-              paddingBottom: '10px', 
-              marginBottom: '10px' 
-            }}>
-              {/* Left Box: Logo & Company Identity in Soft Teal Card */}
-              <div style={{ 
-                flex: 1, 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '14px',
-                padding: '8px 12px',
-                borderRadius: '8px',
-                border: '1.5px solid #CBD5E1',
-                backgroundColor: 'rgba(248, 250, 252, 0.8)'
-              }}>
+              ) : (
                 <img
                   src={ANANTATECHCARE_LOGO_BASE64}
                   alt="AnantaTech Care"
-                  style={{ height: "92px", width: "92px", objectFit: "contain", display: "block" }}
+                  style={{ height: "105px", width: "105px", objectFit: "contain", display: "block" }}
                 />
-                <div>
-                  <h1 style={{ 
-                    color: '#1E3A8A', 
-                    fontSize: "23px", 
-                    fontWeight: "900", 
-                    margin: 0, 
-                    letterSpacing: "-0.01em" 
-                  }}>
-                    ANANTATECH CARE
-                  </h1>
-                  <div style={{ fontSize: '12px', color: '#334155', marginTop: '3px', lineHeight: '1.35', fontWeight: '500' }}>
-                    47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br />
-                    Chikkabettahalli, Bengaluru - 560097<br />
-                    Phone: <strong>09986742525</strong> | Email: {companyEmail}
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Box: Distinct Document Metadata Card with Accent Badge */}
-              <div style={{ 
-                minWidth: '270px',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'flex-end',
-                textAlign: 'right',
-                padding: '8px 14px',
-                borderRadius: '8px',
-                border: '1.5px solid #1E3A8A',
-                backgroundColor: '#F0F9FF'
-              }}>
-                <div style={{ 
-                  display: 'inline-block',
-                  backgroundColor: isCancelled ? '#DC2626' : '#1E3A8A',
-                  color: '#ffffff',
-                  fontSize: '13px',
-                  fontWeight: '800',
-                  padding: '4px 12px',
-                  borderRadius: '4px',
-                  letterSpacing: '0.06em',
-                  textTransform: 'uppercase',
-                  marginBottom: '6px'
+              )}
+              <div>
+                
+                <h1 style={{ 
+                  color: primaryColor, 
+                  fontSize: isAnanta ? "23px" : "24px", 
+                  fontWeight: "900", 
+                  margin: 0, 
+                  letterSpacing: isAnanta ? "-0.02em" : "0.4px" 
                 }}>
-                  {docTitle}
-                </div>
-                <div style={{ fontSize: '13.5px', color: '#475569', marginTop: '2px', whiteSpace: 'nowrap' }}>
-                  {docNumberLabel}
-                  <strong style={{ 
-                    color: '#1E3A8A', 
-                    fontSize: '13.5px',
-                    fontFamily: 'monospace',
-                    fontWeight: '800',
-                    whiteSpace: 'nowrap'
-                  }}>
-                    {invoice.invoice_no || 'DRAFT'}
-                  </strong>
-                </div>
-                <div style={{ fontSize: '13.5px', color: '#475569', marginTop: '3px', whiteSpace: 'nowrap' }}>
-                  Date: <strong style={{ color: '#0f172a', fontSize: '14px' }}>{formattedDate}</strong>
+                  {isAnanta ? "ANANTATECH CARE" : "YANTRABYTE SOLUTIONS"}
+                </h1>
+                <div style={{ fontSize: '12px', color: '#333333', marginTop: '3px', lineHeight: '1.35', fontWeight: '500' }}>
+                  47A 1st Cross, Sainagar 2nd Stage, Vidyaranyapura Post<br />
+                  Chikkabettahalli, Bengaluru - 560097<br />
+                  Phone: 09986742525 | Email: {companyEmail}
                 </div>
               </div>
             </div>
-          )}
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ 
+                fontWeight: '900', 
+                color: isCancelled ? '#DC2626' : primaryColor, 
+                fontSize: isAnanta ? '22px' : '21px', 
+                textTransform: 'uppercase', 
+                letterSpacing: isAnanta ? '0.04em' : '0.6px' 
+              }}>
+                {docTitle}
+              </div>
+              <div style={{ fontSize: '14px', color: '#475569', marginTop: '4px' }}>
+                {docNumberLabel} 
+                <strong style={{ 
+                  color: isAnanta ? '#991B1B' : '#000000', 
+                  fontSize: isAnanta ? '15px' : '14.5px',
+                  fontFamily: isAnanta ? monoFont : 'inherit',
+                  letterSpacing: isAnanta ? '0.04em' : 'normal',
+                  fontWeight: '700'
+                }}>
+                  {invoice.invoice_no || 'DRAFT'}
+                </strong>
+              </div>
+              <div style={{ fontSize: '14px', color: '#475569', marginTop: '2px' }}>
+                Date: <strong style={{ color: '#000000', fontSize: '14px' }}>{formattedDate}</strong>
+              </div>
+            </div>
+          </div>
 
           {/* Customer Details */}
           <div style={{ 
@@ -360,7 +306,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
           }}>
             <div style={{ fontSize: '13px', lineHeight: '1.45', color: '#1e293b' }}>
               <span style={{ 
-                color: isAnanta ? '#1E3A8A' : '#64748b', 
+                color: isAnanta ? '#DC2626' : '#64748b', 
                 fontSize: '11px', 
                 textTransform: 'uppercase', 
                 fontWeight: '800', 
@@ -377,16 +323,16 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
           {/* Items Table */}
           <table style={{ 
             width: '100%', 
-            borderCollapse: 'collapse', 
+            borderCollapse: isAnanta ? 'separate' : 'collapse', 
             borderSpacing: 0,
             tableLayout: 'fixed', 
-            borderBottom: isAnanta ? '1px solid #1E3A8A' : '1px solid #000000', 
+            borderBottom: isAnanta ? `1px solid ${primaryBorder}` : '1px solid #000000', 
             fontSize: '13.5px',
-            borderRadius: '0',
+            borderRadius: isAnanta ? '8px' : '0',
             overflow: 'hidden'
           }}>
             <thead>
-              <tr style={{ backgroundColor: primaryColor, color: '#ffffff', height: '34px', fontSize: '13px' }}>
+              <tr style={{ backgroundColor: isAnanta ? '#DC2626' : primaryColor, color: '#ffffff', height: '34px', fontSize: '13px' }}>
                 <th style={{ width: '45px', textAlign: 'center', borderRight: isAnanta ? '1px solid rgba(255,255,255,0.2)' : '1px solid #000000', borderBottom: isAnanta ? 'none' : '1px solid #000000', padding: '6px 4px', fontWeight: '700', textTransform: isAnanta ? 'uppercase' : 'none', letterSpacing: isAnanta ? '0.05em' : 'normal' }}>
                   Sl<br />No.
                 </th>
@@ -420,18 +366,18 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                     <td style={{ textAlign: 'left', borderRight: cellBorder, borderBottom: 'none', padding: '6px 10px', color: '#000000', wordBreak: 'break-word', fontSize: '13.5px' }}>
                       <div style={{ fontWeight: '700', fontSize: '14px' }}>{desc}</div>
                       {it.serial_no && (
-                        <div style={{ fontSize: '12px', color: isAnanta ? '#1E3A8A' : '#334155', marginTop: '2px', fontWeight: 'bold' }}>
+                        <div style={{ fontSize: '12px', color: isAnanta ? '#DC2626' : '#334155', marginTop: '2px', fontWeight: 'bold' }}>
                           S/N: {it.serial_no}
                         </div>
                       )}
                     </td>
-                    <td style={{ textAlign: 'center', borderRight: cellBorder, borderBottom: 'none', padding: '6px 4px', color: '#000000', fontWeight: 'bold', fontSize: '13.5px' }}>
+                    <td style={{ textAlign: 'center', borderRight: cellBorder, borderBottom: 'none', padding: '6px 4px', color: '#000000', fontWeight: 'bold', fontSize: '13.5px', fontFamily: isAnanta ? monoFont : 'inherit' }}>
                       {qty}
                     </td>
-                    <td style={{ textAlign: 'right', borderRight: cellBorder, borderBottom: 'none', padding: '6px 10px', color: '#000000', fontSize: '13.5px' }}>
+                    <td style={{ textAlign: 'right', borderRight: cellBorder, borderBottom: 'none', padding: '6px 10px', color: '#000000', fontSize: '13.5px', fontFamily: isAnanta ? monoFont : 'inherit' }}>
                       {rate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </td>
-                    <td style={{ textAlign: 'right', borderBottom: 'none', padding: '6px 10px', fontWeight: 'bold', color: '#000000', fontSize: '14px' }}>
+                    <td style={{ textAlign: 'right', borderBottom: 'none', padding: '6px 10px', fontWeight: 'bold', color: '#000000', fontSize: '14px', fontFamily: isAnanta ? monoFont : 'inherit' }}>
                       {amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </td>
                   </tr>
@@ -458,8 +404,8 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                 {/* Left: Amount in Words */}
                 <td style={{ width: '56%', verticalAlign: 'top', padding: '10px 12px', borderRight: isAnanta ? '1px solid #E2E8F0' : '1px solid #000000' }}>
                   <div style={{ 
-                    backgroundColor: isAnanta ? '#DBEAFE' : '#D9EAF7', 
-                    color: isAnanta ? '#1E3A8A' : '#92400E', 
+                    backgroundColor: isAnanta ? '#FEF08A' : '#D9EAF7', 
+                    color: isAnanta ? '#854D0E' : '#92400E', 
                     fontWeight: '800', 
                     fontSize: '11px', 
                     padding: '3px 8px', 
@@ -484,13 +430,13 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                         <tr 
                           key={row.label}
                           style={{ 
-                            backgroundColor: row.isHighlight ? (isAnanta ? '#DBEAFE' : '#FFFBEB') : 'transparent',
+                            backgroundColor: row.isHighlight ? (isAnanta ? '#FEF9C3' : '#FFFBEB') : 'transparent',
                             height: '26px'
                           }}
                         >
                           <td style={{ 
                             padding: '4px 8px', 
-                            color: row.isHighlight ? (isAnanta ? '#1E3A8A' : '#15803D') : (row.isDue ? '#B91C1C' : '#1e293b'), 
+                            color: row.isHighlight ? (isAnanta ? '#DC2626' : '#15803D') : (row.isDue ? '#B91C1C' : '#1e293b'), 
                             fontWeight: (row.isHighlight || row.isDue) ? '800' : '600',
                             fontSize: (row.isHighlight || row.isDue) ? '14px' : '13px',
                             borderBottom: idx === calcRows.length - 1 ? 'none' : (isAnanta ? '1px solid #E2E8F0' : '1px solid #000000')
@@ -500,9 +446,10 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                           <td style={{ 
                             padding: '4px 8px', 
                             textAlign: 'right', 
-                            color: row.isHighlight ? (isAnanta ? '#1E3A8A' : '#15803D') : (row.isDue ? '#B91C1C' : '#000000'), 
+                            color: row.isHighlight ? (isAnanta ? '#DC2626' : '#15803D') : (row.isDue ? '#B91C1C' : '#000000'), 
                             fontWeight: (row.isHighlight || row.isDue) ? '800' : '700',
                             fontSize: (row.isHighlight || row.isDue) ? '15px' : '13.5px',
+                            fontFamily: isAnanta ? monoFont : 'inherit',
                             borderBottom: idx === calcRows.length - 1 ? 'none' : (isAnanta ? '1px solid #E2E8F0' : '1px solid #000000')
                           }}>
                             {row.value}
@@ -558,7 +505,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                       <>
                         <div style={{ marginBottom: '1px' }}>1. Service warranty is valid for 30 days only.</div>
                         <div style={{ marginBottom: '1px' }}>2. No warranty for Windows installation/software issues.</div>
-                        <div style={{ marginBottom: '1px' }}>3. {isAnanta ? 'AnantaTech Care' : 'YantraByte Solutions'} is not responsible for any data loss.</div>
+                        <div style={{ marginBottom: '1px' }}>3. AnantaTech Care is not responsible for any data loss.</div>
                         <div style={{ marginBottom: '1px' }}>4. Customer should take backup of all important files prior.</div>
                         <div style={{ marginBottom: '1px' }}>5. Physical, liquid or burnt damages void warranty.</div>
                         <div>6. No warranty for swollen batteries or electrical faults.</div>
@@ -612,7 +559,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                                 <div><span style={{ fontWeight: "bold", color: primaryDark }}>Branch:</span> Koramangala</div>
                                 <div><span style={{ fontWeight: "bold", color: primaryDark }}>A/C No:</span> <strong style={{ color: primaryDark, fontSize: "13px" }}>260226952682568</strong></div>
                                 <div><span style={{ fontWeight: "bold", color: primaryDark }}>IFSC:</span> <strong style={{ color: primaryDark, fontSize: "13px" }}>AUBL0002695</strong></div>
-                                <div style={{ marginTop: "3px", fontSize: "11px", color: "#1E3A8A", fontWeight: "bold" }}>Pay via NEFT / RTGS / IMPS / UPI</div>
+                                <div style={{ marginTop: "3px", fontSize: "11px", color: isAnanta ? "#B91C1C" : "#0D9488", fontWeight: "bold" }}>Pay via NEFT / RTGS / IMPS / UPI</div>
                               </>
                             )}
                           </td>
@@ -621,12 +568,14 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                               SCAN TO PAY
                             </div>
                             <div style={{ background: '#ffffff', padding: '2px', display: 'inline-block', border: `1.5px solid ${isAnanta ? primaryDark : '#0B5394'}`, borderRadius: '4px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-                              <QrCodeRenderer 
-                                value={isAnanta 
-                                  ? "upi://pay?ver=01&mode=01&pa=anantatechcare011126@aubiz&pn=ANANTA%20TECHCARE&mc=7372" 
-                                  : "upi://pay?pa=s0424237152@slc&pn=YantraByte%20Solutions&cu=INR"} 
-                                size={80} 
-                              />
+                              {isAnanta ? (
+                                <img src={ANANTA_QR_CODE_BASE64} alt="Scan & Pay UPI" style={{ width: '80px', height: '80px', objectFit: 'contain', display: 'block' }} />
+                              ) : (
+                                <QrCodeRenderer 
+                                  value="upi://pay?pa=s0424237152@slc&pn=YantraByte%20Solutions&cu=INR" 
+                                  size={80} 
+                                />
+                              )}
                             </div>
                             {isAnanta && <div style={{ fontSize: '8px', color: '#64748b', fontWeight: 'bold', marginTop: '2px' }}>ANY UPI APP</div>}
                           </td>
@@ -643,15 +592,15 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
           <div style={{
             textAlign: 'center',
             padding: '4px 8px',
-            backgroundColor: isAnanta ? '#F0F9FF' : '#F1F5F9',
+            backgroundColor: isAnanta ? '#FEFCE8' : '#F1F5F9',
             border: `1.2px solid ${primaryColor}`,
-            borderRadius: '4px',
+            borderRadius: isAnanta ? '6px' : '4px',
             boxSizing: 'border-box'
           }}>
             <div style={{
               fontSize: '11px',
               fontWeight: '900',
-              color: isAnanta ? '#1E3A8A' : '#000000',
+              color: isAnanta ? '#991B1B' : '#000000',
               letterSpacing: '0.06em',
               textTransform: 'uppercase'
             }}>
