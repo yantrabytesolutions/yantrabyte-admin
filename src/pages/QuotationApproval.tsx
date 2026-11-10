@@ -1,3 +1,4 @@
+import { ANANTA_QR_CODE_BASE64 } from '../assets/anantaQr';
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { FileText, CheckCircle2, XCircle, ShieldCheck, AlertCircle } from 'lucide-react';
@@ -5,7 +6,7 @@ import html2pdf from 'html2pdf.js';
 import type { Invoice } from '../types';
 import SEO from '../components/SEO';
 import { HardwareBrandsBanner } from '../components/HardwareBrandsBanner';
-import { QrCodeRenderer } from '../components/QrCodeRenderer';
+import { OFFICIAL_QR_CODE_BASE64 } from '../assets/generatedQr';
 
 export function QuotationApproval() {
   const { id } = useParams<{ id: string }>();
@@ -163,11 +164,10 @@ export function QuotationApproval() {
                     </div>
                   </div>
                   <div className="w-48 h-48 bg-white rounded-xl p-2 flex-shrink-0 flex items-center justify-center relative overflow-hidden border-4 border-white/10 shadow-xl">
-                    <QrCodeRenderer 
-                      value={isAnanta 
-                        ? "upi://pay?ver=01&mode=01&pa=anantatechcare011126@aubiz&pn=ANANTA%20TECHCARE&mc=7372" 
-                        : "upi://pay?pa=s0424237152@slc&pn=YantraByte%20Solutions&cu=INR"} 
-                      size={176} 
+                    <img 
+                      src={isAnanta ? ANANTA_QR_CODE_BASE64 : (OFFICIAL_QR_CODE_BASE64 || "/Payment.jpg")} 
+                      alt="Payment QR Code" 
+                      className="w-full h-full object-contain"
                     />
                   </div>
                 </div>
