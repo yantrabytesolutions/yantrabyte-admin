@@ -595,10 +595,10 @@ export default function AdminPanel() {
     element.innerHTML = `
       <div style="width: 794px; height: 1080px; padding: 28px; box-sizing: border-box; overflow: hidden; background-color: #ffffff; position: relative;">
         <!-- Watermark -->
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 500px; height: 500px; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 5; opacity: 0.45;">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 500px; height: 500px; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 5; opacity: ${isAnantaTicket ? '0.18' : '0.45'};">
           <img src="${watermarkSrc}" style="width: 460px; height: auto; object-fit: contain; display: block; filter: contrast(1.15) brightness(0.92);" />
         </div>
-        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url(${HARDWARE_WATERMARK_BASE64}); background-size: cover; background-position: center; background-repeat: no-repeat; pointer-events: none; z-index: 4; opacity: 0.30;">
+        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url(${HARDWARE_WATERMARK_BASE64}); background-size: cover; background-position: center; background-repeat: no-repeat; pointer-events: none; z-index: 4; opacity: ${isAnantaTicket ? '0.12' : '0.30'};">
         </div>
         <div style="border: 2px solid #000000; padding: 18px; min-height: 1020px; box-sizing: border-box; position: relative; z-index: 10;">
         <!-- Header -->

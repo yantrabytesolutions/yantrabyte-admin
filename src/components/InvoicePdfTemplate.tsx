@@ -169,8 +169,8 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         backgroundRepeat: 'no-repeat',
         pointerEvents: 'none',
         zIndex: 5,
-        opacity: isAnanta ? 0.30 : 0.12,
-        filter: isAnanta ? 'contrast(1.25) brightness(0.92)' : 'contrast(1.15) brightness(0.92)'
+        opacity: isAnanta ? 0.08 : 0.12,
+        filter: isAnanta ? 'contrast(1.15) brightness(0.95)' : 'contrast(1.15) brightness(0.92)'
       }} />
 
       {/* Full Page Hardware & Circuit Watermark Pattern */}
@@ -186,7 +186,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
         backgroundRepeat: 'no-repeat',
         pointerEvents: 'none',
         zIndex: 4,
-        opacity: isAnanta ? 0.03 : 0.05
+        opacity: isAnanta ? 0.02 : 0.05
       }} />
 
       {/* Cancelled Stamp */}
