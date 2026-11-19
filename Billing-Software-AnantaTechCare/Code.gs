@@ -533,7 +533,7 @@ function createPrintableInvoiceSheet_(ss, data) {
 
   sh.getRange('A1:E3').setBorder(true,true,true,true,null,null,'#000000',SpreadsheetApp.BorderStyle.SOLID);
 
-  var docTitle = (data.docType === 'Quotation') ? 'QUOTATION' : 'TAX INVOICE';
+  var docTitle = (data.docType === 'Quotation') ? 'QUOTATION' : 'SALES INVOICE';
   sh.setRowHeight(4, 25);
   sh.getRange('A4:E4').merge().setValue(docTitle)
     .setBackground('#0D9488').setFontColor('#FFFFFF').setFontWeight('bold')

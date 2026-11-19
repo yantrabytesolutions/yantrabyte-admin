@@ -224,7 +224,7 @@ export default function EstimateView() {
   const items: InvoiceItem[] = estimate.items || [];
   const isQuotation = estimate.doc_type === 'Quotation';
   const docLabel = isQuotation ? 'Quotation' : 'Invoice';
-  const docTitle = isQuotation ? 'QUOTATION' : 'TAX INVOICE';
+  const docTitle = isQuotation ? 'QUOTATION' : 'SALES INVOICE';
   const isAnanta = (Boolean(estimate.invoice_no) && String(estimate.invoice_no).startsWith('ATC')) || (typeof window !== 'undefined' && (window.location.hostname.includes('ananta') && !window.location.hostname.startsWith('yantrabyte.')));
 
   return (

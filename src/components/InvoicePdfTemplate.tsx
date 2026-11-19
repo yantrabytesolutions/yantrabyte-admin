@@ -66,7 +66,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
       ? 'QUOTATION' 
       : isServiceBill 
         ? 'SERVICE BILL' 
-        : 'SALE INVOICE';
+        : 'SALES INVOICE';
 
   const docNumberLabel = isQuotation 
     ? 'Quote No: ' 
