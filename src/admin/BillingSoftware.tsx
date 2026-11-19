@@ -422,8 +422,7 @@ export default function BillingSoftware({
 
   const clearForm = () => {
     setSelectedInvoiceId('');
-    setDraftInvoiceNumber('');
-    setDocType('Invoice');
+    setDocType('Sale Bill');
     setSelectedCustomerId('');
     setCustomerName('');
     setPhone('');
@@ -435,6 +434,8 @@ export default function BillingSoftware({
     setTermsConditions('');
     setWarrantyMonths('');
     setItems([]);
+    // Immediately calculate and show the next invoice number for the fresh form
+    generateInvoiceNoAsync('Sale Bill').then(no => setDraftInvoiceNumber(no)).catch(() => setDraftInvoiceNumber(''));
   };
 
   const handleSelectCustomer = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -576,8 +577,8 @@ export default function BillingSoftware({
     // Clear the selected invoice ID so that we start as a brand new unsaved Invoice!
     setSelectedInvoiceId('');
     
-    // Force Document Type to 'Invoice'
-    setDocType('Invoice');
+    // Force Document Type to 'Sale Bill' (Invoice)
+    setDocType('Sale Bill');
     setInvoiceDate(new Date().toISOString().slice(0, 10));
     
     // Keep all customer and items details intact!
@@ -595,10 +596,10 @@ export default function BillingSoftware({
     setItems(inv.items || []);
 
     // Generate the next sequential invoice number immediately!
-    const nextInvoiceNo = await generateInvoiceNoAsync('Invoice');
+    const nextInvoiceNo = await generateInvoiceNoAsync('Sale Bill');
     setDraftInvoiceNumber(nextInvoiceNo);
     
-    showToast(`Converted quotation ${inv.invoice_no} to new Invoice ${nextInvoiceNo}!`);
+    showToast(`Converted quotation ${inv.invoice_no} to new Bill ${nextInvoiceNo}!`);
   };
 
   const handleMarkAsPaid = async (id: string) => {
@@ -849,6 +850,19 @@ export default function BillingSoftware({
     const seq = maxSeq + 1;
     return `${prefix}-${datePart}-${seq.toString().padStart(3, '0')}`;
   };
+
+  // Auto-refresh draft invoice number whenever brand or docType changes on an unsaved new document
+  useEffect(() => {
+    if (!selectedInvoiceId) {
+      let isMounted = true;
+      generateInvoiceNoAsync(docType)
+        .then(nextNo => {
+          if (isMounted) setDraftInvoiceNumber(nextNo);
+        })
+        .catch(err => console.error('Error generating draft invoice no:', err));
+      return () => { isMounted = false; };
+    }
+  }, [docType, currentBrand, selectedInvoiceId]);
 
 
 
@@ -2035,6 +2049,21 @@ export default function BillingSoftware({
 
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
               <div className="sm:col-span-3">
+                <label className="block text-xs font-bold text-gray-700 mb-1 flex items-center justify-between">
+                  <span>Document / Bill No</span>
+                  <span className="text-[10px] font-normal text-gray-400">
+                    {selectedInvoiceId ? 'Existing' : 'Auto Generated'}
+                  </span>
+                </label>
+                <div className="w-full h-10 bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono font-bold text-blue-700 flex items-center shadow-xs select-all">
+                  {selectedInvoiceId ? (
+                    invoices.find(i => i.id === selectedInvoiceId)?.invoice_no || selectedInvoiceId
+                  ) : (
+                    draftInvoiceNumber || <span className="text-gray-400 font-sans text-xs italic">Calculating...</span>
+                  )}
+                </div>
+              </div>
+              <div className="sm:col-span-3">
                 <label className="block text-xs font-medium text-gray-600 mb-1">Date</label>
                 <input 
                   type="date" 
@@ -2043,7 +2072,7 @@ export default function BillingSoftware({
                   className="w-full h-10 bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors cursor-pointer" 
                 />
               </div>
-              <div className="sm:col-span-4">
+              <div className="sm:col-span-3">
                 <label className="block text-xs font-medium text-gray-600 mb-1">Customer Master</label>
                 <select 
                   value={selectedCustomerId} 
@@ -2064,7 +2093,7 @@ export default function BillingSoftware({
                   )}
                 </select>
               </div>
-              <div className="sm:col-span-5">
+              <div className="sm:col-span-3">
                 <label className="block text-xs font-medium text-gray-600 mb-1">Link Active Service Ticket</label>
                 <select 
                   onChange={handleSelectServiceTicket} 
@@ -2477,8 +2506,19 @@ export default function BillingSoftware({
         {/* Right Sidebar */}
         <div className="space-y-6">
           <div className="bg-gray-50 border border-gray-200 p-6 rounded-xl shadow-sm lg:sticky lg:top-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-3 border-b border-gray-200">Invoice Summary</h3>
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-800">Invoice Summary</h3>
+              <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800 border border-blue-200">
+                {selectedInvoiceId ? (invoices.find(i => i.id === selectedInvoiceId)?.invoice_no) : (draftInvoiceNumber || 'Pending')}
+              </span>
+            </div>
             <div className="space-y-3 text-sm">
+              <div className="flex justify-between text-gray-700 font-semibold bg-white p-2 rounded-lg border border-gray-200 shadow-2xs">
+                <span>Invoice / Bill No:</span>
+                <span className="font-mono text-blue-700">
+                  {selectedInvoiceId ? (invoices.find(i => i.id === selectedInvoiceId)?.invoice_no) : (draftInvoiceNumber || 'Pending')}
+                </span>
+              </div>
               <div className="flex justify-between text-gray-600"><span>Subtotal:</span> <span className="font-medium font-mono">₹{subtotal.toLocaleString('en-IN')}</span></div>
               {discount > 0 && <div className="flex justify-between text-gray-600"><span>Discount:</span> <span className="font-medium font-mono text-green-600">- ₹{discount.toLocaleString('en-IN')}</span></div>}
               <div className="flex justify-between text-gray-600"><span>Round Off:</span> <span className="font-medium font-mono">₹{roundOff.toLocaleString('en-IN')}</span></div>
