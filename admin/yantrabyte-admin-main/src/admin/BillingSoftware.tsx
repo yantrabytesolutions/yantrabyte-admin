@@ -880,7 +880,7 @@ export default function BillingSoftware({ initialAutofillTicket, onClearAutofill
               <div style={{ marginLeft: '8px', fontSize: '13px', color: '#444444' }}>
                 {docType === 'Quotation' ? (
                   <>
-                    <p style={{ margin: '2px 0' }}>1. Quotation is valid for 7 days from the date of issue.</p>
+                    <p style={{ margin: '2px 0' }}>1. Quotation is valid for 2 days from the date of issue.</p>
                     <p style={{ margin: '2px 0' }}>2. Prices are inclusive of all taxes unless specified.</p>
                     <p style={{ margin: '2px 0' }}>3. 50% advance payment required to confirm order.</p>
                     <p style={{ margin: '2px 0' }}>4. Delivery within 3-5 working days after confirmation.</p>

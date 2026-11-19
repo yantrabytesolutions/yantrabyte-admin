@@ -149,6 +149,7 @@ export default function BillingSoftware({
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [isExportingExcel, setIsExportingExcel] = useState(false);
   const [printInvoiceNumber, setPrintInvoiceNumber] = useState('');
+  const [draftInvoiceNumber, setDraftInvoiceNumber] = useState('');
   const [deliveryPopup, setDeliveryPopup] = useState<DeliveryPopup>(null);
 
   const [activeTab, setActiveTab] = useState<'editor' | 'history' | 'sales' | 'services' | 'quotations' | 'pending' | 'renewals' | 'settings'>(initialTab as any);
@@ -421,6 +422,7 @@ export default function BillingSoftware({
 
   const clearForm = () => {
     setSelectedInvoiceId('');
+    setDraftInvoiceNumber('');
     setDocType('Invoice');
     setSelectedCustomerId('');
     setCustomerName('');
@@ -519,6 +521,7 @@ export default function BillingSoftware({
     }
 
     setSelectedInvoiceId(inv.id);
+    setDraftInvoiceNumber('');
     setDocType(inv.doc_type);
     if (inv.date) {
       const parts = inv.date.split('/');
@@ -558,9 +561,17 @@ export default function BillingSoftware({
     showToast(`Invoice ${inv.invoice_no} loaded for editing`);
   };
 
-  const handleConvertToInvoice = (id: string) => {
+  const handleConvertToInvoice = async (id: string) => {
     const inv = invoices.find(i => i.id === id);
     if (!inv) return;
+
+    if (inv.invoice_no) {
+      if (inv.invoice_no.startsWith('ATC') || inv.invoice_no.startsWith('ATCQ')) {
+        setBrand('anantatechcare');
+      } else if (inv.invoice_no.startsWith('YBS') || inv.invoice_no.startsWith('YBQ')) {
+        setBrand('yantrabyte');
+      }
+    }
     
     // Clear the selected invoice ID so that we start as a brand new unsaved Invoice!
     setSelectedInvoiceId('');
@@ -582,8 +593,12 @@ export default function BillingSoftware({
     setDueDate(inv.due_date || '');
     setWarrantyMonths(inv.warranty_months || '');
     setItems(inv.items || []);
+
+    // Generate the next sequential invoice number immediately!
+    const nextInvoiceNo = await generateInvoiceNoAsync('Invoice');
+    setDraftInvoiceNumber(nextInvoiceNo);
     
-    showToast(`Converted quotation ${inv.invoice_no} to a new draft Invoice! Click Save or Print to finalize.`);
+    showToast(`Converted quotation ${inv.invoice_no} to new Invoice ${nextInvoiceNo}!`);
   };
 
   const handleMarkAsPaid = async (id: string) => {
@@ -1048,7 +1063,12 @@ export default function BillingSoftware({
     setIsSendingEmail(action === 'email');
     try {
       const isUpdate = !!selectedInvoiceId;
-      const invoiceNo = isUpdate ? (invoices.find(i => i.id === selectedInvoiceId)?.invoice_no || await generateInvoiceNoAsync()) : await generateInvoiceNoAsync();
+      const existingInv = isUpdate ? invoices.find(i => i.id === selectedInvoiceId) : null;
+      // If updating a Quotation but user changed docType to Invoice/Sale Bill, generate a new sequential invoice number
+      const isQuotationConverted = isUpdate && existingInv && (existingInv.doc_type === 'Quotation' || existingInv.doc_type === 'Estimate') && docType !== 'Quotation' && docType !== 'Estimate';
+      const invoiceNo = (!isUpdate || isQuotationConverted)
+        ? (draftInvoiceNumber || await generateInvoiceNoAsync(docType))
+        : (existingInv?.invoice_no || await generateInvoiceNoAsync(docType));
       const [y, m, d] = invoiceDate.split('-');
       const date = d && m && y ? `${d}/${m}/${y}` : new Date().toLocaleDateString('en-GB'); // dd/mm/yyyy
       const customerId = await saveCustomerFromForm();
@@ -1138,6 +1158,7 @@ export default function BillingSoftware({
         const data = await persistInvoice(false, payload, legacyPayload);
         if (data) {
           setSelectedInvoiceId(data.id);
+          setDraftInvoiceNumber('');
         }
         
         // Auto-deduct stock
@@ -1919,7 +1940,18 @@ export default function BillingSoftware({
           
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-4 gap-4">
-              <h3 className="text-lg font-semibold text-gray-800">Document Details</h3>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800">Document Details</h3>
+                {draftInvoiceNumber ? (
+                  <span className="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md inline-block mt-1">
+                    New Invoice No: {draftInvoiceNumber}
+                  </span>
+                ) : selectedInvoiceId ? (
+                  <span className="text-xs font-mono text-gray-500 inline-block mt-1">
+                    Editing: {invoices.find(i => i.id === selectedInvoiceId)?.invoice_no}
+                  </span>
+                ) : null}
+              </div>
               <div className="flex flex-wrap items-center gap-3">
                 {docType === 'Invoice' && (
                   <div className="flex items-center gap-3 bg-blue-50/70 px-3 py-1.5 rounded-lg border border-blue-100">
@@ -2452,7 +2484,7 @@ export default function BillingSoftware({
                   const bankTxt = isAnanta
                     ? '*Bank Details:* AU Small Finance Bank | A/C: 260226952682568 | IFSC: AUBL0002695 | Name: ANANTATECH CARE | Branch: Koramangala, Bangalore'
                     : '*Pay via UPI:* s0424237152@slc\n*Bank:* North East Small Finance Bank | A/C: 033311501023226 | IFSC: NESF0000333';
-                  const invNum = printInvoiceNumber || (selectedInvoiceId ? (invoices.find(i=>i.id===selectedInvoiceId)?.invoice_no || 'INV-2026') : 'INV-2026');
+                  const invNum = printInvoiceNumber || draftInvoiceNumber || (selectedInvoiceId ? (invoices.find(i=>i.id===selectedInvoiceId)?.invoice_no || 'INV-2026') : 'INV-2026');
                   const custName = customerName || 'Valued Customer';
                   const msg = `*${compName}* 🛠️\n*Invoice No:* ${invNum}\n*Date:* ${invoiceDate}\n*Customer:* ${custName}\n\n*Billing Summary:*\n${itemsSummary}\n\n*Grand Total:* ₹${grandTotal.toLocaleString('en-IN')}\n*Advance Paid:* ₹${advancePaid.toLocaleString('en-IN')}\n*Balance Due:* ₹${balanceDue.toLocaleString('en-IN')}\n\n${bankTxt}\n\nThank you for choosing ${compName}!`;
                   const targetUrl = phoneNum ? `https://api.whatsapp.com/send?phone=91${phoneNum}&text=${encodeURIComponent(msg)}` : `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
@@ -2741,7 +2773,7 @@ export default function BillingSoftware({
           ref={printRef}
           invoice={{
             id: selectedInvoiceId || '',
-            invoice_no: printInvoiceNumber || (selectedInvoiceId ? (invoices.find(i => i.id === selectedInvoiceId)?.invoice_no || 'DRAFT') : 'DRAFT'),
+            invoice_no: printInvoiceNumber || draftInvoiceNumber || (selectedInvoiceId ? (invoices.find(i => i.id === selectedInvoiceId)?.invoice_no || 'DRAFT') : 'DRAFT'),
             doc_type: docType,
             date: invoiceDate,
             customer_name: customerName,
