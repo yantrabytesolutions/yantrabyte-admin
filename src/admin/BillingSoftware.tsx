@@ -434,8 +434,8 @@ export default function BillingSoftware({
     setTermsConditions('');
     setWarrantyMonths('');
     setItems([]);
-    // Immediately calculate and show the next invoice number for the fresh form
-    generateInvoiceNoAsync('Sale Bill').then(no => setDraftInvoiceNumber(no)).catch(() => setDraftInvoiceNumber(''));
+    // Only show invoice number after a customer is selected
+    setDraftInvoiceNumber('');
   };
 
   const handleSelectCustomer = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -446,6 +446,20 @@ export default function BillingSoftware({
       setEmail(cust.email || '');
       setPhone(cust.phone || '');
       setAddress(cust.address || '');
+      if (!selectedInvoiceId) {
+        generateInvoiceNoAsync(docType)
+          .then(nextNo => setDraftInvoiceNumber(nextNo))
+          .catch(err => console.error('Error generating draft invoice no:', err));
+      }
+    } else {
+      setSelectedCustomerId('');
+      setCustomerName('');
+      setEmail('');
+      setPhone('');
+      setAddress('');
+      if (!selectedInvoiceId) {
+        setDraftInvoiceNumber('');
+      }
     }
   };
 
@@ -456,6 +470,11 @@ export default function BillingSoftware({
       setPhone(ticket.customer_phone || '');
       setEmail(ticket.customer_email || '');
       setAddress(ticket.customer_address || '');
+      if (!selectedInvoiceId) {
+        generateInvoiceNoAsync(docType)
+          .then(nextNo => setDraftInvoiceNumber(nextNo))
+          .catch(err => console.error('Error generating draft invoice no:', err));
+      }
       
       const device = ticket.device_type ? ticket.device_type.trim() : '';
       const issue = ticket.issue_description ? ticket.issue_description.trim() : '';
@@ -851,18 +870,22 @@ export default function BillingSoftware({
     return `${prefix}-${datePart}-${seq.toString().padStart(3, '0')}`;
   };
 
-  // Auto-refresh draft invoice number whenever brand or docType changes on an unsaved new document
+  // Auto-refresh draft invoice number only when a customer is selected on an unsaved new document
   useEffect(() => {
     if (!selectedInvoiceId) {
-      let isMounted = true;
-      generateInvoiceNoAsync(docType)
-        .then(nextNo => {
-          if (isMounted) setDraftInvoiceNumber(nextNo);
-        })
-        .catch(err => console.error('Error generating draft invoice no:', err));
-      return () => { isMounted = false; };
+      if (customerName.trim() || selectedCustomerId) {
+        let isMounted = true;
+        generateInvoiceNoAsync(docType)
+          .then(nextNo => {
+            if (isMounted) setDraftInvoiceNumber(nextNo);
+          })
+          .catch(err => console.error('Error generating draft invoice no:', err));
+        return () => { isMounted = false; };
+      } else {
+        setDraftInvoiceNumber('');
+      }
     }
-  }, [docType, currentBrand, selectedInvoiceId]);
+  }, [docType, currentBrand, selectedInvoiceId, customerName, selectedCustomerId]);
 
 
 
@@ -2064,8 +2087,10 @@ export default function BillingSoftware({
                 <div className="w-full h-10 bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono font-bold text-blue-700 flex items-center shadow-xs select-all">
                   {selectedInvoiceId ? (
                     invoices.find(i => i.id === selectedInvoiceId)?.invoice_no || selectedInvoiceId
+                  ) : draftInvoiceNumber ? (
+                    draftInvoiceNumber
                   ) : (
-                    draftInvoiceNumber || <span className="text-gray-400 font-sans text-xs italic">Calculating...</span>
+                    <span className="text-gray-400 font-sans text-xs italic">Select customer to view Bill No</span>
                   )}
                 </div>
               </div>
@@ -2515,14 +2540,14 @@ export default function BillingSoftware({
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-800">Invoice Summary</h3>
               <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800 border border-blue-200">
-                {selectedInvoiceId ? (invoices.find(i => i.id === selectedInvoiceId)?.invoice_no) : (draftInvoiceNumber || 'Pending')}
+                {selectedInvoiceId ? (invoices.find(i => i.id === selectedInvoiceId)?.invoice_no) : (draftInvoiceNumber || 'Pending Customer')}
               </span>
             </div>
             <div className="space-y-3 text-sm">
               <div className="flex justify-between text-gray-700 font-semibold bg-white p-2 rounded-lg border border-gray-200 shadow-2xs">
                 <span>Invoice / Bill No:</span>
                 <span className="font-mono text-blue-700">
-                  {selectedInvoiceId ? (invoices.find(i => i.id === selectedInvoiceId)?.invoice_no) : (draftInvoiceNumber || 'Pending')}
+                  {selectedInvoiceId ? (invoices.find(i => i.id === selectedInvoiceId)?.invoice_no) : (draftInvoiceNumber || 'Pending Customer')}
                 </span>
               </div>
               <div className="flex justify-between text-gray-600"><span>Subtotal:</span> <span className="font-medium font-mono">₹{subtotal.toLocaleString('en-IN')}</span></div>
