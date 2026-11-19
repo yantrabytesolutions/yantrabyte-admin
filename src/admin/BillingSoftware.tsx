@@ -794,7 +794,7 @@ export default function BillingSoftware({
     } else if (type === 'Service Bill' || type === 'Service') {
       prefix = isAnanta ? 'ATC-SRV' : 'YBS-SRV';
     } else {
-      prefix = isAnanta ? 'ATC-SALE' : 'YBS';
+      prefix = isAnanta ? 'ATC-SALE' : 'YBS-SALE';
     }
     
     const { data } = await supabase

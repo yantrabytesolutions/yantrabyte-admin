@@ -53,7 +53,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
   const items: InvoiceItem[] = Array.isArray(invoice.items) ? invoice.items : [];
   const isAnanta = brand === 'anantatechcare' || (Boolean(invoice.invoice_no) && (String(invoice.invoice_no).startsWith('ATC') || String(invoice.invoice_no).startsWith('AT-')));
   const isQuotation = invoice.doc_type === 'Quotation' || invoice.doc_type === 'Estimate' || (Boolean(invoice.invoice_no) && (String(invoice.invoice_no).startsWith('YBQ') || String(invoice.invoice_no).startsWith('ATCQ') || String(invoice.invoice_no).startsWith('AT-QUOTE')));
-  const isServiceBill = invoice.doc_type === 'Service Bill' || (Boolean(invoice.invoice_no) && (String(invoice.invoice_no).startsWith('ATC-SRV') || String(invoice.invoice_no).startsWith('AT-SRV') || String(invoice.invoice_no).startsWith('SRV')));
+  const isServiceBill = invoice.doc_type === 'Service Bill' || (Boolean(invoice.invoice_no) && (String(invoice.invoice_no).startsWith('ATC-SRV') || String(invoice.invoice_no).startsWith('YBS-SRV') || String(invoice.invoice_no).startsWith('AT-SRV') || String(invoice.invoice_no).startsWith('SRV')));
   const isCancelled = invoice.doc_type === 'Cancelled';
 
   const companyEmail = isAnanta
