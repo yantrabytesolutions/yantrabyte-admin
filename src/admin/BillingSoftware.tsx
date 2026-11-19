@@ -798,10 +798,14 @@ export default function BillingSoftware({
         prefix = 'ATC-SALE';
       }
 
+      const filterClause = (prefix === 'ATC-SALE')
+        ? 'invoice_no.like.ATC-SALE-%,invoice_no.like.ATC-20%'
+        : `invoice_no.like.${prefix}-%`;
+
       const { data } = await supabase
         .from('invoices')
         .select('invoice_no')
-        .like('invoice_no', `${prefix}-%`);
+        .or(filterClause);
 
       let maxSeq = 100;
       if (data) {
