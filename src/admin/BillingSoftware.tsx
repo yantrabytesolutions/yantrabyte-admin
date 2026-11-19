@@ -1798,8 +1798,14 @@ export default function BillingSoftware({
           >
             <RefreshCw className="w-4 h-4 mr-2" /> Recurring AMCs
           </button>
-          <button onClick={clearForm} className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
-            <Plus className="w-4 h-4 mr-2" /> New Document
+          <button 
+            onClick={() => {
+              clearForm();
+              setActiveTab('editor');
+            }} 
+            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold shadow-sm"
+          >
+            <Plus className="w-4 h-4 mr-2" /> New Bill / Document
           </button>
         </div>
       </div>
@@ -2574,6 +2580,16 @@ export default function BillingSoftware({
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <h3 className="text-xl font-bold text-gray-800">Saved Documents</h3>
             <div className="flex flex-wrap items-center gap-3">
+              <button 
+                onClick={() => {
+                  clearForm();
+                  setActiveTab('editor');
+                }}
+                className="text-sm flex items-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold shadow-sm transition-all"
+                title="Create a new bill"
+              >
+                <Plus className="w-4 h-4 mr-2" /> + New Bill
+              </button>
               <button 
                 onClick={pushAllInvoicesToGoogleDrive}
                 disabled={isSyncingInvoicesDrive}
