@@ -788,20 +788,46 @@ export default function BillingSoftware({
   const generateInvoiceNoAsync = async (type: string = docType) => {
     const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const isAnanta = currentBrand === 'anantatechcare';
-    let prefix = isAnanta ? 'ATC-SALE' : 'YBS-SALE';
-    if (type === 'Quotation' || type === 'Estimate') {
-      prefix = isAnanta ? 'ATCQ' : 'YBQ';
-    } else if (type === 'Service Bill' || type === 'Service') {
-      prefix = isAnanta ? 'ATC-SRV' : 'YBS-SRV';
-    } else {
-      prefix = isAnanta ? 'ATC-SALE' : 'YBS-SALE';
+    if (isAnanta) {
+      let prefix = 'ATC-SALE';
+      if (type === 'Quotation' || type === 'Estimate') {
+        prefix = 'ATCQ';
+      } else if (type === 'Service Bill' || type === 'Service') {
+        prefix = 'ATC-SRV';
+      } else {
+        prefix = 'ATC-SALE';
+      }
+
+      const { data } = await supabase
+        .from('invoices')
+        .select('invoice_no')
+        .like('invoice_no', `${prefix}-%`);
+
+      let maxSeq = 100;
+      if (data) {
+        data.forEach(row => {
+          if (row.invoice_no) {
+            const parts = row.invoice_no.split('-');
+            const lastPart = parts[parts.length - 1];
+            const num = parseInt(lastPart, 10);
+            if (!isNaN(num) && num > maxSeq) {
+              maxSeq = num;
+            }
+          }
+        });
+      }
+
+      const seq = maxSeq + 1;
+      return `${prefix}-${datePart}-${seq.toString().padStart(3, '0')}`;
     }
-    
+
+    // YantraByte Solutions: Keep standard original YBS format (YBS- / YBQ-)
+    const prefix = (type === 'Quotation' || type === 'Estimate') ? 'YBQ' : 'YBS';
     const { data } = await supabase
       .from('invoices')
       .select('invoice_no')
       .like('invoice_no', `${prefix}-%`);
-      
+
     let maxSeq = 100;
     if (data) {
       data.forEach(row => {
@@ -815,7 +841,7 @@ export default function BillingSoftware({
         }
       });
     }
-    
+
     const seq = maxSeq + 1;
     return `${prefix}-${datePart}-${seq.toString().padStart(3, '0')}`;
   };
