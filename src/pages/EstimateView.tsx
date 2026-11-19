@@ -514,7 +514,7 @@ export default function EstimateView() {
                 <div style={{ whiteSpace: 'pre-wrap' }}>{estimate.terms_conditions}</div>
               ) : isQuotation ? (
                 <>
-                  <p>1. Estimate valid for 7 days.</p>
+                  <p>1. Estimate valid for 2 days.</p>
                   <p>2. Advance payment of 85% required and remaining against Delivery.</p>
                   <p>3. Final amount may vary if hidden faults are found.</p>
                 </>

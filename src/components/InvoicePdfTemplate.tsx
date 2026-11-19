@@ -47,7 +47,7 @@ interface Props {
 export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({ 
   invoice, 
   companySignature: _companySignature,
-  quoteValidityDays = 7,
+  quoteValidityDays = 2,
   quoteAdvancePercent = 85,
   brand = 'yantrabyte'
 }, ref) => {

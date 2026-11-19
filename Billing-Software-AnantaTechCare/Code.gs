@@ -635,7 +635,7 @@ function createPrintableInvoiceSheet_(ss, data) {
     .setBackground('#0D9488').setFontColor('#FFFFFF').setFontWeight('bold').setFontSize(9);
 
   var trm = (data.docType === 'Quotation') ? [
-    '1. Quotation is valid for 7 days from the date of issue.',
+    '1. Quotation is valid for 2 days from the date of issue.',
     '2. Prices are inclusive of all taxes unless specified.',
     '3. 50% advance payment required to confirm order.',
     '4. Delivery within 3-5 working days after confirmation.',

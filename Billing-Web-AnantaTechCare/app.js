@@ -279,6 +279,21 @@ async function generateInvoice() {
     document.getElementById('pdf-advance').innerText = fmtINR(advancePaid);
     document.getElementById('pdf-balance').innerText = fmtINR(balance);
     
+    const termsEl = document.getElementById('pdf-terms-content');
+    if (termsEl) {
+      if (docType === 'Quotation') {
+        termsEl.innerHTML = '1. Estimate / Quotation valid for 2 days only.<br>' +
+                            '2. Advance payment required to confirm order.<br>' +
+                            '3. Prices are inclusive of all taxes unless specified.<br>' +
+                            '4. Final amount may vary if hidden faults are discovered.';
+      } else {
+        termsEl.innerHTML = '1. Service warranty is valid for 30 days only.<br>' +
+                            '2. No warranty for OS installation / software issues.<br>' +
+                            '3. AnantaTech Care is not responsible for data loss.<br>' +
+                            '4. Physical, liquid or burnt damages void warranty.';
+      }
+    }
+
     const qrContainer = document.getElementById('pdf-qr-container');
     if (qrContainer) qrContainer.style.display = 'block';
     let tbody = '';

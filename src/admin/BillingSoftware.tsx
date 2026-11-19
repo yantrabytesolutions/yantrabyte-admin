@@ -122,7 +122,7 @@ export default function BillingSoftware({
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurringInterval, setRecurringInterval] = useState('monthly');
   const [termsConditions, setTermsConditions] = useState('');
-  const [quoteValidityDays, setQuoteValidityDays] = useState('7');
+  const [quoteValidityDays, setQuoteValidityDays] = useState('2');
   const [quoteAdvancePercent, setQuoteAdvancePercent] = useState('85');
   const [warrantyMonths, setWarrantyMonths] = useState<number | ''>('');
   const [items, setItems] = useState<InvoiceItem[]>([]);
@@ -2766,7 +2766,7 @@ export default function BillingSoftware({
             created_at: new Date().toISOString()
           } as Invoice}
           companySignature={companySignatureBase64 || undefined}
-          quoteValidityDays={Number(quoteValidityDays) || 7}
+          quoteValidityDays={Number(quoteValidityDays) || 2}
           quoteAdvancePercent={Number(quoteAdvancePercent) || 85}
         />
       </div>
