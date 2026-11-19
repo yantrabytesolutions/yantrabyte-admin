@@ -42,13 +42,24 @@ function getCustomers() {
   return result;
 }
 
-function generateInvoiceNo_() {
-  const data = supabaseGet('invoices', 'select=id');
+function generateInvoiceNo(type) {
+  return generateInvoiceNo_(type);
+}
+
+function generateInvoiceNo_(type) {
+  const data = supabaseGet('invoices', 'select=invoiceNo');
   var maxSeq = 100;
-  (data || []).forEach(function(row) { if (row.invoiceNo) { var parts = row.invoiceNo.split('-'); var num = parseInt(parts[parts.length-1], 10); if (!isNaN(num) && num > maxSeq) maxSeq = num; } });
+  (data || []).forEach(function(row) { 
+    if (row.invoiceNo) { 
+      var parts = row.invoiceNo.split('-'); 
+      var num = parseInt(parts[parts.length-1], 10); 
+      if (!isNaN(num) && num > maxSeq) maxSeq = num; 
+    } 
+  });
   var seq = maxSeq + 1;
   var datePart = Utilities.formatDate(new Date(), APP.TIMEZONE, 'yyyyMMdd');
-  return 'ATC-' + datePart + '-' + ('000' + seq).slice(-3);
+  var prefix = (type === 'Quotation' || type === 'Estimate') ? 'ATCQ' : 'ATC-SALE';
+  return prefix + '-' + datePart + '-' + ('000' + seq).slice(-3);
 }
 
 function generatePurchaseNo_() {
@@ -227,7 +238,7 @@ function saveInvoice(data) {
       }, 'invoiceNo=eq.' + encodeURIComponent(invoiceNo));
       
     } else {
-      invoiceNo = generateInvoiceNo_();
+      invoiceNo = data.invoiceNo || generateInvoiceNo_(data.docType);
       date = Utilities.formatDate(new Date(), APP.TIMEZONE, 'dd/MM/yyyy');
       
       supabasePost('invoices', {
@@ -360,7 +371,7 @@ function generatePdf(data) {
       date = existing[0].date;
       isUpdate = true;
     } else {
-      invoiceNo = generateInvoiceNo_();
+      invoiceNo = data.invoiceNo || generateInvoiceNo_(data.docType);
       date = Utilities.formatDate(new Date(), APP.TIMEZONE, 'dd/MM/yyyy');
     }
 
@@ -533,7 +544,7 @@ function createPrintableInvoiceSheet_(ss, data) {
 
   sh.getRange('A1:E3').setBorder(true,true,true,true,null,null,'#000000',SpreadsheetApp.BorderStyle.SOLID);
 
-  var docTitle = (data.docType === 'Quotation') ? 'QUOTATION' : 'SALES INVOICE';
+  var docTitle = (data.docType === 'Quotation') ? 'QUOTATION' : 'TAX INVOICE';
   sh.setRowHeight(4, 25);
   sh.getRange('A4:E4').merge().setValue(docTitle)
     .setBackground('#0D9488').setFontColor('#FFFFFF').setFontWeight('bold')
@@ -635,7 +646,7 @@ function createPrintableInvoiceSheet_(ss, data) {
     .setBackground('#0D9488').setFontColor('#FFFFFF').setFontWeight('bold').setFontSize(9);
 
   var trm = (data.docType === 'Quotation') ? [
-    '1. Quotation is valid for 2 days from the date of issue.',
+    '1. Quotation is valid for 7 days from the date of issue.',
     '2. Prices are inclusive of all taxes unless specified.',
     '3. 50% advance payment required to confirm order.',
     '4. Delivery within 3-5 working days after confirmation.',

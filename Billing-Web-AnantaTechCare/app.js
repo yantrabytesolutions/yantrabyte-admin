@@ -21,6 +21,39 @@ let purItems = [];
 let editInvoiceNo = null;
 let editPurchaseNo = null;
 
+async function getNextInvoiceNumber(docType) {
+  const d = new Date();
+  const prefix = (docType === 'Quotation') ? 'ATCQ' : 'ATC-SALE';
+  let maxSeq = 100;
+  try {
+    const filter = (prefix === 'ATC-SALE') 
+      ? '/rest/v1/invoices?select=invoice_no&or=(invoice_no.like.ATC-SALE-*,invoice_no.like.ATC-20*)'
+      : '/rest/v1/invoices?select=invoice_no&invoice_no=like.' + prefix + '-*';
+    const idData = await supabaseFetch(filter);
+    if (Array.isArray(idData)) {
+      idData.forEach(row => {
+        const parts = (row.invoice_no || '').split('-');
+        const num = parseInt(parts[parts.length - 1], 10);
+        if (!isNaN(num) && num > maxSeq) maxSeq = num;
+      });
+    }
+  } catch(e) {}
+  const seq = maxSeq + 1;
+  const datePart = d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
+  return prefix + '-' + datePart + '-' + String(seq).padStart(3,'0');
+}
+
+async function displayDraftInvoiceNo() {
+  if (editInvoiceNo) return;
+  const docTypeInput = document.querySelector('input[name="docType"]:checked');
+  const docType = docTypeInput ? docTypeInput.value : 'Invoice';
+  const nextNo = await getNextInvoiceNumber(docType);
+  if (!editInvoiceNo) {
+    document.getElementById('invoiceNoDisplay').textContent = nextNo;
+    document.getElementById('invoiceBadge').classList.add('show');
+  }
+}
+
 function normalizeText(value) { return String(value || '').toLowerCase().replace(/\s+/g, ' ').trim(); }
 function fmtINR(n) { return '\u20B9' + Number(n || 0).toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 2}); }
 function setStatus(msg, type) { const el = document.getElementById('status'); el.textContent = msg; el.className = 'status' + (type ? ' ' + type : ''); }
@@ -143,20 +176,7 @@ async function saveInvoice() {
       });
     } else {
       const d = new Date();
-      const prefix = docType === 'Quotation' ? 'ATCQ' : 'ATC';
-      let maxSeq = 100;
-      try {
-        const idData = await supabaseFetch('/rest/v1/invoices?select=invoice_no&invoice_no=like.' + prefix + '-*');
-        if (Array.isArray(idData)) {
-          idData.forEach(row => {
-            const parts = (row.invoice_no || '').split('-');
-            const num = parseInt(parts[parts.length - 1], 10);
-            if (!isNaN(num) && num > maxSeq) maxSeq = num;
-          });
-        }
-      } catch(e) {}
-      const seq = maxSeq + 1;
-      invNo = prefix + '-' + d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0') + '-' + String(seq).padStart(3,'0');
+      invNo = await getNextInvoiceNumber(docType);
       
       await supabaseFetch('/rest/v1/invoices', {
         method: 'POST',
@@ -224,6 +244,7 @@ function cancelEdit() {
   editInvoiceNo = null;
   document.getElementById('editModeBadge').classList.remove('show');
   clearItems();
+  displayDraftInvoiceNo();
 }
 
 async function generateInvoice() {
@@ -247,20 +268,7 @@ async function generateInvoice() {
     let invNo = editInvoiceNo;
     const d = new Date();
     if (!invNo) {
-      const prefix = docType === 'Quotation' ? 'ATCQ' : 'ATC';
-      let maxSeq = 100;
-      try {
-        const idData = await supabaseFetch('/rest/v1/invoices?select=invoice_no&invoice_no=like.' + prefix + '-*');
-        if (Array.isArray(idData)) {
-          idData.forEach(row => {
-            const parts = (row.invoice_no || '').split('-');
-            const num = parseInt(parts[parts.length - 1], 10);
-            if (!isNaN(num) && num > maxSeq) maxSeq = num;
-          });
-        }
-      } catch(e) {}
-      const seq = maxSeq + 1;
-      invNo = prefix + '-' + d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0') + '-' + String(seq).padStart(3,'0');
+      invNo = await getNextInvoiceNumber(docType);
     }
 
     // 2. Populate Template
@@ -279,21 +287,6 @@ async function generateInvoice() {
     document.getElementById('pdf-advance').innerText = fmtINR(advancePaid);
     document.getElementById('pdf-balance').innerText = fmtINR(balance);
     
-    const termsEl = document.getElementById('pdf-terms-content');
-    if (termsEl) {
-      if (docType === 'Quotation') {
-        termsEl.innerHTML = '1. Estimate / Quotation valid for 2 days only.<br>' +
-                            '2. Advance payment required to confirm order.<br>' +
-                            '3. Prices are inclusive of all taxes unless specified.<br>' +
-                            '4. Final amount may vary if hidden faults are discovered.';
-      } else {
-        termsEl.innerHTML = '1. Service warranty is valid for 30 days only.<br>' +
-                            '2. No warranty for OS installation / software issues.<br>' +
-                            '3. AnantaTech Care is not responsible for data loss.<br>' +
-                            '4. Physical, liquid or burnt damages void warranty.';
-      }
-    }
-
     const qrContainer = document.getElementById('pdf-qr-container');
     if (qrContainer) qrContainer.style.display = 'block';
     let tbody = '';
@@ -377,6 +370,7 @@ async function generateInvoice() {
 window.onload = function() {
   loadCustomers();
   refreshInvoiceList();
+  displayDraftInvoiceNo();
 };
 
 
