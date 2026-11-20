@@ -154,6 +154,7 @@ export default function BillingSoftware({
 
   const [activeTab, setActiveTab] = useState<'editor' | 'history' | 'sales' | 'services' | 'quotations' | 'pending' | 'renewals' | 'settings'>(initialTab as any);
   const [historySearchTerm, setHistorySearchTerm] = useState('');
+  const [savedDocBrandFilter, setSavedDocBrandFilter] = useState<'all' | 'yantrabyte' | 'anantatechcare'>('all');
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
   const [historyDrawerData, setHistoryDrawerData] = useState<{
     invoices: Invoice[];
@@ -434,8 +435,9 @@ export default function BillingSoftware({
     setTermsConditions('');
     setWarrantyMonths('');
     setItems([]);
-    // Only show invoice number after a customer is selected
-    setDraftInvoiceNumber('');
+    generateInvoiceNoAsync('Sale Bill')
+      .then(no => setDraftInvoiceNumber(no))
+      .catch(() => setDraftInvoiceNumber(''));
   };
 
   const handleSelectCustomer = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -458,7 +460,9 @@ export default function BillingSoftware({
       setPhone('');
       setAddress('');
       if (!selectedInvoiceId) {
-        setDraftInvoiceNumber('');
+        generateInvoiceNoAsync(docType)
+          .then(nextNo => setDraftInvoiceNumber(nextNo))
+          .catch(err => console.error('Error generating draft invoice no:', err));
       }
     }
   };
@@ -798,12 +802,23 @@ export default function BillingSoftware({
   const balanceDue = grandTotal - advancePaid;
   const paymentStatus = getPaymentStatus(docType, balanceDue, advancePaid);
 
+  // Helper to identify invoice company/brand
+  const isInvoiceAnanta = (inv: { invoice_no?: string }) => {
+    const no = (inv.invoice_no || '').trim().toUpperCase();
+    return no.startsWith('ATC') || no.startsWith('ATCQ');
+  };
+
   // Stats dashboard calculations
   const isPayableDoc = (doc: string = '') => doc !== 'Quotation' && doc !== 'Estimate' && doc !== 'Cancelled';
-  const totalBilled = invoices.filter(i => isPayableDoc(i.doc_type)).reduce((acc, i) => acc + (i.grand_total || 0), 0);
-  const totalOutstanding = invoices.filter(i => isPayableDoc(i.doc_type)).reduce((acc, i) => acc + Math.max(i.balance_due || 0, 0), 0);
-  const invoiceCount = invoices.filter(i => isPayableDoc(i.doc_type)).length;
-  const quoteCount = invoices.filter(i => i.doc_type === 'Quotation').length;
+  const displayedInvoicesForStats = invoices.filter(i => {
+    if (savedDocBrandFilter === 'yantrabyte') return !isInvoiceAnanta(i);
+    if (savedDocBrandFilter === 'anantatechcare') return isInvoiceAnanta(i);
+    return true;
+  });
+  const totalBilled = displayedInvoicesForStats.filter(i => isPayableDoc(i.doc_type)).reduce((acc, i) => acc + (i.grand_total || 0), 0);
+  const totalOutstanding = displayedInvoicesForStats.filter(i => isPayableDoc(i.doc_type)).reduce((acc, i) => acc + Math.max(i.balance_due || 0, 0), 0);
+  const invoiceCount = displayedInvoicesForStats.filter(i => isPayableDoc(i.doc_type)).length;
+  const quoteCount = displayedInvoicesForStats.filter(i => i.doc_type === 'Quotation').length;
 
   const generateInvoiceNoAsync = async (type: string = docType) => {
     const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
@@ -870,22 +885,18 @@ export default function BillingSoftware({
     return `${prefix}-${datePart}-${seq.toString().padStart(3, '0')}`;
   };
 
-  // Auto-refresh draft invoice number only when a customer is selected on an unsaved new document
+  // Auto-refresh draft invoice number whenever brand, docType, or selection changes on an unsaved new document
   useEffect(() => {
     if (!selectedInvoiceId) {
-      if (customerName.trim() || selectedCustomerId) {
-        let isMounted = true;
-        generateInvoiceNoAsync(docType)
-          .then(nextNo => {
-            if (isMounted) setDraftInvoiceNumber(nextNo);
-          })
-          .catch(err => console.error('Error generating draft invoice no:', err));
-        return () => { isMounted = false; };
-      } else {
-        setDraftInvoiceNumber('');
-      }
+      let isMounted = true;
+      generateInvoiceNoAsync(docType)
+        .then(nextNo => {
+          if (isMounted) setDraftInvoiceNumber(nextNo);
+        })
+        .catch(err => console.error('Error generating draft invoice no:', err));
+      return () => { isMounted = false; };
     }
-  }, [docType, currentBrand, selectedInvoiceId, customerName, selectedCustomerId]);
+  }, [docType, currentBrand, selectedInvoiceId]);
 
 
 
@@ -1836,28 +1847,56 @@ export default function BillingSoftware({
       {/* Financial Statistics Dashboard Overview */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Billed</span>
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Billed</span>
+            {savedDocBrandFilter !== 'all' && (
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${savedDocBrandFilter === 'anantatechcare' ? 'bg-teal-50 text-teal-700' : 'bg-blue-50 text-blue-700'}`}>
+                {savedDocBrandFilter === 'anantatechcare' ? 'ATC' : 'YB'}
+              </span>
+            )}
+          </div>
           <div className="flex items-baseline space-x-1 mt-2">
             <span className="text-2xl font-bold text-gray-900">₹{totalBilled.toLocaleString('en-IN')}</span>
           </div>
           <span className="text-[11px] text-green-600 mt-1 font-medium">From finalized invoices</span>
         </div>
         <div className="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Outstanding Dues</span>
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Outstanding Dues</span>
+            {savedDocBrandFilter !== 'all' && (
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${savedDocBrandFilter === 'anantatechcare' ? 'bg-teal-50 text-teal-700' : 'bg-blue-50 text-blue-700'}`}>
+                {savedDocBrandFilter === 'anantatechcare' ? 'ATC' : 'YB'}
+              </span>
+            )}
+          </div>
           <div className="flex items-baseline space-x-1 mt-2">
             <span className="text-2xl font-bold text-amber-600">₹{totalOutstanding.toLocaleString('en-IN')}</span>
           </div>
           <span className="text-[11px] text-amber-600 mt-1 font-medium">To be collected</span>
         </div>
         <div className="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Invoices</span>
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Invoices</span>
+            {savedDocBrandFilter !== 'all' && (
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${savedDocBrandFilter === 'anantatechcare' ? 'bg-teal-50 text-teal-700' : 'bg-blue-50 text-blue-700'}`}>
+                {savedDocBrandFilter === 'anantatechcare' ? 'ATC' : 'YB'}
+              </span>
+            )}
+          </div>
           <div className="flex items-baseline space-x-1 mt-2">
             <span className="text-2xl font-bold text-blue-600">{invoiceCount}</span>
           </div>
           <span className="text-[11px] text-gray-400 mt-1">Generated bills</span>
         </div>
         <div className="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Quotations</span>
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Quotations</span>
+            {savedDocBrandFilter !== 'all' && (
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${savedDocBrandFilter === 'anantatechcare' ? 'bg-teal-50 text-teal-700' : 'bg-blue-50 text-blue-700'}`}>
+                {savedDocBrandFilter === 'anantatechcare' ? 'ATC' : 'YB'}
+              </span>
+            )}
+          </div>
           <div className="flex items-baseline space-x-1 mt-2">
             <span className="text-2xl font-bold text-purple-600">{quoteCount}</span>
           </div>
@@ -2090,7 +2129,7 @@ export default function BillingSoftware({
                   ) : draftInvoiceNumber ? (
                     draftInvoiceNumber
                   ) : (
-                    <span className="text-gray-400 font-sans text-xs italic">Select customer to view Bill No</span>
+                    <span className="text-gray-400 font-sans text-xs italic">Calculating...</span>
                   )}
                 </div>
               </div>
@@ -2540,14 +2579,14 @@ export default function BillingSoftware({
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-800">Invoice Summary</h3>
               <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800 border border-blue-200">
-                {selectedInvoiceId ? (invoices.find(i => i.id === selectedInvoiceId)?.invoice_no) : (draftInvoiceNumber || 'Pending Customer')}
+                {selectedInvoiceId ? (invoices.find(i => i.id === selectedInvoiceId)?.invoice_no) : (draftInvoiceNumber || 'Pending')}
               </span>
             </div>
             <div className="space-y-3 text-sm">
               <div className="flex justify-between text-gray-700 font-semibold bg-white p-2 rounded-lg border border-gray-200 shadow-2xs">
                 <span>Invoice / Bill No:</span>
                 <span className="font-mono text-blue-700">
-                  {selectedInvoiceId ? (invoices.find(i => i.id === selectedInvoiceId)?.invoice_no) : (draftInvoiceNumber || 'Pending Customer')}
+                  {selectedInvoiceId ? (invoices.find(i => i.id === selectedInvoiceId)?.invoice_no) : (draftInvoiceNumber || 'Pending')}
                 </span>
               </div>
               <div className="flex justify-between text-gray-600"><span>Subtotal:</span> <span className="font-medium font-mono">₹{subtotal.toLocaleString('en-IN')}</span></div>
@@ -2603,7 +2642,47 @@ export default function BillingSoftware({
       ) : activeTab !== 'settings' ? (
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-            <h3 className="text-xl font-bold text-gray-800">Saved Documents</h3>
+            <div className="flex items-center gap-3">
+              <h3 className="text-xl font-bold text-gray-800">Saved Documents</h3>
+              {/* Brand Filter Pill Tabs */}
+              <div className="flex items-center bg-gray-100 p-1 rounded-lg border border-gray-200">
+                <button
+                  type="button"
+                  onClick={() => setSavedDocBrandFilter('all')}
+                  className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${
+                    savedDocBrandFilter === 'all'
+                      ? 'bg-white text-gray-900 shadow-xs'
+                      : 'text-gray-500 hover:text-gray-800'
+                  }`}
+                >
+                  All ({invoices.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSavedDocBrandFilter('yantrabyte')}
+                  className={`px-3 py-1 text-xs font-bold rounded-md transition-all flex items-center gap-1.5 ${
+                    savedDocBrandFilter === 'yantrabyte'
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-blue-400"></span>
+                  YantraByte ({invoices.filter(i => !isInvoiceAnanta(i)).length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSavedDocBrandFilter('anantatechcare')}
+                  className={`px-3 py-1 text-xs font-bold rounded-md transition-all flex items-center gap-1.5 ${
+                    savedDocBrandFilter === 'anantatechcare'
+                      ? 'bg-teal-600 text-white shadow-xs'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-teal-400"></span>
+                  ANANTATECH CARE ({invoices.filter(i => isInvoiceAnanta(i)).length})
+                </button>
+              </div>
+            </div>
             <div className="flex flex-wrap items-center gap-3">
               <button 
                 onClick={() => {
@@ -2657,6 +2736,9 @@ export default function BillingSoftware({
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {invoices.filter(inv => {
+                  if (savedDocBrandFilter === 'yantrabyte' && isInvoiceAnanta(inv)) return false;
+                  if (savedDocBrandFilter === 'anantatechcare' && !isInvoiceAnanta(inv)) return false;
+
                   if (activeTab === ('sales' as any) && (inv.doc_type === 'Service Bill' || inv.doc_type === 'Quotation' || inv.doc_type === 'Estimate' || (inv.invoice_no && (inv.invoice_no.includes('SRV'))))) return false;
                   if (activeTab === ('services' as any) && !(inv.doc_type === 'Service Bill' || (inv.invoice_no && (inv.invoice_no.includes('SRV'))))) return false;
                   if (activeTab === 'quotations' && inv.doc_type !== 'Quotation') return false;
@@ -2694,7 +2776,18 @@ export default function BillingSoftware({
                     className={`group hover:bg-gray-50 transition-colors cursor-pointer ${selectedInvoiceId === inv.id ? 'bg-blue-50' : 'bg-white'}`}
                   >
                     <td className="px-4 py-4">
-                      <div className="font-semibold text-gray-900">{inv.invoice_no}</div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-gray-900">{inv.invoice_no}</span>
+                        {isInvoiceAnanta(inv) ? (
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-200">
+                            ATC
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
+                            YB
+                          </span>
+                        )}
+                      </div>
                       <div className="text-xs text-gray-500 mt-1">{inv.doc_type}</div>
                     </td>
                     <td className="px-4 py-4 font-medium text-gray-800">{inv.customer_name}</td>
