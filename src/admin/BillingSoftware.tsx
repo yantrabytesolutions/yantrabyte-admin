@@ -2044,109 +2044,134 @@ export default function BillingSoftware({
 
       {/* Main Content Area */}
       {activeTab === 'editor' ? (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* Left Form Panel */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-8 space-y-6">
           
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-4 gap-4">
+          {/* Document Type & Details Card */}
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-5 gap-4">
               <div>
-                <h3 className="text-lg font-semibold text-gray-800">Document Details</h3>
-                {draftInvoiceNumber ? (
-                  <span className="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md inline-block mt-1">
-                    New Invoice No: {draftInvoiceNumber}
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xl font-extrabold text-slate-900 tracking-tight">Document Details</h3>
+                  <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${
+                    currentBrand === 'anantatechcare'
+                      ? 'bg-teal-50 text-teal-700 border border-teal-200'
+                      : 'bg-blue-50 text-blue-700 border border-blue-200'
+                  }`}>
+                    {currentBrand === 'anantatechcare' ? 'ANANTATECH CARE' : 'YANTRABYTE'}
                   </span>
-                ) : selectedInvoiceId ? (
-                  <span className="text-xs font-mono text-gray-500 inline-block mt-1">
-                    Editing: {invoices.find(i => i.id === selectedInvoiceId)?.invoice_no}
-                  </span>
-                ) : null}
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                {docType === 'Invoice' && (
-                  <div className="flex items-center gap-3 bg-blue-50/70 px-3 py-1.5 rounded-lg border border-blue-100">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        checked={isRecurring} 
-                        onChange={(e) => setIsRecurring(e.target.checked)}
-                        className="rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
-                      />
-                      <span className="text-xs font-semibold text-blue-800">Recurring (AMC)</span>
-                    </label>
-                    {isRecurring && (
-                      <select 
-                        value={recurringInterval} 
-                        onChange={(e) => setRecurringInterval(e.target.value)}
-                        className="text-xs border-gray-300 rounded-md text-blue-800 bg-white shadow-sm focus:border-blue-500 focus:ring-blue-500 py-1"
-                      >
-                        <option value="monthly">Monthly</option>
-                        <option value="yearly">Yearly</option>
-                      </select>
+                </div>
+                <div className="flex items-center gap-2 mt-1.5">
+                  <span className="text-xs text-slate-500 font-medium">Generated Bill Number:</span>
+                  <span className="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md inline-block">
+                    {selectedInvoiceId ? (
+                      invoices.find(i => i.id === selectedInvoiceId)?.invoice_no || selectedInvoiceId
+                    ) : (
+                      draftInvoiceNumber || 'Calculating...'
                     )}
-                  </div>
+                  </span>
+                </div>
+              </div>
+
+              {/* Document Type Selector Buttons */}
+              <div className="flex flex-wrap items-center gap-2">
+                {docType === 'Invoice' && (
+                  <label className="flex items-center gap-2 cursor-pointer bg-slate-50 hover:bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 transition-colors">
+                    <input 
+                      type="checkbox" 
+                      checked={isRecurring} 
+                      onChange={(e) => setIsRecurring(e.target.checked)}
+                      className="rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
+                    />
+                    <span className="text-xs font-semibold text-slate-700">Recurring (AMC)</span>
+                  </label>
                 )}
-                <div className="flex bg-gray-100 p-1 rounded-lg flex-wrap gap-1">
+                <div className="flex bg-slate-100 p-1 rounded-xl gap-1 border border-slate-200">
                   <button 
-                    className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-colors ${(docType === 'Invoice' || docType === 'Sale Bill') ? 'bg-white text-blue-700 shadow-sm font-bold' : 'text-gray-600 hover:text-gray-900'}`}
+                    type="button"
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      (docType === 'Invoice' || docType === 'Sale Bill')
+                        ? 'bg-blue-600 text-white shadow-sm scale-[1.02]' 
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
                     onClick={() => setDocType('Sale Bill')}
-                  >Sale Bill</button>
+                  >
+                    Sale Bill
+                  </button>
                   <button 
-                    className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-colors ${docType === 'Service Bill' ? 'bg-white text-indigo-700 shadow-sm font-bold' : 'text-gray-600 hover:text-gray-900'}`}
+                    type="button"
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      docType === 'Service Bill' 
+                        ? 'bg-indigo-600 text-white shadow-sm scale-[1.02]' 
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
                     onClick={() => setDocType('Service Bill')}
-                  >Service Bill</button>
+                  >
+                    Service Bill
+                  </button>
                   <button 
-                    className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-colors ${docType === 'Quotation' ? 'bg-white text-purple-700 shadow-sm font-bold' : 'text-gray-600 hover:text-gray-900'}`}
+                    type="button"
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      docType === 'Quotation' 
+                        ? 'bg-purple-600 text-white shadow-sm scale-[1.02]' 
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
                     onClick={() => setDocType('Quotation')}
-                  >Quotation</button>
+                  >
+                    Quotation
+                  </button>
                   {!!selectedInvoiceId && (
                     <button 
-                      className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-colors ${docType === 'Cancelled' ? 'bg-red-500 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-200 hover:text-red-700'}`}
+                      type="button"
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                        docType === 'Cancelled' ? 'bg-red-600 text-white shadow-sm' : 'text-red-600 hover:bg-red-50'
+                      }`}
                       onClick={() => {
                         if (window.confirm('Are you sure you want to CANCEL this invoice? This will mark it as void.')) {
                           setDocType('Cancelled');
                         }
                       }}
-                    >Cancel Invoice</button>
+                    >
+                      Cancel Bill
+                    </button>
                   )}
                 </div>
               </div>
             </div>
 
+            {/* Document Header Fields Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
-              <div className="sm:col-span-3">
-                <label className="block text-xs font-bold text-gray-700 mb-1 flex items-center justify-between">
-                  <span>Document / Bill No</span>
-                  <span className="text-[10px] font-normal text-gray-400">
-                    {selectedInvoiceId ? 'Existing' : 'Auto Generated'}
-                  </span>
-                </label>
-                <div className="w-full h-10 bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono font-bold text-blue-700 flex items-center shadow-xs select-all">
+              <div className="sm:col-span-4">
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Invoice / Document No</label>
+                <div className="w-full h-11 bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-sm font-mono font-bold text-blue-700 flex items-center shadow-xs select-all">
                   {selectedInvoiceId ? (
                     invoices.find(i => i.id === selectedInvoiceId)?.invoice_no || selectedInvoiceId
                   ) : draftInvoiceNumber ? (
                     draftInvoiceNumber
                   ) : (
-                    <span className="text-gray-400 font-sans text-xs italic">Calculating...</span>
+                    <span className="text-slate-400 font-sans text-xs italic">Calculating...</span>
                   )}
                 </div>
               </div>
-              <div className="sm:col-span-3">
-                <label className="block text-xs font-medium text-gray-600 mb-1">Date</label>
+
+              <div className="sm:col-span-4">
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Invoice Date</label>
                 <input 
                   type="date" 
                   value={invoiceDate} 
                   onChange={e => setInvoiceDate(e.target.value)} 
-                  className="w-full h-10 bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors cursor-pointer" 
+                  className="w-full h-11 bg-white text-slate-900 border border-slate-300 rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-medium cursor-pointer shadow-xs" 
                 />
               </div>
-              <div className="sm:col-span-3">
-                <label className="block text-xs font-medium text-gray-600 mb-1">Customer Master</label>
+
+              <div className="sm:col-span-4">
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Customer Master (Quick Select)</label>
                 <select 
                   value={selectedCustomerId} 
                   onChange={handleSelectCustomer} 
-                  className="w-full h-10 bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors cursor-pointer truncate"
+                  className="w-full h-11 bg-white text-slate-900 border border-slate-300 rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all cursor-pointer shadow-xs truncate font-medium"
                 >
                   {customersList.length === 0 ? (
                     <option value="">No customers found...</option>
@@ -2162,20 +2187,21 @@ export default function BillingSoftware({
                   )}
                 </select>
               </div>
-              <div className="sm:col-span-3">
-                <label className="block text-xs font-medium text-gray-600 mb-1">Link Active Service Ticket</label>
+
+              <div className="sm:col-span-12">
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Link Active Service Ticket</label>
                 <select 
                   onChange={handleSelectServiceTicket} 
-                  className="w-full h-10 bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors cursor-pointer truncate"
+                  className="w-full h-11 bg-white text-slate-900 border border-slate-300 rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all cursor-pointer shadow-xs font-medium truncate"
                 >
                   {serviceTicketsList.length === 0 ? (
-                    <option value="">No tickets found...</option>
+                    <option value="">No service tickets available...</option>
                   ) : (
                     <>
-                      <option value="">Select Service Ticket...</option>
+                      <option value="">Select Service Ticket to autofill repair items...</option>
                       {serviceTicketsList.map((t, i) => (
                         <option key={i} value={t.ticket_number}>
-                          {t.ticket_number} - {t.customer_name} ({t.device_type})
+                          {t.ticket_number} — {t.customer_name} ({t.device_type})
                         </option>
                       ))}
                     </>
@@ -2184,14 +2210,14 @@ export default function BillingSoftware({
               </div>
 
               <div className="sm:col-span-12">
-                <div className="flex justify-between items-center mb-1">
-                  <label className="block text-xs font-medium text-gray-600">Customer Name</label>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="block text-xs font-bold text-slate-700">Customer Name *</label>
                   {customerName.trim() && (
                     <div className="flex space-x-3">
                       <button
                         type="button"
                         onClick={openCustomerHistory}
-                        className="text-xs font-semibold text-[#0EA5E9] hover:text-[#0284C7] transition-all flex items-center gap-1"
+                        className="text-xs font-bold text-blue-600 hover:text-blue-800 transition-all flex items-center gap-1"
                       >
                         <FileText className="w-3.5 h-3.5" /> View History
                       </button>
@@ -2201,7 +2227,7 @@ export default function BillingSoftware({
                           setLedgerCustomerName(customerName);
                           setLedgerCustomerId(selectedCustomerId || null);
                         }}
-                        className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-all flex items-center gap-1"
+                        className="text-xs font-bold text-emerald-600 hover:text-emerald-800 transition-all flex items-center gap-1"
                       >
                         <FileText className="w-3.5 h-3.5" /> View Ledger
                       </button>
@@ -2223,8 +2249,8 @@ export default function BillingSoftware({
                       setSelectedCustomerId(customer.id);
                     }
                   }} 
-                  className="w-full h-10 bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-                  placeholder="Enter full name or search..." 
+                  className="w-full h-11 bg-white text-slate-900 border border-slate-300 rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-semibold shadow-xs" 
+                  placeholder="Enter customer or company name..." 
                 />
                 <datalist id="billing-customers-name-list">
                   {customersList.map(c => (
@@ -2236,7 +2262,7 @@ export default function BillingSoftware({
               </div>
 
               <div className="sm:col-span-6">
-                <label className="block text-xs font-medium text-gray-600 mb-1">Phone</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Phone Number</label>
                 <input 
                   type="text" 
                   list="billing-customers-phone-list"
@@ -2252,7 +2278,7 @@ export default function BillingSoftware({
                       setSelectedCustomerId(customer.id);
                     }
                   }} 
-                  className="w-full h-10 bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                  className="w-full h-11 bg-white text-slate-900 border border-slate-300 rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium shadow-xs" 
                   placeholder="Phone number" 
                 />
                 <datalist id="billing-customers-phone-list">
@@ -2265,58 +2291,59 @@ export default function BillingSoftware({
               </div>
 
               <div className="sm:col-span-6">
-                <label className="block text-xs font-medium text-gray-600 mb-1">Email</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Email Address</label>
                 <input 
                   type="email" 
                   value={email} 
                   onChange={e => setEmail(e.target.value)} 
-                  className="w-full h-10 bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                  className="w-full h-11 bg-white text-slate-900 border border-slate-300 rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium shadow-xs" 
                   placeholder="Email address" 
                 />
               </div>
 
               <div className="sm:col-span-12">
-                <label className="block text-xs font-medium text-gray-600 mb-1">Address</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Billing Address</label>
                 <textarea 
                   value={address} 
                   onChange={e => setAddress(e.target.value)} 
                   rows={2} 
-                  className="w-full bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-                  placeholder="Full address"
+                  className="w-full bg-white text-slate-900 border border-slate-300 rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium shadow-xs" 
+                  placeholder="Street address, city, pin code..."
                 ></textarea>
               </div>
             </div>
             
-            <div className="mt-6 border-t pt-4">
+            <div className="border-t border-slate-100 pt-5">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                <label className="block text-xs font-medium text-gray-600">Terms & Conditions</label>
+                <label className="block text-xs font-bold text-slate-700">Terms & Conditions</label>
                 <div className="flex flex-wrap gap-1.5">
-                  <button onClick={() => setTermsConditions("1. Goods once sold will not be taken back.\n2. Warranty as per manufacturer terms.\n3. Subject to local jurisdiction.")} className="text-[10px] font-medium bg-gray-100 px-2.5 py-1 rounded-md hover:bg-gray-200 text-gray-700 transition-colors">General</button>
-                  <button onClick={() => setTermsConditions("1. We are not responsible for any data loss during repair. Please backup your data.\n2. 30 days warranty on repaired parts only.\n3. Physical or liquid damage voids warranty.")} className="text-[10px] font-medium bg-gray-100 px-2.5 py-1 rounded-md hover:bg-gray-200 text-gray-700 transition-colors">Service</button>
-                  <button onClick={() => setTermsConditions("1. AMC covers standard service visits as per contract.\n2. Spare parts are charged extra unless specified.\n3. Contract is non-transferable.")} className="text-[10px] font-medium bg-gray-100 px-2.5 py-1 rounded-md hover:bg-gray-200 text-gray-700 transition-colors">AMC</button>
-                  <button onClick={() => setTermsConditions(`1. Estimate valid for ${quoteValidityDays} days.\n2. Advance payment of ${quoteAdvancePercent}% required and remaining against Delivery.\n3. Final amount may vary if hidden faults are found.`)} className="text-[10px] font-medium bg-purple-50 text-purple-700 px-2.5 py-1 rounded-md border border-purple-200 hover:bg-purple-100 transition-colors">Quotation</button>
-                  <button onClick={() => setTermsConditions("")} className="text-[10px] font-medium text-red-600 bg-red-50 px-2.5 py-1 rounded-md hover:bg-red-100 transition-colors">Clear</button>
+                  <button type="button" onClick={() => setTermsConditions("1. Goods once sold will not be taken back.\n2. Warranty as per manufacturer terms.\n3. Subject to local jurisdiction.")} className="text-[11px] font-semibold bg-slate-100 px-2.5 py-1 rounded-md hover:bg-slate-200 text-slate-700 transition-colors">General</button>
+                  <button type="button" onClick={() => setTermsConditions("1. We are not responsible for any data loss during repair. Please backup your data.\n2. 30 days warranty on repaired parts only.\n3. Physical or liquid damage voids warranty.")} className="text-[11px] font-semibold bg-slate-100 px-2.5 py-1 rounded-md hover:bg-slate-200 text-slate-700 transition-colors">Service</button>
+                  <button type="button" onClick={() => setTermsConditions("1. AMC covers standard service visits as per contract.\n2. Spare parts are charged extra unless specified.\n3. Contract is non-transferable.")} className="text-[11px] font-semibold bg-slate-100 px-2.5 py-1 rounded-md hover:bg-slate-200 text-slate-700 transition-colors">AMC</button>
+                  <button type="button" onClick={() => setTermsConditions(`1. Estimate valid for ${quoteValidityDays} days.\n2. Advance payment of ${quoteAdvancePercent}% required and remaining against Delivery.\n3. Final amount may vary if hidden faults are found.`)} className="text-[11px] font-semibold bg-purple-50 text-purple-700 px-2.5 py-1 rounded-md border border-purple-200 hover:bg-purple-100 transition-colors">Quotation</button>
+                  <button type="button" onClick={() => setTermsConditions("")} className="text-[11px] font-semibold text-red-600 bg-red-50 px-2.5 py-1 rounded-md hover:bg-red-100 transition-colors">Clear</button>
                 </div>
               </div>
               <textarea 
                 value={termsConditions} 
                 onChange={e => setTermsConditions(e.target.value)}
-                className="w-full bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-20" 
-                placeholder="Enter terms and conditions for this invoice..."
+                className="w-full bg-white text-slate-900 border border-slate-300 rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-20 shadow-xs" 
+                placeholder="Enter terms and conditions for this bill..."
               ></textarea>
               {docType === 'Quotation' && (
                 <div className="mt-3 flex flex-wrap gap-3 items-end">
                   <div>
-                    <label className="block text-[11px] font-medium text-gray-500 mb-1">Validity (Days)</label>
-                    <input type="number" value={quoteValidityDays} onChange={e => setQuoteValidityDays(e.target.value)} className="w-24 h-9 text-xs px-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                    <label className="block text-[11px] font-semibold text-slate-500 mb-1">Validity (Days)</label>
+                    <input type="number" value={quoteValidityDays} onChange={e => setQuoteValidityDays(e.target.value)} className="w-24 h-9 text-xs px-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-semibold" />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-medium text-gray-500 mb-1">Advance (%)</label>
-                    <input type="number" value={quoteAdvancePercent} onChange={e => setQuoteAdvancePercent(e.target.value)} className="w-24 h-9 text-xs px-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                    <label className="block text-[11px] font-semibold text-slate-500 mb-1">Advance (%)</label>
+                    <input type="number" value={quoteAdvancePercent} onChange={e => setQuoteAdvancePercent(e.target.value)} className="w-24 h-9 text-xs px-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-semibold" />
                   </div>
                   <button 
+                    type="button"
                     onClick={() => setTermsConditions(`1. Estimate valid for ${quoteValidityDays} days.\n2. Advance payment of ${quoteAdvancePercent}% required and remaining against Delivery.\n3. Final amount may vary if hidden faults are found.`)}
-                    className="h-9 text-xs bg-blue-50 text-blue-600 px-3.5 rounded-lg border border-blue-200 hover:bg-blue-100 font-semibold transition-colors flex items-center"
+                    className="h-9 text-xs bg-blue-50 text-blue-600 px-3.5 rounded-lg border border-blue-200 hover:bg-blue-100 font-bold transition-colors flex items-center"
                   >
                     Apply to Terms
                   </button>
@@ -2325,11 +2352,15 @@ export default function BillingSoftware({
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-4 gap-3">
-              <h3 className="text-lg font-semibold text-gray-800">Items & Billing</h3>
+          {/* Items & Billing Card */}
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-4 gap-3">
+              <div>
+                <h3 className="text-xl font-extrabold text-slate-900 tracking-tight">Line Items</h3>
+                <p className="text-xs text-slate-500 mt-0.5">Add products or services with pricing and serial numbers</p>
+              </div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs text-gray-500 font-medium hidden sm:inline">Quick Presets:</span>
+                <span className="text-xs text-slate-500 font-bold hidden sm:inline">Presets:</span>
                 <select 
                   onChange={(e) => {
                     const selectedVal = e.target.value;
@@ -2343,9 +2374,9 @@ export default function BillingSoftware({
                     }
                   }}
                   value=""
-                  className="text-xs border border-gray-300 rounded-lg px-2.5 py-1.5 text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-sm font-medium"
+                  className="text-xs border border-slate-300 rounded-lg px-3 py-1.5 text-slate-700 bg-slate-50 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-xs font-semibold"
                 >
-                  <option value="">⚡ Quick Service...</option>
+                  <option value="">⚡ Quick Services...</option>
                   {PRESET_ITEMS.map((item, idx) => (
                     <option key={idx} value={item.name}>{item.name} (₹{item.price})</option>
                   ))}
@@ -2366,9 +2397,9 @@ export default function BillingSoftware({
                     }
                   }}
                   value={itemProductId}
-                  className="text-xs border border-gray-300 rounded-lg px-2.5 py-1.5 text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-sm font-medium max-w-[180px]"
+                  className="text-xs border border-slate-300 rounded-lg px-3 py-1.5 text-slate-700 bg-slate-50 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-xs font-semibold max-w-[190px]"
                 >
-                  <option value="">📦 Quick Product...</option>
+                  <option value="">📦 Inventory Stock...</option>
                   {productsList.map((prod) => (
                     <option key={prod.id} value={prod.id}>
                       {prod.name} (Stock: {prod.stock_count ?? 0})
@@ -2378,9 +2409,10 @@ export default function BillingSoftware({
               </div>
             </div>
             
-            <div className="grid grid-cols-12 gap-3 items-end">
+            {/* Item Input Row */}
+            <div className="bg-slate-50/80 p-4 rounded-xl border border-slate-200/80 grid grid-cols-12 gap-3 items-end">
               <div className="col-span-12 sm:col-span-6 lg:col-span-4">
-                <label className="block text-xs font-medium text-gray-600 mb-1">Item Description</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Item Description *</label>
                 <input 
                   type="text" 
                   value={itemDesc} 
@@ -2394,12 +2426,12 @@ export default function BillingSoftware({
                     }
                   }} 
                   onKeyDown={e => e.key === 'Enter' && handleAddItem()} 
-                  className="w-full h-10 bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500" 
-                  placeholder="e.g. Service or Product name" 
+                  className="w-full h-10 bg-white text-slate-900 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 font-semibold shadow-xs" 
+                  placeholder="e.g. Screen Replacement / RAM 16GB" 
                 />
               </div>
               <div className="col-span-12 sm:col-span-6 lg:col-span-3">
-                <label className="block text-xs font-medium text-gray-600 mb-1 truncate" title="Serial No. / IMEI (Optional)">
+                <label className="block text-xs font-bold text-slate-700 mb-1 truncate" title="Serial No. / IMEI (Optional)">
                   Serial No. / IMEI (Optional)
                 </label>
                 <input 
@@ -2407,28 +2439,28 @@ export default function BillingSoftware({
                   value={itemSerialNo} 
                   onChange={e => setItemSerialNo(e.target.value)} 
                   onKeyDown={e => e.key === 'Enter' && handleAddItem()} 
-                  className="w-full h-10 bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 font-mono text-xs" 
-                  placeholder="e.g. S/N: HIK928402" 
+                  className="w-full h-10 bg-white text-slate-900 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 font-mono font-semibold shadow-xs" 
+                  placeholder="e.g. S/N: 20261109A" 
                 />
               </div>
               <div className="col-span-4 sm:col-span-3 lg:col-span-1">
-                <label className="block text-xs font-medium text-gray-600 mb-1 text-center">Qty</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1 text-center">Qty</label>
                 <input 
                   type="number" 
                   value={itemQty} 
                   onChange={e => setItemQty(Number(e.target.value))} 
                   min="1" 
-                  className="w-full h-10 bg-white text-gray-900 border border-gray-300 rounded-lg px-2 py-2 text-sm focus:ring-2 focus:ring-blue-500 text-center" 
+                  className="w-full h-10 bg-white text-slate-900 border border-slate-300 rounded-lg px-2 py-2 text-sm focus:ring-2 focus:ring-blue-500 text-center font-bold shadow-xs" 
                 />
               </div>
               <div className="col-span-8 sm:col-span-4 lg:col-span-2">
-                <label className="block text-xs font-medium text-gray-600 mb-1">Rate (₹)</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Rate (₹)</label>
                 <input 
                   type="number" 
                   value={itemRate || ''} 
                   onChange={e => setItemRate(Number(e.target.value))} 
                   onKeyDown={e => e.key === 'Enter' && handleAddItem()} 
-                  className="w-full h-10 bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500" 
+                  className="w-full h-10 bg-white text-slate-900 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 font-bold font-mono shadow-xs" 
                   placeholder="0" 
                 />
               </div>
@@ -2436,47 +2468,52 @@ export default function BillingSoftware({
                 <button 
                   type="button"
                   onClick={handleAddItem} 
-                  className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white font-medium px-3 rounded-lg transition-colors text-sm flex justify-center items-center shadow-sm"
+                  className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 rounded-lg transition-all text-sm flex justify-center items-center shadow-md shadow-blue-500/20 active:scale-[0.98]"
                 >
                   <Plus className="w-4 h-4 mr-1.5 shrink-0" /> Add Item
                 </button>
               </div>
             </div>
 
-            <div className="mt-4 border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+            {/* Line Items Table */}
+            <div className="border border-slate-200 rounded-xl overflow-hidden shadow-xs">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left">
-                  <thead className="bg-gray-50 border-b border-gray-200 text-gray-600">
+                  <thead className="bg-slate-100/80 border-b border-slate-200 text-slate-700">
                     <tr>
-                      <th className="px-4 py-3 font-semibold text-center w-12">#</th>
-                      <th className="px-4 py-3 font-semibold">Description & Serial No.</th>
-                      <th className="px-4 py-3 font-semibold text-center w-16">Qty</th>
-                      <th className="px-4 py-3 font-semibold text-right w-28">Rate</th>
-                      <th className="px-4 py-3 font-semibold text-right w-28">Amount</th>
-                      <th className="px-4 py-3 font-semibold text-center w-20">Action</th>
+                      <th className="px-4 py-3 font-bold text-center w-12">#</th>
+                      <th className="px-4 py-3 font-bold">Description & Serial</th>
+                      <th className="px-4 py-3 font-bold text-center w-16">Qty</th>
+                      <th className="px-4 py-3 font-bold text-right w-28">Rate</th>
+                      <th className="px-4 py-3 font-bold text-right w-32">Amount</th>
+                      <th className="px-4 py-3 font-bold text-center w-20">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-slate-100">
                     {items.length === 0 ? (
-                      <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400 font-medium">No items added yet. Use the inputs above to add invoice items.</td></tr>
+                      <tr>
+                        <td colSpan={6} className="px-4 py-10 text-center text-slate-400 font-medium">
+                          No items added yet. Add a service or product above to calculate the invoice total.
+                        </td>
+                      </tr>
                     ) : items.map((it, idx) => (
-                      <tr key={idx} className="hover:bg-gray-50/75 transition-colors">
-                        <td className="px-4 py-3 text-center text-gray-500 font-medium">{idx + 1}</td>
-                        <td className="px-4 py-3 font-medium text-gray-800">
+                      <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="px-4 py-3.5 text-center text-slate-400 font-bold">{idx + 1}</td>
+                        <td className="px-4 py-3.5 font-semibold text-slate-900">
                           <div>{it.description}</div>
                           {it.serial_no && (
-                            <div className="text-[11px] font-mono text-slate-500 mt-0.5 font-semibold">
+                            <div className="text-[11px] font-mono text-slate-500 mt-0.5 font-bold">
                               S/N: {it.serial_no}
                             </div>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-center text-gray-600 font-medium">{it.qty}</td>
-                        <td className="px-4 py-3 text-right text-gray-600 font-mono">₹{it.rate.toLocaleString('en-IN')}</td>
-                        <td className="px-4 py-3 text-right font-semibold text-gray-900 font-mono">₹{(it.qty * it.rate).toLocaleString('en-IN')}</td>
-                        <td className="px-4 py-3 text-center">
+                        <td className="px-4 py-3.5 text-center text-slate-700 font-bold">{it.qty}</td>
+                        <td className="px-4 py-3.5 text-right text-slate-700 font-mono font-medium">₹{it.rate.toLocaleString('en-IN')}</td>
+                        <td className="px-4 py-3.5 text-right font-extrabold text-slate-900 font-mono">₹{(it.qty * it.rate).toLocaleString('en-IN')}</td>
+                        <td className="px-4 py-3.5 text-center">
                           <div className="flex items-center justify-center space-x-1">
-                            <button onClick={() => handleEditItem(idx)} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Edit Item"><Pencil className="w-4 h-4" /></button>
-                            <button onClick={() => removeItem(idx)} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="Remove Item"><Trash2 className="w-4 h-4" /></button>
+                            <button type="button" onClick={() => handleEditItem(idx)} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit Item"><Pencil className="w-4 h-4" /></button>
+                            <button type="button" onClick={() => removeItem(idx)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Remove Item"><Trash2 className="w-4 h-4" /></button>
                           </div>
                         </td>
                       </tr>
@@ -2486,24 +2523,23 @@ export default function BillingSoftware({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-4 border-t mt-6">
+            {/* Financial Adjustments Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-4 border-t border-slate-100">
               <div>
-                <div className="h-5 flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-medium text-gray-600">Discount (₹)</label>
-                </div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Discount (₹)</label>
                 <input 
                   type="number" 
                   value={discount || ''} 
                   onChange={e => setDiscount(Number(e.target.value))} 
-                  className="w-full h-10 bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 font-mono" 
+                  className="w-full h-11 bg-white text-slate-900 border border-slate-300 rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-blue-500 font-mono font-bold shadow-xs" 
                   placeholder="0" 
                 />
               </div>
               <div>
-                <div className="h-5 flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-medium text-gray-600">Advance Paid (₹)</label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-bold text-slate-700">Advance Paid (₹)</label>
                   {grandTotal > 0 && advancePaid < grandTotal && (
-                    <button type="button" onClick={() => { setAdvancePaid(grandTotal); setPaymentMode('UPI'); }} className="text-[#0EA5E9] hover:underline text-[10px] font-bold">
+                    <button type="button" onClick={() => { setAdvancePaid(grandTotal); setPaymentMode('UPI'); }} className="text-blue-600 hover:underline text-[10px] font-extrabold uppercase">
                       Mark Fully Paid
                     </button>
                   )}
@@ -2512,18 +2548,16 @@ export default function BillingSoftware({
                   type="number" 
                   value={advancePaid || ''} 
                   onChange={e => setAdvancePaid(Number(e.target.value))} 
-                  className="w-full h-10 bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 font-mono" 
+                  className="w-full h-11 bg-white text-slate-900 border border-slate-300 rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-blue-500 font-mono font-bold shadow-xs text-emerald-700" 
                   placeholder="0" 
                 />
               </div>
               <div>
-                <div className="h-5 flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-medium text-gray-600">Payment Mode</label>
-                </div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Payment Mode</label>
                 <select 
                   value={paymentMode} 
                   onChange={e => setPaymentMode(e.target.value)} 
-                  className="w-full h-10 bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                  className="w-full h-11 bg-white text-slate-900 border border-slate-300 rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-blue-500 cursor-pointer font-semibold shadow-xs"
                 >
                   {PAYMENT_MODES.map(mode => (
                     <option key={mode} value={mode}>{mode}</option>
@@ -2531,40 +2565,40 @@ export default function BillingSoftware({
                 </select>
               </div>
               <div>
-                <div className="h-5 flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-medium text-gray-600">Due Date</label>
-                </div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Payment Due Date</label>
                 <input 
                   type="date" 
                   value={dueDate} 
                   onChange={e => setDueDate(e.target.value)} 
-                  className="w-full h-10 bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 cursor-pointer" 
+                  className="w-full h-11 bg-white text-slate-900 border border-slate-300 rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-blue-500 cursor-pointer font-medium shadow-xs" 
                 />
               </div>
               <div>
-                <div className="h-5 flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-medium text-gray-600">Warranty (Months)</label>
-                </div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Warranty (Months)</label>
                 <input 
                   type="number" 
                   min="0" 
                   step="1" 
                   value={warrantyMonths} 
                   onChange={e => setWarrantyMonths(e.target.value === '' ? '' : Number(e.target.value))} 
-                  className="w-full h-10 bg-white text-gray-900 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500" 
+                  className="w-full h-11 bg-white text-slate-900 border border-slate-300 rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-blue-500 font-bold shadow-xs" 
                   placeholder="e.g. 12" 
                 />
               </div>
               <div>
-                <div className="h-5 flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-medium text-gray-600">Payment Status</label>
-                </div>
-                <div className={`w-full h-10 border rounded-lg px-3 py-2 text-sm font-semibold flex items-center ${
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Payment Status</label>
+                <div className={`w-full h-11 border rounded-xl px-3.5 py-2 text-sm font-bold flex items-center shadow-xs ${
                   paymentStatus === 'Paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
                   paymentStatus === 'Partial' ? 'bg-amber-50 text-amber-700 border-amber-200' :
                   paymentStatus === 'Estimate' ? 'bg-purple-50 text-purple-700 border-purple-200' :
                   'bg-red-50 text-red-700 border-red-200'
                 }`}>
+                  <span className={`w-2 h-2 rounded-full mr-2 ${
+                    paymentStatus === 'Paid' ? 'bg-emerald-500' :
+                    paymentStatus === 'Partial' ? 'bg-amber-500' :
+                    paymentStatus === 'Estimate' ? 'bg-purple-500' :
+                    'bg-red-500'
+                  }`} />
                   {paymentStatus}
                 </div>
               </div>
@@ -2572,45 +2606,97 @@ export default function BillingSoftware({
           </div>
         </div>
 
-        {/* Right Sidebar */}
-        <div className="space-y-6">
-          <div className="bg-gray-50 border border-gray-200 p-6 rounded-xl shadow-sm lg:sticky lg:top-6">
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-800">Invoice Summary</h3>
-              <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800 border border-blue-200">
+        {/* Right Executive Summary Sidebar */}
+        <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-6">
+          <div className="bg-slate-900 text-white rounded-2xl p-6 shadow-xl border border-slate-800 space-y-5">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+              <div>
+                <h3 className="text-lg font-bold text-white tracking-tight">Invoice Summary</h3>
+                <p className="text-xs text-slate-400 mt-0.5">Real-time ledger breakdown</p>
+              </div>
+              <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-lg bg-blue-500/20 text-blue-300 border border-blue-500/30">
                 {selectedInvoiceId ? (invoices.find(i => i.id === selectedInvoiceId)?.invoice_no) : (draftInvoiceNumber || 'Pending')}
               </span>
             </div>
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between text-gray-700 font-semibold bg-white p-2 rounded-lg border border-gray-200 shadow-2xs">
-                <span>Invoice / Bill No:</span>
-                <span className="font-mono text-blue-700">
-                  {selectedInvoiceId ? (invoices.find(i => i.id === selectedInvoiceId)?.invoice_no) : (draftInvoiceNumber || 'Pending')}
+
+            <div className="space-y-3.5 text-sm">
+              <div className="flex justify-between items-center text-slate-300">
+                <span className="text-xs uppercase tracking-wider text-slate-400">Subtotal</span>
+                <span className="font-mono font-semibold text-white">₹{subtotal.toLocaleString('en-IN')}</span>
+              </div>
+              {discount > 0 && (
+                <div className="flex justify-between items-center text-emerald-400">
+                  <span className="text-xs uppercase tracking-wider">Discount</span>
+                  <span className="font-mono font-semibold">- ₹{discount.toLocaleString('en-IN')}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center text-slate-300">
+                <span className="text-xs uppercase tracking-wider text-slate-400">Round Off</span>
+                <span className="font-mono font-semibold text-white">₹{roundOff.toLocaleString('en-IN')}</span>
+              </div>
+              
+              <div className="border-t border-slate-800 pt-3 flex justify-between items-baseline">
+                <div>
+                  <span className="text-sm font-bold text-white uppercase tracking-wider">Grand Total</span>
+                  <div className="text-[11px] text-slate-400">Final payable amount</div>
+                </div>
+                <span className="text-2xl font-extrabold text-white font-mono">
+                  ₹{grandTotal.toLocaleString('en-IN')}
                 </span>
               </div>
-              <div className="flex justify-between text-gray-600"><span>Subtotal:</span> <span className="font-medium font-mono">₹{subtotal.toLocaleString('en-IN')}</span></div>
-              {discount > 0 && <div className="flex justify-between text-gray-600"><span>Discount:</span> <span className="font-medium font-mono text-green-600">- ₹{discount.toLocaleString('en-IN')}</span></div>}
-              <div className="flex justify-between text-gray-600"><span>Round Off:</span> <span className="font-medium font-mono">₹{roundOff.toLocaleString('en-IN')}</span></div>
-              <div className="h-px bg-gray-200 my-2"></div>
-              <div className="flex justify-between text-lg font-bold text-gray-900"><span>Grand Total:</span> <span className="font-mono">₹{grandTotal.toLocaleString('en-IN')}</span></div>
-              <div className="flex justify-between text-gray-600 pt-2 border-t"><span>Advance Paid:</span> <span className="font-medium font-mono">₹{advancePaid.toLocaleString('en-IN')}</span></div>
-              <div className="flex justify-between font-bold text-blue-700"><span>Balance Due:</span> <span className="font-mono">₹{balanceDue.toLocaleString('en-IN')}</span></div>
-              <div className="flex justify-between text-gray-600 pt-2 border-t"><span>Status:</span> <span className="font-semibold">{paymentStatus}</span></div>
-              <div className="flex justify-between text-gray-600"><span>Mode:</span> <span className="font-medium">{paymentMode}</span></div>
-              {dueDate && <div className="flex justify-between text-gray-600"><span>Due Date:</span> <span className="font-medium">{dueDate}</span></div>}
+
+              <div className="border-t border-slate-800 pt-3 space-y-2">
+                <div className="flex justify-between items-center text-slate-300">
+                  <span className="text-xs uppercase tracking-wider text-slate-400">Advance Paid</span>
+                  <span className="font-mono font-semibold text-emerald-400">₹{advancePaid.toLocaleString('en-IN')}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs uppercase tracking-wider font-bold text-amber-300">Balance Due</span>
+                  <span className={`font-mono font-extrabold text-lg ${balanceDue > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                    ₹{balanceDue.toLocaleString('en-IN')}
+                  </span>
+                </div>
+              </div>
+
+              <div className="border-t border-slate-800 pt-3 flex justify-between items-center text-xs text-slate-400">
+                <span>Payment Mode:</span>
+                <span className="font-semibold text-white">{paymentMode}</span>
+              </div>
+              {dueDate && (
+                <div className="flex justify-between items-center text-xs text-slate-400">
+                  <span>Due Date:</span>
+                  <span className="font-semibold text-amber-300">{dueDate}</span>
+                </div>
+              )}
             </div>
 
-            <div className="mt-8 space-y-3">
-              <button disabled={isSaving} onClick={() => handleSave('save')} className="w-full flex items-center justify-center px-4 py-2.5 bg-gray-800 hover:bg-gray-900 text-white font-medium rounded-lg transition-colors shadow-sm">
+            {/* Action Buttons */}
+            <div className="pt-3 space-y-2.5">
+              <button 
+                type="button"
+                disabled={isSaving} 
+                onClick={() => handleSave('save')} 
+                className="w-full flex items-center justify-center px-4 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl transition-all shadow-md active:scale-[0.98] border border-slate-700"
+              >
                 {isSaving ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                Save Only
+                Save Document
               </button>
-              <button disabled={isSaving} onClick={() => handleSave('download')} className="w-full flex items-center justify-center px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors shadow-sm shadow-green-200">
-                <Download className="w-4 h-4 mr-2" /> Save & Generate PDF
+              <button 
+                type="button"
+                disabled={isSaving} 
+                onClick={() => handleSave('download')} 
+                className="w-full flex items-center justify-center px-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-600/30 active:scale-[0.98]"
+              >
+                <Download className="w-4 h-4 mr-2" /> Download &amp; View PDF
               </button>
-              <button disabled={isSaving} onClick={() => handleSave('email')} className="w-full flex items-center justify-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors shadow-sm shadow-blue-200">
+              <button 
+                type="button"
+                disabled={isSaving} 
+                onClick={() => handleSave('email')} 
+                className="w-full flex items-center justify-center px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-600/30 active:scale-[0.98]"
+              >
                 {isSendingEmail ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Mail className="w-4 h-4 mr-2" />}
-                Save & Email PDF
+                Save &amp; Email PDF
               </button>
               <button 
                 type="button"
@@ -2618,7 +2704,7 @@ export default function BillingSoftware({
                   const cleanPhone = phone ? phone.replace(/\D/g, '') : '';
                   const phoneNum = cleanPhone.length === 10 ? cleanPhone : (cleanPhone.length > 10 ? cleanPhone.slice(-10) : '');
                   const itemsSummary = items.map((it, idx) => `${idx + 1}. ${it.description} (Qty: ${it.qty}) - ₹${(it.qty * it.rate).toLocaleString('en-IN')}`).join('\n');
-                                    const isAnanta = currentBrand === 'anantatechcare';
+                  const isAnanta = currentBrand === 'anantatechcare';
                   const compName = isAnanta ? 'ANANTATECH CARE' : 'YANTRABYTE SOLUTIONS';
                   const bankTxt = isAnanta
                     ? '*Bank Details:* AU Small Finance Bank | A/C: 260226952682568 | IFSC: AUBL0002695 | Name: ANANTATECH CARE | Branch: Koramangala, Bangalore'
@@ -2629,7 +2715,7 @@ export default function BillingSoftware({
                   const targetUrl = phoneNum ? `https://api.whatsapp.com/send?phone=91${phoneNum}&text=${encodeURIComponent(msg)}` : `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
                   window.open(targetUrl, '_blank');
                 }} 
-                className="w-full flex items-center justify-center px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors shadow-sm shadow-emerald-200"
+                className="w-full flex items-center justify-center px-4 py-3 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold rounded-xl transition-all shadow-lg shadow-[#25D366]/30 active:scale-[0.98]"
               >
                 <MessageSquare className="w-4 h-4 mr-2" />
                 Share via WhatsApp
