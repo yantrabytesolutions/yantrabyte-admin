@@ -600,6 +600,10 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
   // YANTRABYTE SOLUTIONS: CLASSIC BLUE BORDER CORPORATE FORMAT
   // ----------------------------------------------------
   const primaryColor = "#0B5394";
+  const primaryLight = isAnanta ? "#FEF2F2" : "#F0F9FF";
+  const primaryBorder = isAnanta ? "#FECACA" : "#BAE6FD";
+  const primaryDark = isAnanta ? "#991B1B" : "#0369A1";
+  const monoFont = "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace";
   const fontFam = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 
   return (
