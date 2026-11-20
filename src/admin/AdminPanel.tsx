@@ -1710,27 +1710,35 @@ export default function AdminPanel() {
       <div className="min-h-screen bg-[#0B1120] flex items-center justify-center px-4">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto rounded-2xl bg-[#0EA5E9]/10 flex items-center justify-center mb-4">
-              <LayoutDashboard className="w-8 h-8 text-[#0EA5E9]" />
+            <div className={`w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-4 ${
+              selectedBrand === 'anantatechcare' ? 'bg-teal-500/10' : 'bg-[#0EA5E9]/10'
+            }`}>
+              <LayoutDashboard className={`w-8 h-8 ${selectedBrand === 'anantatechcare' ? 'text-teal-400' : 'text-[#0EA5E9]'}`} />
             </div>
-            <h1 className="text-2xl font-bold text-white">Admin Panel</h1>
-            <p className="text-[#94A3B8] text-sm mt-2 font-medium">{selectedBrand === "anantatechcare" ? "ANANTATECH CARE" : "YantraByte Solutions"}</p>
+            <h1 className="text-2xl font-bold text-white">
+              {selectedBrand === "anantatechcare" ? "ANANTATECH CARE" : "YantraByte Solutions"}
+            </h1>
+            <p className="text-xs uppercase tracking-wider text-slate-400 mt-1 font-semibold">
+              Admin & Billing Portal Login
+            </p>
 
-            {/* Company Selection Tabs */}
-            <div className="mt-6 flex items-center justify-center">
-              <div className="p-1 rounded-xl bg-white/5 border border-white/10 flex gap-1 w-full max-w-xs">
+            {/* Mandatory Brand Login Selection Tabs */}
+            <div className="mt-6 flex flex-col items-center">
+              <span className="text-xs text-slate-400 mb-2 font-medium">Select Portal to Access:</span>
+              <div className="p-1.5 rounded-xl bg-white/5 border border-white/10 flex gap-2 w-full max-w-sm">
                 <button
                   type="button"
                   onClick={() => {
                     setSelectedBrand("yantrabyte");
                     localStorage.setItem("admin_brand", "yantrabyte");
                   }}
-                  className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
+                  className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                     selectedBrand === "yantrabyte"
-                      ? "bg-[#0EA5E9] text-white shadow-md"
-                      : "text-[#94A3B8] hover:text-white"
+                      ? "bg-[#0EA5E9] text-white shadow-lg shadow-sky-500/30 scale-[1.02]"
+                      : "text-slate-400 hover:text-white hover:bg-white/5"
                   }`}
                 >
+                  <span className={`w-2 h-2 rounded-full ${selectedBrand === "yantrabyte" ? "bg-white" : "bg-sky-400"}`}></span>
                   YantraByte
                 </button>
                 <button
@@ -1739,18 +1747,26 @@ export default function AdminPanel() {
                     setSelectedBrand("anantatechcare");
                     localStorage.setItem("admin_brand", "anantatechcare");
                   }}
-                  className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
+                  className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                     selectedBrand === "anantatechcare"
-                      ? "bg-teal-500 text-white shadow-md"
-                      : "text-[#94A3B8] hover:text-white"
+                      ? "bg-teal-600 text-white shadow-lg shadow-teal-500/30 scale-[1.02]"
+                      : "text-slate-400 hover:text-white hover:bg-white/5"
                   }`}
                 >
+                  <span className={`w-2 h-2 rounded-full ${selectedBrand === "anantatechcare" ? "bg-white" : "bg-teal-400"}`}></span>
                   ANANTATECH CARE
                 </button>
               </div>
             </div>
           </div>
-          <form onSubmit={handleLogin} className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 space-y-5">
+          <form onSubmit={handleLogin} className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 space-y-5 shadow-2xl">
+            <div className="text-center pb-1">
+              <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                selectedBrand === "anantatechcare" ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" : "bg-sky-500/20 text-sky-300 border border-sky-500/30"
+              }`}>
+                Logging into: {selectedBrand === "anantatechcare" ? "ANANTATECH CARE" : "YantraByte"}
+              </span>
+            </div>
             {authError && (
               <div className="flex items-center gap-2 text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-xl p-3">
                 <AlertCircle className="w-4 h-4 shrink-0" />
@@ -2611,20 +2627,25 @@ export default function AdminPanel() {
               <div className="flex items-center gap-1.5">
                 <h1 className={`font-bold text-sm truncate ${isDarkMode ? "text-white" : "text-slate-900"}`}>{selectedBrand === "anantatechcare" ? "ANANTATECH CARE" : "YantraByte"}</h1>
               </div>
-              <div className="mt-1 flex gap-1">
+              <div className="mt-1 flex items-center gap-1.5">
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                  selectedBrand === "anantatechcare" ? "bg-teal-500/20 text-teal-400 border border-teal-500/30" : "bg-sky-500/20 text-sky-400 border border-sky-500/30"
+                }`}>
+                  {selectedBrand === "anantatechcare" ? "ATC Active" : "YB Active"}
+                </span>
                 <button
                   type="button"
-                  onClick={() => { setSelectedBrand("yantrabyte"); localStorage.setItem("admin_brand", "yantrabyte"); }}
-                  className={`text-[10px] px-1.5 py-0.5 rounded font-semibold transition-all ${selectedBrand === "yantrabyte" ? "bg-[#0EA5E9] text-white" : "text-slate-400 hover:text-white"}`}
+                  onClick={() => {
+                    const target = selectedBrand === "yantrabyte" ? "anantatechcare" : "yantrabyte";
+                    setSelectedBrand(target);
+                    localStorage.setItem("admin_brand", target);
+                  }}
+                  className={`text-[10px] px-1.5 py-0.5 rounded font-medium border border-white/10 hover:border-white/20 transition-all ${
+                    isDarkMode ? "text-slate-400 hover:text-white" : "text-slate-600 hover:text-slate-900"
+                  }`}
+                  title="Switch Active Brand Portal"
                 >
-                  YB
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setSelectedBrand("anantatechcare"); localStorage.setItem("admin_brand", "anantatechcare"); }}
-                  className={`text-[10px] px-1.5 py-0.5 rounded font-semibold transition-all ${selectedBrand === "anantatechcare" ? "bg-teal-500 text-white" : "text-slate-400 hover:text-white"}`}
-                >
-                  ATC
+                  Switch
                 </button>
               </div>
               <p className={`text-xs truncate ${isDarkMode ? 'text-[#64748B]' : 'text-slate-500'}`}>Admin Panel</p>

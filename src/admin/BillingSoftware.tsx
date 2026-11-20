@@ -154,7 +154,16 @@ export default function BillingSoftware({
 
   const [activeTab, setActiveTab] = useState<'editor' | 'history' | 'sales' | 'services' | 'quotations' | 'pending' | 'renewals' | 'settings'>(initialTab as any);
   const [historySearchTerm, setHistorySearchTerm] = useState('');
-  const [savedDocBrandFilter, setSavedDocBrandFilter] = useState<'all' | 'yantrabyte' | 'anantatechcare'>('all');
+  const [savedDocBrandFilter, setSavedDocBrandFilter] = useState<'all' | 'yantrabyte' | 'anantatechcare'>(() => {
+    if (propBrand) return propBrand;
+    return (localStorage.getItem('admin_brand') as 'yantrabyte' | 'anantatechcare') || 'yantrabyte';
+  });
+
+  useEffect(() => {
+    if (propBrand) {
+      setSavedDocBrandFilter(propBrand);
+    }
+  }, [propBrand]);
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
   const [historyDrawerData, setHistoryDrawerData] = useState<{
     invoices: Invoice[];
@@ -811,6 +820,9 @@ export default function BillingSoftware({
   // Stats dashboard calculations
   const isPayableDoc = (doc: string = '') => doc !== 'Quotation' && doc !== 'Estimate' && doc !== 'Cancelled';
   const displayedInvoicesForStats = invoices.filter(i => {
+    // Strictly isolate by active portal brand
+    if (currentBrand === 'yantrabyte') return !isInvoiceAnanta(i);
+    if (currentBrand === 'anantatechcare') return isInvoiceAnanta(i);
     if (savedDocBrandFilter === 'yantrabyte') return !isInvoiceAnanta(i);
     if (savedDocBrandFilter === 'anantatechcare') return isInvoiceAnanta(i);
     return true;
@@ -1708,11 +1720,16 @@ export default function BillingSoftware({
         'Status',
         'Notes',
       ];
-      const bills = invoices.filter(inv => inv.doc_type === 'Invoice');
-      const quotations = invoices.filter(inv => inv.doc_type === 'Quotation');
+      const isAnanta = currentBrand === 'anantatechcare';
+      const bills = invoices
+        .filter(inv => isAnanta ? isInvoiceAnanta(inv) : !isInvoiceAnanta(inv))
+        .filter(inv => inv.doc_type === 'Invoice');
+      const quotations = invoices
+        .filter(inv => isAnanta ? isInvoiceAnanta(inv) : !isInvoiceAnanta(inv))
+        .filter(inv => inv.doc_type === 'Quotation');
       const dues = bills.filter(inv => (inv.balance_due || 0) > 0);
 
-      downloadExcelWorkbook(`yantrabyte-ledger-${new Date().toISOString().slice(0, 10)}.xls`, [
+      downloadExcelWorkbook(`${isAnanta ? 'anantatechcare' : 'yantrabyte'}-ledger-${new Date().toISOString().slice(0, 10)}.xls`, [
         { name: 'Bills', rows: [invoiceHeaders, ...bills.map(invoiceRow)] },
         { name: 'Quotations', rows: [invoiceHeaders, ...quotations.map(invoiceRow)] },
         {
@@ -1789,31 +1806,13 @@ export default function BillingSoftware({
                 Billing System
               </span>
             </h2>
-            {/* Company Selector Toggle */}
-            <div className="flex items-center bg-gray-100 p-1 rounded-lg border border-gray-200">
-              <button
-                type="button"
-                onClick={() => setBrand("yantrabyte")}
-                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${
-                  currentBrand === "yantrabyte"
-                    ? "bg-blue-600 text-white shadow-xs"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                YantraByte
-              </button>
-              <button
-                type="button"
-                onClick={() => setBrand("anantatechcare")}
-                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${
-                  currentBrand === "anantatechcare"
-                    ? "bg-teal-600 text-white shadow-xs"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                ANANTATECH CARE
-              </button>
-            </div>
+            <span className={`text-xs px-2.5 py-1 rounded-full font-bold uppercase tracking-wider ${
+              currentBrand === 'anantatechcare'
+                ? 'bg-teal-100 text-teal-800 border border-teal-200'
+                : 'bg-blue-100 text-blue-800 border border-blue-200'
+            }`}>
+              {currentBrand === 'anantatechcare' ? 'ANANTATECH CARE ONLY' : 'YANTRABYTE ONLY'}
+            </span>
           </div>
           <p className="text-sm text-gray-500 mt-0.5">Create, edit, and generate PDF invoices and quotations natively.</p>
         </div>
@@ -2644,43 +2643,19 @@ export default function BillingSoftware({
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-3">
               <h3 className="text-xl font-bold text-gray-800">Saved Documents</h3>
-              {/* Brand Filter Pill Tabs */}
+              {/* Isolated Brand Badge & Selector */}
               <div className="flex items-center bg-gray-100 p-1 rounded-lg border border-gray-200">
-                <button
-                  type="button"
-                  onClick={() => setSavedDocBrandFilter('all')}
-                  className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${
-                    savedDocBrandFilter === 'all'
-                      ? 'bg-white text-gray-900 shadow-xs'
-                      : 'text-gray-500 hover:text-gray-800'
-                  }`}
-                >
-                  All ({invoices.length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSavedDocBrandFilter('yantrabyte')}
-                  className={`px-3 py-1 text-xs font-bold rounded-md transition-all flex items-center gap-1.5 ${
-                    savedDocBrandFilter === 'yantrabyte'
-                      ? 'bg-blue-600 text-white shadow-xs'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  <span className="w-2 h-2 rounded-full bg-blue-400"></span>
-                  YantraByte ({invoices.filter(i => !isInvoiceAnanta(i)).length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSavedDocBrandFilter('anantatechcare')}
-                  className={`px-3 py-1 text-xs font-bold rounded-md transition-all flex items-center gap-1.5 ${
-                    savedDocBrandFilter === 'anantatechcare'
-                      ? 'bg-teal-600 text-white shadow-xs'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  <span className="w-2 h-2 rounded-full bg-teal-400"></span>
-                  ANANTATECH CARE ({invoices.filter(i => isInvoiceAnanta(i)).length})
-                </button>
+                {currentBrand === 'yantrabyte' ? (
+                  <div className="px-3 py-1 text-xs font-bold rounded-md bg-blue-600 text-white flex items-center gap-1.5 shadow-xs">
+                    <span className="w-2 h-2 rounded-full bg-blue-300"></span>
+                    YantraByte ({invoices.filter(i => !isInvoiceAnanta(i)).length})
+                  </div>
+                ) : (
+                  <div className="px-3 py-1 text-xs font-bold rounded-md bg-teal-600 text-white flex items-center gap-1.5 shadow-xs">
+                    <span className="w-2 h-2 rounded-full bg-teal-300"></span>
+                    ANANTATECH CARE ({invoices.filter(i => isInvoiceAnanta(i)).length})
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -2736,6 +2711,9 @@ export default function BillingSoftware({
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {invoices.filter(inv => {
+                  // Strict isolation by portal brand
+                  if (currentBrand === 'yantrabyte' && isInvoiceAnanta(inv)) return false;
+                  if (currentBrand === 'anantatechcare' && !isInvoiceAnanta(inv)) return false;
                   if (savedDocBrandFilter === 'yantrabyte' && isInvoiceAnanta(inv)) return false;
                   if (savedDocBrandFilter === 'anantatechcare' && !isInvoiceAnanta(inv)) return false;
 
