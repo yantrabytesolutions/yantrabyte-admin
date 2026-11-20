@@ -122,8 +122,8 @@ export default function BillingSoftware({
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurringInterval, setRecurringInterval] = useState('monthly');
   const [termsConditions, setTermsConditions] = useState('');
-  const [quoteValidityDays, setQuoteValidityDays] = useState('2');
-  const [quoteAdvancePercent, setQuoteAdvancePercent] = useState('85');
+  const quoteValidityDays = '2';
+  const quoteAdvancePercent = '85';
   const [warrantyMonths, setWarrantyMonths] = useState<number | ''>('');
   const [items, setItems] = useState<InvoiceItem[]>([]);
   const [companySignatureBase64, setCompanySignatureBase64] = useState<string | null>(null);
