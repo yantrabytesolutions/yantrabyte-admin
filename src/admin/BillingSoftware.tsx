@@ -2312,44 +2312,6 @@ export default function BillingSoftware({
                 ></textarea>
               </div>
             </div>
-            
-            <div className="border-t border-slate-100 pt-5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                <label className="block text-xs font-bold text-slate-700">Terms & Conditions</label>
-                <div className="flex flex-wrap gap-1.5">
-                  <button type="button" onClick={() => setTermsConditions("1. Goods once sold will not be taken back.\n2. Warranty as per manufacturer terms.\n3. Subject to local jurisdiction.")} className="text-[11px] font-semibold bg-slate-100 px-2.5 py-1 rounded-md hover:bg-slate-200 text-slate-700 transition-colors">General</button>
-                  <button type="button" onClick={() => setTermsConditions("1. We are not responsible for any data loss during repair. Please backup your data.\n2. 30 days warranty on repaired parts only.\n3. Physical or liquid damage voids warranty.")} className="text-[11px] font-semibold bg-slate-100 px-2.5 py-1 rounded-md hover:bg-slate-200 text-slate-700 transition-colors">Service</button>
-                  <button type="button" onClick={() => setTermsConditions("1. AMC covers standard service visits as per contract.\n2. Spare parts are charged extra unless specified.\n3. Contract is non-transferable.")} className="text-[11px] font-semibold bg-slate-100 px-2.5 py-1 rounded-md hover:bg-slate-200 text-slate-700 transition-colors">AMC</button>
-                  <button type="button" onClick={() => setTermsConditions(`1. Estimate valid for ${quoteValidityDays} days.\n2. Advance payment of ${quoteAdvancePercent}% required and remaining against Delivery.\n3. Final amount may vary if hidden faults are found.`)} className="text-[11px] font-semibold bg-purple-50 text-purple-700 px-2.5 py-1 rounded-md border border-purple-200 hover:bg-purple-100 transition-colors">Quotation</button>
-                  <button type="button" onClick={() => setTermsConditions("")} className="text-[11px] font-semibold text-red-600 bg-red-50 px-2.5 py-1 rounded-md hover:bg-red-100 transition-colors">Clear</button>
-                </div>
-              </div>
-              <textarea 
-                value={termsConditions} 
-                onChange={e => setTermsConditions(e.target.value)}
-                className="w-full bg-white text-slate-900 border border-slate-300 rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-20 shadow-xs" 
-                placeholder="Enter terms and conditions for this bill..."
-              ></textarea>
-              {docType === 'Quotation' && (
-                <div className="mt-3 flex flex-wrap gap-3 items-end">
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-500 mb-1">Validity (Days)</label>
-                    <input type="number" value={quoteValidityDays} onChange={e => setQuoteValidityDays(e.target.value)} className="w-24 h-9 text-xs px-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-semibold" />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-500 mb-1">Advance (%)</label>
-                    <input type="number" value={quoteAdvancePercent} onChange={e => setQuoteAdvancePercent(e.target.value)} className="w-24 h-9 text-xs px-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-semibold" />
-                  </div>
-                  <button 
-                    type="button"
-                    onClick={() => setTermsConditions(`1. Estimate valid for ${quoteValidityDays} days.\n2. Advance payment of ${quoteAdvancePercent}% required and remaining against Delivery.\n3. Final amount may vary if hidden faults are found.`)}
-                    className="h-9 text-xs bg-blue-50 text-blue-600 px-3.5 rounded-lg border border-blue-200 hover:bg-blue-100 font-bold transition-colors flex items-center"
-                  >
-                    Apply to Terms
-                  </button>
-                </div>
-              )}
-            </div>
           </div>
 
           {/* Items & Billing Card */}
@@ -2379,31 +2341,6 @@ export default function BillingSoftware({
                   <option value="">⚡ Quick Services...</option>
                   {PRESET_ITEMS.map((item, idx) => (
                     <option key={idx} value={item.name}>{item.name} (₹{item.price})</option>
-                  ))}
-                </select>
-
-                <select 
-                  onChange={(e) => {
-                    const selectedId = e.target.value;
-                    if (selectedId) {
-                      const matched = productsList.find(p => p.id === selectedId);
-                      if (matched) {
-                        setItemDesc(matched.name);
-                        setItemRate(Number(matched.price) || 0);
-                        setItemProductId(matched.id);
-                      }
-                    } else {
-                      setItemProductId('');
-                    }
-                  }}
-                  value={itemProductId}
-                  className="text-xs border border-slate-300 rounded-lg px-3 py-1.5 text-slate-700 bg-slate-50 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-xs font-semibold max-w-[190px]"
-                >
-                  <option value="">📦 Inventory Stock...</option>
-                  {productsList.map((prod) => (
-                    <option key={prod.id} value={prod.id}>
-                      {prod.name} (Stock: {prod.stock_count ?? 0})
-                    </option>
                   ))}
                 </select>
               </div>
