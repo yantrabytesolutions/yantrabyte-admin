@@ -6,7 +6,7 @@ import {
 } from 'recharts';
 import { format, subMonths, startOfMonth, parseISO } from 'date-fns';
 import { Invoice, Purchase, ServiceTicket, Expense } from '../types';
-import { AlertCircle, IndianRupee, TrendingDown, TrendingUp, Clock, CheckCircle, Receipt, MessageSquare, Mail, Loader2, FileText, Cloud, HardDrive, RefreshCw, ExternalLink, ShieldCheck } from 'lucide-react';
+import { AlertCircle, Clock, CheckCircle, Receipt, MessageSquare, Mail, Loader2, FileText, Cloud, HardDrive, RefreshCw, ExternalLink, ShieldCheck } from 'lucide-react';
 import CustomerLedgerModal from './components/CustomerLedgerModal';
 
 interface OutstandingClient {
@@ -51,9 +51,6 @@ export default function Dashboard({ onNavigate, brand: propBrand, onBrandChange 
   const [sendingEmails, setSendingEmails] = useState(false);
   const [ledgerCustomerName, setLedgerCustomerName] = useState<string | null>(null);
   
-  const [totalRevenue, setTotalRevenue] = useState(0);
-  const [totalExpenses, setTotalExpenses] = useState(0);
-  const [totalOutstanding, setTotalOutstanding] = useState(0);
   const [totalInvoices, setTotalInvoices] = useState(0);
   const [totalQuotations, setTotalQuotations] = useState(0);
   const [activeTickets, setActiveTickets] = useState(0);
@@ -136,18 +133,8 @@ export default function Dashboard({ onNavigate, brand: propBrand, onBrandChange 
         quoteCount++;
       }
     });
-    setTotalRevenue(rev);
     setTotalInvoices(invCount);
     setTotalQuotations(quoteCount);
-
-    let exp = 0;
-    purchases.forEach(pur => {
-      exp += Number(pur.grand_total) || 0;
-    });
-    expenses.forEach(ex => {
-      exp += Number(ex.amount) || 0;
-    });
-    setTotalExpenses(exp);
 
     setActiveTickets(tickets.filter(t => t.status !== 'closed').length);
 
@@ -198,7 +185,6 @@ export default function Dashboard({ onNavigate, brand: propBrand, onBrandChange 
 
     clients.sort((a, b) => b.balance_due - a.balance_due);
     setOutstandingClients(clients);
-    setTotalOutstanding(clients.reduce((sum, c) => sum + c.balance_due, 0));
 
     // Get list of outstanding suppliers
     const suppliers = purchases

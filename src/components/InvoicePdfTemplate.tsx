@@ -125,6 +125,8 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
   // Minimal top header, customer name, posting & due dates, delivery check,
   // and clean items table (Removed: Stock UOM, UOM, Discount Amount, Distributed Discount Amount, Rate of Stock UOM, Grant Commission).
   // ----------------------------------------------------
+  const monoFont = "'JetBrains Mono', 'Courier New', monospace";
+
   if (isAnanta) {
     const totalQty = items.reduce((sum, it: any) => sum + (Number(it.qty || 1)), 0);
     const invoiceNo = invoice.invoice_no || 'DRAFT';
@@ -450,7 +452,6 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
   const primaryLight = "#F8FAFC";
   const primaryBorder = "#CBD5E1";
   const fontFam = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
-  const monoFont = "'JetBrains Mono', 'Courier New', monospace";
 
   return (
     <div 
