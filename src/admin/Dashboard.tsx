@@ -27,9 +27,22 @@ const COLORS = ['#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
 interface DashboardProps {
   onNavigate?: (section: string, params?: any) => void;
+  brand?: 'yantrabyte' | 'anantatechcare';
+  onBrandChange?: (brand: 'yantrabyte' | 'anantatechcare') => void;
 }
 
-export default function Dashboard({ onNavigate }: DashboardProps) {
+export default function Dashboard({ onNavigate, brand: propBrand, onBrandChange }: DashboardProps) {
+  const [selectedBrand, setSelectedBrand] = useState<'all' | 'yantrabyte' | 'anantatechcare'>(() => {
+    if (propBrand) return propBrand;
+    return (localStorage.getItem('admin_brand') as 'yantrabyte' | 'anantatechcare') || 'all';
+  });
+
+  useEffect(() => {
+    if (propBrand) {
+      setSelectedBrand(propBrand);
+    }
+  }, [propBrand]);
+
   const [loading, setLoading] = useState(true);
   const [revenueData, setRevenueData] = useState<any[]>([]);
   const [ticketStatusData, setTicketStatusData] = useState<any[]>([]);
@@ -42,7 +55,13 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const [totalExpenses, setTotalExpenses] = useState(0);
   const [totalOutstanding, setTotalOutstanding] = useState(0);
   const [totalInvoices, setTotalInvoices] = useState(0);
+  const [totalQuotations, setTotalQuotations] = useState(0);
   const [activeTickets, setActiveTickets] = useState(0);
+  const [allInvoicesRaw, setAllInvoicesRaw] = useState<Invoice[]>([]);
+  const [allPurchasesRaw, setAllPurchasesRaw] = useState<Purchase[]>([]);
+  const [allTicketsRaw, setAllTicketsRaw] = useState<ServiceTicket[]>([]);
+  const [allExpensesRaw, setAllExpensesRaw] = useState<Expense[]>([]);
+  const [allPaymentsRaw, setAllPaymentsRaw] = useState<any[]>([]);
   const [lowStockProducts, setLowStockProducts] = useState<any[]>([]);
   const [nextcloudStatus, setNextcloudStatus] = useState<{
     online: boolean;
@@ -74,10 +93,201 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     fetchNextcloudStatus();
   }, []);
 
+  const isInvoiceAnanta = (inv: { invoice_no?: string }) => {
+    const no = (inv.invoice_no || '').trim().toUpperCase();
+    return no.startsWith('ATC') || no.startsWith('ATCQ');
+  };
+
+  const isTicketAnanta = (t: { ticket_number?: string }) => {
+    const no = (t.ticket_number || '').trim().toUpperCase();
+    return no.startsWith('ATC');
+  };
+
+  const isPurchaseAnanta = (p: { purchase_no?: string; notes?: string }) => {
+    const no = (p.purchase_no || '').trim().toUpperCase();
+    return no.startsWith('ATC');
+  };
+
+  const filterByBrand = <T extends any>(items: T[], brandChecker: (item: T) => boolean): T[] => {
+    if (selectedBrand === 'yantrabyte') return items.filter(item => !brandChecker(item));
+    if (selectedBrand === 'anantatechcare') return items.filter(item => brandChecker(item));
+    return items;
+  };
+
+  // Re-compute dashboard statistics when raw data or brand filter changes
+  useEffect(() => {
+    const invoices = filterByBrand(allInvoicesRaw, isInvoiceAnanta);
+    const purchases = filterByBrand(allPurchasesRaw, isPurchaseAnanta);
+    const tickets = filterByBrand(allTicketsRaw, isTicketAnanta);
+    const expenses = allExpensesRaw;
+    const customerPayments = allPaymentsRaw;
+
+    // Calculate totals
+    let rev = 0;
+    let out = 0;
+    let invCount = 0;
+    let quoteCount = 0;
+    invoices.forEach(inv => {
+      if (inv.doc_type === 'Invoice') {
+        rev += Number(inv.grand_total) || 0;
+        out += Number(inv.balance_due) || 0;
+        invCount++;
+      } else if (inv.doc_type === 'Quotation') {
+        quoteCount++;
+      }
+    });
+    setTotalRevenue(rev);
+    setTotalInvoices(invCount);
+    setTotalQuotations(quoteCount);
+
+    let exp = 0;
+    purchases.forEach(pur => {
+      exp += Number(pur.grand_total) || 0;
+    });
+    expenses.forEach(ex => {
+      exp += Number(ex.amount) || 0;
+    });
+    setTotalExpenses(exp);
+
+    setActiveTickets(tickets.filter(t => t.status !== 'closed').length);
+
+    // Get list of outstanding clients
+    const clientsMap: Record<string, OutstandingClient> = {};
+
+    invoices
+      .filter(inv => inv.doc_type === 'Invoice')
+      .forEach(inv => {
+        const name = String(inv.customer_name || 'Customer').trim();
+        const lowerName = name.toLowerCase();
+        const phone = String(inv.phone || '');
+        const email = String(inv.email || '');
+
+        if (!clientsMap[lowerName]) {
+          clientsMap[lowerName] = {
+            customer_name: name,
+            customer_phone: phone,
+            customer_email: email,
+            balance_due: 0,
+            invoices: []
+          };
+        }
+
+        if (inv.invoice_no && !clientsMap[lowerName].invoices.includes(inv.invoice_no)) {
+          clientsMap[lowerName].invoices.push(inv.invoice_no);
+        }
+      });
+
+    const clients: OutstandingClient[] = [];
+
+    Object.entries(clientsMap).forEach(([lowerName, client]) => {
+      const custInvoices = invoices.filter(i => i.doc_type === 'Invoice' && String(i.customer_name || '').trim().toLowerCase() === lowerName);
+      const totalBilled = custInvoices.reduce((sum, i) => sum + (Number(i.grand_total) || 0), 0);
+      
+      const custPayments = customerPayments.filter(p => String(p.customer_name || '').trim().toLowerCase() === lowerName);
+      const totalPaymentsRecorded = custPayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+      const totalAdvancesOnInvoices = custInvoices.reduce((sum, i) => sum + (Number(i.advance_paid) || 0), 0);
+      const totalPaid = Math.max(totalPaymentsRecorded, totalAdvancesOnInvoices);
+
+      const trueDue = Math.max(0, totalBilled - totalPaid);
+
+      if (trueDue > 0) {
+        client.balance_due = trueDue;
+        clients.push(client);
+      }
+    });
+
+    clients.sort((a, b) => b.balance_due - a.balance_due);
+    setOutstandingClients(clients);
+    setTotalOutstanding(clients.reduce((sum, c) => sum + c.balance_due, 0));
+
+    // Get list of outstanding suppliers
+    const suppliers = purchases
+      .filter(pur => (pur.balance_due || 0) > 0)
+      .reduce((acc: OutstandingSupplier[], pur) => {
+        const name = String(pur.supplier_name || 'Vendor');
+        const due = pur.balance_due || 0;
+        
+        const existing = acc.find(s => s.supplier_name?.toLowerCase() === name.toLowerCase());
+        if (existing) {
+          existing.balance_due += due;
+          if (!existing.purchases.includes(pur.purchase_no)) {
+            existing.purchases.push(pur.purchase_no);
+          }
+        } else {
+          acc.push({
+            supplier_name: name,
+            balance_due: due,
+            purchases: [pur.purchase_no]
+          });
+        }
+        return acc;
+      }, [])
+      .sort((a, b) => b.balance_due - a.balance_due);
+    setOutstandingSuppliers(suppliers);
+
+    // Aggregate revenue and expenses by month
+    const monthlyData: Record<string, { month: string; revenue: number; expenses: number; tickets: number }> = {};
+    
+    for (let i = 5; i >= 0; i--) {
+      const d = subMonths(new Date(), i);
+      const monthLabel = format(d, 'MMM yyyy');
+      monthlyData[monthLabel] = { month: monthLabel, revenue: 0, expenses: 0, tickets: 0 };
+    }
+
+    invoices.filter(i => i.doc_type === 'Invoice').forEach(inv => {
+      if (!inv.created_at) return;
+      const monthLabel = format(parseISO(inv.created_at), 'MMM yyyy');
+      if (monthlyData[monthLabel]) {
+        monthlyData[monthLabel].revenue += Number(inv.grand_total) || 0;
+      }
+    });
+
+    purchases.forEach(pur => {
+      if (!pur.created_at && !pur.date) return;
+      const dateStr = pur.created_at || pur.date;
+      const monthLabel = format(parseISO(dateStr), 'MMM yyyy');
+      if (monthlyData[monthLabel]) {
+        monthlyData[monthLabel].expenses += Number(pur.grand_total) || 0;
+      }
+    });
+    
+    expenses.forEach(exp => {
+      if (!(exp as any).created_at && !exp.date) return;
+      const dateStr = (exp as any).created_at || exp.date;
+      const monthLabel = format(parseISO(dateStr), 'MMM yyyy');
+      if (monthlyData[monthLabel]) {
+        monthlyData[monthLabel].expenses += Number(exp.amount) || 0;
+      }
+    });
+
+    const statusCount: Record<string, number> = {
+      'open': 0,
+      'in-progress': 0,
+      'completed': 0,
+      'closed': 0
+    };
+    tickets.forEach(t => {
+      const s = t.status || 'open';
+      if (statusCount[s] !== undefined) statusCount[s]++;
+      
+      if (t.created_at) {
+        const monthLabel = format(parseISO(t.created_at), 'MMM yyyy');
+        if (monthlyData[monthLabel]) {
+          monthlyData[monthLabel].tickets++;
+        }
+      }
+    });
+    
+    setRevenueData(Object.values(monthlyData));
+    setTicketStatusData(Object.keys(statusCount).map(key => ({
+      name: key.toUpperCase(),
+      value: statusCount[key]
+    })));
+  }, [selectedBrand, allInvoicesRaw, allPurchasesRaw, allTicketsRaw, allExpensesRaw, allPaymentsRaw]);
+
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      // 1. Fetch data for the last 6 months
       const sixMonthsAgo = startOfMonth(subMonths(new Date(), 5)).toISOString();
       
       const [invoicesRes, purchasesRes, ticketsRes, productsRes, expensesRes, paymentsRes] = await Promise.all([
@@ -97,167 +307,11 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       const customerPayments = (paymentsRes.data || []) as any[];
       
       setLowStockProducts(products.filter(p => typeof p.stock_count === 'number' && p.stock_count < 5));
-
-      // Calculate totals
-      let rev = 0;
-      let out = 0;
-      let invCount = 0;
-      invoices.forEach(inv => {
-        if (inv.doc_type === 'Invoice') {
-          rev += Number(inv.grand_total) || 0;
-          out += Number(inv.balance_due) || 0;
-          invCount++;
-        }
-      });
-      setTotalRevenue(rev);
-      setTotalInvoices(invCount);
-
-      let exp = 0;
-      purchases.forEach(pur => {
-        exp += Number(pur.grand_total) || 0;
-      });
-      expenses.forEach(ex => {
-        exp += Number(ex.amount) || 0;
-      });
-      setTotalExpenses(exp);
-
-      setActiveTickets(tickets.filter(t => t.status !== 'closed').length);
-
-      // Get list of outstanding clients
-      // Group invoices and reconcile with customer_payments so client balance is 100% exact
-      const clientsMap: Record<string, OutstandingClient> = {};
-
-      invoices
-        .filter(inv => inv.doc_type === 'Invoice')
-        .forEach(inv => {
-          const name = String(inv.customer_name || 'Customer').trim();
-          const lowerName = name.toLowerCase();
-          const phone = String(inv.phone || '');
-          const email = String(inv.email || '');
-
-          if (!clientsMap[lowerName]) {
-            clientsMap[lowerName] = {
-              customer_name: name,
-              customer_phone: phone,
-              customer_email: email,
-              balance_due: 0,
-              invoices: []
-            };
-          }
-
-          if (inv.invoice_no && !clientsMap[lowerName].invoices.includes(inv.invoice_no)) {
-            clientsMap[lowerName].invoices.push(inv.invoice_no);
-          }
-        });
-
-      const clients: OutstandingClient[] = [];
-
-      Object.entries(clientsMap).forEach(([lowerName, client]) => {
-        const custInvoices = invoices.filter(i => i.doc_type === 'Invoice' && String(i.customer_name || '').trim().toLowerCase() === lowerName);
-        const totalBilled = custInvoices.reduce((sum, i) => sum + (Number(i.grand_total) || 0), 0);
-        
-        const custPayments = customerPayments.filter(p => String(p.customer_name || '').trim().toLowerCase() === lowerName);
-        const totalPaymentsRecorded = custPayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
-        const totalAdvancesOnInvoices = custInvoices.reduce((sum, i) => sum + (Number(i.advance_paid) || 0), 0);
-        const totalPaid = Math.max(totalPaymentsRecorded, totalAdvancesOnInvoices);
-
-        const trueDue = Math.max(0, totalBilled - totalPaid);
-
-        if (trueDue > 0) {
-          client.balance_due = trueDue;
-          clients.push(client);
-        }
-      });
-
-      clients.sort((a, b) => b.balance_due - a.balance_due);
-      setOutstandingClients(clients);
-      setTotalOutstanding(clients.reduce((sum, c) => sum + c.balance_due, 0));
-
-      // Get list of outstanding suppliers (Sundry Creditors)
-      const suppliers = purchases
-        .filter(pur => (pur.balance_due || 0) > 0)
-        .reduce((acc: OutstandingSupplier[], pur) => {
-          const name = String(pur.supplier_name || 'Vendor');
-          const due = pur.balance_due || 0;
-          
-          const existing = acc.find(s => s.supplier_name?.toLowerCase() === name.toLowerCase());
-          if (existing) {
-            existing.balance_due += due;
-            if (!existing.purchases.includes(pur.purchase_no)) {
-              existing.purchases.push(pur.purchase_no);
-            }
-          } else {
-            acc.push({
-              supplier_name: name,
-              balance_due: due,
-              purchases: [pur.purchase_no]
-            });
-          }
-          return acc;
-        }, [])
-        .sort((a, b) => b.balance_due - a.balance_due);
-      setOutstandingSuppliers(suppliers);
-
-      // Aggregate revenue and expenses by month
-      const monthlyData: Record<string, { month: string; revenue: number; expenses: number; tickets: number }> = {};
-      
-      for (let i = 5; i >= 0; i--) {
-        const d = subMonths(new Date(), i);
-        const monthLabel = format(d, 'MMM yyyy');
-        monthlyData[monthLabel] = { month: monthLabel, revenue: 0, expenses: 0, tickets: 0 };
-      }
-
-      invoices.filter(i => i.doc_type === 'Invoice').forEach(inv => {
-        if (!inv.created_at) return;
-        const monthLabel = format(parseISO(inv.created_at), 'MMM yyyy');
-        if (monthlyData[monthLabel]) {
-          monthlyData[monthLabel].revenue += Number(inv.grand_total) || 0;
-        }
-      });
-
-      purchases.forEach(pur => {
-        if (!pur.created_at && !pur.date) return;
-        const dateStr = pur.created_at || pur.date;
-        const monthLabel = format(parseISO(dateStr), 'MMM yyyy');
-        if (monthlyData[monthLabel]) {
-          monthlyData[monthLabel].expenses += Number(pur.grand_total) || 0;
-        }
-      });
-      
-      expenses.forEach(exp => {
-        if (!(exp as any).created_at && !exp.date) return;
-        const dateStr = (exp as any).created_at || exp.date;
-        const monthLabel = format(parseISO(dateStr), 'MMM yyyy');
-        if (monthlyData[monthLabel]) {
-          monthlyData[monthLabel].expenses += Number(exp.amount) || 0;
-        }
-      });
-
-      // Aggregate ticket statuses and monthly trends
-      const statusCount: Record<string, number> = {
-        'open': 0,
-        'in-progress': 0,
-        'completed': 0,
-        'closed': 0
-      };
-      tickets.forEach(t => {
-        const s = t.status || 'open';
-        if (statusCount[s] !== undefined) statusCount[s]++;
-        
-        if (t.created_at) {
-          const monthLabel = format(parseISO(t.created_at), 'MMM yyyy');
-          if (monthlyData[monthLabel]) {
-            monthlyData[monthLabel].tickets++;
-          }
-        }
-      });
-      
-      setRevenueData(Object.values(monthlyData));
-      setTicketStatusData(Object.keys(statusCount).map(key => ({
-        name: key.toUpperCase(),
-        value: statusCount[key]
-      })));
-
+      setAllInvoicesRaw(invoices);
+      setAllPurchasesRaw(purchases);
+      setAllTicketsRaw(tickets);
+      setAllExpensesRaw(expenses);
+      setAllPaymentsRaw(customerPayments);
     } catch (err) {
       console.error("Dashboard error:", err);
     } finally {
@@ -316,59 +370,125 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center bg-white p-6 rounded-lg shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-white p-6 rounded-lg shadow-sm gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Financial <span className="text-blue-600">Dashboard</span></h2>
-          <p className="text-sm text-gray-500">Overview of revenue, expenses, and service operations.</p>
+          <h2 className="text-2xl font-bold text-gray-900">
+            {selectedBrand === 'anantatechcare' ? (
+              <>ANANTATECH CARE <span className="text-teal-600">Dashboard</span></>
+            ) : selectedBrand === 'yantrabyte' ? (
+              <>YantraByte <span className="text-blue-600">Dashboard</span></>
+            ) : (
+              <>Business <span className="text-blue-600">Dashboard</span></>
+            )}
+          </h2>
+          <p className="text-sm text-gray-500">Overview of open tickets, invoices, and quotations.</p>
+        </div>
+
+        {/* Brand Selector Tabs */}
+        <div className="flex items-center bg-gray-100 p-1 rounded-xl self-start sm:self-auto border border-gray-200">
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedBrand('all');
+            }}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              selectedBrand === 'all'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            All Brands
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedBrand('yantrabyte');
+              localStorage.setItem('admin_brand', 'yantrabyte');
+              if (onBrandChange) onBrandChange('yantrabyte');
+            }}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              selectedBrand === 'yantrabyte'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'text-gray-600 hover:text-blue-600'
+            }`}
+          >
+            <span className={`w-2 h-2 rounded-full ${selectedBrand === 'yantrabyte' ? 'bg-white' : 'bg-blue-500'}`} />
+            YantraByte
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedBrand('anantatechcare');
+              localStorage.setItem('admin_brand', 'anantatechcare');
+              if (onBrandChange) onBrandChange('anantatechcare');
+            }}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              selectedBrand === 'anantatechcare'
+                ? 'bg-teal-600 text-white shadow-sm'
+                : 'text-gray-600 hover:text-teal-600'
+            }`}
+          >
+            <span className={`w-2 h-2 rounded-full ${selectedBrand === 'anantatechcare' ? 'bg-white' : 'bg-teal-500'}`} />
+            AnantaTech Care
+          </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4">
-         <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4">
-           <div className="p-3 bg-emerald-100 text-emerald-600 rounded-lg"><IndianRupee className="w-6 h-6" /></div>
-           <div>
-             <p className="text-xs font-semibold text-gray-500 uppercase">Total Revenue (6m)</p>
-             <h3 className="text-2xl font-bold text-gray-900">₹{totalRevenue.toLocaleString('en-IN')}</h3>
-           </div>
-         </div>
-         <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4">
-           <div className="p-3 bg-red-100 text-red-600 rounded-lg"><TrendingDown className="w-6 h-6" /></div>
-           <div>
-             <p className="text-xs font-semibold text-gray-500 uppercase">Total Expenses (6m)</p>
-             <h3 className="text-2xl font-bold text-gray-900">₹{totalExpenses.toLocaleString('en-IN')}</h3>
-           </div>
-         </div>
-         <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4">
-           <div className="p-3 bg-blue-100 text-blue-600 rounded-lg"><TrendingUp className="w-6 h-6" /></div>
-           <div>
-             <p className="text-xs font-semibold text-gray-500 uppercase">Net Profit (6m)</p>
-             <h3 className="text-2xl font-bold text-gray-900">₹{(totalRevenue - totalExpenses).toLocaleString('en-IN')}</h3>
-           </div>
-         </div>
-         <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4">
-           <div className="p-3 bg-amber-100 text-amber-600 rounded-lg"><AlertCircle className="w-6 h-6" /></div>
-           <div>
-             <p className="text-xs font-semibold text-gray-500 uppercase">Outstanding</p>
-             <h3 className="text-xl font-bold text-amber-600">₹{totalOutstanding.toLocaleString('en-IN')}</h3>
-           </div>
-         </div>
-         <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4">
-           <div className="p-3 bg-blue-100 text-blue-600 rounded-lg"><Clock className="w-6 h-6" /></div>
-           <div>
-             <p className="text-xs font-semibold text-gray-500 uppercase">Tickets</p>
-             <h3 className="text-xl font-bold text-gray-900">{activeTickets}</h3>
-           </div>
-         </div>
-         <div 
-           className="bg-white p-5 rounded-xl shadow-sm border border-blue-200 flex items-center space-x-4 cursor-pointer hover:bg-blue-50 transition-colors"
-           onClick={() => onNavigate && onNavigate('billing', { tab: 'history' })}
-         >
-           <div className="p-3 bg-blue-100 text-blue-600 rounded-lg"><Receipt className="w-6 h-6" /></div>
-           <div>
-             <p className="text-xs font-semibold text-gray-500 uppercase">Invoices</p>
-             <h3 className="text-xl font-bold text-gray-900">{totalInvoices}</h3>
-           </div>
-         </div>
+      {/* Main Metric Cards: Only Open Tickets, Invoices, and Quotations (No amounts) */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        {/* Open Service Tickets */}
+        <div 
+          className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer flex items-center justify-between group"
+          onClick={() => onNavigate && onNavigate('tickets')}
+        >
+          <div className="space-y-1">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Open Service Tickets</p>
+            <div className="flex items-baseline gap-2">
+              <h3 className="text-3xl font-extrabold text-blue-600">{activeTickets}</h3>
+              <span className="text-xs text-gray-500 font-medium">Pending & Active</span>
+            </div>
+            <p className="text-xs text-blue-500 group-hover:underline pt-1">View tickets &rarr;</p>
+          </div>
+          <div className="p-4 bg-blue-50 text-blue-600 rounded-2xl group-hover:bg-blue-600 group-hover:text-white transition-colors">
+            <Clock className="w-8 h-8" />
+          </div>
+        </div>
+
+        {/* Invoices */}
+        <div 
+          className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:border-emerald-300 hover:shadow-md transition-all cursor-pointer flex items-center justify-between group"
+          onClick={() => onNavigate && onNavigate('billing', { tab: 'history' })}
+        >
+          <div className="space-y-1">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Invoices</p>
+            <div className="flex items-baseline gap-2">
+              <h3 className="text-3xl font-extrabold text-emerald-600">{totalInvoices}</h3>
+              <span className="text-xs text-gray-500 font-medium">Generated Bills</span>
+            </div>
+            <p className="text-xs text-emerald-500 group-hover:underline pt-1">View invoice history &rarr;</p>
+          </div>
+          <div className="p-4 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+            <Receipt className="w-8 h-8" />
+          </div>
+        </div>
+
+        {/* Quotations */}
+        <div 
+          className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:border-purple-300 hover:shadow-md transition-all cursor-pointer flex items-center justify-between group"
+          onClick={() => onNavigate && onNavigate('billing', { tab: 'quotations' })}
+        >
+          <div className="space-y-1">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Quotations</p>
+            <div className="flex items-baseline gap-2">
+              <h3 className="text-3xl font-extrabold text-purple-600">{totalQuotations}</h3>
+              <span className="text-xs text-gray-500 font-medium">Estimates & Quotes</span>
+            </div>
+            <p className="text-xs text-purple-500 group-hover:underline pt-1">View quotations &rarr;</p>
+          </div>
+          <div className="p-4 bg-purple-50 text-purple-600 rounded-2xl group-hover:bg-purple-600 group-hover:text-white transition-colors">
+            <FileText className="w-8 h-8" />
+          </div>
+        </div>
       </div>
       
       {/* ☁️ Nextcloud Private Cloud Server Live Monitor */}

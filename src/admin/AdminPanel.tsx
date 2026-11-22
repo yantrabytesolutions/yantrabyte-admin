@@ -1936,7 +1936,7 @@ export default function AdminPanel() {
 
   // --- Render Dashboard ---
   const renderDashboard = () => {
-    return <Dashboard onNavigate={(section, params) => {
+    return <Dashboard brand={selectedBrand} onBrandChange={setSelectedBrand} onNavigate={(section, params) => {
       setActiveSection(section as Section);
       if (section === 'billing' && params?.tab) {
         setBillingInitialTab(params.tab);
