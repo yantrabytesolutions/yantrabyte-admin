@@ -121,20 +121,335 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
   const fillerCount = Math.max(0, targetTotalRows - items.length);
 
   // ----------------------------------------------------
-  // DISTINCT BRAND STYLING & CONTEMPORARY THEME SETTINGS
+  // ANANTATECH CARE: CLEAN MODERN ERP FORMAT (MATCHING USER ATTACHED SPECIFICATION)
+  // Minimal top header, customer name, posting & due dates, delivery check,
+  // and clean items table (Removed: Stock UOM, UOM, Discount Amount, Distributed Discount Amount, Rate of Stock UOM, Grant Commission).
   // ----------------------------------------------------
-  // Red & Yellow Executive Palette for AnantaTech Care:
-  // Primary Red: #DC2626 (Bold Crimson Red)
-  // Deep Red / Dark Accent: #991B1B (Burgundy)
-  // Warm Yellow Gold Border: #FACC15 / #EAB308
-  // Soft Yellow Gold Tint Background: #FEFCE8 / #FEF08A
-  const primaryColor = isAnanta ? "#DC2626" : "#0B5394";
-  const primaryDark = isAnanta ? "#991B1B" : "#1E3A8A";
-  const primaryLight = isAnanta ? "#FEFCE8" : "#F8FAFC";
-  const primaryBorder = isAnanta ? "#FACC15" : "#CBD5E1";
-  const fontFam = isAnanta 
-    ? "'Outfit', 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
-    : "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+  if (isAnanta) {
+    const totalQty = items.reduce((sum, it: any) => sum + (Number(it.qty || 1)), 0);
+    const invoiceNo = invoice.invoice_no || 'DRAFT';
+    const postingDate = formattedDate;
+    const paymentDueDate = invoice.due_date 
+      ? (invoice.due_date.includes('-') ? invoice.due_date.split('-').reverse().join('-') : invoice.due_date)
+      : formattedDate;
+
+    return (
+      <div 
+        ref={ref} 
+        style={{ 
+          width: '794px', 
+          height: '1122px',
+          maxHeight: '1122px',
+          boxSizing: 'border-box', 
+          padding: '28px 32px', 
+          backgroundColor: '#ffffff', 
+          color: '#1e293b', 
+          fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", 
+          position: 'relative', 
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between'
+        }}
+      >
+        {/* Centered Brand Watermark Emblem */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundImage: `url(${ANANTATECHCARE_LOGO_BASE64})`,
+          backgroundSize: '480px 480px',
+          backgroundPosition: 'center center',
+          backgroundRepeat: 'no-repeat',
+          pointerEvents: 'none',
+          zIndex: 1,
+          opacity: 0.16,
+          filter: 'contrast(1.2) brightness(0.92)'
+        }} />
+
+        {/* Cancelled Stamp */}
+        {isCancelled && (
+          <div style={{
+            position: 'absolute',
+            top: '45%',
+            left: '50%',
+            transform: 'translate(-50%, -50%) rotate(-30deg)',
+            color: 'rgba(220, 38, 38, 0.4)',
+            fontSize: '70px',
+            fontWeight: '900',
+            textTransform: 'uppercase',
+            pointerEvents: 'none',
+            zIndex: 60,
+            border: '6px dashed rgba(220, 38, 38, 0.45)',
+            padding: '8px 36px',
+            borderRadius: '14px',
+            whiteSpace: 'nowrap'
+          }}>
+            CANCELLED
+          </div>
+        )}
+
+        {/* TOP CONTENT AREA */}
+        <div style={{ position: 'relative', zIndex: 10 }}>
+          {/* 1. Header (Centered Company Info) */}
+          <div style={{ textAlign: 'center', marginBottom: '18px' }}>
+            <div style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a', letterSpacing: '0.04em' }}>
+              ANANTATECH CARE
+            </div>
+            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
+              Your One Stop for Desktop or Laptop Solutions
+            </div>
+            <div style={{ fontSize: '11px', color: '#475569', marginTop: '2px', lineHeight: '1.4' }}>
+              47A 1st Cross, SAI Nagar 2nd Stage, 2nd Main Rd, Vidyaranyapura Post,<br />
+              Chikkabettahalli, Bengaluru, Karnataka – 560097
+            </div>
+            <div style={{ 
+              fontSize: '11px', 
+              color: '#0f172a', 
+              marginTop: '5px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              gap: '12px',
+              fontWeight: '600'
+            }}>
+              <span>☎ +91 9986742525</span>
+              <span style={{ color: '#cbd5e1' }}>|</span>
+              <span>✉ {companyEmail}</span>
+              <span style={{ color: '#cbd5e1' }}>|</span>
+              <span>💬 WhatsApp: 9986742525</span>
+            </div>
+          </div>
+
+          {/* Thin Divider Line */}
+          <div style={{ borderBottom: '1px solid #e2e8f0', marginBottom: '16px' }} />
+
+          {/* 2. Document Title & Number */}
+          <div style={{ marginBottom: '18px' }}>
+            <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#0f172a', margin: 0 }}>
+              {docTitle}
+            </h2>
+            <div style={{ fontSize: '12px', color: '#475569', marginTop: '4px', fontWeight: '500' }}>
+              {invoiceNo}
+            </div>
+          </div>
+
+          {/* 3. Customer Info, Dates & Delivery Note Check */}
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'flex-start',
+            marginBottom: '20px',
+            fontSize: '12px',
+            lineHeight: '1.5'
+          }}>
+            {/* Left: Customer Name */}
+            <div style={{ width: '38%' }}>
+              <div style={{ color: '#64748b' }}>Customer Name:</div>
+              <div style={{ fontWeight: '700', color: '#0f172a', fontSize: '13px', marginTop: '2px' }}>
+                {invoice.customer_name || 'Cash'}
+              </div>
+              {invoice.phone && <div style={{ color: '#475569', fontSize: '11px' }}>Ph: {invoice.phone}</div>}
+              {invoice.address && <div style={{ color: '#64748b', fontSize: '10.5px', marginTop: '1px' }}>{invoice.address}</div>}
+            </div>
+
+            {/* Center: Posting Date & Payment Due Date */}
+            <div style={{ width: '32%', textAlign: 'left' }}>
+              <div>
+                <span style={{ color: '#64748b' }}>Posting Date:</span>
+                <div style={{ fontWeight: '700', color: '#0f172a', marginTop: '1px' }}>{postingDate}</div>
+              </div>
+              <div style={{ marginTop: '8px' }}>
+                <span style={{ color: '#64748b' }}>Payment Due Date:</span>
+                <div style={{ fontWeight: '700', color: '#0f172a', marginTop: '1px' }}>{paymentDueDate}</div>
+              </div>
+            </div>
+
+            {/* Right: Update Billed Amount in Delivery Note */}
+            <div style={{ width: '30%', textAlign: 'right' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ color: '#475569', fontSize: '11px' }}>Update Billed Amount in Delivery Note:</span>
+                <span style={{ fontWeight: 'bold', color: '#0f172a', fontSize: '14px' }}>✓</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 4. Clean Items Table (Removed: Stock UOM, UOM, Discount Amount, Distributed Discount Amount, Rate of Stock UOM, Grant Commission) */}
+          <table style={{ 
+            width: '100%', 
+            borderCollapse: 'collapse', 
+            fontSize: '11.5px',
+            marginBottom: '16px'
+          }}>
+            <thead>
+              <tr style={{ borderTop: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1', color: '#64748b', textAlign: 'left' }}>
+                <th style={{ padding: '8px 6px', width: '38px', fontWeight: '600' }}>Sr</th>
+                <th style={{ padding: '8px 8px', width: '70px', fontWeight: '600' }}>Item</th>
+                <th style={{ padding: '8px 10px', fontWeight: '600' }}>Description</th>
+                <th style={{ padding: '8px 8px', width: '65px', textAlign: 'center', fontWeight: '600' }}>Quantity</th>
+                <th style={{ padding: '8px 10px', width: '90px', textAlign: 'right', fontWeight: '600' }}>Rate</th>
+                <th style={{ padding: '8px 10px', width: '105px', textAlign: 'right', fontWeight: '600' }}>Amount</th>
+                <th style={{ padding: '8px 8px', width: '65px', textAlign: 'center', fontWeight: '600' }}>
+                  Use Serial No / Batch Fields
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((it: any, idx: number) => {
+                const desc = it.description || it.item || it.name || it.item_name || '';
+                const qty = Number(it.qty || 1);
+                const rate = Number(it.rate || it.price || it.amount || 0);
+                const amount = qty * rate;
+                const itemCode = it.item_code || String(idx + 1).padStart(2, '0');
+                const hasSerial = Boolean(it.serial_no);
+
+                return (
+                  <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9', verticalAlign: 'top' }}>
+                    <td style={{ padding: '10px 6px', color: '#475569' }}>{idx + 1}</td>
+                    <td style={{ padding: '10px 8px', fontWeight: '600', color: '#0f172a' }}>{itemCode}</td>
+                    <td style={{ padding: '10px 10px', color: '#0f172a' }}>
+                      <div style={{ fontWeight: '600' }}>{desc}</div>
+                      {hasSerial && (
+                        <div style={{ fontSize: '10px', color: '#64748b', marginTop: '2px' }}>
+                          S/N: {it.serial_no}
+                        </div>
+                      )}
+                    </td>
+                    <td style={{ padding: '10px 8px', textAlign: 'center', color: '#0f172a' }}>
+                      Nos {qty}
+                    </td>
+                    <td style={{ padding: '10px 10px', textAlign: 'right', color: '#0f172a', fontFamily: monoFont }}>
+                      ₹ {rate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td style={{ padding: '10px 10px', textAlign: 'right', fontWeight: '700', color: '#0f172a', fontFamily: monoFont }}>
+                      ₹ {amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td style={{ padding: '10px 8px', textAlign: 'center', color: '#0f172a', fontSize: '13px' }}>
+                      {hasSerial ? '✓' : '✓'}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+
+          {/* 5. Summary / Totals Row */}
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            fontSize: '12px',
+            borderTop: '1px solid #cbd5e1',
+            paddingTop: '12px',
+            marginBottom: '14px'
+          }}>
+            {/* Left: Total Quantity */}
+            <div>
+              <div style={{ color: '#475569', fontWeight: '600' }}>Total Quantity:</div>
+              <div style={{ fontWeight: '700', color: '#0f172a', marginTop: '2px' }}>{totalQty}</div>
+            </div>
+
+            {/* Right: Totals Breakdown */}
+            <div style={{ width: '42%' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <span style={{ color: '#475569' }}>Total:</span>
+                <span style={{ fontWeight: '700', color: '#0f172a', fontFamily: monoFont }}>
+                  ₹ {subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+              {discount > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <span style={{ color: '#475569' }}>Discount:</span>
+                  <span style={{ fontWeight: '600', color: '#dc2626', fontFamily: monoFont }}>
+                    - ₹ {discount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+              )}
+              {tax > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <span style={{ color: '#475569' }}>Tax:</span>
+                  <span style={{ fontWeight: '600', color: '#0f172a', fontFamily: monoFont }}>
+                    ₹ {tax.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <span style={{ color: '#475569', fontWeight: '600' }}>Grand Total:</span>
+                <span style={{ fontWeight: '800', color: '#0f172a', fontFamily: monoFont }}>
+                  ₹ {grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ color: '#475569', fontWeight: '600' }}>Rounded Total:</span>
+                <span style={{ fontWeight: '800', color: '#0f172a', fontFamily: monoFont }}>
+                  ₹ {grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#334155' }}>
+                <span style={{ color: '#64748b' }}>In Words:</span>
+                <span style={{ fontWeight: '700', textAlign: 'right', maxWidth: '240px' }}>
+                  INR {numberToWords(grandTotal).replace(' Rupees Only', '')} only.
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* BOTTOM ANCHORED SECTION (Payment, Bank, QR Code & Terms) */}
+        <div style={{ position: 'relative', zIndex: 10, marginTop: 'auto', borderTop: '1px solid #e2e8f0', paddingTop: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '14px' }}>
+            {/* Bank Details */}
+            <div style={{ flex: 1, fontSize: '11px', color: '#334155', lineHeight: '1.45' }}>
+              <div style={{ fontWeight: '700', color: '#0f172a', marginBottom: '3px', textTransform: 'uppercase', fontSize: '11px' }}>
+                Bank &amp; Payment Details
+              </div>
+              <div><span style={{ color: '#64748b' }}>Company / A/C:</span> <strong>ANANTATECH CARE</strong></div>
+              <div><span style={{ color: '#64748b' }}>Bank:</span> AU Small Finance Bank &bull; Branch: Koramangala</div>
+              <div><span style={{ color: '#64748b' }}>A/C No:</span> <strong style={{ color: '#0f172a', fontFamily: monoFont }}>260226952682568</strong> &bull; <span style={{ color: '#64748b' }}>IFSC:</span> <strong style={{ color: '#0f172a', fontFamily: monoFont }}>AUBL0002695</strong></div>
+              <div style={{ marginTop: '2px', color: '#0f766e', fontWeight: '600' }}>Pay via UPI / GPay / PhonePe / BHIM / IMPS</div>
+            </div>
+
+            {/* Scan To Pay QR */}
+            <div id="invoice-qr-cell" style={{ textAlign: 'center', flexShrink: 0 }}>
+              <div style={{ fontSize: '9.5px', fontWeight: '700', color: '#0f172a', marginBottom: '2px' }}>
+                SCAN TO PAY
+              </div>
+              <div style={{ background: '#ffffff', padding: '2px', display: 'inline-block', border: '1px solid #cbd5e1', borderRadius: '4px' }}>
+                <QrCodeRenderer 
+                  value="upi://pay?pa=anantatechcare011126@aubiz&pn=ANANTATECH%20CARE&cu=INR" 
+                  size={65} 
+                />
+              </div>
+              <div style={{ fontSize: '8px', color: '#64748b', fontWeight: '600', marginTop: '1px' }}>ANY UPI APP</div>
+            </div>
+          </div>
+
+          {/* System Generated Notice */}
+          <div style={{ 
+            marginTop: '10px', 
+            textAlign: 'center', 
+            fontSize: '9.5px', 
+            color: '#64748b', 
+            letterSpacing: '0.04em',
+            textTransform: 'uppercase',
+            fontWeight: '600'
+          }}>
+            This is a computer generated document, no signature required.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ----------------------------------------------------
+  // YANTRABYTE SOLUTIONS: CLASSIC BLUE BORDER CORPORATE FORMAT
+  // ----------------------------------------------------
+  const primaryColor = "#0B5394";
+  const primaryDark = "#1E3A8A";
+  const primaryLight = "#F8FAFC";
+  const primaryBorder = "#CBD5E1";
+  const fontFam = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
   const monoFont = "'JetBrains Mono', 'Courier New', monospace";
 
   return (
