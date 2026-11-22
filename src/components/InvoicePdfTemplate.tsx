@@ -206,7 +206,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
             <img 
               src={ANANTATECHCARE_LOGO_BASE64} 
               alt="AnantaTech Care Logo" 
-              style={{ height: '76px', width: 'auto', objectFit: 'contain', display: 'block' }} 
+              style={{ height: '96px', width: 'auto', objectFit: 'contain', display: 'block' }} 
             />
             <div style={{ textAlign: 'left' }}>
               <div style={{ fontSize: '20px', fontWeight: '900', color: '#0f172a', letterSpacing: '0.03em', lineHeight: '1.2' }}>
@@ -291,7 +291,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
             </div>
           </div>
 
-          {/* 4. Clean Items Table (Removed: Stock UOM, UOM, Discount Amount, Distributed Discount Amount, Rate of Stock UOM, Grant Commission) */}
+          {/* 4. Clean Items Table (Removed: Use Serial No / Batch Fields column; Serial No shown cleanly below description) */}
           <table style={{ 
             width: '100%', 
             borderCollapse: 'collapse', 
@@ -303,12 +303,9 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                 <th style={{ padding: '8px 6px', width: '38px', fontWeight: '600' }}>Sr</th>
                 <th style={{ padding: '8px 8px', width: '70px', fontWeight: '600' }}>Item</th>
                 <th style={{ padding: '8px 10px', fontWeight: '600' }}>Description</th>
-                <th style={{ padding: '8px 8px', width: '65px', textAlign: 'center', fontWeight: '600' }}>Quantity</th>
-                <th style={{ padding: '8px 10px', width: '90px', textAlign: 'right', fontWeight: '600' }}>Rate</th>
-                <th style={{ padding: '8px 10px', width: '105px', textAlign: 'right', fontWeight: '600' }}>Amount</th>
-                <th style={{ padding: '8px 8px', width: '65px', textAlign: 'center', fontWeight: '600' }}>
-                  Use Serial No / Batch Fields
-                </th>
+                <th style={{ padding: '8px 8px', width: '75px', textAlign: 'center', fontWeight: '600' }}>Quantity</th>
+                <th style={{ padding: '8px 10px', width: '105px', textAlign: 'right', fontWeight: '600' }}>Rate</th>
+                <th style={{ padding: '8px 10px', width: '120px', textAlign: 'right', fontWeight: '600' }}>Amount</th>
               </tr>
             </thead>
             <tbody>
@@ -318,17 +315,29 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                 const rate = Number(it.rate || it.price || it.amount || 0);
                 const amount = qty * rate;
                 const itemCode = it.item_code || String(idx + 1).padStart(2, '0');
-                const hasSerial = Boolean(it.serial_no);
+                const serial = it.serial_no || it.serial || it.imei || '';
 
                 return (
                   <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9', verticalAlign: 'top' }}>
                     <td style={{ padding: '10px 6px', color: '#475569' }}>{idx + 1}</td>
                     <td style={{ padding: '10px 8px', fontWeight: '600', color: '#0f172a' }}>{itemCode}</td>
                     <td style={{ padding: '10px 10px', color: '#0f172a' }}>
-                      <div style={{ fontWeight: '600' }}>{desc}</div>
-                      {hasSerial && (
-                        <div style={{ fontSize: '10px', color: '#64748b', marginTop: '2px' }}>
-                          S/N: {it.serial_no}
+                      <div style={{ fontWeight: '600', lineHeight: '1.35' }}>{desc}</div>
+                      {serial && (
+                        <div style={{ 
+                          fontSize: '10.5px', 
+                          color: '#475569', 
+                          marginTop: '3px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          backgroundColor: '#f8fafc',
+                          padding: '1px 6px',
+                          borderRadius: '4px',
+                          border: '1px solid #e2e8f0'
+                        }}>
+                          <span style={{ fontWeight: '700', color: '#0f172a' }}>Serial No:</span> 
+                          <span style={{ fontFamily: monoFont }}>{serial}</span>
                         </div>
                       )}
                     </td>
@@ -340,9 +349,6 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                     </td>
                     <td style={{ padding: '10px 10px', textAlign: 'right', fontWeight: '700', color: '#0f172a', fontFamily: monoFont }}>
                       ₹ {amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td style={{ padding: '10px 8px', textAlign: 'center', color: '#0f172a', fontSize: '13px' }}>
-                      {hasSerial ? '✓' : '✓'}
                     </td>
                   </tr>
                 );
