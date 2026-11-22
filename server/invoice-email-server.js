@@ -45,6 +45,9 @@ const whatsappClient = new Client({
   userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
   puppeteer: {
     headless: true,
+    executablePath: fs.existsSync('/root/.cache/puppeteer/chrome/linux-146.0.7680.31/chrome-linux64/chrome') 
+      ? '/root/.cache/puppeteer/chrome/linux-146.0.7680.31/chrome-linux64/chrome'
+      : undefined,
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
