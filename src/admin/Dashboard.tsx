@@ -108,7 +108,7 @@ export default function Dashboard({ onNavigate, brand: propBrand, onBrandChange 
     return no.startsWith('ATC');
   };
 
-  const filterByBrand = <T extends any>(items: T[], brandChecker: (item: T) => boolean): T[] => {
+  const filterByBrand = <T,>(items: T[], brandChecker: (item: T) => boolean): T[] => {
     if (selectedBrand === 'yantrabyte') return items.filter(item => !brandChecker(item));
     if (selectedBrand === 'anantatechcare') return items.filter(item => brandChecker(item));
     return items;
