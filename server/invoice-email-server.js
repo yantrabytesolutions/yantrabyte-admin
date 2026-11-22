@@ -130,7 +130,10 @@ const startWhatsAppWithRetry = () => {
   });
 };
 
-startWhatsAppWithRetry();
+// Non-blocking background WhatsApp initialization
+setTimeout(() => {
+  startWhatsAppWithRetry();
+}, 1000);
 
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - content-length: ${req.headers['content-length']}`);
