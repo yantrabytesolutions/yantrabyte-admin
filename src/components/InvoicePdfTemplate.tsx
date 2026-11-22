@@ -195,33 +195,45 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
 
         {/* TOP CONTENT AREA */}
         <div style={{ position: 'relative', zIndex: 10 }}>
-          {/* 1. Header (Centered Company Info) */}
-          <div style={{ textAlign: 'center', marginBottom: '18px' }}>
-            <div style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a', letterSpacing: '0.04em' }}>
-              ANANTATECH CARE
-            </div>
-            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
-              Your One Stop for Desktop or Laptop Solutions
-            </div>
-            <div style={{ fontSize: '11px', color: '#475569', marginTop: '2px', lineHeight: '1.4' }}>
-              47A 1st Cross, SAI Nagar 2nd Stage, 2nd Main Rd, Vidyaranyapura Post,<br />
-              Chikkabettahalli, Bengaluru, Karnataka – 560097
-            </div>
-            <div style={{ 
-              fontSize: '11px', 
-              color: '#0f172a', 
-              marginTop: '5px', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              gap: '12px',
-              fontWeight: '600'
-            }}>
-              <span>☎ +91 9986742525</span>
-              <span style={{ color: '#cbd5e1' }}>|</span>
-              <span>✉ {companyEmail}</span>
-              <span style={{ color: '#cbd5e1' }}>|</span>
-              <span>💬 WhatsApp: 9986742525</span>
+          {/* 1. Header (Brand Logo & Company Info) */}
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            gap: '20px', 
+            marginBottom: '16px' 
+          }}>
+            <img 
+              src={ANANTATECHCARE_LOGO_BASE64} 
+              alt="AnantaTech Care Logo" 
+              style={{ height: '76px', width: 'auto', objectFit: 'contain', display: 'block' }} 
+            />
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ fontSize: '20px', fontWeight: '900', color: '#0f172a', letterSpacing: '0.03em', lineHeight: '1.2' }}>
+                ANANTATECH CARE
+              </div>
+              <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px', fontWeight: '500' }}>
+                Your One Stop for Desktop or Laptop Solutions
+              </div>
+              <div style={{ fontSize: '11px', color: '#475569', marginTop: '2px', lineHeight: '1.4' }}>
+                47A 1st Cross, SAI Nagar 2nd Stage, 2nd Main Rd, Vidyaranyapura Post,<br />
+                Chikkabettahalli, Bengaluru, Karnataka – 560097
+              </div>
+              <div style={{ 
+                fontSize: '10.5px', 
+                color: '#0f172a', 
+                marginTop: '4px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '10px',
+                fontWeight: '600'
+              }}>
+                <span>☎ +91 9986742525</span>
+                <span style={{ color: '#cbd5e1' }}>|</span>
+                <span>✉ {companyEmail}</span>
+                <span style={{ color: '#cbd5e1' }}>|</span>
+                <span>💬 WhatsApp: 9986742525</span>
+              </div>
             </div>
           </div>
 
