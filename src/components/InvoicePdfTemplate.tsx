@@ -269,16 +269,25 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
               {invoice.address && <div style={{ color: '#64748b', fontSize: '10.5px', marginTop: '1px' }}>{invoice.address}</div>}
             </div>
 
-            {/* Right: Posting Date & Payment Due Date */}
+            {/* Right: Posting Date & Payment Due Date / Validity */}
             <div style={{ width: '42%', textAlign: 'right' }}>
               <div>
-                <span style={{ color: '#64748b' }}>Posting Date: </span>
+                <span style={{ color: '#64748b' }}>{isQuotation ? 'Date: ' : 'Posting Date: '}</span>
                 <span style={{ fontWeight: '700', color: '#0f172a' }}>{postingDate}</span>
               </div>
               <div style={{ marginTop: '6px' }}>
-                <span style={{ color: '#64748b' }}>Payment Due Date: </span>
-                <span style={{ fontWeight: '700', color: '#0f172a' }}>{paymentDueDate}</span>
+                <span style={{ color: '#64748b' }}>{isQuotation ? 'Valid Until: ' : 'Payment Due Date: '}</span>
+                <span style={{ fontWeight: '700', color: '#0f172a' }}>
+                  {isQuotation 
+                    ? `${paymentDueDate} (2 Days Only)` 
+                    : paymentDueDate}
+                </span>
               </div>
+              {isQuotation && (
+                <div style={{ marginTop: '4px', fontSize: '11px', color: '#dc2626', fontWeight: '700' }}>
+                  ⚠️ Valid for 2 days only
+                </div>
+              )}
             </div>
           </div>
 
@@ -402,8 +411,22 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
           </div>
         </div>
 
-        {/* BOTTOM ANCHORED SECTION (Payment, Bank, QR Code & Terms) */}
-        <div style={{ position: 'relative', zIndex: 10, marginTop: 'auto', borderTop: '1px solid #e2e8f0', paddingTop: '12px' }}>
+        {/* BOTTOM ANCHORED SECTION (Terms, Payment, Bank, QR Code) */}
+        <div style={{ position: 'relative', zIndex: 10, marginTop: 'auto', borderTop: '1px solid #e2e8f0', paddingTop: '10px' }}>
+          {isQuotation && (
+            <div style={{ 
+              marginBottom: '10px', 
+              padding: '6px 10px', 
+              backgroundColor: '#fef2f2', 
+              borderLeft: '3px solid #dc2626', 
+              borderRadius: '4px',
+              fontSize: '11px',
+              color: '#991b1b'
+            }}>
+              <strong>Quotation Terms:</strong> This quotation is valid for <strong>2 days only</strong> from the date of issue. Advance payment required to confirm the order.
+            </div>
+          )}
+
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '14px' }}>
             {/* Bank Details */}
             <div style={{ flex: 1, fontSize: '11px', color: '#334155', lineHeight: '1.45' }}>
@@ -433,7 +456,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
 
           {/* System Generated Notice */}
           <div style={{ 
-            marginTop: '10px', 
+            marginTop: '8px', 
             textAlign: 'center', 
             fontSize: '9.5px', 
             color: '#64748b', 
