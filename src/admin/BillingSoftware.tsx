@@ -8,7 +8,6 @@ import html2pdf from 'html2pdf.js';
 import SignatureCanvas from 'react-signature-canvas';
 import { PRESET_ITEMS } from './presetItems';
 import { downloadExcelWorkbook } from '../utils/spreadsheetXml';
-import { appendBackupRow } from '../utils/googleSheetBackup';
 import { uploadInvoiceToDrive } from '../utils/googleDriveBackup';
 import { ERPUtils } from '../utils/erp';
 import CustomerLedgerModal from './components/CustomerLedgerModal';
@@ -1242,7 +1241,6 @@ export default function BillingSoftware({
 
       if (isUpdate) {
         await persistInvoice(true, payload, legacyPayload);
-        backupInvoiceToGoogleSheet(payload as unknown as Invoice);
         showToast('Invoice updated successfully!');
       } else {
         const data = await persistInvoice(false, payload, legacyPayload);
@@ -1264,7 +1262,6 @@ export default function BillingSoftware({
           }
         }
         
-        backupInvoiceToGoogleSheet(payload as unknown as Invoice);
         showToast('Invoice saved successfully!');
       }
 
@@ -1641,40 +1638,6 @@ export default function BillingSoftware({
     inv.due_date || '',
     inv.pdf_url || '',
   ];
-
-  const backupInvoiceToGoogleSheet = async (inv: Invoice) => {
-    let pdfBase64 = '';
-    try {
-      const element = document.getElementById('invoice-preview');
-      if (element) {
-        const opt = getPdfOptions(inv.invoice_no, inv.customer_name, inv.doc_type);
-        const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob') as Blob;
-        pdfBase64 = await blobToBase64(pdfBlob);
-      }
-    } catch (e) {
-      console.error('Failed to generate PDF for backup', e);
-    }
-
-    void appendBackupRow({
-      sheetName: inv.doc_type === 'Quotation' ? 'Quotations' : 'Invoices',
-      headers: INVOICE_HEADERS,
-      row: invoiceRow(inv),
-      pdfBase64,
-      invoiceNo: inv.invoice_no,
-      keyColumnIndex: 0,
-      keyValue: inv.invoice_no,
-    }).then(result => {
-      if (result.ok) {
-        showToast('Google Sheet backup updated');
-      } else if (!result.skipped) {
-        showToast('Sheet backup FAILED: ' + (result.error || 'Unknown error'), 'error');
-      } else {
-        showToast('Sheet backup skipped: ' + (result.error || 'No session'), 'error');
-      }
-    }).catch(error => {
-      showToast('Sheet backup ERROR: ' + (error?.message || String(error)), 'error');
-    });
-  };
 
   const handleExportExcelLedger = async () => {
     setIsExportingExcel(true);
