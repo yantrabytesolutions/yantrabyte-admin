@@ -250,7 +250,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
             </div>
           </div>
 
-          {/* 3. Customer Info, Dates & Delivery Note Check */}
+          {/* 3. Customer Info & Dates */}
           <div style={{ 
             display: 'flex', 
             justifyContent: 'space-between', 
@@ -260,7 +260,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
             lineHeight: '1.5'
           }}>
             {/* Left: Customer Name */}
-            <div style={{ width: '38%' }}>
+            <div style={{ width: '52%' }}>
               <div style={{ color: '#64748b' }}>Customer Name:</div>
               <div style={{ fontWeight: '700', color: '#0f172a', fontSize: '13px', marginTop: '2px' }}>
                 {invoice.customer_name || 'Cash'}
@@ -269,23 +269,15 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
               {invoice.address && <div style={{ color: '#64748b', fontSize: '10.5px', marginTop: '1px' }}>{invoice.address}</div>}
             </div>
 
-            {/* Center: Posting Date & Payment Due Date */}
-            <div style={{ width: '32%', textAlign: 'left' }}>
+            {/* Right: Posting Date & Payment Due Date */}
+            <div style={{ width: '42%', textAlign: 'right' }}>
               <div>
-                <span style={{ color: '#64748b' }}>Posting Date:</span>
-                <div style={{ fontWeight: '700', color: '#0f172a', marginTop: '1px' }}>{postingDate}</div>
+                <span style={{ color: '#64748b' }}>Posting Date: </span>
+                <span style={{ fontWeight: '700', color: '#0f172a' }}>{postingDate}</span>
               </div>
-              <div style={{ marginTop: '8px' }}>
-                <span style={{ color: '#64748b' }}>Payment Due Date:</span>
-                <div style={{ fontWeight: '700', color: '#0f172a', marginTop: '1px' }}>{paymentDueDate}</div>
-              </div>
-            </div>
-
-            {/* Right: Update Billed Amount in Delivery Note */}
-            <div style={{ width: '30%', textAlign: 'right' }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ color: '#475569', fontSize: '11px' }}>Update Billed Amount in Delivery Note:</span>
-                <span style={{ fontWeight: 'bold', color: '#0f172a', fontSize: '14px' }}>✓</span>
+              <div style={{ marginTop: '6px' }}>
+                <span style={{ color: '#64748b' }}>Payment Due Date: </span>
+                <span style={{ fontWeight: '700', color: '#0f172a' }}>{paymentDueDate}</span>
               </div>
             </div>
           </div>
