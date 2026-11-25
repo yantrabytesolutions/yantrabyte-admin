@@ -3,20 +3,22 @@ import { renderToString } from 'react-dom/server';
 import html2pdf from 'html2pdf.js';
 import { Invoice } from '../types';
 import { HardwareBrandsBanner } from './HardwareBrandsBanner';
+import { parseFlexibleDate } from '../utils/erp';
 
 export const generateWarrantyCertificate = async (invoice: Invoice, businessProfile: any) => {
   if (!invoice.warranty_months || invoice.warranty_months <= 0) {
     throw new Error('This invoice does not have a warranty.');
   }
 
-  const warrantyEndDate = new Date(invoice.date);
+  const startDate = parseFlexibleDate(invoice.date) || new Date();
+  const warrantyEndDate = new Date(startDate);
   warrantyEndDate.setMonth(warrantyEndDate.getMonth() + invoice.warranty_months);
   
   const formattedEndDate = warrantyEndDate.toLocaleDateString('en-IN', {
     day: 'numeric', month: 'short', year: 'numeric'
   });
   
-  const formattedStartDate = new Date(invoice.date).toLocaleDateString('en-IN', {
+  const formattedStartDate = startDate.toLocaleDateString('en-IN', {
     day: 'numeric', month: 'short', year: 'numeric'
   });
 

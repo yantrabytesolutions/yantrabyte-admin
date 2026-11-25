@@ -138,8 +138,9 @@ app.use((req, res, next) => {
   return next();
 });
 
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - content-length: ${req.headers['content-length']}`);
+app.use((req, _res, next) => {
+  const safePath = String(req.path || '/').replace(/\d{6}(\d{4})/g, '******$1');
+  console.log(`[${new Date().toISOString()}] ${req.method} ${safePath} - content-length: ${req.headers['content-length'] || 0}`);
   next();
 });
 app.disable('x-powered-by');
@@ -151,24 +152,36 @@ app.use((req, res, next) => {
   }
   res.setHeader(
     'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://script.google.com https://script.googleusercontent.com https://api.telegram.org; worker-src 'self' blob:; frame-ancestors 'self'; object-src 'none'; base-uri 'self'"
+    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://script.google.com https://script.googleusercontent.com https://api.telegram.org; worker-src 'self' blob:; frame-ancestors 'self'; form-action 'self'; object-src 'none'; base-uri 'self'"
   );
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('X-XSS-Protection', '0');
+  res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   next();
 });
 
+const productionOrigins = [
+  'https://yantrabyte.anantatechcare.com',
+  'https://anantatechcare.com',
+  ...(process.env.CORS_ALLOWED_ORIGINS
+    ? process.env.CORS_ALLOWED_ORIGINS.split(',').map(v => v.trim()).filter(Boolean)
+    : []),
+];
+const devOrigins = [
+  'http://localhost:3000',
+  'http://localhost:4000',
+  'http://localhost:5173',
+];
+const allowedOrigins = process.env.NODE_ENV === 'production'
+  ? productionOrigins
+  : [...productionOrigins, ...devOrigins];
+
 app.use(cors({
-  origin: [
-    'https://yantrabyte.anantatechcare.com',
-    'https://anantatechcare.com',
-    'http://localhost:3000',
-    'http://localhost:4000',
-    'http://localhost:5173'
-  ],
+  origin: allowedOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -189,6 +202,22 @@ const publicLookupLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { ok: false, error: 'Too many lookup requests. Please wait before trying again.' }
+});
+
+const customerPortalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 12,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, error: 'Too many portal lookups. Please try again in 15 minutes.' }
+});
+
+const adminApiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 180,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, error: 'Too many admin API requests. Please slow down.' }
 });
 
 const requiredEnv = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'];
@@ -223,7 +252,8 @@ function sanitizeFilename(name) {
 }
 
 function isValidEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || ''));
+  const s = String(email || '').trim();
+  return !/[<>]/.test(s) && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 }
 
 function escapeHtml(value) {
@@ -254,10 +284,17 @@ function isAllowedPdfUrl(rawUrl) {
   }
 }
 
+if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  console.warn('⚠️ [Security Warning] SUPABASE_SERVICE_ROLE_KEY is not set; privileged lookups will fail under hardened RLS.');
+}
+
 function getSupabaseAdminClient() {
+  if (!process.env.VITE_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY and VITE_SUPABASE_URL are required for backend service queries.');
+  }
   return createClient(
     process.env.VITE_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
     {
       auth: { persistSession: false },
       realtime: { transport: WebSocket }
@@ -449,35 +486,42 @@ async function appendRowToGoogleSheet({ sheetName, headers, row }) {
   };
 }
 
-async function requireAdminUser(req, res, next) {
-  const missing = getMissingEnv();
-  if (missing.length > 0) {
-    return res.status(500).json({ error: `Missing server configuration: ${missing.join(', ')}` });
+const requireAdminUser = [
+  adminApiLimiter,
+  async function verifyAdminToken(req, res, next) {
+    try {
+      const missing = getMissingEnv();
+      if (missing.length > 0) {
+        return res.status(500).json({ error: `Missing server configuration: ${missing.join(', ')}` });
+      }
+
+      const authHeader = req.get('authorization') || '';
+      const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+      if (!token) {
+        return res.status(401).json({ error: 'Missing Supabase session token' });
+      }
+
+      const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.VITE_SUPABASE_ANON_KEY, {
+        auth: { persistSession: false },
+        realtime: { transport: WebSocket }
+      });
+      const { data, error } = await supabase.auth.getUser(token);
+
+      if (error || !data.user) {
+        return res.status(401).json({ error: 'Invalid or expired Supabase session' });
+      }
+
+      if (data.user.app_metadata?.is_admin !== true) {
+        return res.status(403).json({ error: 'Admin privileges required' });
+      }
+
+      req.user = data.user;
+      return next();
+    } catch (error) {
+      return next(error);
+    }
   }
-
-  const authHeader = req.get('authorization') || '';
-  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
-  if (!token) {
-    return res.status(401).json({ error: 'Missing Supabase session token' });
-  }
-
-  const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.VITE_SUPABASE_ANON_KEY, {
-    auth: { persistSession: false },
-    realtime: { transport: WebSocket }
-  });
-  const { data, error } = await supabase.auth.getUser(token);
-
-  if (error || !data.user) {
-    return res.status(401).json({ error: 'Invalid or expired Supabase session' });
-  }
-
-  if (data.user.app_metadata?.is_admin !== true) {
-    return res.status(403).json({ error: 'Admin privileges required' });
-  }
-
-  req.user = data.user;
-  return next();
-}
+];
 
 function healthResponse(_req, res) {
   const missing = getMissingEnv();
@@ -659,26 +703,28 @@ app.post('/api/backups/public-service-ticket', publicTicketLimiter, async (req, 
     return res.status(400).json({ error: 'Invalid ticket_number format' });
   }
 
-  if (process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.VITE_SUPABASE_URL) {
-    try {
-      const supabaseAdmin = getSupabaseAdminClient();
-      const { data: existingTicket, error: lookupError } = await supabaseAdmin
-        .from('service_tickets')
-        .select('ticket_number, customer_phone')
-        .eq('ticket_number', rawTicketNo)
-        .maybeSingle();
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.VITE_SUPABASE_URL) {
+    return res.status(503).json({ error: 'Server verification service is unavailable' });
+  }
 
-      if (lookupError || !existingTicket) {
-        return res.status(404).json({ error: 'Matching service ticket not found' });
-      }
-      const dbPhone = String(existingTicket.customer_phone || '').replace(/\D/g, '');
-      if (dbPhone.slice(-10) !== cleanPhone.slice(-10)) {
-        return res.status(403).json({ error: 'Ticket phone verification failed' });
-      }
-    } catch (verifyErr) {
-      console.error('Ticket verification failed:', verifyErr);
-      return res.status(500).json({ error: 'Unable to verify service ticket' });
+  try {
+    const supabaseAdmin = getSupabaseAdminClient();
+    const { data: existingTicket, error: lookupError } = await supabaseAdmin
+      .from('service_tickets')
+      .select('ticket_number, customer_phone')
+      .eq('ticket_number', rawTicketNo)
+      .maybeSingle();
+
+    if (lookupError || !existingTicket) {
+      return res.status(404).json({ error: 'Matching service ticket not found' });
     }
+    const dbPhone = String(existingTicket.customer_phone || '').replace(/\D/g, '');
+    if (!dbPhone || dbPhone.slice(-10) !== cleanPhone.slice(-10)) {
+      return res.status(403).json({ error: 'Ticket phone verification failed' });
+    }
+  } catch (verifyErr) {
+    console.error('Ticket verification failed:', verifyErr);
+    return res.status(500).json({ error: 'Unable to verify service ticket' });
   }
 
   let sheetResult = null;
@@ -857,9 +903,16 @@ app.post('/api/invoices/email', requireAdminUser, async (req, res) => {
       return res.status(400).json({ error: 'Invalid or untrusted PDF storage URL' });
     }
     try {
-      const pdfRes = await fetch(pdfUrl);
+      const pdfRes = await fetch(pdfUrl, { redirect: 'error', signal: AbortSignal.timeout(15000) });
       if (!pdfRes.ok) throw new Error(`Failed to download PDF: ${pdfRes.statusText}`);
+      const cType = String(pdfRes.headers.get('content-type') || '').toLowerCase();
+      if (cType && !cType.includes('application/pdf') && !cType.includes('application/octet-stream')) {
+        return res.status(400).json({ error: 'Remote URL did not return a PDF file' });
+      }
       const arrayBuffer = await pdfRes.arrayBuffer();
+      if (arrayBuffer.byteLength > 25 * 1024 * 1024) {
+        return res.status(413).json({ error: 'PDF attachment exceeds 25MB limit' });
+      }
       pdfBuffer = Buffer.from(arrayBuffer);
     } catch (e) {
       return res.status(500).json({ error: 'Failed to retrieve PDF from storage' });
@@ -949,11 +1002,14 @@ app.post('/api/invoices/email', requireAdminUser, async (req, res) => {
     if (cleanPhone.length === 10) cleanPhone = '91' + cleanPhone;
     if (cleanPhone.length >= 10) {
       try {
-        const media = new MessageMedia('application/pdf', pdfBase64, safeFilename);
-        const caption = `Dear ${cleanCustomerName},\n\nPlease find attached your ${cleanDocumentType.toLowerCase()} *${cleanInvoiceNumber}*.\n\nRegards,\nYantraByte Solutions`;
-        await whatsappClient.sendMessage(`${cleanPhone}@c.us`, media, { caption });
-        whatsappStatus = 'sent';
-        console.log(`[Success] WhatsApp sent to ${customerPhone} for ${cleanInvoiceNumber}`);
+        const waBase64 = pdfBase64 || (pdfBuffer ? pdfBuffer.toString('base64') : '');
+        if (waBase64) {
+          const media = new MessageMedia('application/pdf', waBase64, safeFilename);
+          const caption = `Dear ${cleanCustomerName},\n\nPlease find attached your ${cleanDocumentType.toLowerCase()} *${cleanInvoiceNumber}*.\n\nRegards,\nYantraByte Solutions`;
+          await whatsappClient.sendMessage(`${cleanPhone}@c.us`, media, { caption });
+          whatsappStatus = 'sent';
+          console.log(`[Success] WhatsApp sent to ${cleanPhone} for ${cleanInvoiceNumber}`);
+        }
       } catch (err) {
         console.error(`[Error] WhatsApp invoice send failed:`, err);
         whatsappStatus = 'failed';
@@ -1235,9 +1291,13 @@ app.post('/api/tickets/notify', requireAdminUser, async (req, res) => {
 });
 
 app.get('/api/tickets/track/:ticket_number', publicLookupLimiter, async (req, res) => {
-  const { ticket_number } = req.params;
+  res.setHeader('Cache-Control', 'no-store');
+  const cleanTicketNo = String(req.params.ticket_number || '').trim();
   const { phone } = req.query;
 
+  if (!cleanTicketNo || cleanTicketNo.length > 60) {
+    return res.status(400).json({ error: 'Invalid ticket number' });
+  }
   const cleanInputPhone = String(phone || '').replace(/\D/g, '');
   if (cleanInputPhone.length < 10) {
     return res.status(400).json({ error: 'Valid 10-digit phone number is required' });
@@ -1248,7 +1308,7 @@ app.get('/api/tickets/track/:ticket_number', publicLookupLimiter, async (req, re
     const { data, error } = await supabaseAdmin
       .from('service_tickets')
       .select('ticket_number, status, device_type, created_at, customer_name, issue_description, customer_phone')
-      .eq('ticket_number', ticket_number)
+      .eq('ticket_number', cleanTicketNo)
       .single();
 
     if (error || !data) {
@@ -1281,6 +1341,7 @@ app.get('/api/tickets/track/:ticket_number', publicLookupLimiter, async (req, re
 
 // --- QUOTATION APPROVAL ENDPOINTS ---
 app.get('/api/invoices/quotation/:id', publicLookupLimiter, async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
   const { id } = req.params;
   if (!isUuid(id)) {
     return res.status(400).json({ error: 'Invalid quotation link' });
@@ -1303,6 +1364,7 @@ app.get('/api/invoices/quotation/:id', publicLookupLimiter, async (req, res) => 
 });
 
 app.get('/api/estimates/:id', publicLookupLimiter, async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
   const { id } = req.params;
   if (!isUuid(id)) {
     return res.status(400).json({ error: 'Invalid estimate link' });
@@ -1368,17 +1430,21 @@ app.post('/api/invoices/quotation/:id/approve', publicLookupLimiter, async (req,
       try {
         const cleanPhone = inv.phone.replace(/\D/g, '');
         if (cleanPhone.length >= 10) {
+          const isAnantaQuote = Boolean(inv.invoice_no) && String(inv.invoice_no).toUpperCase().startsWith('ATC');
           const advanceAmount = (inv.grand_total * 0.8).toLocaleString('en-IN', { minimumFractionDigits: 2 });
-          const messageText = `Hi ${inv.customer_name},\n\nThank you for approving the estimate #${inv.invoice_no}. \n\nTo proceed with the service, please make an advance payment of 80% (₹${advanceAmount}).\n\n*Bank & Payment Details:*\nBank: North East Small Finance Bank\nA/C Name: YantraByte Solutions\nA/C No: 033311501023226\nIFSC: NESF0000333\nUPI ID: s0424237152@slc\n\nThank you!`;
+          const bankDetails = isAnantaQuote
+            ? '*Bank & Payment Details:*\nBank: AU Small Finance Bank\nBranch: Koramangala\nA/C Name: ANANTATECH CARE\nA/C No: 260226952682568\nIFSC: AUBL0002695\nUPI ID: anantatechcare011126@aubiz'
+            : '*Bank & Payment Details:*\nBank: North East Small Finance Bank\nA/C Name: YantraByte Solutions\nA/C No: 033311501023226\nIFSC: NESF0000333\nUPI ID: s0424237152@slc';
+          const messageText = `Hi ${inv.customer_name},\n\nThank you for approving the estimate #${inv.invoice_no}. \n\nTo proceed with the service, please make an advance payment of 80% (₹${advanceAmount}).\n\n${bankDetails}\n\nThank you!`;
           
           const qrPath = path.join(process.cwd(), 'public', 'payment-qr.png');
-          if (fs.existsSync(qrPath)) {
+          if (!isAnantaQuote && fs.existsSync(qrPath)) {
             const media = MessageMedia.fromFilePath(qrPath);
             await whatsappClient.sendMessage(`${cleanPhone}@c.us`, media, { caption: messageText });
           } else {
             await whatsappClient.sendMessage(`${cleanPhone}@c.us`, messageText);
           }
-          console.log(`[Success] Advance payment WhatsApp sent to ${inv.phone}`);
+          console.log(`[Success] Advance payment WhatsApp sent for ${inv.invoice_no}`);
         }
       } catch (waErr) {
         console.error('[Error] Failed to send WhatsApp advance payment request:', waErr);
@@ -1423,6 +1489,22 @@ app.post('/api/invoices/quotation/:id/approve', publicLookupLimiter, async (req,
   }
 });
 
+function parseFlexibleDate(value) {
+  if (!value) return null;
+  const trimmed = String(value).trim();
+  const ddmmyyyy = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (ddmmyyyy) {
+    const [, dd, mm, yyyy] = ddmmyyyy;
+    const d = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  const d = new Date(trimmed);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+const BILLABLE_DOC_TYPES = ['Invoice', 'Sale Bill', 'Service Bill'];
+const QUOTATION_DOC_TYPES = ['Quotation', 'Estimate'];
+
 // --- AUTOMATED CRON JOB ---
 // Runs daily at 10:00 AM (server time)
 cron.schedule('0 10 * * *', async () => {
@@ -1457,13 +1539,14 @@ cron.schedule('0 10 * * *', async () => {
     const { data: quotations, error: qErr } = await supabase
       .from('invoices')
       .select('*')
-      .eq('doc_type', 'Quotation');
+      .in('doc_type', QUOTATION_DOC_TYPES);
       
     if (!qErr && quotations) {
       const pendingQuotations = quotations.filter(q => q.payment_status !== 'Approved' && q.payment_status !== 'Rejected');
       for (const q of pendingQuotations) {
         if (!q.date) continue;
-        const qDate = new Date(q.date);
+        const qDate = parseFlexibleDate(q.date);
+        if (!qDate) continue;
         const qStart = new Date(qDate.getFullYear(), qDate.getMonth(), qDate.getDate());
         const diffDays = Math.floor((todayStart.getTime() - qStart.getTime()) / (1000 * 60 * 60 * 24));
 
@@ -1521,19 +1604,20 @@ cron.schedule('0 10 * * *', async () => {
     const { data: invoices, error: iErr } = await supabase
       .from('invoices')
       .select('*')
-      .eq('doc_type', 'Invoice')
+      .in('doc_type', BILLABLE_DOC_TYPES)
       .gt('balance_due', 0);
 
     if (!iErr && invoices) {
       for (const inv of invoices) {
         if (!inv.due_date && !inv.date) continue;
-        const dueDate = new Date(inv.due_date || inv.date);
+        const dueDate = parseFlexibleDate(inv.due_date || inv.date);
+        if (!dueDate) continue;
         const dueStart = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
         const diffDays = Math.floor((todayStart.getTime() - dueStart.getTime()) / (1000 * 60 * 60 * 24));
 
         // Overdue by 3 or 4 days
         if (todayStart > dueStart && (diffDays === 3 || diffDays === 4)) {
-          const invLink = `https://yantrabyte.anantatechcare.com/portal/${inv.id}`;
+          const invLink = `https://yantrabyte.anantatechcare.com/estimate/${inv.id}`;
           
           // Send Email
           if (inv.customer_email && isValidEmail(inv.customer_email)) {
@@ -1601,7 +1685,7 @@ cron.schedule('0 0 * * *', async () => {
     const { data, error } = await supabaseAdmin
       .from('invoices')
       .update({ payment_status: 'Expired' })
-      .eq('doc_type', 'Quotation')
+      .in('doc_type', QUOTATION_DOC_TYPES)
       .eq('payment_status', 'Due')
       .lt('created_at', sevenDaysAgo.toISOString());
     
@@ -1684,10 +1768,13 @@ cron.schedule('0 9 * * *', async () => {
 // --- GOOGLE REVIEW AUTOMATION CRON ---
 cron.schedule('0 11 * * *', async () => {
   console.log('Running Google Review automation check...');
+  const missing = getMissingEnv();
+  if (missing.length > 0) {
+    console.error(`Skipping review cron job. Missing env: ${missing.join(', ')}`);
+    return;
+  }
   try {
-    const supabaseAdmin = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY, {
-      realtime: { transport: WebSocket }
-    });
+    const supabaseAdmin = getSupabaseAdminClient();
     
     // Find paid invoices created more than 48 hours ago, where review has not been requested
     const twoDaysAgo = new Date();
@@ -1697,7 +1784,7 @@ cron.schedule('0 11 * * *', async () => {
       .from('invoices')
       .select('id, invoice_no, doc_type, customer_name, phone, created_at')
       .eq('payment_status', 'Paid')
-      .eq('doc_type', 'Invoice')
+      .in('doc_type', BILLABLE_DOC_TYPES)
       .eq('review_requested', false)
       .lt('created_at', twoDaysAgo.toISOString())
       .limit(20); // Process in batches
@@ -1800,7 +1887,8 @@ app.post('/api/invoices/send-whatsapp-pdf', requireAdminUser, async (req, res) =
 });
 
 // --- CUSTOMER HISTORY & PORTAL ENDPOINT ---
-app.get('/api/invoices/customer/:phone', publicLookupLimiter, async (req, res) => {
+app.get('/api/invoices/customer/:phone', customerPortalLimiter, async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
   const { phone } = req.params;
   try {
     const supabaseAdmin = getSupabaseAdminClient();

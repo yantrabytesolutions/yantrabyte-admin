@@ -37,7 +37,12 @@ async function getUserOAuthToken(clientId: string, clientSecret: string, refresh
   const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: `client_id=${clientId}&client_secret=${clientSecret}&refresh_token=${refreshToken}&grant_type=refresh_token`,
+    body: new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      refresh_token: refreshToken,
+      grant_type: 'refresh_token',
+    }),
   });
 
   const tokenData = await tokenRes.json();
@@ -355,7 +360,7 @@ Deno.serve(async (req) => {
       }
       const reqPhone = String(ticket.customer_phone || '').replace(/\D/g, '');
       const dbPhone = String(rows[0].customer_phone || '').replace(/\D/g, '');
-      if (dbPhone && reqPhone && dbPhone.slice(-10) !== reqPhone.slice(-10)) {
+      if (dbPhone && (!reqPhone || dbPhone.slice(-10) !== reqPhone.slice(-10))) {
         return new Response(
           JSON.stringify({ ok: false, error: 'Ticket phone verification failed' }),
           { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -428,7 +433,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const hasValidCustomerEmail = ticket.customer_email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ticket.customer_email);
+    const hasValidCustomerEmail = ticket.customer_email && !/[<>]/.test(String(ticket.customer_email)) && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ticket.customer_email);
     const cleanName     = String(ticket.customer_name || 'Customer');
     const cleanTicketNo = String(ticket.ticket_no || '');
     const cleanDevice   = String(ticket.device_type   || 'Device');

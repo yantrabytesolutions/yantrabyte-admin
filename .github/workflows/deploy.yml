@@ -24,7 +24,7 @@ jobs:
       - name: 🟢 Setup Node.js Environment
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: 'npm'
 
       - name: 📦 Install Dependencies
@@ -36,12 +36,15 @@ jobs:
       - name: 🔬 TypeScript Typechecking
         run: npm run typecheck
 
-      - name: 🛑 Dependency Vulnerability Audit
+      - name: 🛑 Dependency Vulnerability Audit (Critical Gate)
+        run: npm audit --audit-level=critical --omit=dev
+
+      - name: 📋 Dependency Vulnerability Report (High)
         continue-on-error: true
         run: npm audit --audit-level=high --omit=dev
 
       - name: 🔍 SAST Code Vulnerability Scan (Trivy)
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: 'fs'
           ignore-unfixed: true
@@ -59,7 +62,7 @@ jobs:
       - name: 🟢 Setup Node.js Environment
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: 'npm'
 
       - name: 📦 Install Dependencies
@@ -113,5 +116,6 @@ jobs:
           supabase secrets set --project-ref eyajwjrafudarccvcada \
             GMAIL_USER="${{ secrets.GMAIL_USER }}" \
             GMAIL_APP_PASSWORD="${{ secrets.GMAIL_APP_PASSWORD }}" || true
-          supabase functions deploy send-ticket-email \
-            --project-ref eyajwjrafudarccvcada || true
+          for fn in send-ticket-email send-invoice-email backup-to-sheets notify-telegram upload-to-drive; do
+            supabase functions deploy "$fn" --project-ref eyajwjrafudarccvcada || true
+          done

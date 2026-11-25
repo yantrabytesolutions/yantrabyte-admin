@@ -63,8 +63,16 @@ function generateInvoiceNo_(type) {
 }
 
 function generatePurchaseNo_() {
-  const data = supabaseGet('purchases', 'select=id');
-  const seq = (data.length || 0) + 1;
+  const data = supabaseGet('purchases', 'select=purchaseNo');
+  var maxSeq = 0;
+  (data || []).forEach(function(row) {
+    if (row.purchaseNo) {
+      var parts = row.purchaseNo.split('-');
+      var num = parseInt(parts[parts.length - 1], 10);
+      if (!isNaN(num) && num > maxSeq) maxSeq = num;
+    }
+  });
+  const seq = maxSeq + 1;
   const datePart = Utilities.formatDate(new Date(), APP.TIMEZONE, 'yyyyMMdd');
   return 'PUR-' + datePart + '-' + ('000' + seq).slice(-3);
 }

@@ -6,6 +6,7 @@ import { FileText, LogOut, Ticket, Receipt, User, Loader2, Download, CheckCircle
 import { format, parseISO } from 'date-fns';
 import html2pdf from 'html2pdf.js';
 import { InvoicePdfTemplate } from '../components/InvoicePdfTemplate';
+import { isPayableInvoiceDoc } from '../utils/erp';
 
 export default function PortalDashboard() {
   const [loading, setLoading] = useState(true);
@@ -151,7 +152,7 @@ export default function PortalDashboard() {
             <p className="text-sm text-gray-500 mt-1">Pending payments across all your invoices.</p>
           </div>
           <div className="text-3xl font-bold text-red-600">
-            ₹{invoices.filter(i => i.doc_type === 'Invoice').reduce((sum, inv) => sum + (inv.balance_due || 0), 0).toLocaleString('en-IN')}
+            ₹{invoices.filter(i => isPayableInvoiceDoc(i.doc_type)).reduce((sum, inv) => sum + (inv.balance_due || 0), 0).toLocaleString('en-IN')}
           </div>
         </div>
 

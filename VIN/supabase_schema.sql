@@ -59,6 +59,10 @@ ON CONFLICT (id) DO NOTHING;
 ALTER TABLE public.bills ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.company_settings ENABLE ROW LEVEL SECURITY;
 
+-- SECURITY WARNING:
+-- The policies below permit unauthenticated public read/write access via the anon key.
+-- Restrict to authenticated users (`auth.role() = 'authenticated'`) and add Supabase Auth
+-- before exposing this project to untrusted networks or sensitive customer records.
 -- Allow public access with anon key (so mobile & PC can sync without complex login)
 CREATE POLICY "Allow public read bills" ON public.bills FOR SELECT USING (true);
 CREATE POLICY "Allow public insert bills" ON public.bills FOR INSERT WITH CHECK (true);

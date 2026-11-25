@@ -881,7 +881,16 @@ export default function AdminPanel() {
   };
 
   const printDeviceLabel = (item: Record<string, unknown>) => {
-    const trackingUrl = `${window.location.origin}/track-ticket?t=${item.ticket_number}`;
+    const ticketNo = String(item.ticket_number || '');
+    const escapeHtml = (value: unknown, fallback = '') => String(value ?? fallback)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+    const isAnantaTicket = selectedBrand === 'anantatechcare' || ticketNo.startsWith('ATC');
+    const brandName = isAnantaTicket ? 'ANANTATECH CARE' : 'YantraByte Solutions';
+    const trackingUrl = `${window.location.origin}/track-ticket?t=${encodeURIComponent(ticketNo)}`;
     const qrSvgString = getQrSvgString(trackingUrl, 64, 'H');
     
     const win = window.open('', '_blank', 'width=400,height=300');
@@ -893,7 +902,7 @@ export default function AdminPanel() {
     win.document.write(`
       <html>
         <head>
-          <title>Device Label - ${item.ticket_number}</title>
+          <title>Device Label - ${escapeHtml(ticketNo)}</title>
           <style>
             @page { size: 2in 1in; margin: 0; }
             body { 
@@ -923,9 +932,9 @@ export default function AdminPanel() {
         </head>
         <body>
           <div class="left">
-            <div class="brand">YantraByte Solutions</div>
-            <div class="ticket">#${item.ticket_number}</div>
-            <div class="name">${item.customer_name || 'Customer'}</div>
+            <div class="brand">${brandName}</div>
+            <div class="ticket">#${escapeHtml(ticketNo)}</div>
+            <div class="name">${escapeHtml(item.customer_name || 'Customer', 'Customer')}</div>
           </div>
           <div class="qr">${qrSvgString}</div>
           <script>

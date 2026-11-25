@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell
 } from 'recharts';
 import { format, subMonths, startOfMonth, parseISO } from 'date-fns';
+import { isPayableInvoiceDoc } from '../utils/erp';
 import { Invoice, Purchase, ServiceTicket, Expense } from '../types';
 import { AlertCircle, Clock, CheckCircle, Receipt, MessageSquare, Mail, Loader2, FileText, Cloud, HardDrive, RefreshCw, ExternalLink, ShieldCheck } from 'lucide-react';
 import CustomerLedgerModal from './components/CustomerLedgerModal';
@@ -111,11 +112,11 @@ export default function Dashboard({ onNavigate, brand: propBrand, onBrandChange 
     return no.startsWith('ATC');
   };
 
-  const filterByBrand = <T,>(items: T[], brandChecker: (item: T) => boolean): T[] => {
+  const filterByBrand = useCallback(<T,>(items: T[], brandChecker: (item: T) => boolean): T[] => {
     if (selectedBrand === 'yantrabyte') return items.filter(item => !brandChecker(item));
     if (selectedBrand === 'anantatechcare') return items.filter(item => brandChecker(item));
     return items;
-  };
+  }, [selectedBrand]);
 
   // Re-compute dashboard statistics when raw data or brand filter changes
   useEffect(() => {
@@ -131,7 +132,7 @@ export default function Dashboard({ onNavigate, brand: propBrand, onBrandChange 
     let invCount = 0;
     let quoteCount = 0;
     invoices.forEach(inv => {
-      if (inv.doc_type === 'Invoice') {
+      if (isPayableInvoiceDoc(inv.doc_type)) {
         rev += Number(inv.grand_total) || 0;
         out += Number(inv.balance_due) || 0;
         invCount++;
@@ -148,7 +149,7 @@ export default function Dashboard({ onNavigate, brand: propBrand, onBrandChange 
     const clientsMap: Record<string, OutstandingClient> = {};
 
     invoices
-      .filter(inv => inv.doc_type === 'Invoice')
+      .filter(inv => isPayableInvoiceDoc(inv.doc_type))
       .forEach(inv => {
         const name = String(inv.customer_name || 'Customer').trim();
         const lowerName = name.toLowerCase();
@@ -173,7 +174,7 @@ export default function Dashboard({ onNavigate, brand: propBrand, onBrandChange 
     const clients: OutstandingClient[] = [];
 
     Object.entries(clientsMap).forEach(([lowerName, client]) => {
-      const custInvoices = invoices.filter(i => i.doc_type === 'Invoice' && String(i.customer_name || '').trim().toLowerCase() === lowerName);
+      const custInvoices = invoices.filter(i => isPayableInvoiceDoc(i.doc_type) && String(i.customer_name || '').trim().toLowerCase() === lowerName);
       const totalBilled = custInvoices.reduce((sum, i) => sum + (Number(i.grand_total) || 0), 0);
       
       const custPayments = customerPayments.filter(p => String(p.customer_name || '').trim().toLowerCase() === lowerName);
@@ -226,7 +227,7 @@ export default function Dashboard({ onNavigate, brand: propBrand, onBrandChange 
       monthlyData[monthLabel] = { month: monthLabel, revenue: 0, expenses: 0, tickets: 0 };
     }
 
-    invoices.filter(i => i.doc_type === 'Invoice').forEach(inv => {
+    invoices.filter(i => isPayableInvoiceDoc(i.doc_type)).forEach(inv => {
       if (!inv.created_at) return;
       const monthLabel = format(parseISO(inv.created_at), 'MMM yyyy');
       if (monthlyData[monthLabel]) {
@@ -275,7 +276,7 @@ export default function Dashboard({ onNavigate, brand: propBrand, onBrandChange 
       name: key.toUpperCase(),
       value: statusCount[key]
     })));
-  }, [selectedBrand, allInvoicesRaw, allPurchasesRaw, allTicketsRaw, allExpensesRaw, allPaymentsRaw]);
+  }, [filterByBrand, allInvoicesRaw, allPurchasesRaw, allTicketsRaw, allExpensesRaw, allPaymentsRaw]);
 
   const fetchDashboardData = async () => {
     setLoading(true);

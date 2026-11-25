@@ -7,6 +7,36 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+async function requireAdmin(req: Request): Promise<Response | null> {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+  const supabaseAnon = Deno.env.get('SUPABASE_ANON_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+  const authHeader = req.headers.get('authorization') || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+  if (!token || !supabaseUrl || !supabaseAnon) {
+    return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  const userRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
+    headers: { apikey: supabaseAnon, Authorization: `Bearer ${token}` },
+  });
+  if (!userRes.ok) {
+    return new Response(JSON.stringify({ ok: false, error: 'Invalid session' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  const user = await userRes.json();
+  if (user?.app_metadata?.is_admin !== true) {
+    return new Response(JSON.stringify({ ok: false, error: 'Admin privileges required' }), {
+      status: 403,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  return null;
+}
+
 async function getAccessToken(clientId: string, clientSecret: string, refreshToken: string): Promise<string> {
   const res = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
@@ -120,19 +150,6 @@ async function uploadToDrive(fileName: string, base64Data: string, folderId: str
     throw new Error('Failed to upload file content: ' + errorBody);
   }
 
-  // Step 2.5: Set sharing permissions to 'Anyone with the link can view'
-  await fetch(`https://www.googleapis.com/drive/v3/files/${meta.id}/permissions`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      role: 'reader',
-      type: 'anyone'
-    })
-  });
-
   // Step 3: Get webViewLink
   const linkRes = await fetch(`https://www.googleapis.com/drive/v3/files/${meta.id}?fields=webViewLink`, {
     headers: {
@@ -164,6 +181,9 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const authErr = await requireAdmin(req);
+    if (authErr) return authErr;
+
     const clientId      = Deno.env.get('GOOGLE_CLIENT_ID');
     const clientSecret  = Deno.env.get('GOOGLE_CLIENT_SECRET');
     const refreshToken  = Deno.env.get('GOOGLE_REFRESH_TOKEN');

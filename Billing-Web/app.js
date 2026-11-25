@@ -1,11 +1,28 @@
-const SUPABASE_URL = 'https://eyajwjrafudarccvcada.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5YWp3anJhZnVkYXJjY3ZjYWRhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODkxODQ2MiwiZXhwIjoyMDk0NDk0NDYyfQ.9A9D9dPb_GoHJiREuIWML1PATN-es4MC9_DE8wvK76g';
+const SUPABASE_URL = localStorage.getItem('yb_supabase_url') || 'https://eyajwjrafudarccvcada.supabase.co';
+function getSupabaseKey() {
+  let key = (localStorage.getItem('yb_supabase_key') || '').trim();
+  if (!key) {
+    const entered = window.prompt('Enter your Supabase publishable/anon API key (stored locally in this browser):');
+    if (entered && entered.trim()) {
+      key = entered.trim();
+      localStorage.setItem('yb_supabase_key', key);
+    }
+  }
+  if (!key) {
+    throw new Error('Missing Supabase API key. Configure yb_supabase_key in browser storage.');
+  }
+  return key;
+}
+function escapeHtml(value) {
+  return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+// Supabase key is provided at runtime via getSupabaseKey()
 
 async function supabaseFetch(endpoint, options = {}) {
   const url = SUPABASE_URL + endpoint;
   const headers = {
-    'apikey': SUPABASE_KEY,
-    'Authorization': 'Bearer ' + SUPABASE_KEY,
+    'apikey': getSupabaseKey(),
+    'Authorization': 'Bearer ' + getSupabaseKey(),
     'Content-Type': 'application/json',
     ...(options.headers || {})
   };
@@ -97,9 +114,9 @@ function renderItems() {
   let total = 0;
   items.forEach((it, i) => {
     const amt = it.qty * it.rate; total += amt;
-    tbody.innerHTML += '<tr><td align="center">+(i+1)+</td><td>+it.description+</td><td align="center">+it.qty+</td><td align="right">+fmtINR(it.rate)+</td><td align="right">+fmtINR(amt)+</td></tr>';
+    tbody.innerHTML += '<tr><td align="center">' + (i + 1) + '</td><td>' + escapeHtml(it.description) + '</td><td align="center">' + escapeHtml(it.qty) + '</td><td align="right">' + escapeHtml(fmtINR(it.rate)) + '</td><td align="right">' + escapeHtml(fmtINR(amt)) + '</td></tr>';
   });
-  tbody.innerHTML += '<tr><td colspan="4" align="right"><b>Subtotal</b></td><td align="right"><b>+fmtINR(total)+</b></td></tr>';
+  tbody.innerHTML += '<tr><td colspan="4" align="right"><b>Subtotal</b></td><td align="right"><b>' + escapeHtml(fmtINR(total)) + '</b></td></tr>';
 }
 
 async function refreshInvoiceList() {
@@ -146,10 +163,10 @@ async function saveInvoice() {
       const prefix = docType === 'Quotation' ? 'YBQ' : 'YBS';
       let maxSeq = 100;
       try {
-        const idData = await supabaseFetch('/rest/v1/invoices?select=invoice_no&invoice_no=like.' + prefix + '-*');
+        const idData = await supabaseFetch('/rest/v1/invoices?select=invoiceNo&invoiceNo=like.' + prefix + '-*');
         if (Array.isArray(idData)) {
           idData.forEach(row => {
-            const parts = (row.invoice_no || '').split('-');
+            const parts = (row.invoiceNo || '').split('-');
             const num = parseInt(parts[parts.length - 1], 10);
             if (!isNaN(num) && num > maxSeq) maxSeq = num;
           });
@@ -250,10 +267,10 @@ async function generateInvoice() {
       const prefix = docType === 'Quotation' ? 'YBQ' : 'YBS';
       let maxSeq = 100;
       try {
-        const idData = await supabaseFetch('/rest/v1/invoices?select=invoice_no&invoice_no=like.' + prefix + '-*');
+        const idData = await supabaseFetch('/rest/v1/invoices?select=invoiceNo&invoiceNo=like.' + prefix + '-*');
         if (Array.isArray(idData)) {
           idData.forEach(row => {
-            const parts = (row.invoice_no || '').split('-');
+            const parts = (row.invoiceNo || '').split('-');
             const num = parseInt(parts[parts.length - 1], 10);
             if (!isNaN(num) && num > maxSeq) maxSeq = num;
           });
@@ -292,7 +309,7 @@ async function generateInvoice() {
     let tbody = '';
     items.forEach((it, i) => {
       tbody += '<tr><td style="border: 1px solid #000; padding: 8px; text-align: center;">'+(i+1)+'</td>';
-      tbody += '<td style="border: 1px solid #000; padding: 8px;">'+it.description+'</td>';
+      tbody += '<td style="border: 1px solid #000; padding: 8px;">'+escapeHtml(it.description)+'</td>';
       tbody += '<td style="border: 1px solid #000; padding: 8px; text-align: center;">'+it.qty+'</td>';
       tbody += '<td style="border: 1px solid #000; padding: 8px; text-align: right;">'+fmtINR(it.rate)+'</td>';
       tbody += '<td style="border: 1px solid #000; padding: 8px; text-align: right;">'+fmtINR(it.qty*it.rate)+'</td></tr>';
@@ -320,12 +337,13 @@ async function generateInvoice() {
     const storageRes = await fetch(SUPABASE_URL + '/storage/v1/object/' + bucket + '/' + filePath, {
       method: 'POST',
       headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'apikey': getSupabaseKey(),
+        'Authorization': 'Bearer ' + getSupabaseKey(),
         'Content-Type': 'application/pdf'
       },
       body: pdfBlob
     });
+    if (!storageRes.ok) throw new Error('Storage upload failed: ' + await storageRes.text());
     
     const pdfUrl = SUPABASE_URL + '/storage/v1/object/public/' + bucket + '/' + filePath;
 

@@ -4,6 +4,15 @@
 const DEFAULT_SUPABASE_URL = "https://ifxjekxawcnczezyjkrd.supabase.co";
 const DEFAULT_SUPABASE_KEY = "sb_publishable_hiKKIwgv7aT3jpgfJaby0w_B7_la-ZC";
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 const state = {
   supabaseUrl: localStorage.getItem("supabase_url") || DEFAULT_SUPABASE_URL,
   supabaseKey: localStorage.getItem("supabase_key") || DEFAULT_SUPABASE_KEY,
@@ -989,17 +998,17 @@ function renderSettingsView() {
         <form onsubmit="handleSaveSupabase(event)" class="space-y-4">
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Supabase Project URL</label>
-            <input type="url" id="sb-url" value="${state.supabaseUrl}" class="w-full px-3 py-2 border rounded-lg text-sm font-mono bg-slate-50 focus:bg-white outline-none focus:border-amber-500" placeholder="https://xyzcompany.supabase.co" required>
+            <input type="url" id="sb-url" value="${escapeHtml(state.supabaseUrl)}" class="w-full px-3 py-2 border rounded-lg text-sm font-mono bg-slate-50 focus:bg-white outline-none focus:border-amber-500" placeholder="https://xyzcompany.supabase.co" required>
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Supabase Anon Public API Key</label>
-            <input type="text" id="sb-key" value="${state.supabaseKey}" class="w-full px-3 py-2 border rounded-lg text-sm font-mono bg-slate-50 focus:bg-white outline-none focus:border-amber-500" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." required>
+            <input type="text" id="sb-key" value="${escapeHtml(state.supabaseKey)}" class="w-full px-3 py-2 border rounded-lg text-sm font-mono bg-slate-50 focus:bg-white outline-none focus:border-amber-500" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." required>
             <p class="text-[11px] text-slate-500 mt-1">Found in your Supabase project under: <strong>Project Settings -> API -> Project API Keys (anon public)</strong></p>
           </div>
 
           <div class="pt-2 flex items-center justify-between">
             <span class="text-xs ${state.syncStatus === 'connected' ? 'text-emerald-600 font-semibold' : 'text-slate-500'}">
-              Status: ${state.syncStatus.toUpperCase()}
+              Status: ${escapeHtml(state.syncStatus.toUpperCase())}
             </span>
             <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg shadow flex items-center gap-1.5">
               <i data-lucide="check" class="w-4 h-4"></i> Save & Connect Supabase
@@ -1019,20 +1028,20 @@ function renderSettingsView() {
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-xs font-bold text-slate-700 mb-1">Shop Name</label>
-              <input type="text" id="set-name" value="${state.settings.company_name}" class="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:border-amber-500">
+              <input type="text" id="set-name" value="${escapeHtml(state.settings.company_name)}" class="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:border-amber-500">
             </div>
             <div>
               <label class="block text-xs font-bold text-slate-700 mb-1">Tagline</label>
-              <input type="text" id="set-tagline" value="${state.settings.tagline}" class="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:border-amber-500">
+              <input type="text" id="set-tagline" value="${escapeHtml(state.settings.tagline)}" class="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:border-amber-500">
             </div>
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Mobile Phone</label>
-            <input type="text" id="set-phone" value="${state.settings.phone}" class="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:border-amber-500">
+            <input type="text" id="set-phone" value="${escapeHtml(state.settings.phone)}" class="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:border-amber-500">
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Shop Address</label>
-            <textarea id="set-address" rows="2" class="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:border-amber-500">${state.settings.address}</textarea>
+            <textarea id="set-address" rows="2" class="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:border-amber-500">${escapeHtml(state.settings.address)}</textarea>
           </div>
 
           <div class="border-t pt-4">
@@ -1040,23 +1049,23 @@ function renderSettingsView() {
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label class="block text-xs font-semibold text-slate-600 mb-1">Bank Name</label>
-                <input type="text" id="set-bank" value="${state.settings.bank_name}" class="w-full px-3 py-2 border rounded-lg text-sm outline-none">
+                <input type="text" id="set-bank" value="${escapeHtml(state.settings.bank_name)}" class="w-full px-3 py-2 border rounded-lg text-sm outline-none">
               </div>
               <div>
                 <label class="block text-xs font-semibold text-slate-600 mb-1">Account Holder Name</label>
-                <input type="text" id="set-holder" value="${state.settings.account_name}" class="w-full px-3 py-2 border rounded-lg text-sm outline-none">
+                <input type="text" id="set-holder" value="${escapeHtml(state.settings.account_name)}" class="w-full px-3 py-2 border rounded-lg text-sm outline-none">
               </div>
               <div>
                 <label class="block text-xs font-semibold text-slate-600 mb-1">Account Number</label>
-                <input type="text" id="set-acc" value="${state.settings.account_no}" class="w-full px-3 py-2 border rounded-lg text-sm font-mono outline-none">
+                <input type="text" id="set-acc" value="${escapeHtml(state.settings.account_no)}" class="w-full px-3 py-2 border rounded-lg text-sm font-mono outline-none">
               </div>
               <div>
                 <label class="block text-xs font-semibold text-slate-600 mb-1">Branch</label>
-                <input type="text" id="set-branch" value="${state.settings.branch}" class="w-full px-3 py-2 border rounded-lg text-sm outline-none">
+                <input type="text" id="set-branch" value="${escapeHtml(state.settings.branch)}" class="w-full px-3 py-2 border rounded-lg text-sm outline-none">
               </div>
               <div>
                 <label class="block text-xs font-semibold text-slate-600 mb-1">IFSC Code</label>
-                <input type="text" id="set-ifsc" value="${state.settings.ifsc_code}" class="w-full px-3 py-2 border rounded-lg text-sm font-mono outline-none">
+                <input type="text" id="set-ifsc" value="${escapeHtml(state.settings.ifsc_code)}" class="w-full px-3 py-2 border rounded-lg text-sm font-mono outline-none">
               </div>
             </div>
           </div>

@@ -1,11 +1,35 @@
-const SUPABASE_URL = 'https://eyajwjrafudarccvcada.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5YWp3anJhZnVkYXJjY3ZjYWRhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODkxODQ2MiwiZXhwIjoyMDk0NDk0NDYyfQ.9A9D9dPb_GoHJiREuIWML1PATN-es4MC9_DE8wvK76g';
+const SUPABASE_URL = localStorage.getItem('atc_supabase_url') || 'https://eyajwjrafudarccvcada.supabase.co';
+
+function getSupabaseKey() {
+  let key = (localStorage.getItem('atc_supabase_key') || '').trim();
+  if (!key) {
+    const entered = window.prompt('Enter your Supabase publishable/anon API key (stored locally in this browser):');
+    if (entered && entered.trim()) {
+      key = entered.trim();
+      localStorage.setItem('atc_supabase_key', key);
+    }
+  }
+  if (!key) {
+    throw new Error('Missing Supabase API key. Configure atc_supabase_key in browser storage.');
+  }
+  return key;
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 async function supabaseFetch(endpoint, options = {}) {
   const url = SUPABASE_URL + endpoint;
+  const key = getSupabaseKey();
   const headers = {
-    'apikey': SUPABASE_KEY,
-    'Authorization': 'Bearer ' + SUPABASE_KEY,
+    'apikey': key,
+    'Authorization': 'Bearer ' + key,
     'Content-Type': 'application/json',
     ...(options.headers || {})
   };
@@ -130,9 +154,9 @@ function renderItems() {
   let total = 0;
   items.forEach((it, i) => {
     const amt = it.qty * it.rate; total += amt;
-    tbody.innerHTML += '<tr><td align="center">+(i+1)+</td><td>+it.description+</td><td align="center">+it.qty+</td><td align="right">+fmtINR(it.rate)+</td><td align="right">+fmtINR(amt)+</td></tr>';
+    tbody.innerHTML += '<tr><td align="center">' + (i + 1) + '</td><td>' + escapeHtml(it.description) + '</td><td align="center">' + escapeHtml(it.qty) + '</td><td align="right">' + escapeHtml(fmtINR(it.rate)) + '</td><td align="right">' + escapeHtml(fmtINR(amt)) + '</td></tr>';
   });
-  tbody.innerHTML += '<tr><td colspan="4" align="right"><b>Subtotal</b></td><td align="right"><b>+fmtINR(total)+</b></td></tr>';
+  tbody.innerHTML += '<tr><td colspan="4" align="right"><b>Subtotal</b></td><td align="right"><b>' + escapeHtml(fmtINR(total)) + '</b></td></tr>';
 }
 
 async function refreshInvoiceList() {
@@ -294,10 +318,10 @@ async function generateInvoice() {
       const bg = (i % 2 === 1) ? '#f8fafc' : '#ffffff';
       tbody += '<tr style="background: ' + bg + ';">';
       tbody += '<td style="border-bottom: 1px solid #e2e8f0; padding: 10px 8px; text-align: center; font-weight: 600; color: #64748b;">' + (i + 1) + '</td>';
-      tbody += '<td style="border-bottom: 1px solid #e2e8f0; padding: 10px 14px; font-weight: 600; color: #1e293b;">' + it.description + '</td>';
-      tbody += '<td style="border-bottom: 1px solid #e2e8f0; padding: 10px 8px; text-align: center; font-weight: 600; color: #334155;">' + it.qty + '</td>';
-      tbody += '<td style="border-bottom: 1px solid #e2e8f0; padding: 10px 14px; text-align: right; color: #334155;">' + fmtINR(it.rate) + '</td>';
-      tbody += '<td style="border-bottom: 1px solid #e2e8f0; padding: 10px 14px; text-align: right; font-weight: 700; color: #0f172a;">' + fmtINR(it.qty * it.rate) + '</td>';
+      tbody += '<td style="border-bottom: 1px solid #e2e8f0; padding: 10px 14px; font-weight: 600; color: #1e293b;">' + escapeHtml(it.description) + '</td>';
+      tbody += '<td style="border-bottom: 1px solid #e2e8f0; padding: 10px 8px; text-align: center; font-weight: 600; color: #334155;">' + escapeHtml(it.qty) + '</td>';
+      tbody += '<td style="border-bottom: 1px solid #e2e8f0; padding: 10px 14px; text-align: right; color: #334155;">' + escapeHtml(fmtINR(it.rate)) + '</td>';
+      tbody += '<td style="border-bottom: 1px solid #e2e8f0; padding: 10px 14px; text-align: right; font-weight: 700; color: #0f172a;">' + escapeHtml(fmtINR(it.qty * it.rate)) + '</td>';
       tbody += '</tr>';
     });
     document.getElementById('pdf-items').innerHTML = tbody;
@@ -320,15 +344,19 @@ async function generateInvoice() {
     // 4. Upload to Supabase Storage
     const bucket = 'invoices';
     const filePath = encodeURIComponent(invNo + '.pdf');
+    const supabaseKey = getSupabaseKey();
     const storageRes = await fetch(SUPABASE_URL + '/storage/v1/object/' + bucket + '/' + filePath, {
       method: 'POST',
       headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'apikey': supabaseKey,
+        'Authorization': 'Bearer ' + supabaseKey,
         'Content-Type': 'application/pdf'
       },
       body: pdfBlob
     });
+    if (!storageRes.ok) {
+      throw new Error('Storage upload failed: ' + await storageRes.text());
+    }
     
     const pdfUrl = SUPABASE_URL + '/storage/v1/object/public/' + bucket + '/' + filePath;
 

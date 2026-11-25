@@ -211,13 +211,13 @@ export default function PurchaseSoftware() {
       if (isUpdate) {
         const { data: savedPurchase, error } = await supabase.from('purchases').update(payload).eq('id', selectedPurchaseId).select().single();
         if (error) throw error;
-        if (savedPurchase && docType === 'Bill') await ERPUtils.recordPurchase(savedPurchase as Purchase);
+        if (savedPurchase) await ERPUtils.recordPurchase(savedPurchase as Purchase);
         activeSavedPurchase = savedPurchase;
         showToast('Purchase entry updated successfully!');
       } else {
         const { data: savedPurchase, error } = await supabase.from('purchases').insert([payload]).select().single();
         if (error) throw error;
-        if (savedPurchase && docType === 'Bill') await ERPUtils.recordPurchase(savedPurchase as Purchase);
+        if (savedPurchase) await ERPUtils.recordPurchase(savedPurchase as Purchase);
         activeSavedPurchase = savedPurchase;
         showToast('Purchase entry saved successfully!');
       }
@@ -263,8 +263,7 @@ export default function PurchaseSoftware() {
       return;
     }
     try {
-
-
+      await ERPUtils.deleteReferenceEntries(id);
       const { error } = await supabase.from('purchases').delete().eq('id', id);
       if (error) throw error;
       showToast(`Purchase ${pNo} deleted successfully.`);

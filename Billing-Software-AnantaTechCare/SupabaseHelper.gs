@@ -1,8 +1,16 @@
-const SUPABASE_URL = 'https://eyajwjrafudarccvcada.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5YWp3anJhZnVkYXJjY3ZjYWRhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODkxODQ2MiwiZXhwIjoyMDk0NDk0NDYyfQ.9A9D9dPb_GoHJiREuIWML1PATN-es4MC9_DE8wvK76g';
+function getSupabaseConfig_() {
+  const props = PropertiesService.getScriptProperties();
+  const url = (props.getProperty('SUPABASE_URL') || '').replace(/\/+$/, '');
+  const key = props.getProperty('SUPABASE_SERVICE_KEY') || props.getProperty('SUPABASE_KEY') || '';
+  if (!url || !key) {
+    throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_KEY in Apps Script Script Properties.');
+  }
+  return { url: url, key: key };
+}
 
 function supabaseGet(table, queryParams) {
-  let url = SUPABASE_URL + '/rest/v1/' + table;
+  const cfg = getSupabaseConfig_();
+  let url = cfg.url + '/rest/v1/' + table;
   if (queryParams) {
     url += '?' + queryParams;
   }
@@ -10,8 +18,8 @@ function supabaseGet(table, queryParams) {
   const options = {
     method: 'get',
     headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'apikey': cfg.key,
+      'Authorization': 'Bearer ' + cfg.key,
       'Content-Type': 'application/json'
     },
     muteHttpExceptions: true
@@ -25,12 +33,13 @@ function supabaseGet(table, queryParams) {
 }
 
 function supabasePost(table, data) {
-  const url = SUPABASE_URL + '/rest/v1/' + table;
+  const cfg = getSupabaseConfig_();
+  const url = cfg.url + '/rest/v1/' + table;
   const options = {
     method: 'post',
     headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'apikey': cfg.key,
+      'Authorization': 'Bearer ' + cfg.key,
       'Content-Type': 'application/json',
       'Prefer': 'return=representation'
     },
@@ -46,12 +55,13 @@ function supabasePost(table, data) {
 }
 
 function supabasePatch(table, data, matchQuery) {
-  const url = SUPABASE_URL + '/rest/v1/' + table + '?' + matchQuery;
+  const cfg = getSupabaseConfig_();
+  const url = cfg.url + '/rest/v1/' + table + '?' + matchQuery;
   const options = {
     method: 'patch',
     headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'apikey': cfg.key,
+      'Authorization': 'Bearer ' + cfg.key,
       'Content-Type': 'application/json',
       'Prefer': 'return=representation'
     },
@@ -67,12 +77,13 @@ function supabasePatch(table, data, matchQuery) {
 }
 
 function supabaseUploadStorage(bucket, path, blob) {
-  const url = SUPABASE_URL + '/storage/v1/object/' + bucket + '/' + encodeURIComponent(path);
+  const cfg = getSupabaseConfig_();
+  const url = cfg.url + '/storage/v1/object/' + bucket + '/' + encodeURIComponent(path);
   const options = {
     method: 'post',
     headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'apikey': cfg.key,
+      'Authorization': 'Bearer ' + cfg.key,
       'Content-Type': blob.getContentType() || 'application/pdf'
     },
     payload: blob.getBytes(),
@@ -85,5 +96,5 @@ function supabaseUploadStorage(bucket, path, blob) {
     throw new Error('Supabase Storage Error: ' + res.getContentText());
   }
   
-  return SUPABASE_URL + '/storage/v1/object/public/' + bucket + '/' + encodeURIComponent(path);
+  return cfg.url + '/storage/v1/object/public/' + bucket + '/' + encodeURIComponent(path);
 }

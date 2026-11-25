@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { QrCodeSvg } from '../components/QrCodeSvg';
 import SEO from '../components/SEO';
+import { isPayableInvoiceDoc, parseFlexibleDate } from '../utils/erp';
 
 interface InvoiceItem {
   name: string;
@@ -115,25 +116,18 @@ export function CustomerHistory() {
   };
 
   // Calculations
-  const totalBilled = invoices.filter(i => i.doc_type === 'Invoice').reduce((sum, i) => sum + (Number(i.grand_total) || 0), 0);
-  const totalPaid = invoices.filter(i => i.doc_type === 'Invoice').reduce((sum, i) => sum + (Number(i.advance_paid) || 0), 0);
-  const totalBalanceDue = invoices.filter(i => i.doc_type === 'Invoice').reduce((sum, i) => {
+  const billInvoices = invoices.filter(i => isPayableInvoiceDoc(i.doc_type));
+  const totalBilled = billInvoices.reduce((sum, i) => sum + (Number(i.grand_total) || 0), 0);
+  const totalPaid = billInvoices.reduce((sum, i) => sum + (Number(i.advance_paid) || 0), 0);
+  const totalBalanceDue = billInvoices.reduce((sum, i) => {
     const bal = (i.balance_due !== undefined && i.balance_due !== null) ? Number(i.balance_due) : Math.max(0, (Number(i.grand_total) || 0) - (Number(i.advance_paid) || 0));
     return sum + bal;
   }, 0);
 
   // Warranty calculation (30 days from invoice date)
   const getWarrantyInfo = (dateStr: string) => {
-    if (!dateStr) return { active: false, daysLeft: 0, expiryDate: '—' };
-    let invDate: Date;
-    if (dateStr.includes('/')) {
-      const [d, m, y] = dateStr.split('/');
-      invDate = new Date(`${y}-${m}-${d}`);
-    } else {
-      invDate = new Date(dateStr);
-    }
-
-    if (isNaN(invDate.getTime())) return { active: false, daysLeft: 0, expiryDate: '—' };
+    const invDate = parseFlexibleDate(dateStr);
+    if (!invDate) return { active: false, daysLeft: 0, expiryDate: '—' };
 
     const expiry = new Date(invDate);
     expiry.setDate(expiry.getDate() + 30); // 30 days service warranty
@@ -342,7 +336,7 @@ export function CustomerHistory() {
                       const balDue = (inv.balance_due !== undefined && inv.balance_due !== null) 
                         ? Number(inv.balance_due) 
                         : Math.max(0, (Number(inv.grand_total) || 0) - (Number(inv.advance_paid) || 0));
-                      const isInvoice = inv.doc_type === 'Invoice';
+                      const isInvoice = isPayableInvoiceDoc(inv.doc_type);
                       const itemsList = Array.isArray(inv.items) ? inv.items : [];
 
                       return (
@@ -435,7 +429,7 @@ export function CustomerHistory() {
                 {/* TAB 2: WARRANTY TRACKER */}
                 {activeTab === 'warranty' && (
                   <div className="space-y-4">
-                    {invoices.filter(i => i.doc_type === 'Invoice').map((inv) => {
+                    {invoices.filter(i => isPayableInvoiceDoc(i.doc_type)).map((inv) => {
                       const warranty = getWarrantyInfo(inv.date);
                       const itemsList = Array.isArray(inv.items) ? inv.items : [];
 

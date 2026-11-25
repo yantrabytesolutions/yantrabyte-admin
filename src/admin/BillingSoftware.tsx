@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { Invoice, InvoiceItem, ServiceTicket, Product, Customer, Purchase } from '../types';
 import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt, Mail, FileSpreadsheet, Pencil, MessageSquare, Send, List, Search, Clock, Settings, Link, ShieldCheck, CloudUpload, HardDrive, Loader2 } from 'lucide-react';
@@ -9,7 +9,7 @@ import SignatureCanvas from 'react-signature-canvas';
 import { PRESET_ITEMS } from './presetItems';
 import { downloadExcelWorkbook } from '../utils/spreadsheetXml';
 import { uploadInvoiceToDrive } from '../utils/googleDriveBackup';
-import { ERPUtils } from '../utils/erp';
+import { ERPUtils, isPayableInvoiceDoc, isQuotationDoc, parseFlexibleDate } from '../utils/erp';
 import CustomerLedgerModal from './components/CustomerLedgerModal';
 import { InvoicePdfTemplate } from '../components/InvoicePdfTemplate';
 
@@ -95,8 +95,10 @@ export default function BillingSoftware({
     return (localStorage.getItem('admin_brand') as 'yantrabyte' | 'anantatechcare') || 'yantrabyte';
   });
 
+  const prevPropBrandRef = useRef(propBrand);
   useEffect(() => {
-    if (propBrand && propBrand !== currentBrand) {
+    if (propBrand && propBrand !== prevPropBrandRef.current) {
+      prevPropBrandRef.current = propBrand;
       setCurrentBrand(propBrand);
     }
   }, [propBrand]);
@@ -189,11 +191,11 @@ export default function BillingSoftware({
     );
 
     const totalSpend = matchedInvoices
-      .filter(inv => inv.doc_type === 'Invoice')
+      .filter(inv => isPayableInvoiceDoc(inv.doc_type))
       .reduce((sum, inv) => sum + (inv.grand_total || 0), 0);
 
     const outstanding = matchedInvoices
-      .filter(inv => inv.doc_type === 'Invoice')
+      .filter(inv => isPayableInvoiceDoc(inv.doc_type))
       .reduce((sum, inv) => sum + (inv.balance_due || 0), 0);
 
     setHistoryDrawerData({
@@ -525,7 +527,7 @@ export default function BillingSoftware({
       return;
     }
     try {
-
+      await ERPUtils.deleteReferenceEntries(id);
       const { error } = await supabase.from('invoices').delete().eq('id', id);
       if (error) throw error;
       showToast(`Invoice ${invoiceNo} deleted successfully.`);
@@ -794,7 +796,9 @@ export default function BillingSoftware({
 
     if (!phone) { showToast('No phone number available for WhatsApp', 'error'); return; }
 
-    const text = `Hi *${inv.customer_name}*,\n\nThis is a friendly reminder from *YantraByte Solutions* that your 1-Year Annual Maintenance & Service Warranty for Invoice *#${inv.invoice_no}* is approaching its renewal date.\n\nWould you like to renew your AMC contract to ensure uninterrupted priority support and maintenance for your CCTV & IT systems?\n\nPlease reply to this message or call us at *+91 99867 42525* to renew.\n\nWarm regards,\n*YantraByte Solutions*`;
+    const isAnantaDoc = isInvoiceAnanta(inv) || currentBrand === 'anantatechcare';
+    const companyName = isAnantaDoc ? 'ANANTATECH CARE' : 'YantraByte Solutions';
+    const text = `Hi *${inv.customer_name}*,\n\nThis is a friendly reminder from *${companyName}* that your 1-Year Annual Maintenance & Service Warranty for Invoice *#${inv.invoice_no}* is approaching its renewal date.\n\nWould you like to renew your AMC contract to ensure uninterrupted priority support and maintenance for your CCTV & IT systems?\n\nPlease reply to this message or call us at *+91 99867 42525* to renew.\n\nWarm regards,\n*${companyName}*`;
 
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
     showToast('Opening WhatsApp AMC renewal chat...');
@@ -831,7 +835,7 @@ export default function BillingSoftware({
   const invoiceCount = displayedInvoicesForStats.filter(i => isPayableDoc(i.doc_type)).length;
   const quoteCount = displayedInvoicesForStats.filter(i => i.doc_type === 'Quotation').length;
 
-  const generateInvoiceNoAsync = async (type: string = docType) => {
+  const generateInvoiceNoAsync = useCallback(async (type: string = 'Invoice') => {
     const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const isAnanta = currentBrand === 'anantatechcare';
     if (isAnanta) {
@@ -894,7 +898,7 @@ export default function BillingSoftware({
 
     const seq = maxSeq + 1;
     return `${prefix}-${datePart}-${seq.toString().padStart(3, '0')}`;
-  };
+  }, [currentBrand]);
 
   // Auto-refresh draft invoice number whenever brand, docType, or selection changes on an unsaved new document
   useEffect(() => {
@@ -907,7 +911,7 @@ export default function BillingSoftware({
         .catch(err => console.error('Error generating draft invoice no:', err));
       return () => { isMounted = false; };
     }
-  }, [docType, currentBrand, selectedInvoiceId]);
+  }, [docType, selectedInvoiceId, generateInvoiceNoAsync]);
 
 
 
@@ -1069,15 +1073,18 @@ export default function BillingSoftware({
         advance_paid: 0,
         balance_due: inv.grand_total,
         payment_mode: 'Not specified',
-        payment_status: 'Unpaid',
+        payment_status: 'Due',
         is_recurring: true,
         recurring_interval: inv.recurring_interval,
         next_due_date: nextDue,
         terms_conditions: inv.terms_conditions
       };
 
-      const { error } = await supabase.from('invoices').insert([payload]).select().single();
+      const { data: savedRecurring, error } = await supabase.from('invoices').insert([payload]).select().single();
       if (error) throw error;
+      if (savedRecurring) {
+        await ERPUtils.recordInvoice(savedRecurring as Invoice);
+      }
       
       await supabase.from('invoices').update({ next_due_date: nextDue }).eq('id', inv.id);
 
@@ -1218,10 +1225,12 @@ export default function BillingSoftware({
             pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob') as Blob;
             pdfUrl = await uploadPdfToSupabase(pdfBlob, payload.invoice_no, payload.customer_name);
             
-            uploadInvoiceToDrive(pdfBlob, payload.invoice_no, payload.date, (payload.doc_type as any) || 'INVOICE', payload.customer_name).then(res => {
-              if (res.ok) console.log('Backed up to Drive:', res.fileId);
-              else console.error('Drive Backup Failed:', res.error);
-            });
+            uploadInvoiceToDrive(pdfBlob, payload.invoice_no, payload.date, (payload.doc_type as any) || 'INVOICE', payload.customer_name)
+              .then(res => {
+                if (res.ok) console.log('Backed up to Drive:', res.fileId);
+                else console.error('Drive Backup Failed:', res.error);
+              })
+              .catch(driveErr => console.error('Drive Backup Error:', driveErr));
 
             if (action === 'download') {
               await html2pdf().set(opt).from(element).save();
@@ -1247,19 +1256,6 @@ export default function BillingSoftware({
         if (data) {
           setSelectedInvoiceId(data.id);
           setDraftInvoiceNumber('');
-        }
-        
-        // Auto-deduct stock
-        for (const item of items) {
-          if (item.product_id && item.qty > 0) {
-            const prod = productsList.find(p => p.id === item.product_id);
-            if (prod && typeof prod.stock_count === 'number') {
-              await supabase
-                .from('products')
-                .update({ stock_count: Math.max(0, prod.stock_count - item.qty) })
-                .eq('id', item.product_id);
-            }
-          }
         }
         
         showToast('Invoice saved successfully!');
@@ -1464,21 +1460,29 @@ export default function BillingSoftware({
     const fallbackPrefix = isAnantaDoc ? 'ATC-' : 'YBS-';
     const safeTitle = inv.customer_name?.trim().replace(/[/\\?%*:|"<>]/g, '-') || `${fallbackPrefix}${inv.invoice_no}`;
 
+    const escapedTitle = safeTitle
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+
     // Open window synchronously to bypass popup blocker
     const newWindow = window.open('', '_blank');
     if (newWindow) {
       newWindow.document.write(`
         <html>
-          <head><title>${safeTitle}</title></head>
+          <head><title>${escapedTitle}</title></head>
           <body style="display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;background:#f3f4f6;color:#374151;margin:0;">
             <div style="text-align:center;">
               <svg style="animation: spin 1s linear infinite; margin: 0 auto 1rem; height: 2rem; width: 2rem; color: #0EA5E9;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-              <h2>Generating PDF for ${safeTitle}... Please wait.</h2>
+              <h2>Generating PDF for ${escapedTitle}... Please wait.</h2>
               <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
             </div>
           </body>
         </html>
       `);
+      newWindow.document.close();
     }
 
     loadInvoice(id);
@@ -1686,10 +1690,10 @@ export default function BillingSoftware({
       const isAnanta = currentBrand === 'anantatechcare';
       const bills = invoices
         .filter(inv => isAnanta ? isInvoiceAnanta(inv) : !isInvoiceAnanta(inv))
-        .filter(inv => inv.doc_type === 'Invoice');
+        .filter(inv => isPayableInvoiceDoc(inv.doc_type));
       const quotations = invoices
         .filter(inv => isAnanta ? isInvoiceAnanta(inv) : !isInvoiceAnanta(inv))
-        .filter(inv => inv.doc_type === 'Quotation');
+        .filter(inv => isQuotationDoc(inv.doc_type));
       const dues = bills.filter(inv => (inv.balance_due || 0) > 0);
 
       downloadExcelWorkbook(`${isAnanta ? 'anantatechcare' : 'yantrabyte'}-ledger-${new Date().toISOString().slice(0, 10)}.xls`, [
@@ -2040,7 +2044,7 @@ export default function BillingSoftware({
 
               {/* Document Type Selector Buttons */}
               <div className="flex flex-wrap items-center gap-2">
-                {docType === 'Invoice' && (
+                {isPayableInvoiceDoc(docType) && (
                   <label className="flex items-center gap-2 cursor-pointer bg-slate-50 hover:bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 transition-colors">
                     <input 
                       type="checkbox" 
@@ -2705,10 +2709,10 @@ export default function BillingSoftware({
 
                   if (activeTab === ('sales' as any) && (inv.doc_type === 'Service Bill' || inv.doc_type === 'Quotation' || inv.doc_type === 'Estimate' || (inv.invoice_no && (inv.invoice_no.includes('SRV'))))) return false;
                   if (activeTab === ('services' as any) && !(inv.doc_type === 'Service Bill' || (inv.invoice_no && (inv.invoice_no.includes('SRV'))))) return false;
-                  if (activeTab === 'quotations' && inv.doc_type !== 'Quotation') return false;
-                  if (activeTab === 'pending' && ((inv.balance_due || 0) <= 0 || inv.doc_type === 'Quotation')) return false;
+                  if (activeTab === 'quotations' && !isQuotationDoc(inv.doc_type)) return false;
+                  if (activeTab === 'pending' && ((inv.balance_due || 0) <= 0 || !isPayableInvoiceDoc(inv.doc_type))) return false;
                   if (activeTab === 'renewals') {
-                    if (inv.doc_type !== 'Invoice') return false;
+                    if (!isPayableInvoiceDoc(inv.doc_type)) return false;
                     // Check if invoice date is older than 250 days or has 12m warranty / recurring
                     const parts = (inv.date || '').split('/');
                     let isOlder = false;
@@ -2852,12 +2856,12 @@ export default function BillingSoftware({
                             </button>
                           </>
                         )}
-                        {inv.doc_type === 'Invoice' && (inv.balance_due || 0) > 0 && (
+                        {isPayableInvoiceDoc(inv.doc_type) && (inv.balance_due || 0) > 0 && (
                           <button onClick={(e) => { e.stopPropagation(); handleMarkAsPaid(inv.id); }} className="p-1.5 text-gray-500 hover:bg-green-50 hover:text-green-600 rounded-md transition-colors" title="Mark as Paid">
                             <CheckCircle className="w-4 h-4" />
                           </button>
                         )}
-                        {inv.doc_type === 'Invoice' && (
+                        {isPayableInvoiceDoc(inv.doc_type) && (
                           <button onClick={(e) => { e.stopPropagation(); sendAmcRenewalAlert(inv); }} className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors" title="🔄 Send AMC / Warranty Renewal Alert">
                             <ShieldCheck className="w-4 h-4" />
                           </button>
@@ -3092,7 +3096,7 @@ export default function BillingSoftware({
                                 >
                                   <Download className="w-4 h-4" />
                                 </button>
-                                {inv.doc_type === 'Invoice' && (inv.balance_due || 0) > 0 && (
+                                {isPayableInvoiceDoc(inv.doc_type) && (inv.balance_due || 0) > 0 && (
                                   <button 
                                     type="button"
                                     onClick={(e) => {
@@ -3283,7 +3287,7 @@ export default function BillingSoftware({
             
             <div className="p-6 overflow-y-auto">
               <div className="space-y-4">
-                {invoices.filter(i => (i.balance_due || 0) > 0 && i.doc_type === 'Invoice').length === 0 ? (
+                {invoices.filter(i => (i.balance_due || 0) > 0 && isPayableInvoiceDoc(i.doc_type)).length === 0 ? (
                   <div className="text-center py-10">
                     <CheckCircle className="w-12 h-12 text-green-300 mx-auto mb-3" />
                     <h3 className="text-lg font-medium text-gray-900">All caught up!</h3>
@@ -3302,7 +3306,7 @@ export default function BillingSoftware({
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100">
-                        {invoices.filter(i => (i.balance_due || 0) > 0 && i.doc_type === 'Invoice').map(inv => {
+                        {invoices.filter(i => (i.balance_due || 0) > 0 && isPayableInvoiceDoc(i.doc_type)).map(inv => {
                           const customer = customersList.find(c => c.name === inv.customer_name) || { phone: inv.phone };
                           const phoneNum = (customer?.phone || inv.phone || '').replace(/\D/g, '');
                           const estimateUrl = `https://yantrabyte.anantatechcare.com/estimate/${inv.id}`;
@@ -3323,9 +3327,15 @@ export default function BillingSoftware({
                               <td className="px-4 py-3 font-medium text-gray-900">{inv.invoice_no}</td>
                               <td className="px-4 py-3 text-gray-600">{inv.customer_name}</td>
                               <td className="px-4 py-3">
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${new Date(inv.date) < new Date() ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
-                                  {inv.date}
-                                </span>
+                                {(() => {
+                                  const parsedDate = parseFlexibleDate(inv.due_date || inv.date);
+                                  const isOverdue = parsedDate ? parsedDate < new Date() : false;
+                                  return (
+                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${isOverdue ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
+                                      {inv.due_date || inv.date}
+                                    </span>
+                                  );
+                                })()}
                               </td>
                               <td 
                                 className="px-4 py-3 text-right font-bold text-red-600 cursor-pointer hover:bg-red-50"

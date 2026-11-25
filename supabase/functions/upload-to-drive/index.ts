@@ -1,9 +1,43 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+// Uses built-in Deno.serve (Supabase Edge Runtime standard)
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+async function requireAdmin(req: Request): Promise<Response | null> {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+  const supabaseAnon = Deno.env.get('SUPABASE_ANON_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+  const authHeader = req.headers.get('authorization') || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+  if (!token || !supabaseUrl || !supabaseAnon) {
+    return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  const userRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
+    headers: { apikey: supabaseAnon, Authorization: `Bearer ${token}` },
+  });
+  if (!userRes.ok) {
+    return new Response(JSON.stringify({ ok: false, error: 'Invalid session' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  const user = await userRes.json();
+  if (user?.app_metadata?.is_admin !== true) {
+    return new Response(JSON.stringify({ ok: false, error: 'Admin privileges required' }), {
+      status: 403,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  return null;
+}
+
+function escapeDriveQueryValue(val: string): string {
+  return String(val || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
 
 async function getAccessToken(clientId: string, clientSecret: string, refreshToken: string): Promise<string> {
   const res = await fetch('https://oauth2.googleapis.com/token', {
@@ -24,8 +58,12 @@ async function getAccessToken(clientId: string, clientSecret: string, refreshTok
 }
 
 async function getOrCreateSubfolder(token: string, parentId: string, folderName: string): Promise<string> {
+  if (!/^[A-Za-z0-9_-]+$/.test(parentId)) {
+    throw new Error('Invalid parentFolderId');
+  }
+  const safeFolder = escapeDriveQueryValue(folderName);
   // Check if folder exists
-  const query = `name='${folderName}' and mimeType='application/vnd.google-apps.folder' and '${parentId}' in parents and trashed=false`;
+  const query = `name='${safeFolder}' and mimeType='application/vnd.google-apps.folder' and '${parentId}' in parents and trashed=false`;
   const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=files(id)`, {
     headers: { Authorization: `Bearer ${token}` }
   });
@@ -61,12 +99,15 @@ async function getOrCreateSubfolder(token: string, parentId: string, folderName:
   return createData.id;
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
+    const authErr = await requireAdmin(req);
+    if (authErr) return authErr;
+
     const clientId = Deno.env.get('GOOGLE_CLIENT_ID');
     const clientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET');
     const refreshToken = Deno.env.get('GOOGLE_REFRESH_TOKEN');
@@ -124,19 +165,6 @@ serve(async (req) => {
     if (uploadData.error) {
       throw new Error('Upload failed: ' + uploadData.error.message);
     }
-
-    // Set sharing permissions to 'Anyone with the link can view'
-    await fetch(`https://www.googleapis.com/drive/v3/files/${uploadData.id}/permissions`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        role: 'reader',
-        type: 'anyone'
-      })
-    });
 
     return new Response(
       JSON.stringify({ ok: true, fileId: uploadData.id }),

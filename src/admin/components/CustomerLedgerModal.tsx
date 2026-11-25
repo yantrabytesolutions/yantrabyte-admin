@@ -4,6 +4,7 @@ import html2pdf from 'html2pdf.js';
 import { supabase } from '../../lib/supabase';
 import { Invoice } from '../../types';
 import { InvoicePdfTemplate } from '../../components/InvoicePdfTemplate';
+import { isPayableInvoiceDoc } from '../../utils/erp';
 
 const parseDateToTimestamp = (dateStr: string): number => {
   if (!dateStr) return 0;
@@ -55,17 +56,20 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    // Fetch Invoices for this customer
-    let invQuery = supabase.from('invoices').select('*').eq('customer_name', customerName).eq('doc_type', 'Invoice');
-    if (customerId) invQuery = invQuery.or(`customer_id.eq.${customerId},customer_name.eq."${customerName}"`);
+    // Fetch Invoices for this customer (supporting Invoice, Sale Bill, Service Bill)
+    const safeName = customerName.replace(/"/g, '\\"');
+    let invQuery = supabase.from('invoices').select('*');
+    if (customerId) invQuery = invQuery.or(`customer_id.eq.${customerId},customer_name.eq."${safeName}"`);
+    else invQuery = invQuery.eq('customer_name', customerName);
     
     const { data: invData } = await invQuery.order('date', { ascending: true });
     
     // Fetch Payments
     let payData: any[] = [];
     try {
-      let pQuery = supabase.from('customer_payments').select('*').eq('customer_name', customerName);
-      if (customerId) pQuery = pQuery.or(`customer_id.eq.${customerId},customer_name.eq."${customerName}"`);
+      let pQuery = supabase.from('customer_payments').select('*');
+      if (customerId) pQuery = pQuery.or(`customer_id.eq.${customerId},customer_name.eq."${safeName}"`);
+      else pQuery = pQuery.eq('customer_name', customerName);
       
       const { data: pResp, error } = await pQuery.order('payment_date', { ascending: true });
       if (!error && pResp) payData = pResp;
@@ -83,7 +87,7 @@ export default function CustomerLedgerModal({ customerName, customerId, onClose,
       console.warn('Could not fetch company signature', err);
     }
 
-    const filteredInvoices = (invData || []).filter((i: Invoice) => i.doc_type === 'Invoice');
+    const filteredInvoices = (invData || []).filter((i: Invoice) => isPayableInvoiceDoc(i.doc_type));
     setInvoices(filteredInvoices);
     setPayments(payData || []);
 

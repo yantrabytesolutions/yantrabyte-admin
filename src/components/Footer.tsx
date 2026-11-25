@@ -5,12 +5,14 @@ import {
   MapPin,
   Phone,
   Mail,
-  Facebook,
-  Instagram,
-  Linkedin,
-  Twitter,
   ArrowRight,
 } from "lucide-react";
+import {
+  FacebookIcon as Facebook,
+  InstagramIcon as Instagram,
+  LinkedinIcon as Linkedin,
+  TwitterIcon as Twitter,
+} from "./SocialIcons";
 import { supabase } from "../lib/supabase";
 
 const quickLinks = [

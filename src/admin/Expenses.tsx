@@ -169,6 +169,7 @@ export default function Expenses() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this expense record?')) return;
     try {
+      await ERPUtils.deleteReferenceEntries(id);
       const { error } = await supabase
         .from('expenses')
         .delete()

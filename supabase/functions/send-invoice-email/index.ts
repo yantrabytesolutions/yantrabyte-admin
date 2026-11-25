@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { to, customerName, invoiceNumber, documentType = 'Invoice', pdfBase64, filename, grandTotal } = body;
 
-    if (!to || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
+    if (!to || /[<>]/.test(String(to)) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
       return new Response(
         JSON.stringify({ ok: false, error: 'Valid customer email address is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

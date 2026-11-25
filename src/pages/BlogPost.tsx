@@ -2,7 +2,8 @@ import { useRef } from 'react';
 import SEO from '../components/SEO';
 import { useParams, Link } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
-import { ChevronRight, Camera, Monitor, Router, Shield, Printer, ArrowRight, MessageCircle, Phone, Calendar, Clock, User, Share2, Facebook, Twitter, Linkedin, ChevronLeft, ChevronRight as ChevronRightIcon, BookOpen } from 'lucide-react';
+import { ChevronRight, Camera, Monitor, Router, Shield, Printer, ArrowRight, MessageCircle, Phone, Calendar, Clock, User, Share2, ChevronLeft, ChevronRight as ChevronRightIcon, BookOpen } from 'lucide-react';
+import { FacebookIcon as Facebook, TwitterIcon as Twitter, LinkedinIcon as Linkedin } from '../components/SocialIcons';
 import { useBlogPost, useBlogPosts } from '../hooks/useSupabase';
 import type { BlogPost } from '../types';
 
