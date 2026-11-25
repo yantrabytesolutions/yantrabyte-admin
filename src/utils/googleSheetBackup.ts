@@ -56,8 +56,8 @@ export async function appendBackupRow(payload: SheetBackupPayload): Promise<Shee
   // 3. Fallback to Express backend endpoint
   try {
     const backendUrl = typeof window !== 'undefined' && window.location.hostname === 'localhost'
-      ? 'http://localhost:4000/api/backups/sheet'
-      : '/api/backups/sheet';
+      ? 'http://localhost:4000/api/backups/sheet-row'
+      : '/api/backups/sheet-row';
 
     const res = await fetch(backendUrl, {
       method: 'POST',

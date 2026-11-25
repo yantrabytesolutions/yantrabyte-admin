@@ -6,7 +6,6 @@ import {
 } from 'lucide-react';
 import { QrCodeSvg } from '../components/QrCodeSvg';
 import SEO from '../components/SEO';
-import { supabase } from '../lib/supabase';
 
 interface InvoiceItem {
   name: string;
@@ -82,24 +81,13 @@ export function CustomerHistory() {
     try {
       localStorage.setItem('yantrabyte_customer_phone', clean);
       const last10 = clean.slice(-10);
+      const apiBase = import.meta.env.VITE_API_URL || '';
 
-      // Fetch from Supabase direct
-      const [{ data: invData, error: invErr }, { data: tData }] = await Promise.all([
-        supabase
-          .from('invoices')
-          .select('*')
-          .ilike('phone', `%${last10}%`)
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('service_tickets')
-          .select('*')
-          .ilike('customer_phone', `%${last10}%`)
-          .order('created_at', { ascending: false })
-      ]);
+      const res = await fetch(`${apiBase}/api/invoices/customer/${encodeURIComponent(last10)}`);
+      if (!res.ok) throw new Error(`Lookup failed (${res.status})`);
+      const payload = await res.json();
 
-      if (invErr) throw invErr;
-
-      const formattedInvoices: CustomerInvoice[] = (invData || []).map(inv => {
+      const formattedInvoices: CustomerInvoice[] = (payload.invoices || []).map((inv: any) => {
         let parsedItems = inv.items;
         if (typeof parsedItems === 'string') {
           try { parsedItems = JSON.parse(parsedItems); } catch { parsedItems = []; }
@@ -111,7 +99,7 @@ export function CustomerHistory() {
       });
 
       setInvoices(formattedInvoices);
-      setTickets(tData || []);
+      setTickets(payload.tickets || []);
       setSearched(true);
     } catch (err: any) {
       console.error('Fetch error:', err);

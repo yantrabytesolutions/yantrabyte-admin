@@ -30,8 +30,9 @@ export function TrackTicket() {
     try {
       const cleanPhone = phone.replace(/\D/g, '').slice(-10);
       const cleanTicket = ticketNo.trim();
+      const apiBase = import.meta.env.VITE_API_URL || '';
 
-      const res = await fetch(`http://localhost:4000/api/tickets/track/${encodeURIComponent(cleanTicket)}?phone=${encodeURIComponent(cleanPhone)}`);
+      const res = await fetch(`${apiBase}/api/tickets/track/${encodeURIComponent(cleanTicket)}?phone=${encodeURIComponent(cleanPhone)}`);
       if (!res.ok) {
         if (res.status === 404) throw new Error('No ticket found matching this number and phone combination.');
         throw new Error('Failed to fetch ticket status.');

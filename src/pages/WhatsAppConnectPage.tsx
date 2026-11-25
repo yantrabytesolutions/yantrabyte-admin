@@ -1,20 +1,39 @@
 import { useState, useEffect } from 'react';
 import { MessageSquare, CheckCircle2, RefreshCw, Smartphone, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 
 export default function WhatsAppConnectPage() {
   const [ready, setReady] = useState<boolean>(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [unauthorized, setUnauthorized] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const checkStatus = async () => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        setUnauthorized(true);
+        setLoading(false);
+        return;
+      }
+
       const res = await fetch('/api/whatsapp/qr-data', {
-        headers: { 'Cache-Control': 'no-cache' }
+        headers: {
+          'Cache-Control': 'no-cache',
+          Authorization: `Bearer ${token}`,
+        }
       });
+      if (res.status === 401 || res.status === 403) {
+        setUnauthorized(true);
+        setLoading(false);
+        return;
+      }
       if (!res.ok) throw new Error(`Status ${res.status}`);
       const data = await res.json();
+      setUnauthorized(false);
       setReady(!!data.ready);
       setQrDataUrl(data.qrDataUrl || null);
       setError(null);
@@ -58,6 +77,20 @@ export default function WhatsAppConnectPage() {
           <div className="py-16 flex flex-col items-center justify-center text-center">
             <RefreshCw className="w-8 h-8 text-emerald-400 animate-spin mb-3" />
             <p className="text-sm font-medium text-slate-300">Checking WhatsApp connection...</p>
+          </div>
+        ) : unauthorized ? (
+          <div className="py-10 flex flex-col items-center justify-center text-center">
+            <ShieldCheck className="w-12 h-12 text-amber-400 mb-4" />
+            <h2 className="text-lg font-bold text-white mb-2">Admin Authentication Required</h2>
+            <p className="text-xs text-slate-400 max-w-xs mb-5">
+              Please sign in via the Admin Panel first to view or pair the WhatsApp Business QR code.
+            </p>
+            <Link
+              to="/admin"
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg transition-colors"
+            >
+              Sign In at Admin Panel
+            </Link>
           </div>
         ) : ready ? (
           <div className="py-8 flex flex-col items-center justify-center text-center">

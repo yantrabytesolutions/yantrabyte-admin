@@ -31,8 +31,8 @@ import { YANTRABYTE_LOGO_BASE64, HARDWARE_WATERMARK_BASE64 } from '../assets/inv
 import { LAPTOP_SYSTEM_WATERMARK_BASE64 } from '../assets/laptopWatermark';
 import DigitalJobSheetModal from './components/DigitalJobSheetModal';
 import { ServiceTicketPdfTemplate } from '../components/ServiceTicketPdfTemplate';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 import { UserRole } from '../types';
@@ -531,7 +531,13 @@ export default function AdminPanel() {
     if (!session) return;
     const checkWa = async () => {
       try {
-        const res = await fetch('/api/whatsapp/status', { headers: { 'Cache-Control': 'no-cache' } });
+        const token = (await supabase.auth.getSession()).data.session?.access_token;
+        const res = await fetch('/api/whatsapp/status', {
+          headers: {
+            'Cache-Control': 'no-cache',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
         if (res.ok) {
           const data = await res.json();
           setIsWhatsAppOnline(!!data.ready);
@@ -1507,9 +1513,14 @@ export default function AdminPanel() {
           if (record.status !== editingItem.status) {
             if (window.confirm(`Status changed to ${record.status}. Do you want to send an automated status update (Email/WhatsApp) to the customer?`)) {
               try {
-                fetch('http://localhost:4000/api/tickets/notify', {
+                const token = (await supabase.auth.getSession()).data.session?.access_token || '';
+                const apiBase = import.meta.env.VITE_API_URL || '';
+                fetch(`${apiBase}/api/tickets/notify`, {
                   method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
+                  headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                  },
                   body: JSON.stringify({
                     ticket_number: record.ticket_number,
                     customer_name: record.customer_name,
@@ -1517,7 +1528,6 @@ export default function AdminPanel() {
                     customer_phone: record.customer_phone,
                     status: record.status,
                     device_type: record.device_type,
-                    supabase_user_token: (await supabase.auth.getSession()).data.session?.access_token || ''
                   })
                 }).then(res => res.json()).then(data => {
                   if (data.ok) {

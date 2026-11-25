@@ -7,6 +7,49 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+function escapeHtml(value: unknown): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function safeHeader(value: unknown, maxLen = 160): string {
+  return String(value ?? '').replace(/[\r\n]+/g, ' ').trim().slice(0, maxLen);
+}
+
+async function requireAdmin(req: Request): Promise<Response | null> {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+  const supabaseAnon = Deno.env.get('SUPABASE_ANON_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+  const authHeader = req.headers.get('authorization') || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+  if (!token || !supabaseUrl || !supabaseAnon) {
+    return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  const userRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
+    headers: { apikey: supabaseAnon, Authorization: `Bearer ${token}` },
+  });
+  if (!userRes.ok) {
+    return new Response(JSON.stringify({ ok: false, error: 'Invalid session' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  const user = await userRes.json();
+  if (user?.app_metadata?.is_admin !== true) {
+    return new Response(JSON.stringify({ ok: false, error: 'Admin privileges required' }), {
+      status: 403,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  return null;
+}
+
 async function sendTelegram(token: string, chatId: string, message: string): Promise<void> {
   try {
     await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
@@ -23,6 +66,9 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const authErr = await requireAdmin(req);
+    if (authErr) return authErr;
+
     const gmailUser = Deno.env.get('GMAIL_USER');
     const gmailPass = Deno.env.get('GMAIL_APP_PASSWORD');
     const tgToken   = Deno.env.get('TELEGRAM_BOT_TOKEN');
@@ -51,15 +97,15 @@ Deno.serve(async (req) => {
       );
     }
 
-    const cleanInvoiceNo  = String(invoiceNumber || 'invoice');
-    const cleanCustomer   = String(customerName || 'Customer');
-    const cleanDocType    = String(documentType || 'Invoice');
-    const cleanFilename   = String(filename || `${cleanInvoiceNo}.pdf`).replace(/[/\\?%*:|"<>]/g, '-').slice(0, 120);
+    const cleanInvoiceNo  = safeHeader(invoiceNumber || 'invoice', 80);
+    const cleanCustomer   = safeHeader(customerName || 'Customer', 120);
+    const cleanDocType    = safeHeader(documentType || 'Invoice', 60);
+    const cleanFilename   = safeHeader(filename || `${cleanInvoiceNo}.pdf`, 120).replace(/[/\\?%*:|"<>]/g, '-');
     const cleanTotal      = grandTotal != null ? `₹${Number(grandTotal).toLocaleString('en-IN')}` : '';
     const isQuotation     = cleanDocType === 'Quotation';
 
     const upiLink = !isQuotation && grandTotal > 0
-      ? `upi://pay?pa=yantrabyte.solutions@okaxis&pn=YantraByte Solutions&am=${grandTotal}&cu=INR&tn=Invoice ${cleanInvoiceNo}`
+      ? `upi://pay?pa=yantrabyte.solutions@okaxis&pn=YantraByte Solutions&am=${Number(grandTotal)}&cu=INR&tn=Invoice ${encodeURIComponent(cleanInvoiceNo)}`
       : '';
 
     const htmlBody = `
@@ -69,22 +115,22 @@ Deno.serve(async (req) => {
     <p style="color:rgba(255,255,255,0.85);margin:4px 0 0;font-size:13px">IT Service, Repair &amp; Network Management</p>
   </div>
   <div style="padding:28px 32px">
-    <p style="color:#0f172a;font-size:15px">Dear <strong>\${cleanCustomer}</strong>,</p>
-    <p style="color:#334155">Please find attached your <strong>\${cleanDocType.toLowerCase()}</strong> from YantraByte Solutions.</p>
+    <p style="color:#0f172a;font-size:15px">Dear <strong>${escapeHtml(cleanCustomer)}</strong>,</p>
+    <p style="color:#334155">Please find attached your <strong>${escapeHtml(cleanDocType.toLowerCase())}</strong> from YantraByte Solutions.</p>
     <div style="background:#f8fafc;border-radius:6px;padding:16px;margin:16px 0">
       <table style="width:100%;border-collapse:collapse;font-size:14px">
-        <tr><td style="padding:5px 0;color:#64748b;width:40%">\${cleanDocType} No.</td><td style="color:#0f172a;font-weight:700">\${cleanInvoiceNo}</td></tr>
-        \${cleanTotal ? \`<tr><td style="padding:5px 0;color:#64748b">Amount</td><td style="color:#0B5394;font-weight:700;font-size:16px">\${cleanTotal}</td></tr>\` : ''}
+        <tr><td style="padding:5px 0;color:#64748b;width:40%">${escapeHtml(cleanDocType)} No.</td><td style="color:#0f172a;font-weight:700">${escapeHtml(cleanInvoiceNo)}</td></tr>
+        ${cleanTotal ? `<tr><td style="padding:5px 0;color:#64748b">Amount</td><td style="color:#0B5394;font-weight:700;font-size:16px">${escapeHtml(cleanTotal)}</td></tr>` : ''}
       </table>
     </div>
-    \${isQuotation
+    ${isQuotation
       ? '<p style="color:#334155">This is an estimate. Kindly review and confirm to proceed with the service.</p>'
       : '<p style="color:#334155">Payment details and terms are included in the attached PDF. For any queries, please call us.</p>'
     }
     ${upiLink ? `
     <div style="margin:20px 0;padding:20px;background:#f0f9ff;border-radius:8px;text-align:center;border:1px solid #bae6fd">
       <p style="margin:0 0 12px;font-weight:600;color:#0B5394;font-size:16px;">Pay instantly via UPI</p>
-      <a href="${upiLink}" style="display:inline-block;background:#0EA5E9;color:#fff;text-decoration:none;padding:12px 24px;border-radius:6px;font-weight:bold;margin-bottom:16px;font-size:15px;">Pay ${cleanTotal} Now</a>
+      <a href="${escapeHtml(upiLink)}" style="display:inline-block;background:#0EA5E9;color:#fff;text-decoration:none;padding:12px 24px;border-radius:6px;font-weight:bold;margin-bottom:16px;font-size:15px;">Pay ${escapeHtml(cleanTotal)} Now</a>
       <p style="margin:0 0 12px;font-size:13px;color:#334155">Or scan this QR code with any UPI app:</p>
       <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiLink)}" width="150" height="150" alt="UPI QR Code" style="border:4px solid #fff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.1);" />
     </div>
@@ -121,7 +167,7 @@ Deno.serve(async (req) => {
 
     const headerPart = [
       `From: "YantraByte Solutions" <${gmailUser}>`,
-      `To: ${to}`,
+      `To: ${safeHeader(to, 200)}`,
       `Bcc: yantrabyte.solutions@gmail.com`,
       `Subject: ${cleanDocType} ${cleanInvoiceNo} - YantraByte Solutions`,
       'MIME-Version: 1.0',
@@ -202,11 +248,11 @@ Deno.serve(async (req) => {
     if (tgToken && tgChatId) {
       await sendTelegram(
         tgToken, tgChatId,
-        `💰 <b>${cleanDocType} Emailed</b>\n` +
-        `${cleanDocType}: ${cleanInvoiceNo}\n` +
-        `Customer: ${cleanCustomer}\n` +
-        `Amount: ${cleanTotal || '—'}\n` +
-        `Sent to: ${to}`
+        `💰 <b>${escapeHtml(cleanDocType)} Emailed</b>\n` +
+        `${escapeHtml(cleanDocType)}: ${escapeHtml(cleanInvoiceNo)}\n` +
+        `Customer: ${escapeHtml(cleanCustomer)}\n` +
+        `Amount: ${escapeHtml(cleanTotal || '—')}\n` +
+        `Sent to: ${escapeHtml(to)}`
       );
     }
 

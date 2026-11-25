@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { X, CheckCircle2, RefreshCw, MessageSquare, AlertCircle, Smartphone, ShieldCheck } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 
 interface WhatsAppConnectModalProps {
   isOpen: boolean;
@@ -20,8 +21,12 @@ export const WhatsAppConnectModal: React.FC<WhatsAppConnectModalProps> = ({ isOp
 
     const checkStatus = async () => {
       try {
+        const token = (await supabase.auth.getSession()).data.session?.access_token;
         const res = await fetch('/api/whatsapp/qr-data', {
-          headers: { 'Cache-Control': 'no-cache' }
+          headers: {
+            'Cache-Control': 'no-cache',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          }
         });
         if (!res.ok) throw new Error(`Server returned ${res.status}`);
         const data = await res.json();

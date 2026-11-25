@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
 import { HardwareBrandsBanner } from '../components/HardwareBrandsBanner';
 import { QrCodeRenderer } from '../components/QrCodeRenderer';
 
@@ -100,17 +99,14 @@ export default function EstimateView() {
       }
 
       try {
-        const { data, error: fetchError } = await supabase
-          .from('invoices')
-          .select('*')
-          .eq('id', id)
-          .single();
-
-        if (fetchError || !data) {
+        const apiBase = import.meta.env.VITE_API_URL || '';
+        const res = await fetch(`${apiBase}/api/estimates/${encodeURIComponent(id)}`);
+        if (!res.ok) {
           setError('This estimate could not be found. It may have been removed or the link is invalid.');
           setLoading(false);
           return;
         }
+        const data = await res.json();
 
         // Parse items if stored as string
         let parsedItems = data.items;

@@ -333,13 +333,47 @@ Deno.serve(async (req) => {
     }
 
     // Normalize ticket number field
-    ticket.ticket_no = ticket.ticket_no || ticket.ticket_number || '';
+    ticket.ticket_no = String(ticket.ticket_no || ticket.ticket_number || '').replace(/[\r\n]+/g, ' ').trim();
+    if (!/^(YBS|ATC)-(TKT-|\d{4}-\d{4}-)\d+$/.test(ticket.ticket_no)) {
+      return new Response(
+        JSON.stringify({ ok: false, error: 'Invalid ticket_number format' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (supabaseUrl && supabaseKey) {
+      const verifyRes = await fetch(
+        `${supabaseUrl}/rest/v1/service_tickets?ticket_number=eq.${encodeURIComponent(ticket.ticket_no)}&select=ticket_number,customer_phone`,
+        { headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` } }
+      );
+      const rows = await verifyRes.json().catch(() => []);
+      if (!Array.isArray(rows) || rows.length === 0) {
+        return new Response(
+          JSON.stringify({ ok: false, error: 'Service ticket not found' }),
+          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      const reqPhone = String(ticket.customer_phone || '').replace(/\D/g, '');
+      const dbPhone = String(rows[0].customer_phone || '').replace(/\D/g, '');
+      if (dbPhone && reqPhone && dbPhone.slice(-10) !== reqPhone.slice(-10)) {
+        return new Response(
+          JSON.stringify({ ok: false, error: 'Ticket phone verification failed' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
 
     const gmailUser = Deno.env.get('GMAIL_USER') || 'yantrabyte.solutions@gmail.com';
-    const gmailPass = Deno.env.get('GMAIL_APP_PASSWORD') || 'gfwyhurtzlynglln';
+    const gmailPass = Deno.env.get('GMAIL_APP_PASSWORD') || '';
 
     const escapeHtml = (text: string) =>
-      text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      String(text ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    const safeHeader = (text: string) => String(text ?? '').replace(/[\r\n]+/g, ' ').trim();
 
     // ── Telegram notification ──────────────────────────────────────────────
     if (tgToken && tgChatId) {
@@ -466,9 +500,9 @@ Deno.serve(async (req) => {
 
     let mime = '';
     mime += `From: "YantraByte Solutions" <${gmailUser}>\r\n`;
-    if (hasValidCustomerEmail) mime += `To: ${ticket.customer_email}\r\n`;
+    if (hasValidCustomerEmail) mime += `To: ${safeHeader(ticket.customer_email)}\r\n`;
     mime += `Cc: yantrabyte.solutions@gmail.com\r\n`;
-    mime += `Subject: Service Ticket ${cleanTicketNo} - YantraByte Solutions\r\n`;
+    mime += `Subject: Service Ticket ${safeHeader(cleanTicketNo)} - YantraByte Solutions\r\n`;
     mime += `MIME-Version: 1.0\r\n`;
     mime += `Content-Type: multipart/mixed; boundary="${outerBoundary}"\r\n\r\n`;
 

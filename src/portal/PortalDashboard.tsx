@@ -34,26 +34,19 @@ export default function PortalDashboard() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const { data: invData } = await supabase
-        .from('invoices')
-        .select('*')
-        .ilike('phone', `%${phone}%`)
-        .order('created_at', { ascending: false });
+      const last10 = (phone || '').replace(/\D/g, '').slice(-10);
+      const apiBase = import.meta.env.VITE_API_URL || '';
+      const res = await fetch(`${apiBase}/api/invoices/customer/${encodeURIComponent(last10)}`);
+      const payload = res.ok ? await res.json() : { invoices: [], tickets: [] };
 
-      const { data: ticketData } = await supabase
-        .from('service_tickets')
-        .select('*')
-        .ilike('customer_phone', `%${phone}%`)
-        .order('created_at', { ascending: false });
-
-      const fetchedInvoices = (invData || []) as Invoice[];
-      const fetchedTickets = (ticketData || []) as ServiceTicket[];
+      const fetchedInvoices = (payload.invoices || []) as Invoice[];
+      const fetchedTickets = (payload.tickets || []) as ServiceTicket[];
 
       const { data: settingData } = await supabase
         .from('site_settings')
         .select('value')
         .eq('key', 'company_signature_url')
-        .single();
+        .maybeSingle();
       
       if (settingData && settingData.value) {
         setCompanySignatureBase64(settingData.value);
@@ -183,12 +176,18 @@ export default function PortalDashboard() {
                             <button
                               onClick={async () => {
                                 if (!window.confirm("Are you sure you want to approve this quotation?")) return;
-                                const { error } = await supabase.from('invoices').update({ payment_status: 'Approved' }).eq('id', inv.id);
-                                if (!error) {
+                                const apiBase = import.meta.env.VITE_API_URL || '';
+                                const resp = await fetch(`${apiBase}/api/invoices/quotation/${encodeURIComponent(inv.id)}/approve`, {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ status: 'Approved', signature: customerName || inv.customer_name || 'Customer' }),
+                                });
+                                if (resp.ok) {
                                   alert("Quotation approved successfully!");
                                   fetchData();
                                 } else {
-                                  alert("Failed to approve quotation: " + error.message);
+                                  const errData = await resp.json().catch(() => ({}));
+                                  alert("Failed to approve quotation: " + (errData.error || resp.statusText));
                                 }
                               }}
                               className="inline-flex items-center px-2.5 py-1.5 border border-transparent shadow-sm text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"

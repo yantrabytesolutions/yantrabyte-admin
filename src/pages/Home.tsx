@@ -282,41 +282,16 @@ function HeroSection() {
 
       let ticketNumber = ticketNumberFromRpc;
 
-      // Fallback if RPC fails or doesn't exist yet
+      // Fallback if RPC fails or doesn't exist yet (avoid querying service_tickets publicly)
       if (rpcError || !ticketNumber) {
         const now = new Date();
         const currentMonth = now.getMonth() + 1; // 1-12
         const currentYear = now.getFullYear();
-        // Indian fiscal year: April to March
         const fiscalStartYear = currentMonth >= 4 ? currentYear : currentYear - 1;
         const fiscalEndYear = fiscalStartYear + 1;
         const prefix = `YBS-${fiscalStartYear}-${fiscalEndYear}-`;
-        
-        let seq = 1;
-        try {
-          const { data: matchingTickets } = await supabase
-            .from('service_tickets')
-            .select('ticket_number')
-            .like('ticket_number', `${prefix}%`)
-            .order('created_at', { ascending: false })
-            .limit(50);
-            
-          if (matchingTickets && matchingTickets.length > 0) {
-            let maxSuffix = 0;
-            for (const t of matchingTickets) {
-              const match = t.ticket_number.match(/-(\d+)$/);
-              if (match) {
-                maxSuffix = Math.max(maxSuffix, parseInt(match[1], 10));
-              }
-            }
-            seq = maxSuffix + 1;
-          }
-        } catch (err) {
-          console.warn('Could not fetch latest ticket.', err);
-          seq = 1;
-        }
-        
-        ticketNumber = `${prefix}${String(seq).padStart(3, '0')}`;
+        const uniqueSuffix = `${Date.now().toString().slice(-4)}${Math.floor(Math.random() * 90 + 10)}`;
+        ticketNumber = `${prefix}${uniqueSuffix}`;
       }
 
       const ticketPayload = {

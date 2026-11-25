@@ -68,18 +68,24 @@ export default function Dashboard({ onNavigate, brand: propBrand, onBrandChange 
     activeUsers?: number;
     storageUsed?: string;
     loading?: boolean;
-  }>({ online: true, version: '34.0.3', activeUsers: 3, storageUsed: '7.9 GB', loading: false });
+  }>({ online: false, version: '', loading: true });
 
   const fetchNextcloudStatus = async () => {
     try {
       setNextcloudStatus(prev => ({ ...prev, loading: true }));
-      const res = await fetch('/api/nextcloud/status');
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      const res = await fetch('/api/nextcloud/status', {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
       if (res.ok) {
         const json = await res.json();
         if (json.ok && json.data) {
           setNextcloudStatus({ ...json.data, loading: false });
+          return;
         }
       }
+      setNextcloudStatus(prev => ({ ...prev, online: false, loading: false }));
     } catch {
       setNextcloudStatus(prev => ({ ...prev, online: false, loading: false }));
     }

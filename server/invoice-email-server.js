@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import { Readable } from 'stream';
 import nodemailer from 'nodemailer';
 import { google } from 'googleapis';
@@ -69,21 +70,9 @@ whatsappClient.on('qr', async (qr) => {
   
   try {
     latestQrDataUrl = await QRCode.toDataURL(qr);
-    const publicDir = path.join(process.cwd(), 'public');
-    if (!fs.existsSync(publicDir)) {
-      fs.mkdirSync(publicDir, { recursive: true });
-    }
-    const html = `<html><body style="display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh;background:#f0f2f5;font-family:sans-serif;text-align:center;">
-      <div>
-        <h2>Scan with WhatsApp Business</h2>
-        <img src="${latestQrDataUrl}" style="width:350px;height:350px;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
-        <p style="margin-top:20px;color:#555;font-size:16px;">Scan this QR code from Linked Devices in WhatsApp.</p>
-      </div>
-    </body></html>`;
-    fs.writeFileSync(path.join(publicDir, 'whatsapp-qr.html'), html);
-    console.log('🌟 Open in browser to scan: https://yantrabyte.anantatechcare.com/api/whatsapp/qr');
+    console.log('🌟 WhatsApp QR ready (open /whatsapp in Admin Panel to scan)');
   } catch (err) {
-    console.error('Failed to generate HTML QR code', err);
+    console.error('Failed to generate WhatsApp QR code', err);
   }
 });
 
@@ -135,6 +124,20 @@ setTimeout(() => {
   startWhatsAppWithRetry();
 }, 1000);
 
+app.set('trust proxy', 1);
+
+app.use((req, res, next) => {
+  if (
+    req.get('x-forwarded-proto') === 'http' &&
+    req.hostname &&
+    req.hostname !== 'localhost' &&
+    req.hostname !== '127.0.0.1'
+  ) {
+    return res.redirect(301, `https://${req.hostname}${req.originalUrl}`);
+  }
+  return next();
+});
+
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - content-length: ${req.headers['content-length']}`);
   next();
@@ -142,7 +145,14 @@ app.use((req, res, next) => {
 app.disable('x-powered-by');
 
 // Security Headers Middleware
-app.use((_req, res, next) => {
+app.use((req, res, next) => {
+  if (req.secure || req.get('x-forwarded-proto') === 'https') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://script.google.com https://script.googleusercontent.com https://api.telegram.org; worker-src 'self' blob:; frame-ancestors 'self'; object-src 'none'; base-uri 'self'"
+  );
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.setHeader('X-XSS-Protection', '1; mode=block');
@@ -165,9 +175,25 @@ app.use(cors({
 app.use(express.json({ limit: '25mb' }));
 app.use(express.urlencoded({ limit: '25mb', extended: true }));
 
+const publicTicketLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, error: 'Too many requests. Please try again later.' }
+});
+
+const publicLookupLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, error: 'Too many lookup requests. Please wait before trying again.' }
+});
+
 const requiredEnv = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'];
 const GMAIL_USER_DEFAULT = process.env.GMAIL_USER || 'yantrabyte.solutions@gmail.com';
-const GMAIL_PASS_DEFAULT = process.env.GMAIL_APP_PASSWORD || 'gfwyhurtzlynglln';
+const GMAIL_PASS_DEFAULT = process.env.GMAIL_APP_PASSWORD || '';
 const driveEnv = ['GOOGLE_DRIVE_FOLDER_ID'];
 const sheetsEnv = ['GOOGLE_SHEETS_SPREADSHEET_ID'];
 const serviceTicketHeaders = [
@@ -198,6 +224,45 @@ function sanitizeFilename(name) {
 
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || ''));
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function sanitizeHeaderText(value, maxLen = 200) {
+  return String(value ?? '').replace(/[\r\n]+/g, ' ').trim().slice(0, maxLen);
+}
+
+function isUuid(value) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(value || ''));
+}
+
+function isAllowedPdfUrl(rawUrl) {
+  try {
+    const parsed = new URL(String(rawUrl || ''));
+    const supabaseOrigin = process.env.VITE_SUPABASE_URL ? new URL(process.env.VITE_SUPABASE_URL) : null;
+    if (parsed.protocol !== 'https:' || !supabaseOrigin) return false;
+    return parsed.hostname === supabaseOrigin.hostname && parsed.pathname.startsWith('/storage/v1/object/');
+  } catch {
+    return false;
+  }
+}
+
+function getSupabaseAdminClient() {
+  return createClient(
+    process.env.VITE_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY,
+    {
+      auth: { persistSession: false },
+      realtime: { transport: WebSocket }
+    }
+  );
 }
 
 function serviceTicketRowFromPayload(ticket) {
@@ -384,14 +449,14 @@ async function appendRowToGoogleSheet({ sheetName, headers, row }) {
   };
 }
 
-async function requireSupabaseUser(req, res, next) {
+async function requireAdminUser(req, res, next) {
   const missing = getMissingEnv();
   if (missing.length > 0) {
     return res.status(500).json({ error: `Missing server configuration: ${missing.join(', ')}` });
   }
 
   const authHeader = req.get('authorization') || '';
-  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
   if (!token) {
     return res.status(401).json({ error: 'Missing Supabase session token' });
   }
@@ -406,6 +471,10 @@ async function requireSupabaseUser(req, res, next) {
     return res.status(401).json({ error: 'Invalid or expired Supabase session' });
   }
 
+  if (data.user.app_metadata?.is_admin !== true) {
+    return res.status(403).json({ error: 'Admin privileges required' });
+  }
+
   req.user = data.user;
   return next();
 }
@@ -414,20 +483,19 @@ function healthResponse(_req, res) {
   const missing = getMissingEnv();
   res.status(missing.length ? 500 : 200).json({
     ok: missing.length === 0,
-    missing,
   });
 }
 
 app.get('/health', healthResponse);
 app.get('/api/health', healthResponse);
-app.get('/api/drive-health', (_req, res) => {
+app.get('/api/drive-health', requireAdminUser, (_req, res) => {
   const missing = getMissingDriveEnv();
   res.status(missing.length ? 500 : 200).json({
     ok: missing.length === 0,
     missing,
   });
 });
-app.get('/api/sheets-health', (_req, res) => {
+app.get('/api/sheets-health', requireAdminUser, (_req, res) => {
   const missing = getMissingSheetsEnv();
   res.status(missing.length ? 500 : 200).json({
     ok: missing.length === 0,
@@ -435,24 +503,22 @@ app.get('/api/sheets-health', (_req, res) => {
   });
 });
 
-app.get('/api/nextcloud/status', async (_req, res) => {
+app.get('/api/nextcloud/status', requireAdminUser, async (_req, res) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 4000);
-    
-    let statusData = {
-      installed: true,
-      online: true,
-      version: '34.0.3',
+
+    const statusData = {
+      installed: false,
+      online: false,
+      version: '',
       maintenance: false,
-      productname: 'Nextcloud Hub',
+      productname: 'Nextcloud',
       containers: {
-        app: 'running',
-        db: 'running'
+        app: 'unknown',
+        db: 'unknown'
       },
-      activeUsers: 3,
-      storageUsed: '7.9 GB',
       port: 8080
     };
 
@@ -462,17 +528,16 @@ app.get('/api/nextcloud/status', async (_req, res) => {
       if (resp.ok) {
         const json = await resp.json();
         statusData.online = true;
-        statusData.installed = json.installed;
-        statusData.version = json.versionstring || json.version || '34.0.3';
-        statusData.maintenance = json.maintenance;
+        statusData.installed = !!json.installed;
+        statusData.version = json.versionstring || json.version || '';
+        statusData.maintenance = !!json.maintenance;
         statusData.productname = json.productname || 'Nextcloud';
+        statusData.containers = { app: 'running', db: 'running' };
       }
     } catch (e) {
+      clearTimeout(timeoutId);
       statusData.error = e.message;
     }
-
-    statusData.activeUsers = 3;
-    statusData.storageUsed = '7.9 GB';
 
     res.json({
       ok: true,
@@ -483,7 +548,7 @@ app.get('/api/nextcloud/status', async (_req, res) => {
   }
 });
 
-app.get('/api/whatsapp/status', (_req, res) => {
+app.get('/api/whatsapp/status', requireAdminUser, (_req, res) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.json({
     ok: true,
@@ -492,7 +557,7 @@ app.get('/api/whatsapp/status', (_req, res) => {
   });
 });
 
-app.get('/api/whatsapp/qr-data', (_req, res) => {
+app.get('/api/whatsapp/qr-data', requireAdminUser, (_req, res) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.json({
     ok: true,
@@ -501,7 +566,7 @@ app.get('/api/whatsapp/qr-data', (_req, res) => {
   });
 });
 
-app.get('/api/whatsapp/qr', (_req, res) => {
+app.get('/api/whatsapp/qr', requireAdminUser, (_req, res) => {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.setHeader('Pragma', 'no-cache');
@@ -560,7 +625,7 @@ app.get('/api/whatsapp/qr', (_req, res) => {
   `);
 });
 
-app.post('/api/backups/sheet-row', requireSupabaseUser, async (req, res) => {
+async function handleSheetBackupRow(req, res) {
   const { sheetName, headers, row } = req.body || {};
 
   if (!sheetName || !Array.isArray(headers) || !Array.isArray(row)) {
@@ -578,12 +643,42 @@ app.post('/api/backups/sheet-row', requireSupabaseUser, async (req, res) => {
       error: getDeliveryErrorMessage(error),
     });
   }
-});
+}
 
-app.post('/api/backups/public-service-ticket', async (req, res) => {
+app.post('/api/backups/sheet-row', requireAdminUser, handleSheetBackupRow);
+app.post('/api/backups/sheet', requireAdminUser, handleSheetBackupRow);
+
+app.post('/api/backups/public-service-ticket', publicTicketLimiter, async (req, res) => {
   const ticket = req.body || {};
-  if (!ticket.ticket_number || !ticket.customer_name || !ticket.customer_phone || !ticket.issue_description) {
-    return res.status(400).json({ error: 'ticket_number, customer_name, customer_phone, and issue_description are required' });
+  const rawTicketNo = String(ticket.ticket_number || '').trim();
+  const cleanPhone = String(ticket.customer_phone || '').replace(/\D/g, '');
+  if (!rawTicketNo || !ticket.customer_name || cleanPhone.length < 10 || !ticket.issue_description) {
+    return res.status(400).json({ error: 'ticket_number, customer_name, valid customer_phone, and issue_description are required' });
+  }
+  if (!/^(YBS|ATC)-(TKT-|\d{4}-\d{4}-)\d+$/.test(rawTicketNo)) {
+    return res.status(400).json({ error: 'Invalid ticket_number format' });
+  }
+
+  if (process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.VITE_SUPABASE_URL) {
+    try {
+      const supabaseAdmin = getSupabaseAdminClient();
+      const { data: existingTicket, error: lookupError } = await supabaseAdmin
+        .from('service_tickets')
+        .select('ticket_number, customer_phone')
+        .eq('ticket_number', rawTicketNo)
+        .maybeSingle();
+
+      if (lookupError || !existingTicket) {
+        return res.status(404).json({ error: 'Matching service ticket not found' });
+      }
+      const dbPhone = String(existingTicket.customer_phone || '').replace(/\D/g, '');
+      if (dbPhone.slice(-10) !== cleanPhone.slice(-10)) {
+        return res.status(403).json({ error: 'Ticket phone verification failed' });
+      }
+    } catch (verifyErr) {
+      console.error('Ticket verification failed:', verifyErr);
+      return res.status(500).json({ error: 'Unable to verify service ticket' });
+    }
   }
 
   let sheetResult = null;
@@ -613,9 +708,10 @@ app.post('/api/backups/public-service-ticket', async (req, res) => {
         },
       });
 
-      const cleanCustomerName = String(ticket.customer_name || 'Customer');
-      const cleanTicketNumber = String(ticket.ticket_number);
-      const cleanDeviceType = String(ticket.device_type || 'Device');
+      const cleanCustomerName = sanitizeHeaderText(ticket.customer_name || 'Customer', 120);
+      const cleanTicketNumber = sanitizeHeaderText(rawTicketNo, 60);
+      const cleanDeviceType = sanitizeHeaderText(ticket.device_type || 'Device', 120);
+      const cleanIssue = String(ticket.issue_description || '').slice(0, 2000);
 
       mailResult = await transporter.sendMail({
         from: `"YantraByte Solutions" <${GMAIL_USER_DEFAULT}>`,
@@ -626,7 +722,7 @@ app.post('/api/backups/public-service-ticket', async (req, res) => {
           `Dear ${cleanCustomerName},`,
           '',
           `Your service ticket (${cleanTicketNumber}) for your ${cleanDeviceType} has been successfully created.`,
-          `Our team is reviewing the issue: "${ticket.issue_description}"`,
+          `Our team is reviewing the issue: "${cleanIssue}"`,
           '',
           'We will keep you updated on the progress.',
           '',
@@ -645,7 +741,7 @@ app.post('/api/backups/public-service-ticket', async (req, res) => {
               <p style="color:rgba(255,255,255,0.85);margin:4px 0 0;font-size:13px">IT Service, Repair &amp; Network Management</p>
             </div>
             <div style="padding:28px 32px">
-              <p style="color:#0f172a;font-size:15px">Dear <strong>${cleanCustomerName}</strong>,</p>
+              <p style="color:#0f172a;font-size:15px">Dear <strong>${escapeHtml(cleanCustomerName)}</strong>,</p>
               <p style="color:#334155">Your service ticket has been successfully created.</p>
 
               <div style="text-align:center;margin:20px 0">
@@ -654,12 +750,12 @@ app.post('/api/backups/public-service-ticket', async (req, res) => {
 
               <div style="background:#f8fafc;border-radius:6px;padding:16px;margin:16px 0;border-left:4px solid #0B5394;text-align:center">
                 <p style="margin:0 0 6px;color:#64748b;font-size:13px">Ticket Number</p>
-                <p style="margin:0;font-size:22px;font-weight:700;color:#0B5394;letter-spacing:2px">${cleanTicketNumber}</p>
+                <p style="margin:0;font-size:22px;font-weight:700;color:#0B5394;letter-spacing:2px">${escapeHtml(cleanTicketNumber)}</p>
               </div>
 
               <table style="width:100%;border-collapse:collapse;font-size:14px;margin:16px 0">
-                <tr><td style="padding:6px 0;color:#64748b;width:40%">Device</td><td style="color:#0f172a;font-weight:600">${cleanDeviceType}</td></tr>
-                <tr><td style="padding:6px 0;color:#64748b">Issue Reported</td><td style="color:#0f172a">${ticket.issue_description}</td></tr>
+                <tr><td style="padding:6px 0;color:#64748b;width:40%">Device</td><td style="color:#0f172a;font-weight:600">${escapeHtml(cleanDeviceType)}</td></tr>
+                <tr><td style="padding:6px 0;color:#64748b">Issue Reported</td><td style="color:#0f172a">${escapeHtml(cleanIssue)}</td></tr>
               </table>
 
               <p style="color:#334155">Our team is reviewing your issue and will contact you shortly.</p>
@@ -696,7 +792,7 @@ app.post('/api/backups/public-service-ticket', async (req, res) => {
   });
 });
 
-app.post('/api/backups/ticket-drive', requireSupabaseUser, async (req, res) => {
+app.post('/api/backups/ticket-drive', requireAdminUser, async (req, res) => {
   const { customerName, ticketNumber, filename, pdfBase64 } = req.body || {};
   if (!pdfBase64) return res.status(400).json({ error: 'PDF attachment is missing' });
   if (!ticketNumber) return res.status(400).json({ error: 'ticketNumber is missing' });
@@ -719,7 +815,7 @@ app.post('/api/backups/ticket-drive', requireSupabaseUser, async (req, res) => {
   }
 });
 
-app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {
+app.post('/api/invoices/email', requireAdminUser, async (req, res) => {
   const {
     to,
     customerName,
@@ -738,13 +834,16 @@ app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {
     return res.status(400).json({ error: 'PDF attachment is missing' });
   }
 
-  const cleanInvoiceNumber = String(invoiceNumber || 'invoice');
-  const cleanDocumentType = String(documentType || 'Invoice');
-  const cleanCustomerName = String(customerName || 'Customer');
+  const cleanInvoiceNumber = sanitizeHeaderText(invoiceNumber || 'invoice', 80);
+  const cleanDocumentType = sanitizeHeaderText(documentType || 'Invoice', 60);
+  const cleanCustomerName = sanitizeHeaderText(customerName || 'Customer', 120);
   const isServiceDoc = cleanDocumentType.toLowerCase().includes('service') || cleanInvoiceNumber.includes('SRV');
   const senderEmail = isServiceDoc ? (process.env.SERVICE_EMAIL || 'service@anantatechcare.com') : (process.env.SALES_EMAIL || 'sales@anantatechcare.com');
   const senderUser = isServiceDoc ? (process.env.SERVICE_GMAIL_USER || GMAIL_USER_DEFAULT) : (process.env.SALES_GMAIL_USER || GMAIL_USER_DEFAULT);
   const senderPass = isServiceDoc ? (process.env.SERVICE_GMAIL_PASS || GMAIL_PASS_DEFAULT) : (process.env.SALES_GMAIL_PASS || GMAIL_PASS_DEFAULT);
+  if (!senderUser || !senderPass) {
+    return res.status(503).json({ error: 'Email service credentials are not configured on server.' });
+  }
   const defaultFilename = (cleanCustomerName && cleanCustomerName !== 'Customer') 
     ? `${cleanCustomerName}.pdf` 
     : `${cleanInvoiceNumber}.pdf`;
@@ -754,6 +853,9 @@ app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {
   if (pdfBase64) {
     pdfBuffer = Buffer.from(pdfBase64, 'base64');
   } else if (pdfUrl) {
+    if (!isAllowedPdfUrl(pdfUrl)) {
+      return res.status(400).json({ error: 'Invalid or untrusted PDF storage URL' });
+    }
     try {
       const pdfRes = await fetch(pdfUrl);
       if (!pdfRes.ok) throw new Error(`Failed to download PDF: ${pdfRes.statusText}`);
@@ -790,8 +892,8 @@ app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {
         'YantraByte Solutions',
       ].join('\n'),
       html: `
-        <p>Dear ${cleanCustomerName},</p>
-        <p>Please find attached your ${cleanDocumentType.toLowerCase()} <strong>${cleanInvoiceNumber}</strong>.</p>
+        <p>Dear ${escapeHtml(cleanCustomerName)},</p>
+        <p>Please find attached your ${escapeHtml(cleanDocumentType.toLowerCase())} <strong>${escapeHtml(cleanInvoiceNumber)}</strong>.</p>
         <p>Regards,<br/>YantraByte Solutions</p>
       `,
       attachments: [
@@ -867,7 +969,7 @@ app.post('/api/invoices/email', requireSupabaseUser, async (req, res) => {
   });
 });
 
-app.post('/api/invoices/payment-receipt', async (req, res) => {
+app.post('/api/invoices/payment-receipt', requireAdminUser, async (req, res) => {
   const {
     customerName,
     customerPhone,
@@ -881,14 +983,14 @@ app.post('/api/invoices/payment-receipt', async (req, res) => {
     totalPaid
   } = req.body || {};
 
-  const cleanName = String(customerName || 'Customer');
+  const cleanName = sanitizeHeaderText(customerName || 'Customer', 120);
   const numAmount = Number(amount) || 0;
   const numBalDue = Number(balanceDue) || 0;
   const numTotalBilled = Number(totalBilled) || 0;
   const numTotalPaid = Number(totalPaid) || 0;
-  const formattedDate = paymentDate || new Date().toLocaleDateString('en-GB');
-  const mode = String(paymentMode || 'UPI');
-  const ref = referenceNote ? String(referenceNote).trim() : '';
+  const formattedDate = sanitizeHeaderText(paymentDate || new Date().toLocaleDateString('en-GB'), 40);
+  const mode = sanitizeHeaderText(paymentMode || 'UPI', 40);
+  const ref = referenceNote ? String(referenceNote).trim().slice(0, 200) : '';
 
   let whatsappStatus = 'skipped';
   let emailStatus = 'skipped';
@@ -925,7 +1027,7 @@ app.post('/api/invoices/payment-receipt', async (req, res) => {
   }
 
   // 2. Email Receipt (if customerEmail is provided)
-  if (customerEmail && isValidEmail(customerEmail)) {
+  if (customerEmail && isValidEmail(customerEmail) && GMAIL_USER_DEFAULT && GMAIL_PASS_DEFAULT) {
     try {
       const transporter = nodemailer.createTransport({
         service: 'gmail',
@@ -946,7 +1048,7 @@ app.post('/api/invoices/payment-receipt', async (req, res) => {
               <p style="color: #6b7280; font-size: 13px; margin: 4px 0 0;">Official Payment Receipt</p>
             </div>
             
-            <p style="font-size: 15px; color: #111827;">Dear <strong>${cleanName}</strong>,</p>
+            <p style="font-size: 15px; color: #111827;">Dear <strong>${escapeHtml(cleanName)}</strong>,</p>
             <p style="font-size: 14px; color: #374151; line-height: 1.6;">
               Thank you for your payment. We have successfully received and credited <strong>₹${numAmount.toLocaleString('en-IN')}</strong> to your account.
             </p>
@@ -954,7 +1056,7 @@ app.post('/api/invoices/payment-receipt', async (req, res) => {
             <table style="width: 100%; border-collapse: collapse; margin: 20px 0; background: #f9fafb; border-radius: 8px; overflow: hidden;">
               <tr style="border-bottom: 1px solid #e5e7eb;">
                 <td style="padding: 10px 16px; color: #6b7280; font-size: 13px;">Date:</td>
-                <td style="padding: 10px 16px; font-weight: bold; color: #111827; font-size: 13px;">${formattedDate}</td>
+                <td style="padding: 10px 16px; font-weight: bold; color: #111827; font-size: 13px;">${escapeHtml(formattedDate)}</td>
               </tr>
               <tr style="border-bottom: 1px solid #e5e7eb;">
                 <td style="padding: 10px 16px; color: #6b7280; font-size: 13px;">Amount Received:</td>
@@ -962,12 +1064,12 @@ app.post('/api/invoices/payment-receipt', async (req, res) => {
               </tr>
               <tr style="border-bottom: 1px solid #e5e7eb;">
                 <td style="padding: 10px 16px; color: #6b7280; font-size: 13px;">Payment Mode:</td>
-                <td style="padding: 10px 16px; font-weight: bold; color: #111827; font-size: 13px;">${mode}</td>
+                <td style="padding: 10px 16px; font-weight: bold; color: #111827; font-size: 13px;">${escapeHtml(mode)}</td>
               </tr>
               ${ref ? `
               <tr style="border-bottom: 1px solid #e5e7eb;">
                 <td style="padding: 10px 16px; color: #6b7280; font-size: 13px;">Reference / Note:</td>
-                <td style="padding: 10px 16px; color: #111827; font-size: 13px;">${ref}</td>
+                <td style="padding: 10px 16px; color: #111827; font-size: 13px;">${escapeHtml(ref)}</td>
               </tr>
               ` : ''}
               <tr>
@@ -998,11 +1100,14 @@ app.post('/api/invoices/payment-receipt', async (req, res) => {
   });
 });
 
-app.post('/api/invoices/reminders', requireSupabaseUser, async (req, res) => {
+app.post('/api/invoices/reminders', requireAdminUser, async (req, res) => {
   const { clients } = req.body || {};
 
   if (!Array.isArray(clients)) {
     return res.status(400).json({ error: 'clients array is required' });
+  }
+  if (!GMAIL_USER_DEFAULT || !GMAIL_PASS_DEFAULT) {
+    return res.status(503).json({ error: 'Email service credentials are not configured on server.' });
   }
 
   const transporter = nodemailer.createTransport({
@@ -1022,16 +1127,18 @@ app.post('/api/invoices/reminders', requireSupabaseUser, async (req, res) => {
     }
 
     try {
+      const safeName = sanitizeHeaderText(client.customer_name || 'Customer', 120);
+      const invoiceList = Array.isArray(client.invoices) ? client.invoices.map(v => String(v)).join(', ') : '';
       const mailResult = await transporter.sendMail({
         from: `"YantraByte Solutions" <${GMAIL_USER_DEFAULT}>`,
         to: client.customer_email,
         replyTo: process.env.GMAIL_REPLY_TO || GMAIL_USER_DEFAULT,
         subject: `Payment Reminder - YantraByte Solutions`,
         text: [
-          `Dear ${client.customer_name || 'Customer'},`,
+          `Dear ${safeName},`,
           '',
-          `This is a friendly reminder that you have an outstanding balance of ₹${(client.balance_due || 0).toLocaleString('en-IN')}.`,
-          `This balance is associated with the following invoice(s): ${client.invoices.join(', ')}.`,
+          `This is a friendly reminder that you have an outstanding balance of ₹${(Number(client.balance_due) || 0).toLocaleString('en-IN')}.`,
+          `This balance is associated with the following invoice(s): ${invoiceList}.`,
           '',
           'Kindly clear the balance at your earliest convenience via our UPI ID: s0424237152@slc or our bank account details.',
           '',
@@ -1041,9 +1148,9 @@ app.post('/api/invoices/reminders', requireSupabaseUser, async (req, res) => {
           'YantraByte Solutions',
         ].join('\n'),
         html: `
-          <p>Dear ${client.customer_name || 'Customer'},</p>
-          <p>This is a friendly reminder that you have an outstanding balance of <strong>₹${(client.balance_due || 0).toLocaleString('en-IN')}</strong>.</p>
-          <p>This balance is associated with the following invoice(s): ${client.invoices.join(', ')}.</p>
+          <p>Dear ${escapeHtml(safeName)},</p>
+          <p>This is a friendly reminder that you have an outstanding balance of <strong>₹${(Number(client.balance_due) || 0).toLocaleString('en-IN')}</strong>.</p>
+          <p>This balance is associated with the following invoice(s): ${escapeHtml(invoiceList)}.</p>
           <p>Kindly clear the balance at your earliest convenience via our UPI ID: <strong>s0424237152@slc</strong> or our bank account details.</p>
           <p>If you have already made the payment, please ignore this email.</p>
           <p>Regards,<br/>YantraByte Solutions</p>
@@ -1059,11 +1166,14 @@ app.post('/api/invoices/reminders', requireSupabaseUser, async (req, res) => {
   return res.json({ ok: true, results });
 });
 
-app.post('/api/tickets/notify', requireSupabaseUser, async (req, res) => {
+app.post('/api/tickets/notify', requireAdminUser, async (req, res) => {
   const { ticket_number, customer_name, customer_email, status, device_type, customer_phone } = req.body || {};
 
   if (!customer_email || !isValidEmail(customer_email)) {
     return res.status(400).json({ error: 'Valid customer_email is required' });
+  }
+  if (!GMAIL_USER_DEFAULT || !GMAIL_PASS_DEFAULT) {
+    return res.status(503).json({ error: 'Email service credentials are not configured on server.' });
   }
 
   const transporter = nodemailer.createTransport({
@@ -1075,19 +1185,23 @@ app.post('/api/tickets/notify', requireSupabaseUser, async (req, res) => {
   });
 
   const portalLink = `https://yantrabyte.anantatechcare.com/track-ticket`; // Assuming this will be the track page link
+  const safeTicketNo = sanitizeHeaderText(ticket_number || '', 60);
+  const safeName = sanitizeHeaderText(customer_name || 'Customer', 120);
+  const safeDevice = sanitizeHeaderText(device_type || 'device', 120);
+  const safeStatus = sanitizeHeaderText(String(status || 'updated').toUpperCase(), 40);
 
   try {
     const mailResult = await transporter.sendMail({
       from: `"YantraByte Solutions" <${GMAIL_USER_DEFAULT}>`,
       to: customer_email,
       replyTo: process.env.GMAIL_REPLY_TO || GMAIL_USER_DEFAULT,
-      subject: `Service Ticket Update [${ticket_number}] - YantraByte Solutions`,
+      subject: `Service Ticket Update [${safeTicketNo}] - YantraByte Solutions`,
       html: `
         <div style="font-family: Arial, sans-serif; color: #333;">
           <h2 style="color: #0B5394;">Service Ticket Update</h2>
-          <p>Dear ${customer_name || 'Customer'},</p>
-          <p>This is an automated update regarding your service ticket <strong>${ticket_number}</strong> for your <strong>${device_type || 'device'}</strong>.</p>
-          <p>The current status of your ticket has been updated to: <strong style="color: #B91C1C;">${status.toUpperCase()}</strong></p>
+          <p>Dear ${escapeHtml(safeName)},</p>
+          <p>This is an automated update regarding your service ticket <strong>${escapeHtml(safeTicketNo)}</strong> for your <strong>${escapeHtml(safeDevice)}</strong>.</p>
+          <p>The current status of your ticket has been updated to: <strong style="color: #B91C1C;">${escapeHtml(safeStatus)}</strong></p>
           <p>You can track the live status of your repair at any time by visiting our tracking portal:</p>
           <p><a href="${portalLink}" style="display: inline-block; padding: 10px 15px; background-color: #0B5394; color: #fff; text-decoration: none; border-radius: 5px;">Track Ticket Status</a></p>
           <p>If you have any questions, feel free to reply to this email or contact us.</p>
@@ -1103,7 +1217,7 @@ app.post('/api/tickets/notify', requireSupabaseUser, async (req, res) => {
       if (cleanPhone.length === 10) cleanPhone = '91' + cleanPhone;
       if (cleanPhone.length >= 10) {
         try {
-          const messageText = `*Service Ticket Update*\n\nDear ${customer_name || 'Customer'},\n\nYour service ticket *${ticket_number}* for your *${device_type || 'device'}* has been updated to: *${status.toUpperCase()}*.\n\nTrack your live status here: ${portalLink}\n\nRegards,\nYantraByte Solutions`;
+          const messageText = `*Service Ticket Update*\n\nDear ${safeName},\n\nYour service ticket *${safeTicketNo}* for your *${safeDevice}* has been updated to: *${safeStatus}*.\n\nTrack your live status here: ${portalLink}\n\nRegards,\nYantraByte Solutions`;
           await whatsappClient.sendMessage(`${cleanPhone}@c.us`, messageText);
           whatsappStatus = 'sent';
         } catch (err) {
@@ -1120,18 +1234,17 @@ app.post('/api/tickets/notify', requireSupabaseUser, async (req, res) => {
   }
 });
 
-app.get('/api/tickets/track/:ticket_number', async (req, res) => {
+app.get('/api/tickets/track/:ticket_number', publicLookupLimiter, async (req, res) => {
   const { ticket_number } = req.params;
   const { phone } = req.query;
 
-  if (!phone) {
-    return res.status(400).json({ error: 'Phone number is required' });
+  const cleanInputPhone = String(phone || '').replace(/\D/g, '');
+  if (cleanInputPhone.length < 10) {
+    return res.status(400).json({ error: 'Valid 10-digit phone number is required' });
   }
 
   try {
-    const supabaseAdmin = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY, {
-      realtime: { transport: WebSocket }
-    });
+    const supabaseAdmin = getSupabaseAdminClient();
     const { data, error } = await supabaseAdmin
       .from('service_tickets')
       .select('ticket_number, status, device_type, created_at, customer_name, issue_description, customer_phone')
@@ -1142,16 +1255,15 @@ app.get('/api/tickets/track/:ticket_number', async (req, res) => {
       return res.status(404).json({ error: 'Ticket not found' });
     }
 
-    // Verify phone number (last 4 digits at least or exact match)
-    const cleanInputPhone = String(phone).replace(/\D/g, '');
-    const cleanDbPhone = String(data.customer_phone).replace(/\D/g, '');
-    
-    if (cleanDbPhone && cleanInputPhone && !cleanDbPhone.endsWith(cleanInputPhone.slice(-4))) {
+    const cleanDbPhone = String(data.customer_phone || '').replace(/\D/g, '');
+    if (!cleanDbPhone || cleanDbPhone.slice(-10) !== cleanInputPhone.slice(-10)) {
        return res.status(404).json({ error: 'Ticket not found or phone mismatch' });
     }
 
     // Obfuscate customer name for privacy
-    const obfuscatedName = data.customer_name ? data.customer_name.substring(0, 2) + '*'.repeat(data.customer_name.length - 2) : 'Customer';
+    const obfuscatedName = data.customer_name && data.customer_name.length > 2
+      ? data.customer_name.substring(0, 2) + '*'.repeat(data.customer_name.length - 2)
+      : 'Customer';
 
     return res.json({
       ticket_number: data.ticket_number,
@@ -1168,20 +1280,17 @@ app.get('/api/tickets/track/:ticket_number', async (req, res) => {
 });
 
 // --- QUOTATION APPROVAL ENDPOINTS ---
-app.get('/api/invoices/quotation/:id', async (req, res) => {
+app.get('/api/invoices/quotation/:id', publicLookupLimiter, async (req, res) => {
   const { id } = req.params;
+  if (!isUuid(id)) {
+    return res.status(400).json({ error: 'Invalid quotation link' });
+  }
   try {
-    const supabaseAdmin = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY, {
-      realtime: { transport: WebSocket }
-    });
-    
-    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-    const filterColumn = isUUID ? 'id' : 'invoice_no';
-    
+    const supabaseAdmin = getSupabaseAdminClient();
     const { data, error } = await supabaseAdmin
       .from('invoices')
-      .select('*')
-      .eq(filterColumn, id)
+      .select('id, invoice_no, doc_type, date, customer_name, phone, items, subtotal, discount, tax, round_off, grand_total, advance_paid, balance_due, payment_status, terms_conditions, warranty_months, pdf_url, created_at')
+      .eq('id', id)
       .eq('doc_type', 'Quotation')
       .single();
       
@@ -1193,32 +1302,55 @@ app.get('/api/invoices/quotation/:id', async (req, res) => {
   }
 });
 
-app.post('/api/invoices/quotation/:id/approve', async (req, res) => {
+app.get('/api/estimates/:id', publicLookupLimiter, async (req, res) => {
   const { id } = req.params;
-  const { status, signature } = req.body;
+  if (!isUuid(id)) {
+    return res.status(400).json({ error: 'Invalid estimate link' });
+  }
+  try {
+    const supabaseAdmin = getSupabaseAdminClient();
+    const { data, error } = await supabaseAdmin
+      .from('invoices')
+      .select('id, invoice_no, doc_type, date, customer_name, phone, email, address, items, subtotal, discount, tax, round_off, grand_total, advance_paid, balance_due, payment_status, terms_conditions, warranty_months, pdf_url, created_at')
+      .eq('id', id)
+      .single();
+
+    if (error || !data) return res.status(404).json({ error: 'Estimate not found' });
+    return res.json(data);
+  } catch (err) {
+    console.error('Error fetching estimate:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/invoices/quotation/:id/approve', publicLookupLimiter, async (req, res) => {
+  const { id } = req.params;
+  const { status, signature } = req.body || {};
   
+  if (!isUuid(id)) {
+    return res.status(400).json({ error: 'Invalid quotation link' });
+  }
   if (!['Approved', 'Rejected'].includes(status)) {
     return res.status(400).json({ error: 'Invalid status' });
   }
+  const cleanSignature = typeof signature === 'string' ? signature.replace(/[\r\n]+/g, ' ').trim().slice(0, 100) : '';
   
   try {
-    const supabaseAdmin = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY, {
-      realtime: { transport: WebSocket }
-    });
-    
-    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-    const filterColumn = isUUID ? 'id' : 'invoice_no';
-    
+    const supabaseAdmin = getSupabaseAdminClient();
     const { data: inv, error: fetchErr } = await supabaseAdmin
       .from('invoices')
-      .select('terms_conditions, customer_name, phone, grand_total, invoice_no')
-      .eq(filterColumn, id)
+      .select('terms_conditions, customer_name, phone, grand_total, invoice_no, payment_status, doc_type')
+      .eq('id', id)
+      .eq('doc_type', 'Quotation')
       .single();
       
     if (fetchErr || !inv) return res.status(404).json({ error: 'Estimate not found' });
+    if (['Approved', 'Rejected', 'Expired'].includes(inv.payment_status)) {
+      return res.status(409).json({ error: `Quotation has already been ${inv.payment_status}` });
+    }
     
     const timestamp = new Date().toLocaleString('en-IN');
-    const signatureText = signature ? `\n\nDigital Signature: ${signature} on ${timestamp}` : `\n\n[System] Customer ${status} on ${timestamp}`;
+    const signatureText = cleanSignature ? `\n\nDigital Signature: ${cleanSignature} on ${timestamp}` : `\n\n[System] Customer ${status} on ${timestamp}`;
     const newTerms = (inv.terms_conditions || '') + signatureText;
     
     const { error: updateErr } = await supabaseAdmin
@@ -1227,7 +1359,7 @@ app.post('/api/invoices/quotation/:id/approve', async (req, res) => {
         payment_status: status,
         terms_conditions: newTerms.trim()
       })
-      .eq(filterColumn, id);
+      .eq('id', id);
       
     if (updateErr) throw updateErr;
 
@@ -1268,14 +1400,14 @@ app.post('/api/invoices/quotation/:id/approve', async (req, res) => {
         await transporter.sendMail({
           from: `"YantraByte Solutions" <${GMAIL_USER_DEFAULT}>`,
           to: 'yantrabyte.solutions@gmail.com',
-          subject: `Quotation ${inv.invoice_no} ${status} by ${inv.customer_name}`,
+          subject: `Quotation ${sanitizeHeaderText(inv.invoice_no, 60)} ${status} by ${sanitizeHeaderText(inv.customer_name, 100)}`,
           html: `
             <h3>Quotation Update</h3>
-            <p><strong>Customer Name:</strong> ${inv.customer_name}</p>
-            <p><strong>Invoice Number:</strong> ${inv.invoice_no}</p>
-            <p><strong>Status:</strong> ${status}</p>
-            <p><strong>Grand Total:</strong> ₹${inv.grand_total}</p>
-            <p><strong>Timestamp:</strong> ${timestamp}</p>
+            <p><strong>Customer Name:</strong> ${escapeHtml(inv.customer_name)}</p>
+            <p><strong>Invoice Number:</strong> ${escapeHtml(inv.invoice_no)}</p>
+            <p><strong>Status:</strong> ${escapeHtml(status)}</p>
+            <p><strong>Grand Total:</strong> ₹${escapeHtml(inv.grand_total)}</p>
+            <p><strong>Timestamp:</strong> ${escapeHtml(timestamp)}</p>
           `
         });
         console.log(`[Success] Owner email notification sent for ${inv.invoice_no}`);
@@ -1302,14 +1434,16 @@ cron.schedule('0 10 * * *', async () => {
   }
   
   try {
-    const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.VITE_SUPABASE_ANON_KEY, {
-      auth: { persistSession: false },
-      realtime: { transport: WebSocket }
-    });
+    const supabase = getSupabaseAdminClient();
 
     const now = new Date();
     // Reset time to start of day for accurate day diff calculation
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    if (!GMAIL_USER_DEFAULT || !GMAIL_PASS_DEFAULT) {
+      console.warn('Skipping cron email reminders: GMAIL_APP_PASSWORD not set');
+      return;
+    }
 
     const transporter = nodemailer.createTransport({
       service: 'gmail',
@@ -1334,7 +1468,7 @@ cron.schedule('0 10 * * *', async () => {
         const diffDays = Math.floor((todayStart.getTime() - qStart.getTime()) / (1000 * 60 * 60 * 24));
 
         if (diffDays === 3 || diffDays === 4) {
-          const qLink = `https://yantrabyte.anantatechcare.com/quotation/${q.invoice_no}`;
+          const qLink = `https://yantrabyte.anantatechcare.com/quotation/${q.id}`;
           
           // Send Email
           if (q.customer_email && isValidEmail(q.customer_email)) {
@@ -1343,11 +1477,11 @@ cron.schedule('0 10 * * *', async () => {
                 from: `"YantraByte Solutions" <${GMAIL_USER_DEFAULT}>`,
                 to: q.customer_email,
                 replyTo: process.env.GMAIL_REPLY_TO || GMAIL_USER_DEFAULT,
-                subject: `Reminder: Action Required for Quotation #${q.invoice_no}`,
+                subject: `Reminder: Action Required for Quotation #${sanitizeHeaderText(q.invoice_no, 60)}`,
                 html: `
                   <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-                    <p>Dear ${q.customer_name || 'Customer'},</p>
-                    <p>This is a gentle reminder that your quotation <strong>#${q.invoice_no}</strong> is awaiting your approval.</p>
+                    <p>Dear ${escapeHtml(q.customer_name || 'Customer')},</p>
+                    <p>This is a gentle reminder that your quotation <strong>#${escapeHtml(q.invoice_no)}</strong> is awaiting your approval.</p>
                     <div style="margin: 20px 0; padding: 15px; background-color: #f8fafc; border-left: 4px solid #0B5394;">
                       <a href="${qLink}" style="display: inline-block; padding: 10px 15px; background-color: #0B5394; color: #fff; text-decoration: none; border-radius: 5px;">Review & Approve Quotation</a>
                     </div>
@@ -1408,11 +1542,11 @@ cron.schedule('0 10 * * *', async () => {
                 from: `"YantraByte Solutions" <${GMAIL_USER_DEFAULT}>`,
                 to: inv.customer_email,
                 replyTo: process.env.GMAIL_REPLY_TO || GMAIL_USER_DEFAULT,
-                subject: `Payment Reminder: Invoice #${inv.invoice_no}`,
+                subject: `Payment Reminder: Invoice #${sanitizeHeaderText(inv.invoice_no, 60)}`,
                 html: `
                   <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-                    <p>Dear ${inv.customer_name || 'Customer'},</p>
-                    <p>This is an automated reminder that you have an outstanding balance of <strong style="color: #e53e3e;">₹${(inv.balance_due || 0).toLocaleString('en-IN')}</strong> for Invoice <strong>#${inv.invoice_no}</strong>.</p>
+                    <p>Dear ${escapeHtml(inv.customer_name || 'Customer')},</p>
+                    <p>This is an automated reminder that you have an outstanding balance of <strong style="color: #e53e3e;">₹${(Number(inv.balance_due) || 0).toLocaleString('en-IN')}</strong> for Invoice <strong>#${escapeHtml(inv.invoice_no)}</strong>.</p>
                     <div style="margin: 20px 0; padding: 15px; background-color: #f8fafc; border-left: 4px solid #0B5394;">
                       <a href="${invLink}" style="display: inline-block; padding: 10px 15px; background-color: #0B5394; color: #fff; text-decoration: none; border-radius: 5px;">View & Download Invoice</a>
                     </div>
@@ -1459,9 +1593,7 @@ cron.schedule('0 10 * * *', async () => {
 cron.schedule('0 0 * * *', async () => {
   console.log('Running quotation expiry check...');
   try {
-    const supabaseAdmin = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY, {
-      realtime: { transport: WebSocket }
-    });
+    const supabaseAdmin = getSupabaseAdminClient();
     
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -1483,10 +1615,12 @@ cron.schedule('0 0 * * *', async () => {
 // --- LOW STOCK ALERTS CRON ---
 cron.schedule('0 9 * * *', async () => {
   console.log('Running low stock alert check at 9:00 AM...');
+  if (!GMAIL_USER_DEFAULT || !GMAIL_PASS_DEFAULT) {
+    console.warn('Skipping low stock cron email: GMAIL_APP_PASSWORD not set');
+    return;
+  }
   try {
-    const supabaseAdmin = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY, {
-      realtime: { transport: WebSocket }
-    });
+    const supabaseAdmin = getSupabaseAdminClient();
     
     // Find products with low stock (< 5)
     const { data: lowStockProducts, error } = await supabaseAdmin
@@ -1522,8 +1656,8 @@ cron.schedule('0 9 * * *', async () => {
             </tr>
             ${lowStockProducts.map(p => `
               <tr>
-                <td style="padding: 10px; border: 1px solid #e5e7eb;">${p.name}</td>
-                <td style="padding: 10px; border: 1px solid #e5e7eb; font-weight: bold; color: #dc2626;">${p.stock_count || 0}</td>
+                <td style="padding: 10px; border: 1px solid #e5e7eb;">${escapeHtml(p.name)}</td>
+                <td style="padding: 10px; border: 1px solid #e5e7eb; font-weight: bold; color: #dc2626;">${escapeHtml(p.stock_count || 0)}</td>
               </tr>
             `).join('')}
           </table>
@@ -1590,7 +1724,7 @@ cron.schedule('0 11 * * *', async () => {
       
       const message = `Hi ${inv.customer_name},\n\nThis is YantraByte. We hope your device is working perfectly after our recent service! 💻✨\n\nIf you were satisfied with our work, it would mean the world to us if you could leave a quick 5-star review on Google. It helps our small business immensely!\n\nLeave a review here: ${GOOGLE_REVIEW_LINK}\n\nThank you for choosing Ananta Techcare (YantraByte)! 🙏`;
       
-      if (whatsappClientReady) {
+      if (isWhatsappReady) {
         try {
           await whatsappClient.sendMessage(waNumber, message);
           console.log(`Sent review request for Invoice ${inv.invoice_no} to ${waNumber}`);
@@ -1611,7 +1745,7 @@ cron.schedule('0 11 * * *', async () => {
 
 
 // --- WHATSAPP PDF ATTACHMENT ENDPOINT ---
-app.post('/api/invoices/send-whatsapp-pdf', requireSupabaseUser, async (req, res) => {
+app.post('/api/invoices/send-whatsapp-pdf', requireAdminUser, async (req, res) => {
   const {
     customerPhone,
     customerName,
@@ -1666,14 +1800,12 @@ app.post('/api/invoices/send-whatsapp-pdf', requireSupabaseUser, async (req, res
 });
 
 // --- CUSTOMER HISTORY & PORTAL ENDPOINT ---
-app.get('/api/invoices/customer/:phone', async (req, res) => {
+app.get('/api/invoices/customer/:phone', publicLookupLimiter, async (req, res) => {
   const { phone } = req.params;
   try {
-    const supabaseAdmin = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY, {
-      realtime: { transport: WebSocket }
-    });
+    const supabaseAdmin = getSupabaseAdminClient();
     
-    const cleanPhone = phone.replace(/\D/g, '');
+    const cleanPhone = String(phone || '').replace(/\D/g, '');
     if (cleanPhone.length < 10) return res.status(400).json({ error: 'Invalid phone number' });
     
     // Search with last 10 digits to handle various formats (digits only, safe against injection)
@@ -1682,19 +1814,19 @@ app.get('/api/invoices/customer/:phone', async (req, res) => {
     
     const { data: invData, error: invError } = await supabaseAdmin
       .from('invoices')
-      .select('*')
+      .select('id, invoice_no, doc_type, date, customer_name, phone, subtotal, discount, tax, round_off, grand_total, advance_paid, balance_due, payment_status, items, terms_conditions, warranty_months, pdf_url, created_at')
       .ilike('phone', `%${last10}%`)
       .order('created_at', { ascending: false })
       .limit(50);
     
     if (invError) throw invError;
 
-    // Also fetch service tickets if any
+    // Also fetch non-sensitive service ticket fields only (omit device_password & internal_logs)
     let tickets = [];
     try {
       const { data: tData } = await supabaseAdmin
         .from('service_tickets')
-        .select('*')
+        .select('id, ticket_number, customer_name, device_type, brand_model, issue_description, status, estimated_cost, created_at')
         .ilike('customer_phone', `%${last10}%`)
         .order('created_at', { ascending: false })
         .limit(20);
