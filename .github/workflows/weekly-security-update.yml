@@ -1,0 +1,78 @@
+name: Weekly Security & Dependency Update
+
+on:
+  schedule:
+    - cron: '30 20 * * 0' # Every Monday 02:00 AM IST (20:30 UTC Sunday)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  weekly-update:
+    name: Weekly Security & Package Update
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 24 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply compatible updates & non-breaking audit fixes
+        run: |
+          npm update
+          npm audit fix || true
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run TypeScript typecheck
+        run: npm run typecheck
+
+      - name: Verify production build
+        run: npm run build
+
+      - name: Production critical vulnerability gate
+        run: npm audit --audit-level=critical --omit=dev
+
+      - name: SAST filesystem scan (Trivy)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: 'fs'
+          ignore-unfixed: true
+          format: 'table'
+          severity: 'HIGH,CRITICAL'
+
+      - name: Create Pull Request if dependencies updated
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if git diff --quiet package.json package-lock.json; then
+            echo "No compatible package updates available."
+            exit 0
+          fi
+
+          BRANCH="chore/weekly-security-update"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          git add package.json package-lock.json
+          git commit -m "chore(deps): weekly security & dependency update"
+          git push --force-with-lease origin "$BRANCH"
+
+          if ! gh pr view "$BRANCH" >/dev/null 2>&1; then
+            gh pr create \
+              --title "chore(deps): weekly security & dependency update" \
+              --body "Automated weekly compatible dependency and security update. Verified with lint, typecheck, production build, and critical audit gate." \
+              --base main \
+              --head "$BRANCH"
+          fi
