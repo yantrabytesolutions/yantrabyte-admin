@@ -4,12 +4,13 @@ import { Invoice, InvoiceItem, ServiceTicket, Product, Customer, Purchase } from
 import { Plus, Trash2, Save, FileText, Download, CheckCircle, RefreshCw, Copy, Users, X, Wrench, Receipt, Mail, FileSpreadsheet, Pencil, MessageSquare, Send, List, Search, Clock, Settings, Link, ShieldCheck, CloudUpload, HardDrive, Loader2 } from 'lucide-react';
 import { sendTelegramNotification } from '../utils/telegram';
 import html2pdf from 'html2pdf.js';
+import QRCode from 'qrcode';
 
 import SignatureCanvas from 'react-signature-canvas';
 import { PRESET_ITEMS } from './presetItems';
 import { downloadExcelWorkbook } from '../utils/spreadsheetXml';
 import { uploadInvoiceToDrive } from '../utils/googleDriveBackup';
-import { ERPUtils, isPayableInvoiceDoc, isQuotationDoc, parseFlexibleDate } from '../utils/erp';
+import { ERPUtils, isCreditNoteDoc, isPayableInvoiceDoc, isQuotationDoc, parseFlexibleDate } from '../utils/erp';
 import CustomerLedgerModal from './components/CustomerLedgerModal';
 import { InvoicePdfTemplate } from '../components/InvoicePdfTemplate';
 
@@ -27,7 +28,7 @@ type DeliveryPopup = {
   message: string;
 } | null;
 
-const PAYMENT_MODES = ['Not specified', 'Cash', 'UPI', 'Bank Transfer', 'Card', 'Cheque'];
+const PAYMENT_MODES = ['Not specified', 'Cash', 'UPI', 'Bank Transfer', 'Card', 'Cheque', 'Advance'];
 const CUSTOMER_MASTER_FRESH_KEY = 'billing_customer_master_fresh_started_at';
 const CUSTOMER_MASTER_FRESH_VALUE = '2026-05-22T19:00:00+05:30';
 const BILLING_DOCUMENTS_FRESH_KEY = 'billing_documents_fresh_started_at';
@@ -39,6 +40,7 @@ const normalizePhone = (value: string) => value.trim().replace(/\s+/g, ' ');
 const getPaymentStatus = (docType: string, balanceDue: number, amountPaid: number) => {
   if (docType === 'Cancelled') return 'Cancelled';
   if (docType === 'Quotation') return 'Estimate';
+  if (isCreditNoteDoc(docType)) return balanceDue <= 0 ? 'Refunded' : 'Credit Note';
   if (balanceDue <= 0) return 'Paid';
   if (amountPaid > 0) return 'Partial';
   return 'Due';
@@ -175,6 +177,190 @@ export default function BillingSoftware({
 
   const [showRecurringModal, setShowRecurringModal] = useState(false);
   const [showRemindersModal, setShowRemindersModal] = useState(false);
+  const [barcodeQuery, setBarcodeQuery] = useState('');
+  const [splitPaymentOpen, setSplitPaymentOpen] = useState(false);
+  const [splitAmounts, setSplitAmounts] = useState<{ Cash: number; UPI: number; Card: number; 'Bank Transfer': number; Advance: number }>({
+    Cash: 0,
+    UPI: 0,
+    Card: 0,
+    'Bank Transfer': 0,
+    Advance: 0,
+  });
+  const [remindedAtMap, setRemindedAtMap] = useState<Record<string, string>>(() => {
+    try {
+      const raw = localStorage.getItem('yb_invoice_reminded_map');
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  const markInvoiceReminded = (invoiceId: string) => {
+    const stamp = new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+    setRemindedAtMap(prev => {
+      const next = { ...prev, [invoiceId]: stamp };
+      try {
+        localStorage.setItem('yb_invoice_reminded_map', JSON.stringify(next));
+      } catch {
+        // ignore storage quota errors
+      }
+      return next;
+    });
+  };
+
+  const handleBarcodeScan = (rawCode: string) => {
+    const q = rawCode.trim().toLowerCase();
+    if (!q) return;
+    const matched = productsList.find(
+      p => p.id.toLowerCase() === q || p.name.toLowerCase() === q || p.name.toLowerCase().includes(q)
+    );
+    if (!matched) {
+      showToast(`No product found for "${rawCode.trim()}"`, 'error');
+      return;
+    }
+    const prodRecord = matched as Product & { selling_price?: number; unit_price?: number; price?: number };
+    const matchedRate = Number(prodRecord.selling_price ?? prodRecord.unit_price ?? prodRecord.price ?? 0);
+    setItems(prev => {
+      const existingIdx = prev.findIndex(it => it.product_id === matched.id || it.description.toLowerCase() === matched.name.toLowerCase());
+      if (existingIdx >= 0) {
+        return prev.map((it, idx) => idx === existingIdx ? { ...it, qty: Number(it.qty || 0) + 1 } : it);
+      }
+      return [
+        ...prev,
+        {
+          product_id: matched.id,
+          description: matched.name,
+          qty: 1,
+          rate: matchedRate,
+        },
+      ];
+    });
+    setBarcodeQuery('');
+    showToast(`Added ${matched.name}`);
+  };
+
+  const applySplitPayments = (nextSplit: typeof splitAmounts) => {
+    setSplitAmounts(nextSplit);
+    const entries = Object.entries(nextSplit).filter(([, amt]) => Number(amt) > 0);
+    const total = entries.reduce((sum, [, amt]) => sum + Number(amt), 0);
+    setAdvancePaid(total);
+    if (entries.length === 1) {
+      setPaymentMode(entries[0][0]);
+    } else if (entries.length > 1) {
+      setPaymentMode(`Split (${entries.map(([m, a]) => `${m}: ₹${a}`).join(' + ')})`);
+    }
+  };
+
+  const handleCreateCreditNote = (inv: Invoice) => {
+    setSelectedInvoiceId('');
+    setDocType('Credit Note');
+    setCustomerName(inv.customer_name || '');
+    setPhone(inv.phone || '');
+    setEmail(inv.email || '');
+    setAddress(inv.address || '');
+    setItems((inv.items || []).map(it => ({ ...it })));
+    setDiscount(Number(inv.discount || 0));
+    setAdvancePaid(0);
+    setPaymentMode('Not specified');
+    setActiveTab('editor');
+    showToast(`Loaded Credit Note draft for ${inv.invoice_no}`);
+  };
+
+  const handleAutoRenewAmc = (inv: Invoice) => {
+    setSelectedInvoiceId('');
+    setDocType('Service Bill');
+    setIsRecurring(true);
+    setCustomerName(inv.customer_name || '');
+    setPhone(inv.phone || '');
+    setEmail(inv.email || '');
+    setAddress(inv.address || '');
+    setItems((inv.items && inv.items.length > 0) ? inv.items.map(it => ({ ...it })) : [{ description: `Annual Maintenance Contract (AMC) Renewal - Ref #${inv.invoice_no}`, qty: 1, rate: Number(inv.grand_total || 0) }]);
+    setDiscount(0);
+    setAdvancePaid(0);
+    setPaymentMode('Not specified');
+    setActiveTab('editor');
+    showToast(`AMC Renewal bill prepared for ${inv.customer_name}`);
+  };
+
+  const handleSendEmailReminder = async (inv: Invoice) => {
+    const custEmail = inv.email || customersList.find(c => c.name === inv.customer_name)?.email || '';
+    if (!custEmail) {
+      showToast(`No email address found for ${inv.customer_name}`, 'error');
+      return;
+    }
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch('/api/invoices/reminders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({ invoiceId: inv.id, email: custEmail }),
+      });
+      if (!res.ok) throw new Error('Reminder request failed');
+      markInvoiceReminded(inv.id);
+      showToast(`Email reminder sent to ${custEmail}`);
+    } catch {
+      showToast(`Could not send email reminder to ${custEmail}`, 'error');
+    }
+  };
+
+  const handlePrintThermalReceipt = async () => {
+    const isAnanta = currentBrand === 'anantatechcare';
+    const company = isAnanta ? 'ANANTATECH CARE' : 'YANTRABYTE SOLUTIONS';
+    const upiId = isAnanta ? 'anantatechcare011126@aubiz' : 's0424237152@slc';
+    const invNo = draftInvoiceNumber || 'DRAFT';
+    const upiUri = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(company)}&cu=INR${balanceDue > 0 ? `&am=${balanceDue.toFixed(2)}&tn=${encodeURIComponent(`Inv ${invNo}`)}` : ''}`;
+    let qrImgHtml = '';
+    if (balanceDue > 0 && isPayableInvoiceDoc(docType)) {
+      try {
+        const qrDataUrl = await QRCode.toDataURL(upiUri, { width: 140, margin: 1 });
+        qrImgHtml = `<div style="text-align:center;margin-top:8px;"><img src="${qrDataUrl}" style="width:110px;height:110px;" /><div style="font-size:10px;">Scan to Pay ₹${balanceDue.toFixed(2)}</div></div>`;
+      } catch {
+        qrImgHtml = '';
+      }
+    }
+    const esc = (s: string) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const win = window.open('', '_blank', 'width=360,height=640');
+    if (!win) {
+      showToast('Please allow popups for thermal receipt printing', 'error');
+      return;
+    }
+    win.document.write(`<!doctype html><html><head><title>Receipt ${esc(invNo)}</title><style>
+      @page { size: 80mm auto; margin: 3mm; }
+      body { font-family: monospace; width: 74mm; margin: 0 auto; font-size: 11px; color: #000; }
+      .center { text-align: center; } .bold { font-weight: bold; }
+      .line { border-top: 1px dashed #000; margin: 6px 0; }
+      table { width: 100%; border-collapse: collapse; font-size: 11px; }
+      th, td { text-align: left; padding: 2px 0; } .right { text-align: right; }
+    </style></head><body>
+      <div class="center bold" style="font-size:13px;">${esc(company)}</div>
+      <div class="center">${esc(docType)} #${esc(invNo)}</div>
+      <div class="center">${esc(new Date().toLocaleDateString('en-IN'))}</div>
+      <div class="line"></div>
+      <div><span class="bold">Customer:</span> ${esc(customerName || 'Walk-in')}</div>
+      ${phone ? `<div><span class="bold">Phone:</span> ${esc(phone)}</div>` : ''}
+      <div class="line"></div>
+      <table><thead><tr><th>Item</th><th class="right">Qty</th><th class="right">Amt</th></tr></thead><tbody>
+      ${items.map(it => `<tr><td>${esc(it.description)}</td><td class="right">${it.qty}</td><td class="right">₹${(Number(it.qty) * Number(it.rate)).toFixed(2)}</td></tr>`).join('')}
+      </tbody></table>
+      <div class="line"></div>
+      <table>
+        <tr><td>Subtotal</td><td class="right">₹${subtotal.toFixed(2)}</td></tr>
+        ${discount > 0 ? `<tr><td>Discount</td><td class="right">-₹${discount.toFixed(2)}</td></tr>` : ''}
+        ${tax > 0 ? `<tr><td>GST</td><td class="right">₹${tax.toFixed(2)}</td></tr>` : ''}
+        <tr class="bold" style="font-size:13px;"><td>Total</td><td class="right">₹${grandTotal.toFixed(2)}</td></tr>
+        <tr><td>Paid (${esc(paymentMode)})</td><td class="right">₹${advancePaid.toFixed(2)}</td></tr>
+        <tr class="bold"><td>Balance Due</td><td class="right">₹${balanceDue.toFixed(2)}</td></tr>
+      </table>
+      ${qrImgHtml}
+      <div class="line"></div>
+      <div class="center">Thank you for your business!</div>
+      <script>window.onload = () => { window.print(); }</script>
+    </body></html>`);
+    win.document.close();
+  };
 
   const openCustomerHistory = () => {
     if (!customerName.trim()) {
@@ -844,6 +1030,8 @@ export default function BillingSoftware({
         prefix = 'ATCQ';
       } else if (type === 'Service Bill' || type === 'Service') {
         prefix = 'ATC-SRV';
+      } else if (type === 'Credit Note' || type === 'Sales Return') {
+        prefix = 'ATC-CN';
       } else {
         prefix = 'ATC-SALE';
       }
@@ -2089,6 +2277,17 @@ export default function BillingSoftware({
                   >
                     Quotation
                   </button>
+                  <button 
+                    type="button"
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      isCreditNoteDoc(docType)
+                        ? 'bg-amber-600 text-white shadow-sm scale-[1.02]'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                    onClick={() => setDocType('Credit Note')}
+                  >
+                    Credit Note
+                  </button>
                   {!!selectedInvoiceId && (
                     <button 
                       type="button"
@@ -2379,6 +2578,33 @@ export default function BillingSoftware({
               </div>
             </div>
 
+            {/* Barcode / SKU Quick Scan */}
+            <div className="mb-3 flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={barcodeQuery}
+                  onChange={e => setBarcodeQuery(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleBarcodeScan(barcodeQuery);
+                    }
+                  }}
+                  placeholder="Scan Barcode / SKU or type product name & press Enter..."
+                  className="w-full h-10 pl-9 pr-3 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:bg-white focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => handleBarcodeScan(barcodeQuery)}
+                className="h-10 px-3 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg transition-colors shrink-0"
+              >
+                Quick Add
+              </button>
+            </div>
+
             {/* Line Items Table */}
             <div className="border border-slate-200 rounded-xl overflow-hidden shadow-xs">
               <div className="overflow-x-auto">
@@ -2457,9 +2683,18 @@ export default function BillingSoftware({
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">Payment Mode</label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-bold text-slate-700">Payment Mode</label>
+                  <button
+                    type="button"
+                    onClick={() => setSplitPaymentOpen(v => !v)}
+                    className="text-indigo-600 hover:underline text-[10px] font-extrabold uppercase"
+                  >
+                    {splitPaymentOpen ? 'Hide Split' : 'Split / Advance'}
+                  </button>
+                </div>
                 <select 
-                  value={paymentMode} 
+                  value={PAYMENT_MODES.includes(paymentMode) ? paymentMode : 'Not specified'} 
                   onChange={e => setPaymentMode(e.target.value)} 
                   className="w-full h-11 bg-white text-slate-900 border border-slate-300 rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-blue-500 cursor-pointer font-semibold shadow-xs"
                 >
@@ -2468,6 +2703,25 @@ export default function BillingSoftware({
                   ))}
                 </select>
               </div>
+              {splitPaymentOpen && (
+                <div className="sm:col-span-2 md:col-span-3 bg-indigo-50/70 border border-indigo-200 rounded-xl p-3">
+                  <div className="text-xs font-bold text-indigo-900 mb-2">Multi-Payment Split &amp; Advance Receipt</div>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                    {(['Cash', 'UPI', 'Card', 'Bank Transfer', 'Advance'] as const).map(mode => (
+                      <div key={mode}>
+                        <label className="block text-[11px] font-semibold text-slate-600 mb-1">{mode} (₹)</label>
+                        <input
+                          type="number"
+                          value={splitAmounts[mode] || ''}
+                          onChange={e => applySplitPayments({ ...splitAmounts, [mode]: Number(e.target.value) || 0 })}
+                          className="w-full h-9 bg-white border border-indigo-200 rounded-lg px-2.5 text-xs font-mono font-bold"
+                          placeholder="0"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">Payment Due Date</label>
                 <input 
@@ -2592,6 +2846,13 @@ export default function BillingSoftware({
                 className="w-full flex items-center justify-center px-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-600/30 active:scale-[0.98]"
               >
                 <Download className="w-4 h-4 mr-2" /> Download &amp; View PDF
+              </button>
+              <button 
+                type="button"
+                onClick={handlePrintThermalReceipt} 
+                className="w-full flex items-center justify-center px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl transition-all active:scale-[0.98] text-sm"
+              >
+                <Receipt className="w-4 h-4 mr-2" /> 80mm Thermal Receipt
               </button>
               <button 
                 type="button"
@@ -2862,9 +3123,17 @@ export default function BillingSoftware({
                           </button>
                         )}
                         {isPayableInvoiceDoc(inv.doc_type) && (
-                          <button onClick={(e) => { e.stopPropagation(); sendAmcRenewalAlert(inv); }} className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors" title="🔄 Send AMC / Warranty Renewal Alert">
-                            <ShieldCheck className="w-4 h-4" />
-                          </button>
+                          <>
+                            <button onClick={(e) => { e.stopPropagation(); sendAmcRenewalAlert(inv); }} className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors" title="🔄 Send AMC / Warranty Renewal Alert">
+                              <ShieldCheck className="w-4 h-4" />
+                            </button>
+                            <button onClick={(e) => { e.stopPropagation(); handleAutoRenewAmc(inv); }} className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors" title="Auto-Generate AMC Renewal Bill">
+                              <RefreshCw className="w-4 h-4" />
+                            </button>
+                            <button onClick={(e) => { e.stopPropagation(); handleCreateCreditNote(inv); }} className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-md transition-colors" title="Issue Credit Note / Return">
+                              <Receipt className="w-4 h-4" />
+                            </button>
+                          </>
                         )}
                         <button onClick={(e) => { e.stopPropagation(); sendWhatsAppPdfInvoice(inv); }} className="p-1.5 text-gray-500 hover:bg-emerald-50 hover:text-emerald-600 rounded-md transition-colors" title="Send PDF on WhatsApp">
                           <FileText className="w-4 h-4 text-emerald-600" />
@@ -3344,17 +3613,30 @@ export default function BillingSoftware({
                                 ₹{inv.balance_due?.toLocaleString('en-IN')}
                               </td>
                               <td className="px-4 py-3 text-center sticky right-0 bg-inherit z-10 border-l border-gray-100 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)]">
-                                {phoneNum ? (
-                                  <a
-                                    href={whatsappUrl}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="inline-flex items-center px-3 py-1.5 bg-[#25D366] text-white text-xs font-medium rounded-md hover:bg-[#128C7E] transition-colors shadow-sm"
+                                <div className="flex items-center justify-center gap-1.5">
+                                  {phoneNum ? (
+                                    <a
+                                      href={whatsappUrl}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      onClick={() => markInvoiceReminded(inv.id)}
+                                      className="inline-flex items-center px-2.5 py-1.5 bg-[#25D366] text-white text-xs font-medium rounded-md hover:bg-[#128C7E] transition-colors shadow-sm"
+                                    >
+                                      <Send className="w-3 h-3 mr-1" /> WhatsApp
+                                    </a>
+                                  ) : (
+                                    <span className="text-xs text-gray-400 italic">No phone</span>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSendEmailReminder(inv)}
+                                    className="inline-flex items-center px-2.5 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700 transition-colors shadow-sm"
                                   >
-                                    <Send className="w-3 h-3 mr-1.5" /> Send Reminder
-                                  </a>
-                                ) : (
-                                  <span className="text-xs text-gray-400 italic">No phone #</span>
+                                    <Mail className="w-3 h-3 mr-1" /> Email
+                                  </button>
+                                </div>
+                                {remindedAtMap[inv.id] && (
+                                  <div className="text-[10px] text-slate-500 mt-1">Last: {remindedAtMap[inv.id]}</div>
                                 )}
                               </td>
                             </tr>

@@ -9,8 +9,11 @@ export const isQuotationDoc = (docType?: string | null): boolean =>
 export const isCancelledDoc = (docType?: string | null): boolean =>
   docType === 'Cancelled';
 
+export const isCreditNoteDoc = (docType?: string | null): boolean =>
+  docType === 'Credit Note' || docType === 'Sales Return';
+
 export const isPayableInvoiceDoc = (docType?: string | null): boolean =>
-  !isQuotationDoc(docType) && !isCancelledDoc(docType);
+  !isQuotationDoc(docType) && !isCancelledDoc(docType) && !isCreditNoteDoc(docType);
 
 export function parseFlexibleDate(dateStr?: string | null): Date | null {
   if (!dateStr) return null;
@@ -93,10 +96,11 @@ export const ERPUtils = {
       }
 
       if (customerAccId) {
+        const isCreditNote = isCreditNoteDoc(invoice.doc_type);
         const { data: je } = await supabase.from('journal_entries').insert([{
           date: entryDate,
-          description: `Invoice Sale #${invoice.invoice_no}`,
-          reference_type: 'invoice',
+          description: isCreditNote ? `Credit Note #${invoice.invoice_no}` : `Invoice Sale #${invoice.invoice_no}`,
+          reference_type: isCreditNote ? 'credit_note' : 'invoice',
           reference_id: invoice.id
         }]).select('id').single();
 
@@ -104,12 +108,22 @@ export const ERPUtils = {
           const grandTotal = Number(invoice.grand_total) || 0;
           const taxAmount = Math.max(0, Number(invoice.tax) || 0);
           const netRevenue = Math.max(0, Number((grandTotal - taxAmount).toFixed(2)));
-          const lines = [
-            { journal_entry_id: je.id, account_id: customerAccId, debit: grandTotal, credit: 0 },
-            { journal_entry_id: je.id, account_id: salesAcc, debit: 0, credit: netRevenue }
-          ];
+          const lines = isCreditNote
+            ? [
+                { journal_entry_id: je.id, account_id: customerAccId, debit: 0, credit: grandTotal },
+                { journal_entry_id: je.id, account_id: salesAcc, debit: netRevenue, credit: 0 }
+              ]
+            : [
+                { journal_entry_id: je.id, account_id: customerAccId, debit: grandTotal, credit: 0 },
+                { journal_entry_id: je.id, account_id: salesAcc, debit: 0, credit: netRevenue }
+              ];
           if (taxAmount > 0 && taxAcc) {
-            lines.push({ journal_entry_id: je.id, account_id: taxAcc, debit: 0, credit: taxAmount });
+            lines.push({
+              journal_entry_id: je.id,
+              account_id: taxAcc,
+              debit: isCreditNote ? taxAmount : 0,
+              credit: isCreditNote ? 0 : taxAmount
+            });
           }
           await supabase.from('journal_entry_lines').insert(lines);
         }
@@ -118,29 +132,37 @@ export const ERPUtils = {
           const advanceAmount = Number(invoice.advance_paid) || 0;
           const { data: recJe } = await supabase.from('journal_entries').insert([{
             date: entryDate,
-            description: `Advance Receipt for #${invoice.invoice_no}`,
+            description: isCreditNote ? `Refund Paid for #${invoice.invoice_no}` : `Advance Receipt for #${invoice.invoice_no}`,
             reference_type: 'payment',
             reference_id: invoice.id
           }]).select('id').single();
 
           if (recJe) {
-            await supabase.from('journal_entry_lines').insert([
-              { journal_entry_id: recJe.id, account_id: cashAcc, debit: advanceAmount, credit: 0 },
-              { journal_entry_id: recJe.id, account_id: customerAccId, debit: 0, credit: advanceAmount }
-            ]);
+            await supabase.from('journal_entry_lines').insert(
+              isCreditNote
+                ? [
+                    { journal_entry_id: recJe.id, account_id: customerAccId, debit: advanceAmount, credit: 0 },
+                    { journal_entry_id: recJe.id, account_id: cashAcc, debit: 0, credit: advanceAmount }
+                  ]
+                : [
+                    { journal_entry_id: recJe.id, account_id: cashAcc, debit: advanceAmount, credit: 0 },
+                    { journal_entry_id: recJe.id, account_id: customerAccId, debit: 0, credit: advanceAmount }
+                  ]
+            );
           }
         }
       }
     }
 
     // 2. Inventory Transactions (PostgreSQL trg_update_stock updates products.stock_count)
+    const isCreditNote = isCreditNoteDoc(invoice.doc_type);
     const invTransactions = (invoice.items || [])
       .filter(item => Boolean(item.product_id) && Number(item.qty) > 0)
       .map(item => ({
         product_id: item.product_id,
         transaction_date: entryDate,
-        quantity_change: -Math.abs(Number(item.qty)),
-        reference_type: 'invoice',
+        quantity_change: isCreditNote ? Math.abs(Number(item.qty)) : -Math.abs(Number(item.qty)),
+        reference_type: isCreditNote ? 'credit_note' : 'invoice',
         reference_id: invoice.id,
         unit_cost: Number(item.rate) || 0
       }));

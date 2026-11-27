@@ -452,7 +452,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
               </div>
               <div style={{ background: '#ffffff', padding: '2px', display: 'inline-block', border: '1px solid #cbd5e1', borderRadius: '4px' }}>
                 <QrCodeRenderer 
-                  value="upi://pay?pa=anantatechcare011126@aubiz&pn=ANANTATECH%20CARE&cu=INR" 
+                  value={`upi://pay?pa=anantatechcare011126@aubiz&pn=ANANTATECH%20CARE&cu=INR${balanceDue > 0 ? `&am=${balanceDue.toFixed(2)}&tn=${encodeURIComponent(`Inv ${invoice.invoice_no || ''}`)}` : ''}`} 
                   size={65} 
                 />
               </div>
@@ -917,7 +917,7 @@ export const InvoicePdfTemplate = forwardRef<HTMLDivElement, Props>(({
                             </div>
                             <div style={{ background: '#ffffff', padding: '2px', display: 'inline-block', border: `1.5px solid ${isAnanta ? primaryDark : '#0B5394'}`, borderRadius: '4px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                               <QrCodeRenderer 
-                                value={isAnanta ? "upi://pay?pa=anantatechcare011126@aubiz&pn=ANANTATECH%20CARE&cu=INR" : "upi://pay?pa=s0424237152@slc&pn=YantraByte%20Solutions&cu=INR"} 
+                                value={`${isAnanta ? 'upi://pay?pa=anantatechcare011126@aubiz&pn=ANANTATECH%20CARE&cu=INR' : 'upi://pay?pa=s0424237152@slc&pn=YantraByte%20Solutions&cu=INR'}${balanceDue > 0 ? `&am=${balanceDue.toFixed(2)}&tn=${encodeURIComponent(`Inv ${invoice.invoice_no || ''}`)}` : ''}`} 
                                 size={80} 
                               />
                             </div>
